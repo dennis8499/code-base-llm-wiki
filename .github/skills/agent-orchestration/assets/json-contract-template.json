@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentCommunicationEnvelope",
+  "description": "多代理人編排系統中，Agent 之間標準化通訊的 JSON Envelope，適用於 request / response / confirmation_required",
+  "type": "object",
+  "required": ["traceId", "sender", "target", "timestamp", "payload", "context"],
+  "properties": {
+    "traceId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "UUID v4 格式的唯一追蹤 ID，用於日誌關聯與錯誤追蹤"
+    },
+    "sender": {
+      "type": "string",
+      "minLength": 1,
+      "description": "發送者的 Agent 識別名稱（如 RouterAgent、DataAccessSubAgent）"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "description": "目標 Agent 的識別名稱"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "訊息發送時間，ISO 8601 格式"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "failed", "confirmation_required", "partial"],
+      "description": "回應狀態；請求訊息通常不帶此欄位"
+    },
+    "payload": {
+      "type": "object",
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "要執行的動作名稱，使用 snake_case（如 generate_dapper_query）"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "請求訊息使用的輸入參數，Key-Value 結構。具體欄位依 action 而定"
+        },
+        "result": {
+          "type": "object",
+          "description": "回應訊息使用的結果物件，可包含 generatedCode、warnings、analysis、errorDetails 等欄位"
+        },
+        "pendingOperation": {
+          "type": "object",
+          "description": "當 status = confirmation_required 時，描述待授權的操作與其風險",
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1,
+              "description": "待執行操作的簡述"
+            },
+            "impact": {
+              "type": "string",
+              "minLength": 1,
+              "description": "此操作對系統或資料的影響"
+            },
+            "reversibility": {
+              "type": "string",
+              "minLength": 1,
+              "description": "操作是否可逆，例如：可逆 / 不可逆"
+            },
+            "suggestedAlternative": {
+              "type": ["string", "null"],
+              "description": "若不建議直接執行，提供較安全的替代方案"
+            }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["retryCount", "maxRetries"],
+      "properties": {
+        "retryCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "當前重試次數，從 0 開始"
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3,
+          "description": "最大允許重試次數"
+        },
+        "parentTraceId": {
+          "type": ["string", "null"],
+          "description": "若此請求由另一個請求觸發，記錄父級 traceId"
+        },
+        "sessionMemoryPath": {
+          "type": ["string", "null"],
+          "description": "共享黑板路徑（如 /memories/session/orchestration-plan.md）"
+        },
+        "previousError": {
+          "type": ["object", "null"],
+          "description": "重試時附帶的上次錯誤資訊",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "錯誤類型（如 SchemaValidationFailed、Timeout）"
+            },
+            "message": {
+              "type": "string",
+              "description": "人類可讀的錯誤描述"
+            },
+            "suggestion": {
+              "type": "string",
+              "description": "操作指導：下一步可以做什麼來修正"
+            }
+          }
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "回應訊息可附帶的執行耗時（毫秒）"
+        },
+        "tokensUsed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "回應訊息可附帶的估計 Token 使用量"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "const": "confirmation_required"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["action", "pendingOperation"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "enum": ["completed", "failed", "partial"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["action", "result"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "not": {
+          "required": ["status"]
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["action", "parameters"]
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "_comment": "範例 1：Router 分發任務給 Sub-Agent",
+      "traceId": "a1b2c3d4-e5f6-4890-ab34-56789abcdef0",
+      "sender": "RouterAgent",
+      "target": "DataAccessSubAgent",
+      "timestamp": "2026-04-16T10:30:00Z",
+      "payload": {
+        "action": "generate_dapper_query",
+        "parameters": {
+          "targetTable": "Users",
+          "performanceRequirement": "high_throughput",
+          "constraints": ["avoid_n_plus_one", "use_parameterized_query"]
+        }
+      },
+      "context": {
+        "retryCount": 0,
+        "maxRetries": 3,
+        "parentTraceId": null,
+        "sessionMemoryPath": "/memories/session/orchestration-plan.md"
+      }
+    },
+    {
+      "_comment": "範例 2：重試請求時帶入上次錯誤",
+      "traceId": "b2c3d4e5-f6a7-4901-8b45-6789abcdef01",
+      "sender": "RouterAgent",
+      "target": "DataAccessSubAgent",
+      "timestamp": "2026-04-16T10:30:30Z",
+      "payload": {
+        "action": "generate_dapper_query",
+        "parameters": {
+          "targetTable": "Users",
+          "performanceRequirement": "high_throughput"
+        }
+      },
+      "context": {
+        "retryCount": 1,
+        "maxRetries": 3,
+        "parentTraceId": "a1b2c3d4-e5f6-4890-ab34-56789abcdef0",
+        "sessionMemoryPath": "/memories/session/orchestration-plan.md",
+        "previousError": {
+          "type": "SchemaValidationFailed",
+          "message": "缺少必要欄位 'payload.result.generatedCode'",
+          "suggestion": "請確保輸出包含 generatedCode 欄位，類型為 string"
+        }
+      }
+    },
+    {
+      "_comment": "範例 3：Sub-Agent 完成任務後回傳結果",
+      "traceId": "c3d4e5f6-a7b8-4a12-9c56-789abcdef012",
+      "sender": "DataAccessSubAgent",
+      "target": "RouterAgent",
+      "timestamp": "2026-04-16T10:30:15Z",
+      "status": "completed",
+      "payload": {
+        "action": "generate_dapper_query",
+        "result": {
+          "generatedCode": "SELECT * FROM Users WHERE Id = @Id",
+          "warnings": [],
+          "performanceNotes": "使用參數化查詢並避免 N+1"
+        }
+      },
+      "context": {
+        "retryCount": 0,
+        "maxRetries": 3,
+        "durationMs": 15000,
+        "tokensUsed": 4500,
+        "sessionMemoryPath": "/memories/session/orchestration-plan.md"
+      }
+    },
+    {
+      "_comment": "範例 4：遇到高風險操作時請求人工確認",
+      "traceId": "d4e5f6a7-b8c9-4b23-8d67-89abcdef0123",
+      "sender": "DataAccessSubAgent",
+      "target": "RouterAgent",
+      "timestamp": "2026-04-16T10:31:00Z",
+      "status": "confirmation_required",
+      "payload": {
+        "action": "execute_migration",
+        "pendingOperation": {
+          "description": "即將對 Users 表執行 DROP COLUMN legacy_flag",
+          "impact": "會永久移除舊欄位",
+          "reversibility": "不可逆",
+          "suggestedAlternative": "先標記為 deprecated，再於下一次版本移除"
+        }
+      },
+      "context": {
+        "retryCount": 0,
+        "maxRetries": 3,
+        "sessionMemoryPath": "/memories/session/orchestration-plan.md"
+      }
+    }
+  ]
+}
