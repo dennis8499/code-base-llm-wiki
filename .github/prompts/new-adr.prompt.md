@@ -3,7 +3,8 @@ name: new-adr
 description: >
   建立新的 Architecture Decision Record (ADR)——套用標準 ADR
   模板，建立 wiki/decisions/ 頁面並更新索引。
-mode: agent
+agent: "wiki-keeper"
+argument-hint: "決策標題，例如：採用 Obsidian wikilink 作為內部連結格式"
 ---
 
 ## 任務
@@ -31,10 +32,10 @@ mode: agent
 ---
 title: "ADR-{NNN}: {決策標題}"
 type: decision
-decision_date: {today}
+decision_date: { today }
 decision_status: proposed
 sources: []
-last_updated: {today}
+last_updated: { today }
 tags: [adr]
 status: active
 ---

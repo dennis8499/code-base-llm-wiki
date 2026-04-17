@@ -3,7 +3,8 @@ name: onboarding-guide
 description: >
   基於現有 wiki 內容產出新人 Onboarding 指南——自動彙整
   overview、架構、核心模組、關鍵慣例，產出結構化指南頁面。
-mode: agent
+agent: "wiki-keeper"
+argument-hint: "可選：補充目標讀者，例如前端新人或維運工程師"
 ---
 
 ## 任務

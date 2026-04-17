@@ -22,11 +22,10 @@ Custom Agent（`.agent.md`）用於封裝**專業化角色**，適合以下情�
 name: agent-name             # kebab-case，必填
 description: >               # 角色說明 + 觸發條件，必填
   ...
-tools:                        # 或 allowedTools；依宿主版本與功能支援擇一
-  - read_file
-  - grep_search
-  - file_search
-  - get_errors
+tools:                        # 建議優先使用官方 tool aliases，其次才是特定 tool 名稱
+  - read
+  - search
+  - edit
 # model: gpt-5.4              # 選填；僅在宿主支援時設定
 ---
 ```
@@ -75,22 +74,18 @@ tools:                        # 或 allowedTools；依宿主版本與功能支�
 
 ```yaml
 tools:
-  # 讀取類（安全，幾乎都可以開放）
-  - read_file
-  - grep_search
-  - file_search
-  - semantic_search
-  - get_errors
+  # 建議優先使用 aliases：read / search / edit / execute / agent / web / todo
+  - read
+  - search
   
   # MCP 或外部獲取工具（需考量環境相容性與權限最小化）
   # - github_issues_read
   
   # 寫入類（謹慎開放；名稱依宿主環境而異）
-  # - <edit tool>           # 例如：apply_patch / editFiles / replace_string_in_file
-  # - create_file           # 若代理需要生成新檔
+  # - edit                  # 開放檔案寫入能力
   
   # 執行類（高風險，唯讀代理不應開放）
-  # - run_in_terminal        ← 不開放
+  # - execute                ← 唯讀代理不應開放
 ```
 
 ### Handoff 描述格式
@@ -121,11 +116,8 @@ description: >
   review authentication/authorization logic, or check for injection
   risks. Only reads files — never modifies anything.
 tools:
-  - read_file
-  - grep_search
-  - file_search
-  - semantic_search
-  - get_errors
+  - read
+  - search
 ---
 
 # 安全審核代理
@@ -185,9 +177,8 @@ description: >
   impact, or design zero-downtime migration strategies. Reads DB
   schema files only — does not execute migrations.
 tools:
-  - read_file
-  - grep_search
-  - file_search
+  - read
+  - search
 ---
 
 # 資料庫遷移規劃代理
@@ -264,6 +255,6 @@ tools:
 **使用者輸入**：「我想要一個 Agent 分析 API 效能瓶頸，但不允許它修改任何程式碼」
 
 **關鍵設計點**：
-- `tools` 清單只開放 `read_file`、`grep_search`、`semantic_search`
-- 不開放任何檔案編輯工具與 `run_in_terminal`
+- `tools` 清單只開放 `read`、`search`
+- 不開放任何檔案編輯工具與 `execute`
 - instructions 明確寫「此代理不修改任何檔案，僅輸出分析報告」

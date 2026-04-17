@@ -3,7 +3,8 @@ name: ingest-batch
 description: >
   批次攝入整個目錄到 wiki——掃描指定路徑下所有模組，
   按依賴順序批次產出 wiki 頁面，最終產出完整摘要報告。
-mode: agent
+agent: "wiki-ingest"
+argument-hint: "目標路徑，例如：src/、services/ 或 packages/core"
 ---
 
 你是 `wiki-ingest` 代理，現在執行 **Batch Ingest** 模式。
@@ -42,9 +43,11 @@ mode: agent
 - **更新頁面數**：N
 
 ### 建立的頁面
+
 1. [[page-name]] — 摘要
-...
+   ...
 
 ### 建議後續動作
+
 - ...
 ```

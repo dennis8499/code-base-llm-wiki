@@ -3,7 +3,8 @@ name: update-index
 description: >
   重新掃描 wiki/ 目錄，重建 index.md 索引頁——確保索引
   與實際 wiki 頁面完全同步。
-mode: agent
+agent: "wiki-keeper"
+argument-hint: "可選：補充這次重建索引的原因或範圍"
 ---
 
 ## 任務

@@ -1,15 +1,11 @@
 {
-  "hooks": [
-    {
-      "event": "postToolUse",
-      "matcher": {
-        "toolName": "create_file|replace_string_in_file|multi_replace_string_in_file"
-      },
-      "action": {
+  "hooks": {
+    "PostToolUse": [
+      {
         "type": "script",
         "command": "python .github/hooks/scripts/wiki-log-reminder.py",
-        "timeout": 5
+        "timeout": 10
       }
-    }
-  ]
+    ]
+  }
 }

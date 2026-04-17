@@ -134,16 +134,12 @@ description: >
   Use when TRIGGER_CONDITION_1 or TRIGGER_CONDITION_2.
   Only ALLOWED_ACTION — never FORBIDDEN_ACTION.
 tools:
-  - read_file
-  - grep_search
-  - file_search
-  - semantic_search
-  - get_errors
-  # 取消註解以開放寫入工具（名稱依宿主環境而異）：
-  # - <edit tool>   # 例如：apply_patch / editFiles / replace_string_in_file
-  # - create_file
+  - read
+  - search
+  # 取消註解以開放寫入工具：
+  # - edit
   # 不開放執行工具（唯讀代理不應有此權限）：
-  # - run_in_terminal
+  # - execute
 ---
 
 # AGENT_DISPLAY_NAME
@@ -194,7 +190,8 @@ STRUCTURED_OUTPUT_FORMAT
 name: PROMPT_IDENTIFIER
 description: >
   PROMPT_PURPOSE_DESC（說明用途與觸發方式）
-mode: ask
+argument-hint: "可選：提示使用者應補充的內容"
+agent: ask
 ---
 
 ROLE_SETTING（可選，若任務需要特定專業知識則設定角色）
@@ -217,7 +214,7 @@ EXAMPLE_SECTION（可選，2-3 個示範性 input/output 範例）
 
 **快速客製化清單**：
 - `PROMPT_IDENTIFIER` → kebab-case，如 `pr-summary`、`generate-tests`
-- `mode` → `ask`（分析/對話）、`edit`（直接改寫目前內容）或 `agent`（需要工具）
+- `agent` → `ask`（分析/對話）、`agent`（需要工具）或自訂 Agent 名稱
 - 動態變量選擇：選取內容用 `${selection}`；整個檔案用 `${file}`；互動輸入用 `${input:xxx}`
 - 若客戶端以檔名決定 slash command 名稱，請讓檔名與 `PROMPT_IDENTIFIER` 保持一致
 - 若有固定格式要求，在「輸出格式」中提供完整模板（不要只用文字描述）
@@ -230,19 +227,15 @@ EXAMPLE_SECTION（可選，2-3 個示範性 input/output 範例）
 
 ```json
 {
-  "hooks": [
-    {
-      "event": "preToolUse",
-      "matcher": {
-        "tool": "bash"
-      },
-      "action": {
+  "hooks": {
+    "PreToolUse": [
+      {
         "type": "script",
         "command": "python .github/hooks/scripts/guardrails.py",
         "timeout": 5
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 

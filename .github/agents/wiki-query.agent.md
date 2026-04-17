@@ -7,12 +7,8 @@ description: >
   relationships between modules. Read-only by default; valuable analysis
   can be saved to wiki/synthesis/ with user confirmation.
 tools:
-  - read_file
-  - grep_search
-  - file_search
-  - list_dir
-  - semantic_search
-  - get_errors
+  - read
+  - search
 ---
 
 # Wiki Query — 知識查詢代理
@@ -28,7 +24,7 @@ tools:
 3. **必要時回溯**：若 wiki 內容不足以回答，根據 `sources` 回溯原始碼
 4. **綜合回答**：
    - 引用 wiki 頁面：「根據 [[module-name]]，...」
-   - 引用原始碼：`` 根據 `src/services/auth.ts` L42-58，... ``
+   - 引用原始碼：``根據 `src/services/auth.ts` L42-58，...``
    - 若發現矛盾，明確標註
 5. **建議存檔**：若回答涉及重要的綜合分析（如跨模組關係、架構洞察），建議使用者將分析結果存入 `wiki/synthesis/`
 

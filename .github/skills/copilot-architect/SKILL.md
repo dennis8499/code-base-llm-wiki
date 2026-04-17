@@ -151,7 +151,7 @@ description: Designs, audits, and repairs GitHub Copilot customization component
 | ------------------------------------------------------------------------- | ---------------------------------- |
 | `copilot-instructions.md` / `AGENTS.md` / `*.instructions.md` / `applyTo` | `references/instructions-guide.md` |
 | `.agent.md` / agent / persona / tools / handoff                           | `references/agents-guide.md`       |
-| `.prompt.md` / slash command / prompt / `mode:`                           | `references/prompts-guide.md`      |
+| `.prompt.md` / slash command / prompt / `agent:`                          | `references/prompts-guide.md`      |
 | hook / `preToolUse` / `postToolUse` / `sessionStart` / guardrail          | `references/hooks-guide.md`        |
 | `SKILL.md` / skill / references / assets / scripts                        | `references/skills-guide.md`       |
 

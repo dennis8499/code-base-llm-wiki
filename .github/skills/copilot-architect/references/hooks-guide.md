@@ -8,6 +8,8 @@ Hooks 是 Copilot 生命週期中**唯一能提供確定性攔截**的機制。
 
 **配置位置**：`.github/hooks/*.json`（每個 Hook 配置一個 JSON 檔案）
 
+> **更新註記（VS Code 2026 現行規格）**：Workspace hook JSON 使用 `{ "hooks": { "PreToolUse": [...], "PostToolUse": [...] } }` 結構；VS Code 會忽略 Claude 相容格式中的 `matcher`，建議在腳本內自行檢查 `tool_name` 與 `tool_input`。
+
 ---
 
 ## 生命週期事件
@@ -38,20 +40,16 @@ Hooks 是 Copilot 生命週期中**唯一能提供確定性攔截**的機制。
 
 ```json
 {
-  "hooks": [
-    {
-      "event": "preToolUse | postToolUse | sessionStart",
-      "matcher": {
-        "tool": "bash | edit | *",
-        "command": "可選：正則表達式匹配命令內容"
-      },
-      "action": {
+  "hooks": {
+    "PreToolUse": [
+      {
         "type": "script",
         "command": "執行的腳本路徑或 shell 指令（可為 .py / .ps1 / .sh）",
         "timeout": 10
       }
-    }
-  ]
+    ],
+    "PostToolUse": []
+  }
 }
 ```
 
@@ -61,9 +59,13 @@ Hook 腳本必須輸出以下 JSON 到 stdout：
 
 ```json
 {
-  "permissionDecision": "allow | deny | ask",
-  "reason": "拒絕或詢問的說明（選填，但建議填寫）",
-  "updatedInput": {}
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow | deny | ask",
+    "permissionDecisionReason": "拒絕或詢問的說明（選填，但建議填寫）",
+    "updatedInput": {}
+  },
+  "systemMessage": "可選：顯示給使用者的提醒"
 }
 ```
 
@@ -178,19 +180,15 @@ echo '{"permissionDecision":"allow"}'
 
 ```json
 {
-  "hooks": [
-    {
-      "event": "preToolUse",
-      "matcher": {
-        "tool": "bash"
-      },
-      "action": {
+  "hooks": {
+    "PreToolUse": [
+      {
         "type": "script",
         "command": "python .github/hooks/scripts/guardrails.py",
         "timeout": 5
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 
@@ -246,16 +244,15 @@ except Exception as exc:
 
 ```json
 {
-  "hooks": [
-    {
-      "event": "sessionStart",
-      "action": {
+  "hooks": {
+    "SessionStart": [
+      {
         "type": "script",
         "command": ".github/hooks/scripts/session-init.sh",
         "timeout": 10
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 
@@ -276,24 +273,19 @@ echo '{"displayMessage":"⚠️ 合規提醒：本工作階段受 AcmeCorp 安�
 
 ### 模板 C：生產環境部署確認 Hook（`pre-deploy-check.json`）
 
-此範例偏向 POSIX shell；若部署流程主要在 Windows 環境，請保留 matcher 規則，但改寫腳本 runtime。
+此範例偏向 POSIX shell；若部署流程主要在 Windows 環境，請改寫腳本 runtime，並在腳本內自行檢查 `tool_name` / `tool_input`。
 
 ```json
 {
-  "hooks": [
-    {
-      "event": "preToolUse",
-      "matcher": {
-        "tool": "bash",
-        "command": ".*docker.*deploy.*|.*kubectl.*apply.*|.*helm.*upgrade.*"
-      },
-      "action": {
+  "hooks": {
+    "PreToolUse": [
+      {
         "type": "script",
         "command": ".github/hooks/scripts/prod-deploy-gate.sh",
         "timeout": 5
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 

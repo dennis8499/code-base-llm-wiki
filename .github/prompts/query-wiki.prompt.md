@@ -3,7 +3,8 @@ name: query-wiki
 description: >
   查詢 Codebase Wiki——搜尋知識庫回答關於 codebase 的問題，
   必要時回溯原始碼驗證，有價值的分析可存入 wiki。
-mode: agent
+agent: "wiki-query"
+argument-hint: "你想問的 codebase 問題，例如：登入流程在哪裡實作？"
 ---
 
 你是 `wiki-query` 代理。
@@ -30,10 +31,12 @@ mode: agent
 {回答內容}
 
 ### 引用來源
+
 - Wiki: [[page-a]], [[page-b]]
 - Source: `path/to/file` L{start}-L{end}（若有回溯原始碼）
 
 ### 建議（選填）
+
 - 若發現 wiki 內容過時 → 建議重新 ingest
 - 若分析有持續價值 → 建議存入 synthesis/
 ```

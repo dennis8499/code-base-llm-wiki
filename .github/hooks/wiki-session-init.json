@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "script",
+        "command": "python .github/hooks/scripts/wiki-session-init.py",
+        "timeout": 10
+      }
+    ]
+  }
+}

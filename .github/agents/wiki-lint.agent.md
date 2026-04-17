@@ -6,14 +6,19 @@ description: >
   wiki health, find stale pages, detect contradictions, or improve wiki quality.
   Can auto-fix simple issues like updating links and marking stale pages.
 tools:
-  - read_file
-  - grep_search
-  - file_search
-  - list_dir
-  - replace_string_in_file
-  - create_file
-  - get_errors
-  - run_in_terminal
+  - read
+  - search
+  - edit
+  - execute
+hooks:
+  PreToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-write-guard.py"
+      timeout: 5
+  PostToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-log-reminder.py"
+      timeout: 5
 ---
 
 # Wiki Lint — 健康檢查代理
@@ -35,22 +40,23 @@ tools:
 
 ## 檢查項目摘要
 
-| # | 項目 | 方法 |
-|---|------|------|
-| 1 | Stale Pages | 驗證 frontmatter sources 路徑是否存在 |
-| 2 | Orphan Pages | 建立 inbound link 圖，找無人連結的頁面 |
-| 3 | Broken Links | 掃描所有 `[[wikilink]]`，確認目標頁面存在 |
-| 4 | Missing Pages | 比對 codebase 模組與 wiki/modules/，找未文件化的模組 |
-| 5 | Frontmatter Validation | 驗證每頁 YAML frontmatter 欄位完整性 |
-| 6 | Contradictions | 語意檢查：多頁描述同一實體時事實是否一致 |
-| 7 | Index Completeness | 比對實際 wiki 檔案與 index.md 列表 |
-| 8 | Coverage Report | 統計 wiki 覆蓋率 |
+| #   | 項目                   | 方法                                                 |
+| --- | ---------------------- | ---------------------------------------------------- |
+| 1   | Stale Pages            | 驗證 frontmatter sources 路徑是否存在                |
+| 2   | Orphan Pages           | 建立 inbound link 圖，找無人連結的頁面               |
+| 3   | Broken Links           | 掃描所有 `[[wikilink]]`，確認目標頁面存在            |
+| 4   | Missing Pages          | 比對 codebase 模組與 wiki/modules/，找未文件化的模組 |
+| 5   | Frontmatter Validation | 驗證每頁 YAML frontmatter 欄位完整性                 |
+| 6   | Contradictions         | 語意檢查：多頁描述同一實體時事實是否一致             |
+| 7   | Index Completeness     | 比對實際 wiki 檔案與 index.md 列表                   |
+| 8   | Coverage Report        | 統計 wiki 覆蓋率                                     |
 
 > 完整檢查清單請參閱 `.github/skills/codebase-wiki/references/lint-checklist.md`。
 
 ## 自動化工具
 
 可以執行以下腳本輔助檢查：
+
 - `python .github/skills/codebase-wiki/scripts/check-stale.py wiki/` — 批次檢查 stale sources
 - `python .github/skills/codebase-wiki/scripts/rebuild-index.py wiki/` — 重建 index.md
 - `python .github/skills/codebase-wiki/scripts/wiki-stats.py wiki/` — 產出統計報告
@@ -61,21 +67,25 @@ tools:
 # Wiki 健康報告 — YYYY-MM-DD
 
 ## 摘要
-| 指標 | 數值 |
-|------|------|
-| 總頁面數 | N |
-| 🔴 Critical | N |
-| 🟡 Warning | N |
-| 🟢 健康 | N |
-| 覆蓋率 | N% |
+
+| 指標        | 數值 |
+| ----------- | ---- |
+| 總頁面數    | N    |
+| 🔴 Critical | N    |
+| 🟡 Warning  | N    |
+| 🟢 健康     | N    |
+| 覆蓋率      | N%   |
 
 ## Critical 問題
+
 1. ...
 
 ## Warning
+
 1. ...
 
 ## 建議行動
+
 1. ...
 ```
 

@@ -13,6 +13,8 @@ Prompt File（`.prompt.md`）是**顯式觸發**的可重用任務模板，適�
 
 **與 Agent 的差異**：Prompt File 由使用者手動呼叫（通常透過 `/` 指令）；Agent 是持續性角色或工具受限的工作流。
 
+> **更新註記（VS Code 2026 現行規格）**：Prompt frontmatter 使用 `agent:` 指定執行代理（如 `ask`、`agent`、`plan` 或自訂 Agent 名稱），不再使用舊版 `mode:`；互動參數可直接透過 `${input:...}` 與 `argument-hint` 搭配，不需要 `inputs:` frontmatter。
+
 ---
 
 ## 動態變量語法
@@ -33,11 +35,9 @@ Prompt File（`.prompt.md`）是**顯式觸發**的可重用任務模板，適�
 name: prompt-name
 description: >
   說明這個 Prompt 做什麼，以及什麼情境下要手動呼叫它。
-mode: ask  # ask | edit | agent
-inputs:
-  - name: exampleInput
-    description: "只有需要互動參數時才宣告"
-# tools:    # 選填；僅在 mode=agent 且宿主支援時設定
+argument-hint: "可選：提示使用者要補充的內容"
+agent: ask  # ask | agent | plan | custom-agent-name
+# tools:    # 選填；需要額外限制工具時才宣告
 #   - <host-specific-tool>
 ---
 ```
@@ -50,25 +50,25 @@ inputs:
 
 1. **顯式觸發**：Prompt File 由使用者手動啟動，不要假設它會自動介入。
 2. **單一任務原則**：每個 Prompt File 聚焦一個具體目標，不要做成萬用瑞士刀。
-3. **模式要選對**：
-   - `ask`：偏分析、寫作、整理
-   - `edit`：偏直接改寫目前檔案或選取內容
-   - `agent`：需要工具、跨檔案、多步驟流程
+3. **代理選對**：
+  - `agent: ask`：偏分析、寫作、整理
+  - `agent: agent`：需要工具、跨檔案、多步驟流程
+  - `agent: <custom-agent>`：需要特定 persona、工具限制或 handoff
 4. **上下文最小化**：只引用任務所需的檔案，避免用過大的工作區上下文把 Token 當煙火放。
 5. **輸出規格明確**：如果輸出有固定格式，直接寫模板，不要只寫「請整理成清楚的格式」。
 6. **輸入要有意義**：只有關鍵參數會因使用者而變時，才使用 `${input:...}`。
-7. **`mode=agent` 要節制**：只有真的需要工具時才用，且工具清單應最小化並與宿主環境一致。
+7. **`agent: agent` 或自訂 Agent 要節制**：只有真的需要工具或專業 persona 時才用，且工具清單應最小化並與宿主環境一致。
 
 ---
 
 ## 撰寫指南
 
-### 模式選擇
+### 代理選擇
 
 ```text
-需要分析 / 整理 / 產生文字        → mode: ask
-需要直接改寫當前內容              → mode: edit
-需要搜尋、讀檔、建檔、跨檔案工作流 → mode: agent
+需要分析 / 整理 / 產生文字        → agent: ask
+需要直接在既有上下文中處理內容    → agent: agent
+需要搜尋、讀檔、建檔、跨檔案工作流 → agent: agent 或 custom agent
 ```
 
 ### 建議結構
@@ -128,14 +128,14 @@ inputs:
 
 ## 模板
 
-### 模板 A：PR 摘要生成器（`mode: ask`）
+### 模板 A：PR 摘要生成器（`agent: ask`）
 
 ```markdown
 ---
 name: pr-summary
 description: >
   根據選取的 diff 或變更描述，生成結構化的 Pull Request 摘要。
-mode: ask
+agent: ask
 ---
 
 你是一位熟悉技術寫作的 Senior Engineer，負責撰寫清晰的 PR 描述。
@@ -163,14 +163,14 @@ ${selection}
 [說明如何驗證此 PR]
 ```
 
-### 模板 B：選取內容重構器（`mode: edit`）
+### 模板 B：選取內容重構器（`agent: agent`）
 
 ```markdown
 ---
 name: refactor-selection
 description: >
   Refactors the selected code into project-consistent style without changing behavior.
-mode: edit
+agent: agent
 ---
 
 ## 任務
@@ -192,7 +192,7 @@ ${selection}
 - 產出可直接套用的修改結果
 ```
 
-### 模板 C：React 元件腳手架（`mode: agent`）
+### 模板 C：React 元件腳手架（`agent: agent`）
 
 ```markdown
 ---
@@ -200,12 +200,8 @@ name: react-component
 description: >
   Generates a standardized React component scaffold with TypeScript props,
   tests, and a Storybook story.
-mode: agent
-inputs:
-  - name: componentName
-    description: "元件名稱（PascalCase），例如：UserCard"
-  - name: hasChildren
-    description: "是否接受 children prop（yes/no）"
+argument-hint: "例如：componentName=UserCard hasChildren=yes"
+agent: agent
 ---
 
 你是一位熟悉 React 18 + TypeScript 5 最佳實踐的 Senior Frontend Engineer。
@@ -244,7 +240,7 @@ inputs:
 name: update-api-doc
 description: >
   根據當前 API handler 實作，更新對應的 OpenAPI 3.1 規格片段。
-mode: agent
+agent: agent
 ---
 
 參照現有 API 規格：#file:docs/openapi.yaml
@@ -268,7 +264,7 @@ ${file}
 name: test-coverage-boost
 description: >
   分析選取的函式，找出未覆蓋的 edge case，並生成補強測試案例。
-mode: ask
+agent: ask
 ---
 
 分析以下函式的邏輯分支：

@@ -7,17 +7,26 @@ description: >
   Routes to wiki-ingest, wiki-query, wiki-lint, or wiki-archaeologist as needed.
   For ambiguous requests, asks clarifying questions before proceeding.
 tools:
-  - read_file
-  - grep_search
-  - file_search
-  - list_dir
-  - semantic_search
-  - replace_string_in_file
-  - create_file
-  - run_in_terminal
-  - get_errors
-  - runSubagent
-  - vscode_askQuestions
+  - read
+  - search
+  - edit
+  - execute
+  - agent
+  - vscode/askQuestions
+agents:
+  - wiki-ingest
+  - wiki-query
+  - wiki-lint
+  - wiki-archaeologist
+hooks:
+  PreToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-write-guard.py"
+      timeout: 5
+  PostToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-log-reminder.py"
+      timeout: 5
 ---
 
 # Wiki Keeper — Codebase Wiki 總管
@@ -30,14 +39,14 @@ tools:
 
 收到使用者請求後，先判斷意圖類型：
 
-| 意圖 | 特徵關鍵詞 | 路由目標 |
-|------|-----------|---------|
-| **Ingest** | 「讀取」「分析」「ingest」「文件化」「加入 wiki」 | `wiki-ingest` agent |
-| **Query** | 「怎麼做」「在哪裡」「解釋」「查詢」「找」 | `wiki-query` agent |
-| **Lint** | 「檢查」「健康」「lint」「品質」「陳舊」 | `wiki-lint` agent |
-| **Archaeology** | 「歷史」「為什麼這樣寫」「追蹤」「legacy」「考古」 | `wiki-archaeologist` agent |
-| **ADR** | 「決策」「ADR」「decision」「架構選擇」 | 自行處理（套用 ADR 模板） |
-| **Simple Query** | 能從 index.md 直接回答的簡單問題 | 自行處理 |
+| 意圖             | 特徵關鍵詞                                         | 路由目標                   |
+| ---------------- | -------------------------------------------------- | -------------------------- |
+| **Ingest**       | 「讀取」「分析」「ingest」「文件化」「加入 wiki」  | `wiki-ingest` agent        |
+| **Query**        | 「怎麼做」「在哪裡」「解釋」「查詢」「找」         | `wiki-query` agent         |
+| **Lint**         | 「檢查」「健康」「lint」「品質」「陳舊」           | `wiki-lint` agent          |
+| **Archaeology**  | 「歷史」「為什麼這樣寫」「追蹤」「legacy」「考古」 | `wiki-archaeologist` agent |
+| **ADR**          | 「決策」「ADR」「decision」「架構選擇」            | 自行處理（套用 ADR 模板）  |
+| **Simple Query** | 能從 index.md 直接回答的簡單問題                   | 自行處理                   |
 
 ## 工作流程
 

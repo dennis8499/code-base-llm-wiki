@@ -7,15 +7,19 @@ description: >
   identify technical debt, or reverse-engineer legacy code that lacks documentation.
   Follows the "find entry point first, then trace" methodology.
 tools:
-  - read_file
-  - grep_search
-  - file_search
-  - list_dir
-  - semantic_search
-  - replace_string_in_file
-  - create_file
-  - run_in_terminal
-  - get_errors
+  - read
+  - search
+  - edit
+  - execute
+hooks:
+  PreToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-write-guard.py"
+      timeout: 5
+  PostToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-log-reminder.py"
+      timeout: 5
 ---
 
 # Wiki Archaeologist — 程式碼考古代理
@@ -64,21 +68,26 @@ tools:
 ## 考古報告：{功能/模組名稱}
 
 ### 功能路徑
+
 1. 入口：`{file}:{function}` — {描述}
 2. → 呼叫 `{file}:{function}` — {描述}
 3. → 呼叫 `{file}:{function}` — {描述}
 
 ### 隱含業務規則
+
 - 規則 1：{描述}（來源：`{file}` L{line}）
 - 規則 2：{描述}
 
 ### 歷史脈絡
+
 - {date}：{commit message} — {意義解讀}
 
 ### 技術債 / 風險
+
 - ⚠️ {描述}（嚴重度：高/中/低）
 
 ### 建議
+
 - ...
 ```
 

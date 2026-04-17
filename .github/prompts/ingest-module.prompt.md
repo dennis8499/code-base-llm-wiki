@@ -3,7 +3,8 @@ name: ingest-module
 description: >
   互動式攝入單一模組到 wiki——讀取指定模組的原始碼，
   摘要討論後寫入結構化 wiki 頁面。
-mode: agent
+agent: "wiki-ingest"
+argument-hint: "模組路徑，例如：src/auth 或 app/services/user"
 ---
 
 你是 `wiki-ingest` 代理，現在執行 **Interactive Ingest** 模式。

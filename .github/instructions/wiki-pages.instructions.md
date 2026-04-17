@@ -11,19 +11,19 @@ description: "Applies when editing any markdown file under the wiki/ directory. 
 
 ```yaml
 ---
-title: string          # 頁面標題（人類可讀）
-type: string           # module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture
-sources:               # 引用的原始碼檔案路徑（陣列）
+title: string # 頁面標題（人類可讀）
+type: string # module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture
+sources: # 引用的原始碼檔案路徑（陣列）
   - path/to/file
-last_updated: string   # YYYY-MM-DD 格式
-tags: [string]         # 分類標籤（陣列）
-status: string         # active | stale | placeholder
+last_updated: string # YYYY-MM-DD 格式
+tags: [string] # 分類標籤（陣列）
+status: string # active | stale | placeholder
 ---
 ```
 
 ### type 特定的額外欄位
 
-- **decision**（ADR）：額外需要 `decision_date`、`status`（proposed | accepted | deprecated | superseded）
+- **decision**（ADR）：額外需要 `decision_date`、`decision_status`（proposed | accepted | deprecated | superseded）；`status` 仍保留頁面生命週期（active | stale | placeholder）
 - **entity**：額外建議 `entity_type`（class | service | api-endpoint | database-table）
 - **dependency**：額外建議 `package_name`、`version`
 
@@ -40,11 +40,17 @@ status: string         # active | stale | placeholder
 
 ```markdown
 # {模組名稱}
+
 ## 職責
+
 ## 核心檔案
+
 ## 主要類別/函式
+
 ## 相依關係
+
 ## 對外介面
+
 ## 相關頁面
 ```
 
@@ -52,10 +58,15 @@ status: string         # active | stale | placeholder
 
 ```markdown
 # {實體名稱}
+
 ## 定義
+
 ## 所屬模組
+
 ## 屬性/方法
+
 ## 使用場景
+
 ## 相關頁面
 ```
 
@@ -63,10 +74,15 @@ status: string         # active | stale | placeholder
 
 ```markdown
 # {模式名稱}
+
 ## 說明
+
 ## 使用位置
+
 ## 實作方式
+
 ## 優缺點
+
 ## 相關頁面
 ```
 
@@ -74,11 +90,17 @@ status: string         # active | stale | placeholder
 
 ```markdown
 # ADR-{NNN}: {決策標題}
+
 ## 狀態
+
 ## 背景
+
 ## 決策
+
 ## 理由
+
 ## 後果
+
 ## 相關頁面
 ```
 
@@ -86,10 +108,15 @@ status: string         # active | stale | placeholder
 
 ```markdown
 # {指南標題}
+
 ## 目標讀者
+
 ## 前置條件
+
 ## 步驟
+
 ## 常見問題
+
 ## 相關頁面
 ```
 

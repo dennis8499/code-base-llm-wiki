@@ -6,14 +6,18 @@ description: >
   Supports both interactive (one module at a time with user confirmation)
   and batch (scanning entire directories) modes. Never modifies source code.
 tools:
-  - read_file
-  - grep_search
-  - file_search
-  - list_dir
-  - semantic_search
-  - replace_string_in_file
-  - create_file
-  - get_errors
+  - read
+  - search
+  - edit
+hooks:
+  PreToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-write-guard.py"
+      timeout: 5
+  PostToolUse:
+    - type: command
+      command: "python .github/hooks/scripts/wiki-log-reminder.py"
+      timeout: 5
 ---
 
 # Wiki Ingest — 知識攝入代理
@@ -63,6 +67,7 @@ tools:
 ## Entity 建立判斷
 
 在以下情況建立獨立的 Entity 頁面：
+
 - 一個 class 被 3+ 個其他檔案 import
 - 一個 service/controller/handler 處理外部請求
 - 一個 API endpoint（路由定義）
@@ -78,6 +83,7 @@ tools:
 ## Cross-Reference 策略
 
 Ingest 時同步更新：
+
 1. 被新模組 import 的模組頁面 → 在「被依賴」加 `[[new-module]]`
 2. import 新模組的模組頁面 → 在「相依關係」加 `[[new-module]]`
 3. `wiki/overview.md` → 若為頂層模組則加入模組清單
