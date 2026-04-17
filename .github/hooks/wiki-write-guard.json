@@ -1,0 +1,15 @@
+{
+  "hooks": [
+    {
+      "event": "preToolUse",
+      "matcher": {
+        "toolName": "create_file|replace_string_in_file|multi_replace_string_in_file"
+      },
+      "action": {
+        "type": "script",
+        "command": "python .github/hooks/scripts/wiki-write-guard.py",
+        "timeout": 5
+      }
+    }
+  ]
+}
