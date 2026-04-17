@@ -43,6 +43,7 @@
   - [設計原則](#設計原則)
   - [目錄結構總覽](#目錄結構總覽)
   - [相容性](#相容性)
+  - [變更紀錄](#變更紀錄)
 
 ---
 
@@ -235,7 +236,7 @@ python .github/skills/codebase-wiki/scripts/wiki-stats.py
 | -------------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
 | `wiki-keeper`        | `wiki-keeper.agent.md`        | **路由器**。分析使用者意圖，派發到正確的子 agent。所有入口從這裡開始                 |
 | `wiki-ingest`        | `wiki-ingest.agent.md`        | **攝入專家**。讀取原始碼，以互動或批次模式產出結構化 wiki 頁面                       |
-| `wiki-query`         | `wiki-query.agent.md`         | **知識導航員**。搜尋 wiki 回答問題，可追溯到原始碼；重要分析可存入 synthesis         |
+| `wiki-query`         | `wiki-query.agent.md`         | **知識導航員**。搜尋 wiki 回答問題，可追溯到原始碼；重要分析可存入 synthesis。支援 **Hand-Off** 自動交接：建議行動經使用者確認後，自動委派給對應子代理執行 |
 | `wiki-lint`          | `wiki-lint.agent.md`          | **品質審計員**。執行 8 項健康檢查：陳舊頁面、孤島頁面、斷裂連結、缺失 frontmatter 等 |
 | `wiki-archaeologist` | `wiki-archaeologist.agent.md` | **程式碼考古師**。透過 git log 追蹤歷史、揭露隱含邏輯、分析技術債成因                |
 
@@ -481,3 +482,9 @@ wiki/
 | **Obsidian**            | ✅ 相容   | `wiki/` 目錄可直接作為 Obsidian Vault 開啟，支援 Graph View 與雙向連結 |
 | **Python 3.8+**         | ⚡ 選用   | 輔助腳本與 Hooks 的執行環境，純 Agent 使用不需要                       |
 | **任意語言的 Codebase** | ✅ 通用   | 框架與語言無關，可套用到任何語言的 codebase                            |
+
+---
+
+## 變更紀錄
+
+詳見 [ChangeLog.md](ChangeLog.md)。
