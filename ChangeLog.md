@@ -4,7 +4,7 @@
 
 ---
 
-## [Unreleased] — 2026-04-17
+## [Unreleased] — 2026-04-22
 
 ### 新增
 
@@ -20,6 +20,8 @@
 
 - **wiki-query 禁止行為更新**：從「不得修改任何檔案」調整為「不得直接修改任何檔案」，所有寫入操作僅能透過委派子代理間接執行
 - **query-wiki prompt 更新**：同步加入 Hand-Off 流程說明與新的建議行動回答格式
+- **統一 wiki agents 的 `tools` 宣告格式**：`wiki-keeper`、`wiki-query`、`wiki-ingest`、`wiki-lint`、`wiki-archaeologist` 全數改為 inline YAML array（例如 `tools: [read, edit, search]`），讓代理能力清單更精簡且更容易比對
+- **Hook 設定改用 `command` 類型**：`wiki-write-guard.json`、`wiki-log-reminder.json`、`wiki-session-init.json` 的 hook `type` 從 `script` 調整為 `command`，保留原本執行的 Python 指令與 timeout 設定
 
 ### 受影響的檔案
 
@@ -27,3 +29,10 @@
 |------|----------|
 | `.github/agents/wiki-query.agent.md` | 大幅擴充（+59/-3） |
 | `.github/prompts/query-wiki.prompt.md` | 更新（+11/-2） |
+| `.github/agents/wiki-keeper.agent.md` | 格式整理（`tools` 改為 inline array） |
+| `.github/agents/wiki-ingest.agent.md` | 格式整理（`tools` 改為 inline array） |
+| `.github/agents/wiki-lint.agent.md` | 格式整理（`tools` 改為 inline array） |
+| `.github/agents/wiki-archaeologist.agent.md` | 格式整理（`tools` 改為 inline array） |
+| `.github/hooks/wiki-write-guard.json` | 相容性調整（`type: script` → `type: command`） |
+| `.github/hooks/wiki-log-reminder.json` | 相容性調整（`type: script` → `type: command`） |
+| `.github/hooks/wiki-session-init.json` | 相容性調整（`type: script` → `type: command`） |

@@ -232,13 +232,15 @@ python .github/skills/codebase-wiki/scripts/wiki-stats.py
 
 框架包含 5 個專業 agent，各司其職：
 
-| Agent                | 檔案                          | 職責                                                                                 |
-| -------------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
-| `wiki-keeper`        | `wiki-keeper.agent.md`        | **路由器**。分析使用者意圖，派發到正確的子 agent。所有入口從這裡開始                 |
-| `wiki-ingest`        | `wiki-ingest.agent.md`        | **攝入專家**。讀取原始碼，以互動或批次模式產出結構化 wiki 頁面                       |
+| Agent                | 檔案                          | 職責                                                                                                                                                       |
+| -------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wiki-keeper`        | `wiki-keeper.agent.md`        | **路由器**。分析使用者意圖，派發到正確的子 agent。所有入口從這裡開始                                                                                       |
+| `wiki-ingest`        | `wiki-ingest.agent.md`        | **攝入專家**。讀取原始碼，以互動或批次模式產出結構化 wiki 頁面                                                                                             |
 | `wiki-query`         | `wiki-query.agent.md`         | **知識導航員**。搜尋 wiki 回答問題，可追溯到原始碼；重要分析可存入 synthesis。支援 **Hand-Off** 自動交接：建議行動經使用者確認後，自動委派給對應子代理執行 |
-| `wiki-lint`          | `wiki-lint.agent.md`          | **品質審計員**。執行 8 項健康檢查：陳舊頁面、孤島頁面、斷裂連結、缺失 frontmatter 等 |
-| `wiki-archaeologist` | `wiki-archaeologist.agent.md` | **程式碼考古師**。透過 git log 追蹤歷史、揭露隱含邏輯、分析技術債成因                |
+| `wiki-lint`          | `wiki-lint.agent.md`          | **品質審計員**。執行 8 項健康檢查：陳舊頁面、孤島頁面、斷裂連結、缺失 frontmatter 等                                                                       |
+| `wiki-archaeologist` | `wiki-archaeologist.agent.md` | **程式碼考古師**。透過 git log 追蹤歷史、揭露隱含邏輯、分析技術債成因                                                                                      |
+
+這些 agent manifest 的 `tools` 欄位採用 inline array 寫法（例如 `tools: [read, edit, search]`），方便快速比較各代理的能力邊界；只有確實需要的能力才會加入，例如 `execute`、`agent` 與 `vscode/askQuestions`。
 
 #### wiki-keeper 意圖路由邏輯
 
@@ -275,11 +277,13 @@ python .github/skills/codebase-wiki/scripts/wiki-stats.py
 
 Hooks 為自動觸發的保護機制，在 agent 執行工具前後自動運行：
 
-| Hook 檔案                | 觸發時機       | 腳本                   | 職責                                                                   |
-| ------------------------ | -------------- | ---------------------- | ---------------------------------------------------------------------- |
-| `wiki-write-guard.json`  | `PreToolUse`   | `wiki-write-guard.py`  | 攔截寫入操作，防止 agent 意外修改 `wiki/` 以外的任何檔案（保護原始碼） |
-| `wiki-log-reminder.json` | `PostToolUse`  | `wiki-log-reminder.py` | 偵測到 `wiki/` 頁面被修改後，提醒 agent 在 `log.md` 追加操作紀錄       |
-| `wiki-session-init.json` | `sessionStart` | `wiki-session-init.py` | Session 開始時自動初始化，載入 wiki 狀態摘要供 agent 參考              |
+| Hook 檔案                | 觸發時機       | 設定型式                                                              | 職責                                                                   |
+| ------------------------ | -------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `wiki-write-guard.json`  | `PreToolUse`   | `type: command` → `python .github/hooks/scripts/wiki-write-guard.py`  | 攔截寫入操作，防止 agent 意外修改 `wiki/` 以外的任何檔案（保護原始碼） |
+| `wiki-log-reminder.json` | `PostToolUse`  | `type: command` → `python .github/hooks/scripts/wiki-log-reminder.py` | 偵測到 `wiki/` 頁面被修改後，提醒 agent 在 `log.md` 追加操作紀錄       |
+| `wiki-session-init.json` | `sessionStart` | `type: command` → `python .github/hooks/scripts/wiki-session-init.py` | Session 開始時自動初始化，載入 wiki 狀態摘要供 agent 參考              |
+
+> Hook 設定檔目前統一使用 `type: command`，再透過 `command` 欄位呼叫 Python 腳本，與現行 Hook schema 保持一致。
 
 ---
 

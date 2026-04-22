@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "type": "script",
+        "type": "command",
         "command": "python .github/hooks/scripts/wiki-write-guard.py",
         "timeout": 10
       }

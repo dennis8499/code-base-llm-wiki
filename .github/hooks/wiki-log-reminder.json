@@ -2,7 +2,7 @@
   "hooks": {
     "PostToolUse": [
       {
-        "type": "script",
+        "type": "command",
         "command": "python .github/hooks/scripts/wiki-log-reminder.py",
         "timeout": 10
       }

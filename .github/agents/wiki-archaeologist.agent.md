@@ -6,11 +6,7 @@ description: >
   trace a feature's history through git commits, discover hidden business rules,
   identify technical debt, or reverse-engineer legacy code that lacks documentation.
   Follows the "find entry point first, then trace" methodology.
-tools:
-  - read
-  - search
-  - edit
-  - execute
+tools: [execute, read, edit, search]
 hooks:
   PreToolUse:
     - type: command

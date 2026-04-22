@@ -8,11 +8,7 @@ description: >
   can be saved to wiki/synthesis/ with user confirmation.
   When suggestions are generated, offers hand-off buttons to let the user
   trigger follow-up actions (save synthesis, re-ingest, lint fix) automatically.
-tools:
-  - read
-  - search
-  - agent
-  - vscode/askQuestions
+tools: [vscode/askQuestions, read, agent, search]
 agents:
   - wiki-ingest
   - wiki-lint

@@ -5,10 +5,7 @@ description: >
   Use when ingesting modules, files, or directories into the wiki.
   Supports both interactive (one module at a time with user confirmation)
   and batch (scanning entire directories) modes. Never modifies source code.
-tools:
-  - read
-  - search
-  - edit
+tools: [read, edit, search]
 hooks:
   PreToolUse:
     - type: command

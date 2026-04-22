@@ -6,13 +6,7 @@ description: >
   querying knowledge, running health checks, creating ADRs, or generating guides.
   Routes to wiki-ingest, wiki-query, wiki-lint, or wiki-archaeologist as needed.
   For ambiguous requests, asks clarifying questions before proceeding.
-tools:
-  - read
-  - search
-  - edit
-  - execute
-  - agent
-  - vscode/askQuestions
+tools: [vscode/askQuestions, execute, read, agent, edit, search]
 agents:
   - wiki-ingest
   - wiki-query

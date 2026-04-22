@@ -5,11 +5,7 @@ description: >
   斷裂連結、缺失頁面和 frontmatter 錯誤。Use when the user wants to check
   wiki health, find stale pages, detect contradictions, or improve wiki quality.
   Can auto-fix simple issues like updating links and marking stale pages.
-tools:
-  - read
-  - search
-  - edit
-  - execute
+tools: [execute, read, edit, search]
 hooks:
   PreToolUse:
     - type: command
