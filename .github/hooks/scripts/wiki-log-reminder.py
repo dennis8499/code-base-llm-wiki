@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-"""wiki-log-reminder.py — PostToolUse hook，提醒 wiki 維護代理補上 log.md。
+"""wiki-log-reminder.py — postToolUse hook，記錄 wiki 頁面異動線索。
 
-此腳本預期作為自訂 Agent 的 agent-scoped hook 使用，只在相關 wiki 代理
-完成檔案寫入後執行。當偵測到 `wiki/` 目錄下的 Markdown 頁面被建立或更新
-（排除 `wiki/log.md` 本身）時，會以 systemMessage 與 additionalContext
-提醒代理在收尾時追加 log 條目。
+postToolUse hook 的輸出不會被注入 agent context，因此此腳本改為把異動線索
+寫到 `.github/hooks/logs/wiki-log-reminder.jsonl`，供稽核或後續人工檢查。
 """
 
 import json
+import pathlib
 import re
 import sys
+import time
 
 
 EDIT_TOOL_NAMES = {
     "apply_patch",
+    "create",
     "create_file",
+    "edit",
     "editFiles",
+    "str_replace",
+    "str_replace_editor",
     "multi_replace_string_in_file",
     "replace_string_in_file",
+    "write",
 }
 
 PATCH_FILE_PATTERN = re.compile(
@@ -84,15 +89,35 @@ def extract_paths_from_tool_input(tool_name: str, tool_input) -> list[str]:
     return deduped
 
 
-def respond(message: str | None = None):
-    payload: dict[str, object] = {}
-    if message:
-        payload["systemMessage"] = message
-        payload["hookSpecificOutput"] = {
-            "hookEventName": "PostToolUse",
-            "additionalContext": message,
-        }
-    print(json.dumps(payload, ensure_ascii=False))
+def parse_tool_args(payload: dict) -> object:
+    if "tool_input" in payload:
+        return payload.get("tool_input")
+    if "toolInput" in payload:
+        return payload.get("toolInput")
+    tool_args = payload.get("toolArgs")
+    if isinstance(tool_args, str) and tool_args.strip():
+        try:
+            return json.loads(tool_args)
+        except json.JSONDecodeError:
+            return tool_args
+    return tool_args
+
+
+def append_audit_entry(paths: list[str]):
+    log_dir = pathlib.Path(".github/hooks/logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "timestamp": int(time.time() * 1000),
+        "event": "wiki_page_changed",
+        "paths": paths,
+        "reminder": "Append an entry to wiki/log.md for ingest, lint, query save, or major wiki updates.",
+    }
+    with (log_dir / "wiki-log-reminder.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def respond():
+    print("{}")
 
 
 def main():
@@ -107,24 +132,14 @@ def main():
         respond()
         return
 
-    tool_input = payload.get("tool_input")
-    if tool_input is None:
-        tool_input = payload.get("toolInput")
+    tool_input = parse_tool_args(payload)
 
     changed_paths = extract_paths_from_tool_input(tool_name, tool_input)
     wiki_paths = [path for path in changed_paths if is_wiki_markdown(path) and not is_log_file(path)]
 
     if wiki_paths:
-        summarized_paths = ", ".join(f"`{path}`" for path in wiki_paths[:3])
-        if len(wiki_paths) > 3:
-            summarized_paths += f" 等 {len(wiki_paths)} 個檔案"
-        respond(
-            "💡 已修改 wiki 頁面："
-            f"{summarized_paths}。"
-            "請在本次操作收尾時追加 `wiki/log.md` 條目（append-only）。"
-        )
-    else:
-        respond()
+        append_audit_entry(wiki_paths)
+    respond()
 
 
 if __name__ == "__main__":

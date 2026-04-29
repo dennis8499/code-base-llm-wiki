@@ -7,15 +7,6 @@ description: >
   identify technical debt, or reverse-engineer legacy code that lacks documentation.
   Follows the "find entry point first, then trace" methodology.
 tools: [execute, read, edit, search]
-hooks:
-  PreToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-write-guard.py"
-      timeout: 5
-  PostToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-log-reminder.py"
-      timeout: 5
 ---
 
 # Wiki Archaeologist — 程式碼考古代理

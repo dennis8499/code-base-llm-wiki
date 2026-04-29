@@ -6,15 +6,6 @@ description: >
   wiki health, find stale pages, detect contradictions, or improve wiki quality.
   Can auto-fix simple issues like updating links and marking stale pages.
 tools: [execute, read, edit, search]
-hooks:
-  PreToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-write-guard.py"
-      timeout: 5
-  PostToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-log-reminder.py"
-      timeout: 5
 ---
 
 # Wiki Lint — 健康檢查代理

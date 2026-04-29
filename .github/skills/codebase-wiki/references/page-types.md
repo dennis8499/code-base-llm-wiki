@@ -183,18 +183,19 @@ ADR (Architecture Decision Records) 記錄重要的架構決策。
 title: "ADR-{NNN}: {決策標題}"
 type: decision
 decision_date: YYYY-MM-DD
+decision_status: proposed | accepted | deprecated | superseded
 sources:
   - path/to/related/code
 last_updated: YYYY-MM-DD
 tags: [adr, {domain}]
-status: proposed | accepted | deprecated | superseded
+status: active
 ---
 
 # ADR-{NNN}: {決策標題}
 
 ## 狀態
 
-{proposed | accepted | deprecated | superseded}
+{decision_status: proposed | accepted | deprecated | superseded}
 （若 superseded，標註：被 [[adr-xxx]] 取代）
 
 ## 背景

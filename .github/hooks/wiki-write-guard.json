@@ -1,10 +1,13 @@
 {
+  "version": 1,
   "hooks": {
-    "PreToolUse": [
+    "preToolUse": [
       {
         "type": "command",
-        "command": "python .github/hooks/scripts/wiki-write-guard.py",
-        "timeout": 10
+        "bash": "python3 .github/hooks/scripts/wiki-write-guard.py",
+        "powershell": "python .github/hooks/scripts/wiki-write-guard.py",
+        "cwd": ".",
+        "timeoutSec": 10
       }
     ]
   }

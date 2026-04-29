@@ -8,21 +8,14 @@
 """
 
 import pathlib
-import re
 import sys
-import yaml
+
+from frontmatter import configure_utf8_stdio, parse_frontmatter_text
 
 
 def parse_frontmatter(filepath: pathlib.Path) -> dict:
     """解析 markdown 檔案的 YAML frontmatter。"""
-    text = filepath.read_text(encoding="utf-8")
-    match = re.match(r"^---\s*\n(.*?)\n---", text, re.DOTALL)
-    if not match:
-        return {}
-    try:
-        return yaml.safe_load(match.group(1)) or {}
-    except yaml.YAMLError:
-        return {}
+    return parse_frontmatter_text(filepath.read_text(encoding="utf-8"))
 
 
 def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
@@ -73,6 +66,7 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
 
 
 def main():
+    configure_utf8_stdio()
     wiki_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path("wiki")
     repo_root = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else pathlib.Path(".")
 

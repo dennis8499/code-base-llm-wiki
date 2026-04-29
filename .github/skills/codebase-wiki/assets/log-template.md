@@ -1,7 +1,9 @@
 ---
 title: Wiki Activity Log
 type: log
+sources: []
 last_updated: YYYY-MM-DD
+tags: [log]
 status: active
 ---
 

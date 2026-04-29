@@ -9,10 +9,6 @@ description: >
   When suggestions are generated, offers hand-off buttons to let the user
   trigger follow-up actions (save synthesis, re-ingest, lint fix) automatically.
 tools: [vscode/askQuestions, read, agent, search]
-agents:
-  - wiki-ingest
-  - wiki-lint
-  - wiki-keeper
 ---
 
 # Wiki Query — 知識查詢代理
@@ -36,6 +32,8 @@ agents:
    2. 使用 `#tool:vscode/askQuestions` 向使用者呈現建議清單（多選），讓使用者勾選要執行的項目
    3. 使用者確認後，對每個被選取的行動，以「交接摘要格式」委派給對應的子代理
    4. 若使用者未選取任何項目，正常結束，不執行任何委派
+
+> 可委派的專業代理：`wiki-ingest`、`wiki-lint`、`wiki-keeper`。
 
 ### 建議行動類型
 

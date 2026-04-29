@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""wiki-write-guard.py — PreToolUse hook，限制 wiki 代理的寫入邊界。
+"""wiki-write-guard.py — preToolUse hook，限制 wiki 代理的寫入邊界。
 
-此腳本預期作為自訂 Agent 的 agent-scoped hook 使用，只在 wiki 相關代理
-活躍時觸發。它允許這些代理寫入 `wiki/` 與 `.github/`，並在偵測到其餘
-路徑時要求使用者確認，避免知識維護代理誤改原始碼。
+此腳本預期作為 repository-scoped hook 使用。它允許 wiki 維護流程寫入
+`wiki/` 與 `.github/`，並拒絕其他路徑的寫入，避免知識維護代理誤改
+raw sources。
 """
 
 import json
@@ -13,10 +13,15 @@ import sys
 
 EDIT_TOOL_NAMES = {
     "apply_patch",
+    "create",
     "create_file",
+    "edit",
     "editFiles",
+    "str_replace",
+    "str_replace_editor",
     "multi_replace_string_in_file",
     "replace_string_in_file",
+    "write",
 }
 
 PATCH_FILE_PATTERN = re.compile(
@@ -82,15 +87,24 @@ def extract_paths_from_tool_input(tool_name: str, tool_input) -> list[str]:
 
 
 def respond(decision: str, reason: str | None = None):
-    payload = {
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": decision,
-        }
-    }
+    payload = {"permissionDecision": decision}
     if reason:
-        payload["hookSpecificOutput"]["permissionDecisionReason"] = reason
+        payload["permissionDecisionReason"] = reason
     print(json.dumps(payload, ensure_ascii=False))
+
+
+def parse_tool_args(payload: dict) -> object:
+    if "tool_input" in payload:
+        return payload.get("tool_input")
+    if "toolInput" in payload:
+        return payload.get("toolInput")
+    tool_args = payload.get("toolArgs")
+    if isinstance(tool_args, str) and tool_args.strip():
+        try:
+            return json.loads(tool_args)
+        except json.JSONDecodeError:
+            return tool_args
+    return tool_args
 
 
 def main():
@@ -105,16 +119,14 @@ def main():
         respond("allow")
         return
 
-    tool_input = payload.get("tool_input")
-    if tool_input is None:
-        tool_input = payload.get("toolInput")
+    tool_input = parse_tool_args(payload)
 
     target_paths = extract_paths_from_tool_input(tool_name, tool_input)
     if not target_paths:
         respond(
-            "ask",
+            "deny",
             "wiki-write-guard 無法判定本次編輯的目標路徑。"
-            "請確認這次寫入僅影響 `wiki/` 或 `.github/` 後再繼續。",
+            "為保護 raw sources，請改用可明確標示路徑的編輯工具，且僅寫入 `wiki/` 或 `.github/`。",
         )
         return
 
@@ -124,9 +136,9 @@ def main():
         if len(disallowed_paths) > 3:
             summarized_paths += f" 等 {len(disallowed_paths)} 個路徑"
         respond(
-            "ask",
+            "deny",
             "Wiki 代理預設只應寫入 `wiki/` 與 `.github/`。"
-            f"這次偵測到其他路徑：{summarized_paths}。若確實需要，請明確確認。",
+            f"這次偵測到其他路徑：{summarized_paths}。",
         )
         return
 

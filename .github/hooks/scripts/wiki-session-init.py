@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""wiki-session-init.py — sessionStart hook，載入 wiki 當前狀態作為上下文。
+"""wiki-session-init.py — sessionStart hook，快取 wiki 當前狀態摘要。
 
-每次代理 session 啟動時執行。讀取 wiki/index.md 前半部（目錄摘要）與
-wiki/log.md 最後 10 筆條目，以 systemMessage 注入 LLM 上下文，讓代理
-開口前即了解 wiki 目前涵蓋範圍與最近操作紀錄。
+sessionStart hook 的輸出不會被注入 agent context，因此此腳本把
+wiki/index.md 前半部與 wiki/log.md 最近條目寫入
+`.github/hooks/logs/wiki-session-state.md`，供稽核或人工查看。
 
 若 wiki/ 尚未初始化（index.md 不存在），輸出引導訊息提示使用者先執行 ingest。
 """
 
-import json
 import pathlib
 import sys
 
@@ -16,6 +15,7 @@ import sys
 WIKI_ROOT = pathlib.Path("wiki")
 INDEX_FILE = WIKI_ROOT / "index.md"
 LOG_FILE = WIKI_ROOT / "log.md"
+STATE_FILE = pathlib.Path(".github/hooks/logs/wiki-session-state.md")
 
 INDEX_MAX_LINES = 60   # 只取 index.md 前 60 行（目錄摘要部分）
 LOG_TAIL_ENTRIES = 10  # 取 log.md 最後 N 個 ## 條目
@@ -92,10 +92,9 @@ def main():
     log_tail = read_log_tail()
     message = build_message(index_summary, log_tail)
 
-    payload = {
-        "systemMessage": message
-    }
-    print(json.dumps(payload, ensure_ascii=False))
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(message, encoding="utf-8")
+    print("{}")
 
 
 if __name__ == "__main__":

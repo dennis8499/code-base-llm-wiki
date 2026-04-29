@@ -12,7 +12,7 @@ description: "Applies when editing any markdown file under the wiki/ directory. 
 ```yaml
 ---
 title: string # 頁面標題（人類可讀）
-type: string # module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture
+type: string # module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
 sources: # 引用的原始碼檔案路徑（陣列）
   - path/to/file
 last_updated: string # YYYY-MM-DD 格式
@@ -20,6 +20,8 @@ tags: [string] # 分類標籤（陣列）
 status: string # active | stale | placeholder
 ---
 ```
+
+`wiki/index.md` 與 `wiki/log.md` 若沒有直接 raw source，必須使用 `sources: []`，不可省略欄位。
 
 ### type 特定的額外欄位
 

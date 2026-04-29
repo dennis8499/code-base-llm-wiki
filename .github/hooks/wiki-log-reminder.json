@@ -1,10 +1,13 @@
 {
+  "version": 1,
   "hooks": {
-    "PostToolUse": [
+    "postToolUse": [
       {
         "type": "command",
-        "command": "python .github/hooks/scripts/wiki-log-reminder.py",
-        "timeout": 10
+        "bash": "python3 .github/hooks/scripts/wiki-log-reminder.py",
+        "powershell": "python .github/hooks/scripts/wiki-log-reminder.py",
+        "cwd": ".",
+        "timeoutSec": 10
       }
     ]
   }

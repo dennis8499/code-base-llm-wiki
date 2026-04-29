@@ -64,7 +64,7 @@ Lint 操作對 wiki 進行全面健康檢查，找出品質問題並提供修復
 | 欄位           | 要求                                                                                                       |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
 | `title`        | 必填，非空字串                                                                                             |
-| `type`         | 必填，值為 module / entity / pattern / decision / dependency / guide / synthesis / overview / architecture |
+| `type`         | 必填，值為 module / entity / pattern / decision / dependency / guide / synthesis / overview / architecture / index / log |
 | `sources`      | 必填，陣列（可為空陣列 `[]`，但不可省略）                                                                  |
 | `last_updated` | 必填，YYYY-MM-DD 格式                                                                                      |
 | `tags`         | 必填，陣列                                                                                                 |

@@ -91,7 +91,7 @@ Copilot：直接從 wiki 取出已整理好的知識，附帶可追溯的原始�
 | [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) | 最新版 | 需啟用 Agent 模式                   |
 | [Python](https://www.python.org/)                                                              | 3.8+   | 輔助腳本與 Hooks 執行環境（非必要） |
 
-> **注意：** 使用輔助腳本（`rebuild-index.py` 等）或 Hooks 時需要 Python。純 Agent / Prompt 使用不需要 Python。
+> **注意：** 使用輔助腳本（`rebuild-index.py` 等）或 Hooks 時需要 Python，但目前不需要額外安裝 `PyYAML` 等第三方套件。純 Agent / Prompt 使用不需要 Python。
 
 ---
 
@@ -242,6 +242,8 @@ python .github/skills/codebase-wiki/scripts/wiki-stats.py
 
 這些 agent manifest 的 `tools` 欄位採用 inline array 寫法（例如 `tools: [read, edit, search]`），方便快速比較各代理的能力邊界；只有確實需要的能力才會加入，例如 `execute`、`agent` 與 `vscode/askQuestions`。
 
+agent 的協作與路由規則目前寫在各自的 Markdown 說明內容中，而不是依賴非官方 frontmatter 欄位；這樣能和現行 GitHub Copilot custom agents schema 保持一致。
+
 #### wiki-keeper 意圖路由邏輯
 
 `wiki-keeper` 根據使用者訊息中的關鍵詞自動路由：
@@ -275,15 +277,15 @@ python .github/skills/codebase-wiki/scripts/wiki-stats.py
 
 ### Hooks
 
-Hooks 為自動觸發的保護機制，在 agent 執行工具前後自動運行：
+Hooks 為自動觸發的保護機制，在 repository 範圍內於 Copilot 執行工具前後自動運行：
 
-| Hook 檔案                | 觸發時機       | 設定型式                                                              | 職責                                                                   |
-| ------------------------ | -------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `wiki-write-guard.json`  | `PreToolUse`   | `type: command` → `python .github/hooks/scripts/wiki-write-guard.py`  | 攔截寫入操作，防止 agent 意外修改 `wiki/` 以外的任何檔案（保護原始碼） |
-| `wiki-log-reminder.json` | `PostToolUse`  | `type: command` → `python .github/hooks/scripts/wiki-log-reminder.py` | 偵測到 `wiki/` 頁面被修改後，提醒 agent 在 `log.md` 追加操作紀錄       |
-| `wiki-session-init.json` | `sessionStart` | `type: command` → `python .github/hooks/scripts/wiki-session-init.py` | Session 開始時自動初始化，載入 wiki 狀態摘要供 agent 參考              |
+| Hook 檔案                | 觸發時機       | 設定型式                                                                                     | 職責                                                                 |
+| ------------------------ | -------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `wiki-write-guard.json`  | `preToolUse`   | `version: 1` + `type: command`，分別宣告 `bash` / `powershell`                              | 攔截寫入操作，拒絕對 `wiki/`、`.github/` 以外路徑的寫入（保護原始碼） |
+| `wiki-log-reminder.json` | `postToolUse`  | `version: 1` + `type: command`，分別宣告 `bash` / `powershell`                              | 偵測到 `wiki/` 頁面被修改後，寫入 `.github/hooks/logs/wiki-log-reminder.jsonl` 稽核線索 |
+| `wiki-session-init.json` | `sessionStart` | `version: 1` + `type: command`，分別宣告 `bash` / `powershell`                              | Session 開始時擷取 wiki 狀態摘要到 `.github/hooks/logs/wiki-session-state.md` |
 
-> Hook 設定檔目前統一使用 `type: command`，再透過 `command` 欄位呼叫 Python 腳本，與現行 Hook schema 保持一致。
+> GitHub Copilot 的 hook 輸出目前不會把 `postToolUse` 或 `sessionStart` 的文字直接注入 agent context，所以這兩個 hook 會產生稽核工件，而不是回傳 `systemMessage`。
 
 ---
 
@@ -313,7 +315,7 @@ wiki/
 ```yaml
 ---
 title: 頁面標題
-type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture
+type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
 sources:
   - path/to/source/file.ts   # 必須是真實存在的路徑
   - path/to/another/file.py
@@ -323,6 +325,8 @@ status: active | stale | placeholder
 ---
 ```
 
+`index.md` 與 `log.md` 也屬於正式頁面類型，分別使用 `type: index`、`type: log`；若沒有直接對應的 raw source，需寫成 `sources: []`，而不是省略該欄位。
+
 | 欄位           | 必填 | 說明                                                     |
 | -------------- | ---- | -------------------------------------------------------- |
 | `title`        | ✅    | 頁面標題                                                 |
@@ -331,6 +335,8 @@ status: active | stale | placeholder
 | `last_updated` | ✅    | 最後更新日期（`YYYY-MM-DD`）                             |
 | `tags`         | ✅    | 標籤清單，用於分類與搜尋                                 |
 | `status`       | ✅    | `active`（現行）/ `stale`（過時）/ `placeholder`（待補） |
+
+ADR 類型另有兩個專屬欄位：`decision_date` 與 `decision_status`。其中 `decision_status` 表示決策狀態（例如 `accepted`），`status` 仍只表示頁面生命週期。
 
 ### 跨頁引用
 
@@ -436,9 +442,10 @@ discount_code 這個欄位是什麼時候、為什麼加進來的？
 │   ├── update-index.prompt.md            — 重建主索引
 │   └── save-synthesis.prompt.md          — 儲存分析結果到 synthesis
 ├── hooks/
-│   ├── wiki-write-guard.json             — 寫入保護（PreToolUse）
-│   ├── wiki-log-reminder.json            — Log 提醒（PostToolUse）
+│   ├── wiki-write-guard.json             — 寫入保護（preToolUse）
+│   ├── wiki-log-reminder.json            — Log 稽核（postToolUse）
 │   ├── wiki-session-init.json            — Session 初始化（sessionStart）
+│   ├── logs/                             — Hook 執行期稽核輸出（git ignore）
 │   └── scripts/
 │       ├── wiki-write-guard.py
 │       ├── wiki-log-reminder.py
@@ -459,6 +466,7 @@ discount_code 這個欄位是什麼時候、為什麼加進來的？
         │   ├── log-template.md           — Log 範本
         │   └── index-template.md         — Index 範本
         └── scripts/
+            ├── frontmatter.py            — 內建 frontmatter parser
             ├── rebuild-index.py          — 重建 index.md
             ├── check-stale.py            — 檢查 stale sources
             └── wiki-stats.py             — Wiki 統計報告
@@ -484,7 +492,7 @@ wiki/
 | ----------------------- | -------- | ---------------------------------------------------------------------- |
 | **GitHub Copilot Chat** | ✅ 必要   | 需要 VS Code 中的 GitHub Copilot Chat 擴充套件，啟用 Agent 模式        |
 | **Obsidian**            | ✅ 相容   | `wiki/` 目錄可直接作為 Obsidian Vault 開啟，支援 Graph View 與雙向連結 |
-| **Python 3.8+**         | ⚡ 選用   | 輔助腳本與 Hooks 的執行環境，純 Agent 使用不需要                       |
+| **Python 3.8+**         | ⚡ 選用   | 輔助腳本與 Hooks 的執行環境，純 Agent 使用不需要，且目前不依賴第三方 Python 套件 |
 | **任意語言的 Codebase** | ✅ 通用   | 框架與語言無關，可套用到任何語言的 codebase                            |
 
 ---

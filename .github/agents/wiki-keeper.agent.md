@@ -7,20 +7,6 @@ description: >
   Routes to wiki-ingest, wiki-query, wiki-lint, or wiki-archaeologist as needed.
   For ambiguous requests, asks clarifying questions before proceeding.
 tools: [vscode/askQuestions, execute, read, agent, edit, search]
-agents:
-  - wiki-ingest
-  - wiki-query
-  - wiki-lint
-  - wiki-archaeologist
-hooks:
-  PreToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-write-guard.py"
-      timeout: 5
-  PostToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-log-reminder.py"
-      timeout: 5
 ---
 
 # Wiki Keeper — Codebase Wiki 總管
@@ -49,6 +35,8 @@ hooks:
 3. **澄清模糊請求**：若無法明確分類，使用 `vscode_askQuestions` 向使用者確認
 4. **路由或自行處理**：委派給專業代理，或處理簡單查詢
 5. **品質把關**：確認操作後 index.md 和 log.md 已更新
+
+> 可委派的專業代理：`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`。
 
 ## 澄清觸發條件
 

@@ -10,19 +10,13 @@
 import pathlib
 import re
 import sys
-import yaml
+
+from frontmatter import configure_utf8_stdio, parse_frontmatter_text
 
 
 def parse_frontmatter(filepath: pathlib.Path) -> dict:
     """解析 markdown 檔案的 YAML frontmatter。"""
-    text = filepath.read_text(encoding="utf-8")
-    match = re.match(r"^---\s*\n(.*?)\n---", text, re.DOTALL)
-    if not match:
-        return {}
-    try:
-        return yaml.safe_load(match.group(1)) or {}
-    except yaml.YAMLError:
-        return {}
+    return parse_frontmatter_text(filepath.read_text(encoding="utf-8"))
 
 
 def extract_first_sentence(filepath: pathlib.Path) -> str:
@@ -86,7 +80,9 @@ def rebuild_index(wiki_dir: pathlib.Path) -> str:
         "---",
         "title: Wiki Index",
         "type: index",
+        "sources: []",
         f"last_updated: {__import__('datetime').date.today().isoformat()}",
+        "tags: [index]",
         "status: active",
         "---",
         "",
@@ -114,6 +110,7 @@ def rebuild_index(wiki_dir: pathlib.Path) -> str:
 
 
 def main():
+    configure_utf8_stdio()
     wiki_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path("wiki")
     if not wiki_dir.is_dir():
         print(f"Error: wiki directory not found: {wiki_dir}", file=sys.stderr)

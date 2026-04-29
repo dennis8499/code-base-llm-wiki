@@ -6,15 +6,6 @@ description: >
   Supports both interactive (one module at a time with user confirmation)
   and batch (scanning entire directories) modes. Never modifies source code.
 tools: [read, edit, search]
-hooks:
-  PreToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-write-guard.py"
-      timeout: 5
-  PostToolUse:
-    - type: command
-      command: "python .github/hooks/scripts/wiki-log-reminder.py"
-      timeout: 5
 ---
 
 # Wiki Ingest — 知識攝入代理

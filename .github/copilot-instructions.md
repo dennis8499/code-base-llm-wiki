@@ -45,7 +45,7 @@ wiki/
 ```yaml
 ---
 title: 頁面標題
-type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture
+type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
 sources:
   - path/to/source/file.ts
   - path/to/another/file.py
@@ -54,6 +54,8 @@ tags: [tag1, tag2]
 status: active | stale | placeholder
 ---
 ```
+
+`wiki/index.md` 與 `wiki/log.md` 也必須包含上述欄位；若沒有直接 raw source，使用 `sources: []`。
 
 ### 品質標準
 

@@ -1,7 +1,9 @@
 ---
 title: Wiki Index
 type: index
+sources: []
 last_updated: YYYY-MM-DD
+tags: [index]
 status: active
 ---
 
