@@ -8,6 +8,8 @@
 
 ### 新增
 
+- **新增 OpenAI Codex 版入口**：加入根目錄 `AGENTS.md`，將 Codebase LLM Wiki 的意圖路由、Ingest / Query / Lint / Archaeology / ADR 工作流程、frontmatter 規格與禁止事項整理成 Codex 可直接讀取的專案指令
+- **README 新增雙版本使用說明**：補上 GitHub Copilot 版與 OpenAI Codex 版的支援矩陣、安裝方式、快速開始、自然語言工作流與相容性說明
 - **wiki-query 建議行動與自動交接（Hand-Off）功能**：查詢代理在產生建議後，會透過 `vscode/askQuestions` 向使用者呈現可執行的行動清單，使用者確認後自動委派給對應的專業子代理執行。
   - 三種建議行動類型：
     - `save-synthesis`：將有持續價值的綜合分析存入 `wiki/synthesis/`（委派 `wiki-keeper`）
@@ -40,6 +42,8 @@
 
 | 檔案 | 變更類型 |
 |------|----------|
+| `AGENTS.md` | 新增（OpenAI Codex 版專案指令） |
+| `README.md` | 更新（新增 Copilot / Codex 雙版本說明） |
 | `.github/agents/wiki-query.agent.md` | 大幅擴充（+59/-3） |
 | `.github/prompts/query-wiki.prompt.md` | 更新（+11/-2） |
 | `.github/agents/wiki-keeper.agent.md` | 格式整理（`tools` 改為 inline array） |

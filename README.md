@@ -1,9 +1,10 @@
 # Codebase LLM Wiki
 
-> 讓 GitHub Copilot 為任意 codebase 增量建構並維護結構化知識庫。
+> 讓 GitHub Copilot 或 OpenAI Codex 為任意 codebase 增量建構並維護結構化知識庫。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![GitHub Copilot](https://img.shields.io/badge/GitHub%20Copilot-Required-blue?logo=github)](https://github.com/features/copilot)
+[![GitHub Copilot](https://img.shields.io/badge/GitHub%20Copilot-Supported-blue?logo=github)](https://github.com/features/copilot)
+[![OpenAI Codex](https://img.shields.io/badge/OpenAI%20Codex-Supported-111827?logo=openai)](https://openai.com/index/introducing-codex/)
 [![VS Code](https://img.shields.io/badge/VS%20Code-Extension-007ACC?logo=visualstudiocode)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?logo=python)](https://www.python.org/)
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-7C3AED?logo=obsidian)](https://obsidian.md/)
@@ -16,14 +17,15 @@
   - [目錄](#目錄)
   - [這是什麼？](#這是什麼)
   - [核心概念](#核心概念)
+  - [支援版本](#支援版本)
   - [前置需求](#前置需求)
   - [安裝與設定](#安裝與設定)
-    - [步驟 1：複製框架到你的 repo](#步驟-1複製框架到你的-repo)
-    - [步驟 2：確認 VS Code 設定](#步驟-2確認-vs-code-設定)
-    - [步驟 3：確認框架正確載入](#步驟-3確認框架正確載入)
+    - [GitHub Copilot 版](#github-copilot-版)
+    - [OpenAI Codex 版](#openai-codex-版)
   - [快速開始](#快速開始)
   - [使用方式](#使用方式)
     - [Agent 對話（推薦）](#agent-對話推薦)
+    - [Codex 自然語言工作流](#codex-自然語言工作流)
     - [Slash Prompt 指令](#slash-prompt-指令)
     - [輔助腳本](#輔助腳本)
   - [元件說明](#元件說明)
@@ -31,6 +33,7 @@
       - [wiki-keeper 意圖路由邏輯](#wiki-keeper-意圖路由邏輯)
     - [Skill](#skill)
     - [Hooks](#hooks)
+    - [Codex Instructions](#codex-instructions)
   - [Wiki 結構與格式](#wiki-結構與格式)
     - [目錄結構](#目錄結構)
     - [頁面 Frontmatter 規格](#頁面-frontmatter-規格)
@@ -49,13 +52,15 @@
 
 ## 這是什麼？
 
-**Codebase LLM Wiki** 是一套 GitHub Copilot 自訂化框架，透過自訂 Agent、Prompt、Hook 與 Skill，讓 Copilot 扮演技術文件架構師的角色，持續為你的 codebase 建立、更新並維護一座結構化的 Markdown 知識庫。
+**Codebase LLM Wiki** 是一套面向 coding agents 的自訂化框架，讓 GitHub Copilot 或 OpenAI Codex 扮演技術文件架構師的角色，持續為你的 codebase 建立、更新並維護一座結構化的 Markdown 知識庫。
+
+Copilot 版透過自訂 Agent、Prompt、Hook 與 Skill 運作；Codex 版則透過根目錄 `AGENTS.md` 收斂同一套 wiki 方法論，讓 Codex 在 CLI、IDE 或雲端任務中可以依照相同規格行動。
 
 這**不是 RAG**（每次重新檢索原始碼）。而是**持久累積的知識庫**——讀過的模組被記錄成頁面，交叉引用持續建立，矛盾會被標記，綜合分析反映所有已讀內容。
 
 ```
 你問：「OrderService 的退款邏輯在哪裡？」
-Copilot：直接從 wiki 取出已整理好的知識，附帶可追溯的原始碼引用。
+LLM：直接從 wiki 取出已整理好的知識，附帶可追溯的原始碼引用。
 ```
 
 ---
@@ -69,9 +74,10 @@ Copilot：直接從 wiki 取出已整理好的知識，附帶可追溯的原始�
 │  Wiki         ← LLM 產生並維護的 Markdown 知識庫  │
 │               wiki/ 目錄（index、modules、ADR 等） │
 ├─────────────────────────────────────────────────┤
-│  Schema       ← 驅動 LLM 行為的 Copilot 元件     │
-│               .github/ 下的 agents/prompts/      │
-│               hooks/skills                       │
+│  Schema       ← 驅動 LLM 行為的規則與工作流       │
+│               Copilot: .github/ agents/prompts/   │
+│               hooks/skills                        │
+│               Codex: AGENTS.md                    │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -79,25 +85,38 @@ Copilot：直接從 wiki 取出已整理好的知識，附帶可追溯的原始�
 | --------------- | ------------- | ------------------------------ |
 | **Raw Sources** | codebase 本身 | 唯讀。LLM 只讀取，**永不修改** |
 | **Wiki**        | `wiki/`       | LLM 產出的 Markdown 知識庫     |
-| **Schema**      | `.github/`    | 規則、工作流、範本             |
+| **Schema**      | `.github/` 或 `AGENTS.md` | 規則、工作流、範本             |
+
+---
+
+## 支援版本
+
+| 版本 | 入口檔案 | 適合情境 |
+| ---- | -------- | -------- |
+| **GitHub Copilot 版** | `.github/copilot-instructions.md`、`.github/agents/`、`.github/prompts/`、`.github/hooks/`、`.github/skills/` | 你想在 VS Code Copilot Chat 中使用自訂 agent、slash prompt 與 hook |
+| **OpenAI Codex 版** | `AGENTS.md` | 你想讓 Codex CLI、IDE extension、Codex app 或 cloud task 直接讀取專案規則 |
+| **共用 wiki 骨架** | `wiki/` | 兩種版本共用的知識庫輸出位置 |
+
+你只需要選擇其中一個入口使用；兩者可共存於同一 repo，但不互相依賴。
 
 ---
 
 ## 前置需求
 
-| 需求                                                                                           | 版本   | 說明                                |
-| ---------------------------------------------------------------------------------------------- | ------ | ----------------------------------- |
-| [VS Code](https://code.visualstudio.com/)                                                      | 最新版 | 主要編輯器                          |
-| [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) | 最新版 | 需啟用 Agent 模式                   |
-| [Python](https://www.python.org/)                                                              | 3.8+   | 輔助腳本與 Hooks 執行環境（非必要） |
+| 需求 | 版本 | 說明 |
+| ---- | ---- | ---- |
+| [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) | 最新版 | Copilot 版需要，並需啟用 Agent 模式 |
+| [OpenAI Codex](https://platform.openai.com/docs/codex) | 最新版 | Codex 版需要，可使用 CLI、IDE extension、Codex app 或 cloud task |
+| [VS Code](https://code.visualstudio.com/) | 最新版 | Copilot 版主要編輯器；Codex IDE extension 也可使用 |
+| [Python](https://www.python.org/) | 3.8+ | 輔助腳本與 Copilot Hooks 執行環境（非必要） |
 
-> **注意：** 使用輔助腳本（`rebuild-index.py` 等）或 Hooks 時需要 Python，但目前不需要額外安裝 `PyYAML` 等第三方套件。純 Agent / Prompt 使用不需要 Python。
+> **注意：** 使用輔助腳本（`rebuild-index.py` 等）或 Hooks 時需要 Python，但目前不需要額外安裝 `PyYAML` 等第三方套件。純 Agent / Prompt / Codex `AGENTS.md` 使用不需要 Python。
 
 ---
 
 ## 安裝與設定
 
-### 步驟 1：複製框架到你的 repo
+### GitHub Copilot 版
 
 ```bash
 # 複製 .github/ 目錄（框架核心）
@@ -109,14 +128,10 @@ cp -r wiki/ /path/to/your-repo/wiki/
 
 > 如果你的 repo 已有 `.github/` 目錄，請手動合併 `agents/`、`prompts/`、`hooks/`、`skills/` 等子目錄。
 
-### 步驟 2：確認 VS Code 設定
-
 在 VS Code 中開啟你的 repo，確認以下設定已啟用：
 
 - **GitHub Copilot Chat** 擴充套件已安裝並登入
 - Copilot Chat 的 **Agent 模式**已開啟（Chat 視窗中可切換 Agent 下拉選單）
-
-### 步驟 3：確認框架正確載入
 
 開啟 Copilot Chat，點選 Agent 下拉選單，應可看到：
 
@@ -128,17 +143,39 @@ cp -r wiki/ /path/to/your-repo/wiki/
 
 若看不到這些 Agent，請確認 `.github/agents/` 目錄下的 `.agent.md` 檔案存在。
 
+### OpenAI Codex 版
+
+```bash
+# 複製 Codex 專用指令檔到目標 repo 根目錄
+cp AGENTS.md /path/to/your-repo/AGENTS.md
+
+# 複製 wiki/ 骨架目錄
+cp -r wiki/ /path/to/your-repo/wiki/
+
+# 可選：若想沿用頁面模板與 Python 輔助腳本，複製共用 skill 資料夾
+mkdir -p /path/to/your-repo/.github/skills/
+cp -r .github/skills/codebase-wiki/ /path/to/your-repo/.github/skills/codebase-wiki/
+```
+
+Codex 會讀取 repo 內的 `AGENTS.md` 作為專案操作規則。開始任務時直接用自然語言描述需求即可，不需要切換 agent 或輸入 slash prompt。
+
 ---
 
 ## 快速開始
 
-開啟 Copilot Chat 並切換到 **`wiki-keeper`** agent，然後：
+**Copilot 版**：開啟 Copilot Chat 並切換到 **`wiki-keeper`** agent，然後：
 
 ```
 把 src/auth/ 模組加進 wiki
 ```
 
-就這樣。`wiki-keeper` 會自動分析意圖、呼叫適合的子 agent，並在 `wiki/` 目錄下建立結構化的文件頁面。
+**Codex 版**：在 Codex CLI、IDE extension、Codex app 或 cloud task 中直接輸入：
+
+```
+請依照 Codebase LLM Wiki 的 ingest 流程，把 src/auth/ 模組加進 wiki
+```
+
+就這樣。Copilot 版會由 `wiki-keeper` 自動分析意圖並呼叫適合的子 agent；Codex 版會依照 `AGENTS.md` 中的意圖路由與工作流程行動，並在 `wiki/` 目錄下建立結構化的文件頁面。
 
 ---
 
@@ -181,9 +218,35 @@ PaymentService 依賴哪些外部服務？
 
 ---
 
+### Codex 自然語言工作流
+
+Codex 版沒有 Copilot 的 `.agent.md` manifest 與 slash prompt；所有路由邏輯都寫在 `AGENTS.md`，因此直接描述任務即可。
+
+**攝入程式碼：**
+```
+請以 Codebase LLM Wiki 的 ingest 流程，分析 src/auth/ 並更新 wiki。
+```
+
+**查詢知識：**
+```
+請先查 wiki，再必要時回溯 sources，解釋 OrderService 的退款邏輯。
+```
+
+**健康檢查：**
+```
+請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。
+```
+
+**程式碼考古：**
+```
+請用 code archaeology 流程追蹤 discount_code 欄位的 git history，並把有價值的結論存進 wiki。
+```
+
+---
+
 ### Slash Prompt 指令
 
-在 Copilot Chat 輸入 `/` 可叫出 Prompt 指令：
+此區為 **GitHub Copilot 版專用**。在 Copilot Chat 輸入 `/` 可叫出 Prompt 指令：
 
 | 指令                | 用途                                        | 參數                                      |
 | ------------------- | ------------------------------------------- | ----------------------------------------- |
@@ -211,7 +274,7 @@ PaymentService 依賴哪些外部服務？
 
 ### 輔助腳本
 
-位於 `.github/skills/codebase-wiki/scripts/`，可獨立在終端機執行：
+位於 `.github/skills/codebase-wiki/scripts/`，可獨立在終端機執行。Copilot 版的 agents 與 Codex 版的 `AGENTS.md` 都會在需要時引用這些腳本（若已複製到目標 repo）：
 
 ```bash
 # 重建 wiki/index.md（掃描所有頁面並重新產生索引）
@@ -230,7 +293,7 @@ python .github/skills/codebase-wiki/scripts/wiki-stats.py
 
 ### Agents
 
-框架包含 5 個專業 agent，各司其職：
+Copilot 版包含 5 個專業 agent，各司其職：
 
 | Agent                | 檔案                          | 職責                                                                                                                                                       |
 | -------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -277,7 +340,7 @@ agent 的協作與路由規則目前寫在各自的 Markdown 說明內容中，�
 
 ### Hooks
 
-Hooks 為自動觸發的保護機制，在 repository 範圍內於 Copilot 執行工具前後自動運行：
+Hooks 是 Copilot 版的自動觸發保護機制，在 repository 範圍內於 Copilot 執行工具前後自動運行：
 
 | Hook 檔案                | 觸發時機       | 設定型式                                                                                     | 職責                                                                 |
 | ------------------------ | -------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -286,6 +349,20 @@ Hooks 為自動觸發的保護機制，在 repository 範圍內於 Copilot 執�
 | `wiki-session-init.json` | `sessionStart` | `version: 1` + `type: command`，分別宣告 `bash` / `powershell`                              | Session 開始時擷取 wiki 狀態摘要到 `.github/hooks/logs/wiki-session-state.md` |
 
 > GitHub Copilot 的 hook 輸出目前不會把 `postToolUse` 或 `sessionStart` 的文字直接注入 agent context，所以這兩個 hook 會產生稽核工件，而不是回傳 `systemMessage`。
+
+---
+
+### Codex Instructions
+
+Codex 版的入口是根目錄 `AGENTS.md`。它把 Copilot 版分散在 agents/prompts/instructions 裡的規則收斂成一份 Codex 可直接讀取的專案指令。
+
+| 檔案 | 職責 |
+| ---- | ---- |
+| `AGENTS.md` | 定義 Codex 的 wiki 任務邊界、意圖路由、Ingest / Query / Lint / Archaeology / ADR 工作流程、frontmatter 規格與禁止事項 |
+| `wiki/` | Codex 寫入與維護的 Markdown 知識庫 |
+| `.github/skills/codebase-wiki/` | 可選的共用範本、reference 文件與 Python 輔助腳本；Codex 不會自動把它當成 skill 載入，但可依 `AGENTS.md` 指示讀取或執行 |
+
+Codex 版不依賴 Copilot 的 custom agents、slash prompts 或 hooks；如果兩套檔案同時存在，Codex 會以 `AGENTS.md` 為主要入口。
 
 ---
 
@@ -355,6 +432,8 @@ ADR 類型另有兩個專屬欄位：`decision_date` 與 `decision_status`。其
 
 ### 情境一：初始化全新專案的 wiki
 
+Copilot 版：
+
 ```bash
 # 1. 套用框架
 cp -r .github/ your-repo/
@@ -364,6 +443,20 @@ cp -r wiki/ your-repo/
 /ingest-batch src/         # 批次掃描整個 src 目錄
 /onboarding-guide          # 自動產生新人指南
 /update-index              # 重建主索引
+```
+
+Codex 版：
+
+```bash
+# 1. 套用框架
+cp AGENTS.md your-repo/AGENTS.md
+cp -r wiki/ your-repo/
+```
+
+在 Codex 中描述任務：
+
+```
+請依照 AGENTS.md 的 batch ingest 流程掃描 src/，建立初始 wiki，最後更新 index 與 log。
 ```
 
 ### 情境二：新功能上線後更新 wiki
@@ -411,7 +504,7 @@ discount_code 這個欄位是什麼時候、為什麼加進來的？
 
 | 原則                   | 說明                                                                     |
 | ---------------------- | ------------------------------------------------------------------------ |
-| **LLM 永不修改原始碼** | wiki agents 對 codebase 只讀不寫，`wiki-write-guard` hook 會攔截越界寫入 |
+| **LLM 永不修改原始碼** | wiki agents / Codex 在 wiki 任務中對 codebase 只讀不寫；Copilot 版的 `wiki-write-guard` hook 會攔截越界寫入 |
 | **Log 為 append-only** | `log.md` 只能追加新條目，不得修改或刪除既有條目                          |
 | **Sources 可追溯**     | 每個 wiki 頁面的 `frontmatter.sources` 必須指向真實存在的檔案路徑        |
 | **Wiki 完整性**        | 新增或刪除 wiki 頁面後，必須同步更新 `wiki/index.md`                     |
@@ -422,6 +515,7 @@ discount_code 這個欄位是什麼時候、為什麼加進來的？
 ## 目錄結構總覽
 
 ```
+AGENTS.md                                — OpenAI Codex 版專案指令
 .github/
 ├── copilot-instructions.md               — 全域規則（wiki 慣例、禁止事項）
 ├── instructions/
@@ -490,9 +584,10 @@ wiki/
 
 | 工具                    | 支援狀態 | 說明                                                                   |
 | ----------------------- | -------- | ---------------------------------------------------------------------- |
-| **GitHub Copilot Chat** | ✅ 必要   | 需要 VS Code 中的 GitHub Copilot Chat 擴充套件，啟用 Agent 模式        |
+| **GitHub Copilot Chat** | ✅ 支援   | Copilot 版需要 VS Code 中的 GitHub Copilot Chat 擴充套件，啟用 Agent 模式 |
+| **OpenAI Codex**        | ✅ 支援   | Codex 版使用 `AGENTS.md` 作為入口，可在 CLI、IDE extension、Codex app 或 cloud task 中使用 |
 | **Obsidian**            | ✅ 相容   | `wiki/` 目錄可直接作為 Obsidian Vault 開啟，支援 Graph View 與雙向連結 |
-| **Python 3.8+**         | ⚡ 選用   | 輔助腳本與 Hooks 的執行環境，純 Agent 使用不需要，且目前不依賴第三方 Python 套件 |
+| **Python 3.8+**         | ⚡ 選用   | 輔助腳本與 Hooks 的執行環境，純 Agent / `AGENTS.md` 使用不需要，且目前不依賴第三方 Python 套件 |
 | **任意語言的 Codebase** | ✅ 通用   | 框架與語言無關，可套用到任何語言的 codebase                            |
 
 ---
