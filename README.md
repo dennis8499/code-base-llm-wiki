@@ -2,7 +2,6 @@
 
 > 讓 GitHub Copilot 或 OpenAI Codex 為任意 codebase 增量建構並維護結構化知識庫。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Copilot](https://img.shields.io/badge/GitHub%20Copilot-Supported-blue?logo=github)](https://github.com/features/copilot)
 [![OpenAI Codex](https://img.shields.io/badge/OpenAI%20Codex-Supported-111827?logo=openai)](https://openai.com/index/introducing-codex/)
 [![VS Code](https://img.shields.io/badge/VS%20Code-Extension-007ACC?logo=visualstudiocode)](https://code.visualstudio.com/)
@@ -13,106 +12,117 @@
 
 ## 目錄
 
-- [Codebase LLM Wiki](#codebase-llm-wiki)
-  - [目錄](#目錄)
-  - [這是什麼？](#這是什麼)
-  - [核心概念](#核心概念)
-  - [支援版本](#支援版本)
-  - [前置需求](#前置需求)
-  - [安裝與設定](#安裝與設定)
-    - [GitHub Copilot 版](#github-copilot-版)
-    - [OpenAI Codex 版](#openai-codex-版)
-  - [快速開始](#快速開始)
-  - [使用方式](#使用方式)
-    - [Agent 對話（推薦）](#agent-對話推薦)
-    - [Codex 自然語言工作流](#codex-自然語言工作流)
-    - [Slash Prompt 指令](#slash-prompt-指令)
-    - [輔助腳本](#輔助腳本)
-  - [元件說明](#元件說明)
-    - [Agents](#agents)
-      - [wiki-keeper 意圖路由邏輯](#wiki-keeper-意圖路由邏輯)
-      - [Codex Custom Agents](#codex-custom-agents)
-    - [Skill](#skill)
-    - [Hooks](#hooks)
-    - [Codex Instructions](#codex-instructions)
-  - [Wiki 結構與格式](#wiki-結構與格式)
-    - [目錄結構](#目錄結構)
-    - [頁面 Frontmatter 規格](#頁面-frontmatter-規格)
-    - [跨頁引用](#跨頁引用)
-  - [典型工作流程](#典型工作流程)
-    - [情境一：初始化全新專案的 wiki](#情境一初始化全新專案的-wiki)
-    - [情境二：新功能上線後更新 wiki](#情境二新功能上線後更新-wiki)
-    - [情境三：定期 wiki 健康維護](#情境三定期-wiki-健康維護)
-    - [情境四：知識查詢與探索](#情境四知識查詢與探索)
-  - [設計原則](#設計原則)
-  - [目錄結構總覽](#目錄結構總覽)
-  - [相容性](#相容性)
-  - [變更紀錄](#變更紀錄)
+- [這是什麼？](#這是什麼)
+- [文件入口](#文件入口)
+- [三層模型](#三層模型)
+- [支援入口](#支援入口)
+- [專案結構](#專案結構)
+- [安裝與設定](#安裝與設定)
+- [快速開始](#快速開始)
+- [典型工作流程](#典型工作流程)
+- [元件一覽](#元件一覽)
+- [Wiki 結構與規格](#wiki-結構與規格)
+- [相容性](#相容性)
+- [變更紀錄](#變更紀錄)
 
 ---
 
 ## 這是什麼？
 
-**Codebase LLM Wiki** 是一套面向 coding agents 的自訂化框架，讓 GitHub Copilot 或 OpenAI Codex 扮演技術文件架構師的角色，持續為你的 codebase 建立、更新並維護一座結構化的 Markdown 知識庫。
+**Codebase LLM Wiki** 是一套面向 coding agents 的框架，讓 LLM 把 codebase 持續整理成一個可累積、可交叉引用、可追溯來源的 Markdown wiki。
 
-Copilot 版透過自訂 Agent、Prompt、Hook 與 Skill 運作；Codex 版則透過根目錄 `AGENTS.md`、`.codex/` hooks/custom agents，以及 `.agents/skills/` repo-local skill 承接同一套 wiki 方法論。
+這不是每次查詢都重新檢索原始碼的 RAG，而是把已讀過的模組、服務、模式與決策沉澱成 wiki 頁面。之後再查詢時，LLM 會先讀 wiki，再必要時回溯原始碼驗證。
 
-這**不是 RAG**（每次重新檢索原始碼）。而是**持久累積的知識庫**——讀過的模組被記錄成頁面，交叉引用持續建立，矛盾會被標記，綜合分析反映所有已讀內容。
+這個 repo 同時提供兩條入口：
 
-```
-你問：「OrderService 的退款邏輯在哪裡？」
-LLM：直接從 wiki 取出已整理好的知識，附帶可追溯的原始碼引用。
-```
+- **GitHub Copilot 版**：以 `.github/` 內的 agents、prompts、hooks、skills 為主。
+- **OpenAI Codex 版**：以 `AGENTS.md`、`.codex/`、`.agents/skills/codebase-wiki/` 為主。
 
----
-
-## 核心概念
-
-```
-┌─────────────────────────────────────────────────┐
-│  Raw Sources  ← 唯讀。codebase 原始碼與設定檔    │
-├─────────────────────────────────────────────────┤
-│  Wiki         ← LLM 產生並維護的 Markdown 知識庫  │
-│               wiki/ 目錄（index、modules、ADR 等） │
-├─────────────────────────────────────────────────┤
-│  Schema       ← 驅動 LLM 行為的規則與工作流       │
-│               Copilot: .github/ agents/prompts/   │
-│               hooks/skills                        │
-│               Codex: AGENTS.md + .codex/          │
-│               + .agents/skills/                   │
-└─────────────────────────────────────────────────┘
-```
-
-| 層              | 位置          | 職責                           |
-| --------------- | ------------- | ------------------------------ |
-| **Raw Sources** | codebase 本身 | 唯讀。LLM 只讀取，**永不修改** |
-| **Wiki**        | `wiki/`       | LLM 產出的 Markdown 知識庫     |
-| **Schema**      | `.github/` 或 `AGENTS.md` + `.codex/` + `.agents/skills/` | 規則、工作流、範本             |
+兩者共用同一份 `wiki/` 骨架與方法論。
 
 ---
 
-## 支援版本
+## 文件入口
 
-| 版本 | 入口檔案 | 適合情境 |
-| ---- | -------- | -------- |
+| 文件 | 用途 |
+| --- | --- |
+| [README.md](README.md) | 專案總覽，說明 Copilot 與 Codex 兩種入口的定位與結構 |
+| [Codex.md](Codex.md) | 給框架使用者的 Codex 專用安裝、操作、排錯手冊 |
+| [AGENTS.md](AGENTS.md) | 給 Codex 讀取的機器指令，定義 wiki 邊界、流程與規則 |
+| [ChangeLog.md](ChangeLog.md) | 框架版本變更紀錄 |
+| [llm-wiki.md](llm-wiki.md) | 這套方法論的原始概念說明 |
+| [prompt.txt](prompt.txt) | 早期設計此框架時使用的提示草稿 |
+
+如果你是第一次接觸這個 repo，建議先讀 `README.md`；如果你要把這套框架套到自己的 repo 並用 Codex 操作，接著讀 [Codex.md](Codex.md)。
+
+---
+
+## 三層模型
+
+| 層 | 位置 | 職責 |
+| --- | --- | --- |
+| **Raw Sources** | 目標 codebase 的原始碼、設定檔、既有文件 | 唯讀。wiki 任務中只讀取、不修改 |
+| **Wiki** | `wiki/` | LLM 產生並維護的 Markdown 知識庫 |
+| **Schema** | `.github/` 或 `AGENTS.md` + `.codex/` + `.agents/skills/` | 驅動 agent 行為的規則、模板、腳本與工作流程 |
+
+---
+
+## 支援入口
+
+| 入口 | 主要檔案 | 適合情境 |
+| --- | --- | --- |
 | **GitHub Copilot 版** | `.github/copilot-instructions.md`、`.github/agents/`、`.github/prompts/`、`.github/hooks/`、`.github/skills/` | 你想在 VS Code Copilot Chat 中使用自訂 agent、slash prompt 與 hook |
-| **OpenAI Codex 版** | `AGENTS.md`、`.codex/agents/`、`.codex/hooks.json`、`.agents/skills/` | 你想讓 Codex CLI、IDE extension、Codex app 或 cloud task 直接讀取專案規則、hooks、custom agents 與 repo-local skill |
-| **共用 wiki 骨架** | `wiki/` | 兩種版本共用的知識庫輸出位置 |
+| **OpenAI Codex 版** | `AGENTS.md`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/agents/`、`.agents/skills/codebase-wiki/` | 你想讓 Codex CLI、IDE extension、Codex app 或 cloud task 直接讀取專案規則與 repo-local skill |
+| **共用 Wiki 骨架** | `wiki/` | 兩種版本共用的知識庫輸出位置 |
 
-你只需要選擇其中一個入口使用；兩者可共存於同一 repo，但不互相依賴。
+你可以只選其中一條路線，也可以讓兩套檔案共存於同一個 repo。
 
 ---
 
-## 前置需求
+## 專案結構
 
-| 需求 | 版本 | 說明 |
-| ---- | ---- | ---- |
-| [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) | 最新版 | Copilot 版需要，並需啟用 Agent 模式 |
-| [OpenAI Codex](https://platform.openai.com/docs/codex) | 最新版 | Codex 版需要，可使用 CLI、IDE extension、Codex app 或 cloud task |
-| [VS Code](https://code.visualstudio.com/) | 最新版 | Copilot 版主要編輯器；Codex IDE extension 也可使用 |
-| [Python](https://www.python.org/) | 3.8+ | 輔助腳本、Copilot Hooks 與 Codex Hooks 執行環境（非必要） |
+### 版本化元件
 
-> **注意：** 使用輔助腳本（`rebuild-index.py` 等）或 Hooks 時需要 Python，但目前不需要額外安裝 `PyYAML` 等第三方套件。純 Agent / Prompt / Codex `AGENTS.md` 使用不需要 Python。
+```text
+AGENTS.md
+Codex.md
+README.md
+ChangeLog.md
+llm-wiki.md
+prompt.txt
+.codex/
+├── config.toml
+├── hooks.json
+├── agents/
+└── hooks/
+    └── scripts/
+.agents/
+└── skills/
+    └── codebase-wiki/
+.github/
+├── copilot-instructions.md
+├── agents/
+├── prompts/
+├── hooks/
+├── instructions/
+└── skills/
+wiki/
+├── index.md
+├── log.md
+├── overview.md
+├── architecture/
+├── modules/
+├── entities/
+├── patterns/
+├── decisions/
+├── dependencies/
+├── guides/
+└── synthesis/
+```
+
+### 執行期產物
+
+- `.codex/hooks/logs/`：當 Codex hooks 啟用時，SessionStart 與 log reminder 會在這裡留下執行期輸出。
 
 ---
 
@@ -121,343 +131,62 @@ LLM：直接從 wiki 取出已整理好的知識，附帶可追溯的原始碼�
 ### GitHub Copilot 版
 
 ```bash
-# 複製 .github/ 目錄（框架核心）
 cp -r .github/ /path/to/your-repo/.github/
-
-# 複製 wiki/ 骨架目錄
 cp -r wiki/ /path/to/your-repo/wiki/
 ```
 
-> 如果你的 repo 已有 `.github/` 目錄，請手動合併 `agents/`、`prompts/`、`hooks/`、`skills/` 等子目錄。
+安裝後請確認：
 
-在 VS Code 中開啟你的 repo，確認以下設定已啟用：
-
-- **GitHub Copilot Chat** 擴充套件已安裝並登入
-- Copilot Chat 的 **Agent 模式**已開啟（Chat 視窗中可切換 Agent 下拉選單）
-
-開啟 Copilot Chat，點選 Agent 下拉選單，應可看到：
-
-- `wiki-keeper`
-- `wiki-ingest`
-- `wiki-query`
-- `wiki-lint`
-- `wiki-archaeologist`
-
-若看不到這些 Agent，請確認 `.github/agents/` 目錄下的 `.agent.md` 檔案存在。
+- 已安裝並登入 GitHub Copilot Chat
+- 已啟用 Agent 模式
+- `.github/agents/` 下可看到 `wiki-keeper`、`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`
 
 ### OpenAI Codex 版
 
 ```bash
-# 複製 Codex 專用指令檔到目標 repo 根目錄
 cp AGENTS.md /path/to/your-repo/AGENTS.md
-
-# 複製 Codex 原生 hooks 與 custom agents
 cp -r .codex/ /path/to/your-repo/.codex/
-
-# 複製 Codex repo-local skill
 mkdir -p /path/to/your-repo/.agents/skills/
 cp -r .agents/skills/codebase-wiki/ /path/to/your-repo/.agents/skills/codebase-wiki/
-
-# 複製 wiki/ 骨架目錄
 cp -r wiki/ /path/to/your-repo/wiki/
 ```
 
-Codex 會讀取 repo 內的 `AGENTS.md` 作為主要專案操作規則，並可使用 `.agents/skills/codebase-wiki/` 的模板與腳本。`.codex/agents/*.toml` 是可委派的 custom agents；一般任務直接用自然語言描述即可，不需要切換 agent 或輸入 slash prompt。
+Codex 版的必要元件只有：
+
+- `AGENTS.md`
+- `.codex/`
+- `.agents/skills/codebase-wiki/`
+- `wiki/`
+
+`.github/` 不是 Codex 的必要依賴。完整操作說明、自然語言範例與排錯請看 [Codex.md](Codex.md)。
 
 ---
 
 ## 快速開始
 
-**Copilot 版**：開啟 Copilot Chat 並切換到 **`wiki-keeper`** agent，然後：
+### Copilot
 
-```
+在 Copilot Chat 切到 `wiki-keeper`，直接輸入：
+
+```text
 把 src/auth/ 模組加進 wiki
 ```
 
-**Codex 版**：在 Codex CLI、IDE extension、Codex app 或 cloud task 中直接輸入：
+或使用 slash prompt：
 
-```
-請依照 Codebase LLM Wiki 的 ingest 流程，把 src/auth/ 模組加進 wiki
-```
-
-就這樣。Copilot 版會由 `wiki-keeper` 自動分析意圖並呼叫適合的子 agent；Codex 版會依照 `AGENTS.md` 與 `$codebase-wiki` skill 行動，必要時可在明確要求委派時使用 `.codex/agents/` 的 custom agents。
-
----
-
-## 使用方式
-
-### Agent 對話（推薦）
-
-在 Copilot Chat 選擇 **`wiki-keeper`** agent，直接以自然語言描述需求。`wiki-keeper` 會自動判斷意圖並路由到正確的專業 agent。
-
-**攝入程式碼：**
-```
-把 src/auth/ 模組加進 wiki
-分析 services/payment/ 目錄並文件化
+```text
+/ingest-module src/auth/
 ```
 
-**查詢知識：**
-```
-解釋一下 OrderService 的退款邏輯
-用戶登入流程的整個呼叫鏈是什麼？
-PaymentService 依賴哪些外部服務？
-```
+### Codex
 
-**建立架構決策紀錄（ADR）：**
-```
-我要記錄一個架構決策：為什麼選 PostgreSQL
-記錄我們採用 Event Sourcing 的原因
+在 Codex CLI、IDE extension、Codex app 或 cloud task 中直接輸入：
+
+```text
+請依照 AGENTS.md 的 ingest 流程，把 src/auth/ 模組加進 wiki。
 ```
 
-**健康檢查：**
-```
-幫我檢查 wiki 有沒有品質問題
-有哪些 wiki 頁面已經過時了？
-```
-
-**程式碼考古：**
-```
-為什麼這段重試邏輯用指數退避？
-這個 discount_code 欄位是什麼時候加進來的？
-```
-
----
-
-### Codex 自然語言工作流
-
-Codex 版沒有 Copilot 的 slash prompt；主要路由邏輯寫在 `AGENTS.md`，repo-local skill 放在 `.agents/skills/codebase-wiki/`，可委派的 custom agents 放在 `.codex/agents/`。日常使用直接描述任務即可。
-
-**攝入程式碼：**
-```
-請以 Codebase LLM Wiki 的 ingest 流程，分析 src/auth/ 並更新 wiki。
-```
-
-**查詢知識：**
-```
-請先查 wiki，再必要時回溯 sources，解釋 OrderService 的退款邏輯。
-```
-
-**健康檢查：**
-```
-請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。
-```
-
-**程式碼考古：**
-```
-請用 code archaeology 流程追蹤 discount_code 欄位的 git history，並把有價值的結論存進 wiki。
-```
-
----
-
-### Slash Prompt 指令
-
-此區為 **GitHub Copilot 版專用**。在 Copilot Chat 輸入 `/` 可叫出 Prompt 指令：
-
-| 指令                | 用途                                        | 參數                                      |
-| ------------------- | ------------------------------------------- | ----------------------------------------- |
-| `/ingest-module`    | 互動式攝入單一模組（先預覽再寫入）          | `modulePath` — 模組路徑，例如 `src/auth/` |
-| `/ingest-batch`     | 批次掃描整個目錄，自動推導模組邊界          | `targetPath` — 目標目錄，例如 `src/`      |
-| `/query-wiki`       | 向 wiki 提問，回答附帶原始碼引用            | `question` — 問題文字                     |
-| `/lint-wiki`        | 執行 8 項 wiki 健康檢查，列出問題並建議修復 | —                                         |
-| `/new-adr`          | 以互動方式建立 Architecture Decision Record | `decisionTitle` — 決策標題                |
-| `/onboarding-guide` | 掃描 wiki 自動產生新人 Onboarding 指南      | —                                         |
-| `/update-index`     | 重新掃描 `wiki/` 並完整重建 `index.md`      | —                                         |
-| `/save-synthesis`   | 將當前對話的分析結果存入 `wiki/synthesis/`  | `topicName`（可選）— 分析主題名稱         |
-
-**使用範例：**
-
-```
-/ingest-module src/payment/
-/ingest-batch src/
-/query-wiki 用戶登入流程的整個呼叫鏈是什麼？
-/new-adr 選擇 gRPC 取代 REST 作為 service-to-service 通訊協定
-/save-synthesis 登入流程跨模組依賴分析
-/lint-wiki
-```
-
----
-
-### 輔助腳本
-
-Codex 版位於 `.agents/skills/codebase-wiki/scripts/`，Copilot 版使用 `.github/skills/` 下同名 skill 的 `scripts/`。這些腳本可獨立在終端機執行，也會被 agents 或 `AGENTS.md` 在需要時引用：
-
-```bash
-# 重建 wiki/index.md（掃描所有頁面並重新產生索引）
-python .agents/skills/codebase-wiki/scripts/rebuild-index.py
-
-# 檢查 frontmatter.sources 中的路徑是否仍存在
-python .agents/skills/codebase-wiki/scripts/check-stale.py
-
-# 統計 wiki 概況（頁面數量、類型分佈、wikilink 密度）
-python .agents/skills/codebase-wiki/scripts/wiki-stats.py
-```
-
----
-
-## 元件說明
-
-### Agents
-
-Copilot 版包含 5 個專業 agent，各司其職：
-
-| Agent                | 檔案                          | 職責                                                                                                                                                       |
-| -------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wiki-keeper`        | `wiki-keeper.agent.md`        | **路由器**。分析使用者意圖，派發到正確的子 agent。所有入口從這裡開始                                                                                       |
-| `wiki-ingest`        | `wiki-ingest.agent.md`        | **攝入專家**。讀取原始碼，以互動或批次模式產出結構化 wiki 頁面                                                                                             |
-| `wiki-query`         | `wiki-query.agent.md`         | **知識導航員**。搜尋 wiki 回答問題，可追溯到原始碼；重要分析可存入 synthesis。支援 **Hand-Off** 自動交接：建議行動經使用者確認後，自動委派給對應子代理執行 |
-| `wiki-lint`          | `wiki-lint.agent.md`          | **品質審計員**。執行 8 項健康檢查：陳舊頁面、孤島頁面、斷裂連結、缺失 frontmatter 等                                                                       |
-| `wiki-archaeologist` | `wiki-archaeologist.agent.md` | **程式碼考古師**。透過 git log 追蹤歷史、揭露隱含邏輯、分析技術債成因                                                                                      |
-
-這些 agent manifest 的 `tools` 欄位採用 inline array 寫法（例如 `tools: [read, edit, search]`），方便快速比較各代理的能力邊界；只有確實需要的能力才會加入，例如 `execute`、`agent` 與 `vscode/askQuestions`。
-
-agent 的協作與路由規則目前寫在各自的 Markdown 說明內容中，而不是依賴非官方 frontmatter 欄位；這樣能和現行 GitHub Copilot custom agents schema 保持一致。
-
-#### wiki-keeper 意圖路由邏輯
-
-`wiki-keeper` 根據使用者訊息中的關鍵詞自動路由：
-
-| 關鍵詞特徵                                 | 路由目標              |
-| ------------------------------------------ | --------------------- |
-| 「讀取」「ingest」「文件化」「加入 wiki」  | `wiki-ingest`         |
-| 「怎麼做」「在哪裡」「解釋」「查詢」「找」 | `wiki-query`          |
-| 「檢查」「健康」「lint」「品質」「陳舊」   | `wiki-lint`           |
-| 「歷史」「為什麼這樣寫」「追蹤」「legacy」 | `wiki-archaeologist`  |
-| 「決策」「ADR」「架構選擇」                | 自行套用 ADR 範本處理 |
-
----
-
-#### Codex Custom Agents
-
-Codex 版將 Copilot 的 `.github/agents/*.agent.md` 對應轉寫為 `.codex/agents/*.toml`：
-
-| Codex custom agent | 對應 Copilot agent | 職責 |
-| ------------------ | ------------------ | ---- |
-| `wiki-keeper.toml` | `wiki-keeper.agent.md` | wiki 任務路由、ADR 與品質把關 |
-| `wiki-ingest.toml` | `wiki-ingest.agent.md` | 攝入 raw sources 並建立/更新 wiki |
-| `wiki-query.toml` | `wiki-query.agent.md` | 以 wiki 優先回答 codebase 問題；此 agent 為 read-only |
-| `wiki-lint.toml` | `wiki-lint.agent.md` | 健康檢查、stale sources、broken links、index completeness |
-| `wiki-archaeologist.toml` | `wiki-archaeologist.agent.md` | 透過 git history 追蹤 legacy 行為與設計脈絡 |
-
-Codex custom agents 不是 Copilot 的 Agent 下拉選單等價物；它們是可委派的 specialized agents。一般 Codex wiki 任務會先由主 agent 依 `AGENTS.md` 與 `$codebase-wiki` skill 處理，只有在使用者明確要求 spawn、委派或 parallel agent work 時才使用 `.codex/agents/`。
-
----
-
-### Skill
-
-| Skill           | 位置                            | 內容                                                                                                                         |
-| --------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `codebase-wiki` | Copilot: `.github/skills/` 下的 `codebase-wiki/`；Codex: `.agents/skills/codebase-wiki/` | 主方法論技能，包含攝入工作流、頁面類型規格、lint 清單、frontmatter 規格、6 個頁面範本（module/entity/pattern/adr/log/index） |
-
-**Skill 的 reference 文件：**
-
-| 檔案                             | 說明                                               |
-| -------------------------------- | -------------------------------------------------- |
-| `references/page-types.md`       | 各頁面類型（module/entity/pattern 等）的規格與用途 |
-| `references/ingest-workflow.md`  | 攝入工作流程的詳細步驟說明                         |
-| `references/lint-checklist.md`   | 8 項 wiki 健康檢查項目清單                         |
-| `references/frontmatter-spec.md` | YAML frontmatter 的完整欄位規格                    |
-
----
-
-### Hooks
-
-Hooks 是 Copilot 版的自動觸發保護機制，在 repository 範圍內於 Copilot 執行工具前後自動運行：
-
-| Hook 檔案                | 觸發時機       | 設定型式                                                                                     | 職責                                                                 |
-| ------------------------ | -------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `wiki-write-guard.json`  | `preToolUse`   | `version: 1` + `type: command`，分別宣告 `bash` / `powershell`                              | 攔截寫入操作，拒絕對 `wiki/`、`.github/` 以外路徑的寫入（保護原始碼） |
-| `wiki-log-reminder.json` | `postToolUse`  | `version: 1` + `type: command`，分別宣告 `bash` / `powershell`                              | 偵測到 `wiki/` 頁面被修改後，寫入 `.github/hooks/logs/wiki-log-reminder.jsonl` 稽核線索 |
-| `wiki-session-init.json` | `sessionStart` | `version: 1` + `type: command`，分別宣告 `bash` / `powershell`                              | Session 開始時擷取 wiki 狀態摘要到 `.github/hooks/logs/wiki-session-state.md` |
-
-> GitHub Copilot 的 hook 輸出目前不會把 `postToolUse` 或 `sessionStart` 的文字直接注入 agent context，所以這兩個 hook 會產生稽核工件，而不是回傳 `systemMessage`。
-
-Codex 版使用 `.codex/hooks.json` 與 `.codex/hooks/scripts/`：
-
-| Hook | 觸發時機 | 職責 |
-| ---- | -------- | ---- |
-| `wiki-write-guard.py` | `PreToolUse` | 攔截寫入操作，拒絕對 `wiki/`、`.codex/`、`.agents/`、`.github/`、根目錄 `AGENTS.md` 以外路徑的寫入 |
-| `wiki-log-reminder.py` | `PostToolUse` | 偵測 wiki markdown 頁面變更，寫入 `.codex/hooks/logs/wiki-log-reminder.jsonl` 並回傳 log reminder |
-| `wiki-session-init.py` | `SessionStart` | Session 開始時摘要 `wiki/index.md` 與 `wiki/log.md`，寫入 `.codex/hooks/logs/wiki-session-state.md` 並提供 additional context |
-
-> Codex hooks 需要專案信任 `.codex/` layer 後才會作用；若你的環境尚未啟用 hooks，可先只使用 `AGENTS.md` 與 `.agents/skills/codebase-wiki/`。
-
----
-
-### Codex Instructions
-
-Codex 版的主要入口是根目錄 `AGENTS.md`。它把 Copilot 版分散在 agents/prompts/instructions 裡的規則收斂成一份 Codex 可直接讀取的專案指令，並搭配 Codex 原生 hooks、custom agents 與 repo-local skill。
-
-| 檔案 | 職責 |
-| ---- | ---- |
-| `AGENTS.md` | 定義 Codex 的 wiki 任務邊界、意圖路由、Ingest / Query / Lint / Archaeology / ADR 工作流程、frontmatter 規格與禁止事項 |
-| `wiki/` | Codex 寫入與維護的 Markdown 知識庫 |
-| `.agents/skills/codebase-wiki/` | Codex repo-local skill，提供共用範本、reference 文件與 Python 輔助腳本 |
-| `.codex/agents/` | Codex custom agents，對應 Copilot 版的五個 wiki agents，僅在明確委派時使用 |
-| `.codex/hooks.json` | Codex hooks 設定，串接寫入保護、log reminder 與 session state 摘要 |
-
-Codex 版不依賴 Copilot 的 `.github/agents`、slash prompts 或 hooks；如果兩套檔案同時存在，Codex 會以 `AGENTS.md`、`.codex/` 與 `.agents/skills/` 為主要入口。
-
----
-
-## Wiki 結構與格式
-
-### 目錄結構
-
-```
-wiki/
-├── index.md          — 主索引（LLM 自動維護，列出所有頁面）
-├── log.md            — 時序活動紀錄（append-only，只增不刪）
-├── overview.md       — Codebase 高階總覽
-├── architecture/     — 系統架構、部署架構、資料流圖
-├── modules/          — 按模組/目錄對應的文件頁面
-├── entities/         — 關鍵類別、服務、API 端點文件
-├── patterns/         — Codebase 中使用到的設計模式
-├── decisions/        — Architecture Decision Records (ADR)
-├── dependencies/     — 相依性分析（外部套件、服務相依）
-├── guides/           — Onboarding 指南、除錯指南、貢獻指南
-└── synthesis/        — 綜合分析（技術債、風險區域、改善建議）
-```
-
-### 頁面 Frontmatter 規格
-
-每個 wiki 頁面的 YAML frontmatter：
-
-```yaml
----
-title: 頁面標題
-type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
-sources:
-  - path/to/source/file.ts   # 必須是真實存在的路徑
-  - path/to/another/file.py
-last_updated: YYYY-MM-DD
-tags: [tag1, tag2]
-status: active | stale | placeholder
----
-```
-
-`index.md` 與 `log.md` 也屬於正式頁面類型，分別使用 `type: index`、`type: log`；若沒有直接對應的 raw source，需寫成 `sources: []`，而不是省略該欄位。
-
-| 欄位           | 必填 | 說明                                                     |
-| -------------- | ---- | -------------------------------------------------------- |
-| `title`        | ✅    | 頁面標題                                                 |
-| `type`         | ✅    | 頁面類型（影響 agent 的分類與 lint 行為）                |
-| `sources`      | ✅    | 引用的原始碼路徑清單，必須真實存在                       |
-| `last_updated` | ✅    | 最後更新日期（`YYYY-MM-DD`）                             |
-| `tags`         | ✅    | 標籤清單，用於分類與搜尋                                 |
-| `status`       | ✅    | `active`（現行）/ `stale`（過時）/ `placeholder`（待補） |
-
-ADR 類型另有兩個專屬欄位：`decision_date` 與 `decision_status`。其中 `decision_status` 表示決策狀態（例如 `accepted`），`status` 仍只表示頁面生命週期。
-
-### 跨頁引用
-
-使用 **Wikilink 語法**（與 Obsidian 相容）：
-
-```markdown
-詳見 [[user-auth-service]] 的實作。
-此模式源自 [[repository-pattern]]。
-```
-
-> **規定：** 提及其他 wiki 頁面時**必須**使用 `[[page-name]]`，不使用相對路徑連結。
+日常使用不需要手動切換 custom agent，也不需要 slash prompt。Codex 的完整安裝、hooks、delegation 與排錯說明請看 [Codex.md](Codex.md)。
 
 ---
 
@@ -465,190 +194,163 @@ ADR 類型另有兩個專屬欄位：`decision_date` 與 `decision_status`。其
 
 ### 情境一：初始化全新專案的 wiki
 
-Copilot 版：
+**Copilot**
 
-```bash
-# 1. 套用框架
-cp -r .github/ your-repo/
-cp -r wiki/ your-repo/
-
-# 2. 在 Copilot Chat 中執行
-/ingest-batch src/         # 批次掃描整個 src 目錄
-/onboarding-guide          # 自動產生新人指南
-/update-index              # 重建主索引
+```text
+/ingest-batch src/
+/onboarding-guide
+/update-index
 ```
 
-Codex 版：
+**Codex**
 
-```bash
-# 1. 套用框架
-cp AGENTS.md your-repo/AGENTS.md
-cp -r .codex/ your-repo/.codex/
-mkdir -p your-repo/.agents/skills/
-cp -r .agents/skills/codebase-wiki/ your-repo/.agents/skills/codebase-wiki/
-cp -r wiki/ your-repo/
-```
-
-在 Codex 中描述任務：
-
-```
+```text
 請依照 AGENTS.md 的 batch ingest 流程掃描 src/，建立初始 wiki，最後更新 index 與 log。
+請根據目前的 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。
 ```
+
+更多 Codex 寫法可參考 [Codex.md](Codex.md)。
 
 ### 情境二：新功能上線後更新 wiki
 
-```
-# 單模組攝入（互動模式，先預覽再確認）
+**Copilot**
+
+```text
 /ingest-module src/features/checkout/
-
-# 記錄架構決策
 /new-adr 為什麼在結帳流程中採用 Saga Pattern
-
-# 儲存本次分析的綜合洞察
 /save-synthesis 結帳流程跨服務依賴分析
 ```
 
-### 情境三：定期 wiki 健康維護
+**Codex**
 
-```
-/lint-wiki
+```text
+請依照 AGENTS.md 的 Interactive Ingest 流程，分析 src/features/checkout/，先摘要主要職責、相依關係與風險，再更新 wiki。
 
-# wiki-lint 會回報：
-# - 哪些頁面的 sources 路徑已不存在（stale）
-# - 哪些頁面沒有任何 wikilink（孤島頁面）
-# - 哪些頁面缺少必要的 frontmatter 欄位
-# - log.md 是否有近期更新
+請建立一份 ADR，說明為什麼在結帳流程中採用 Saga Pattern，寫入 wiki/decisions/，並同步更新 index 與 log。
+
+請把這次對結帳流程跨服務依賴的分析整理成 wiki/synthesis/ 頁面，保留來源並更新 index 與 log。
 ```
 
-### 情境四：知識查詢與探索
+### 情境三：知識查詢與健康維護
 
-```
-# 理解某個服務的邏輯
+**Copilot**
+
+```text
 /query-wiki PaymentService 如何處理退款？
+/lint-wiki
+```
 
-# 追蹤跨模組的呼叫鏈
-/query-wiki 用戶登入的完整流程從哪裡開始到哪裡結束？
+**Codex**
 
-# 深挖歷史（建議切換到 wiki-archaeologist agent）
-為什麼這段重試邏輯要用指數退避而不是固定間隔？
+```text
+請先查 wiki，再必要時回溯 sources，解釋 PaymentService 的退款流程。
+請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。
+```
+
+### 情境四：程式碼考古與長期知識沉澱
+
+**Copilot**
+
+```text
 discount_code 這個欄位是什麼時候、為什麼加進來的？
+/save-synthesis 折扣碼設計演進分析
+```
+
+**Codex**
+
+```text
+請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
+請把這次分析整理成一份 synthesis 頁面，並更新 index 與 log。
 ```
 
 ---
 
-## 設計原則
+## 元件一覽
 
-| 原則                   | 說明                                                                     |
-| ---------------------- | ------------------------------------------------------------------------ |
-| **LLM 永不修改原始碼** | wiki agents / Codex 在 wiki 任務中對 codebase 只讀不寫；Copilot 與 Codex 版的 `wiki-write-guard` hook 會攔截越界寫入 |
-| **Log 為 append-only** | `log.md` 只能追加新條目，不得修改或刪除既有條目                          |
-| **Sources 可追溯**     | 每個 wiki 頁面的 `frontmatter.sources` 必須指向真實存在的檔案路徑        |
-| **Wiki 完整性**        | 新增或刪除 wiki 頁面後，必須同步更新 `wiki/index.md`                     |
-| **增量建構**           | 不需要一次讀完整個 codebase，可按模組逐步累積知識                        |
+### Copilot 版
+
+| 元件 | 位置 | 用途 |
+| --- | --- | --- |
+| Agents | `.github/agents/` | `wiki-keeper` 等 5 個專業 agent，負責路由、ingest、query、lint、archaeology |
+| Prompts | `.github/prompts/` | `/ingest-module`、`/lint-wiki`、`/save-synthesis` 等對話入口 |
+| Hooks | `.github/hooks/` | 寫入保護與稽核提醒 |
+| Skill | `.github/skills/codebase-wiki/` | 共用模板、reference 文件與腳本 |
+
+### Codex 版
+
+| 元件 | 位置 | 用途 |
+| --- | --- | --- |
+| Root instructions | `AGENTS.md` | Codex 讀取的主要規則、流程與禁止事項 |
+| Repo-local skill | `.agents/skills/codebase-wiki/` | 模板、reference 文件與輔助腳本 |
+| Hooks | `.codex/config.toml`、`.codex/hooks.json`、`.codex/hooks/scripts/` | SessionStart 狀態摘要、寫入保護、log reminder |
+| Custom agents | `.codex/agents/` | 可委派的 specialized agents；只在明確要求 delegation 或 parallel agent work 時使用 |
+
+Codex 版的細節配置與常見誤解，集中整理在 [Codex.md](Codex.md)。
 
 ---
 
-## 目錄結構總覽
+## Wiki 結構與規格
 
-```
-AGENTS.md                                — OpenAI Codex 版專案指令
-.codex/
-├── config.toml                           — Codex 專案設定（hooks 與 subagent defaults）
-├── hooks.json                            — Codex hooks 設定
-├── agents/
-│   ├── wiki-keeper.toml                  — Codex 路由器 custom agent
-│   ├── wiki-ingest.toml                  — Codex 攝入 custom agent
-│   ├── wiki-query.toml                   — Codex 查詢 custom agent（read-only）
-│   ├── wiki-lint.toml                    — Codex 健康檢查 custom agent
-│   └── wiki-archaeologist.toml           — Codex 程式碼考古 custom agent
-└── hooks/
-    ├── logs/                             — Hook 執行期稽核輸出（git ignore）
-    └── scripts/
-        ├── wiki-write-guard.py
-        ├── wiki-log-reminder.py
-        └── wiki-session-init.py
-.agents/
-└── skills/
-    └── codebase-wiki/
-        ├── SKILL.md                      — Codex repo-local 主方法論技能
-        ├── agents/
-        │   └── openai.yaml               — Codex skill UI metadata
-        ├── references/                   — 頁面類型、攝入流程、lint、frontmatter 規格
-        ├── assets/                       — Wiki 頁面範本
-        └── scripts/                      — Codex 輔助腳本
-.github/
-├── copilot-instructions.md               — 全域規則（wiki 慣例、禁止事項）
-├── instructions/
-│   └── wiki-pages.instructions.md        — 套用至 wiki/**/*.md 的頁面規則
-├── agents/
-│   ├── wiki-keeper.agent.md              — 路由器 agent
-│   ├── wiki-ingest.agent.md              — 攝入 agent
-│   ├── wiki-query.agent.md               — 查詢 agent
-│   ├── wiki-lint.agent.md                — 健康檢查 agent
-│   └── wiki-archaeologist.agent.md       — 程式碼考古 agent
-├── prompts/
-│   ├── ingest-module.prompt.md           — 互動式攝入單一模組
-│   ├── ingest-batch.prompt.md            — 批次攝入目錄
-│   ├── query-wiki.prompt.md              — 向 wiki 提問
-│   ├── lint-wiki.prompt.md               — wiki 健康檢查
-│   ├── new-adr.prompt.md                 — 建立 ADR
-│   ├── onboarding-guide.prompt.md        — 產生新人指南
-│   ├── update-index.prompt.md            — 重建主索引
-│   └── save-synthesis.prompt.md          — 儲存分析結果到 synthesis
-├── hooks/
-│   ├── wiki-write-guard.json             — 寫入保護（preToolUse）
-│   ├── wiki-log-reminder.json            — Log 稽核（postToolUse）
-│   ├── wiki-session-init.json            — Session 初始化（sessionStart）
-│   ├── logs/                             — Hook 執行期稽核輸出（git ignore）
-│   └── scripts/
-│       ├── wiki-write-guard.py
-│       ├── wiki-log-reminder.py
-│       └── wiki-session-init.py
-└── skills/
-    └── codebase-wiki/
-        ├── SKILL.md                      — 主方法論技能
-        ├── references/
-        │   ├── page-types.md             — 頁面類型規格
-        │   ├── ingest-workflow.md        — 攝入工作流程
-        │   ├── lint-checklist.md         — 健康檢查清單
-        │   └── frontmatter-spec.md       — Frontmatter 規格
-        ├── assets/
-        │   ├── module-template.md        — 模組頁面範本
-        │   ├── entity-template.md        — Entity 頁面範本
-        │   ├── pattern-template.md       — 設計模式頁面範本
-        │   ├── adr-template.md           — ADR 頁面範本
-        │   ├── log-template.md           — Log 範本
-        │   └── index-template.md         — Index 範本
-        └── scripts/
-            ├── frontmatter.py            — 內建 frontmatter parser
-            ├── rebuild-index.py          — 重建 index.md
-            ├── check-stale.py            — 檢查 stale sources
-            └── wiki-stats.py             — Wiki 統計報告
+### 目錄結構
+
+```text
 wiki/
-├── index.md                              — 主索引
-├── log.md                                — 活動紀錄
-├── overview.md                           — 高階總覽
-├── architecture/                         — 架構文件
-├── modules/                              — 模組文件
-├── entities/                             — Entity 文件
-├── patterns/                             — 設計模式
-├── decisions/                            — ADR
-├── dependencies/                         — 相依性分析
-├── guides/                               — 指南
-└── synthesis/                            — 綜合分析
+├── index.md
+├── log.md
+├── overview.md
+├── architecture/
+├── modules/
+├── entities/
+├── patterns/
+├── decisions/
+├── dependencies/
+├── guides/
+└── synthesis/
 ```
+
+### Frontmatter 規格
+
+每個 wiki 頁面都應包含：
+
+```yaml
+---
+title: 頁面標題
+type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
+sources:
+  - path/to/source/file.ts
+last_updated: YYYY-MM-DD
+tags: [tag1, tag2]
+status: active | stale | placeholder
+---
+```
+
+ADR 頁面另外需要：
+
+```yaml
+decision_date: YYYY-MM-DD
+decision_status: proposed | accepted | deprecated | superseded
+```
+
+### 核心規則
+
+- Raw sources 在 wiki 任務中只能讀取，不能修改
+- `wiki/log.md` 是 append-only
+- 新增、刪除、改名 wiki 頁面後必須更新 `wiki/index.md`
+- `frontmatter.sources` 必須對應真實存在的 repo 相對路徑
+- 引用其他 wiki 頁面時使用 `[[page-name]]`
 
 ---
 
 ## 相容性
 
-| 工具                    | 支援狀態 | 說明                                                                   |
-| ----------------------- | -------- | ---------------------------------------------------------------------- |
-| **GitHub Copilot Chat** | ✅ 支援   | Copilot 版需要 VS Code 中的 GitHub Copilot Chat 擴充套件，啟用 Agent 模式 |
-| **OpenAI Codex**        | ✅ 支援   | Codex 版使用 `AGENTS.md`、`.codex/`、`.agents/skills/` 作為入口，可在 CLI、IDE extension、Codex app 或 cloud task 中使用 |
-| **Obsidian**            | ✅ 相容   | `wiki/` 目錄可直接作為 Obsidian Vault 開啟，支援 Graph View 與雙向連結 |
-| **Python 3.8+**         | ⚡ 選用   | 輔助腳本與 Copilot/Codex Hooks 的執行環境，純 Agent / `AGENTS.md` 使用不需要，且目前不依賴第三方 Python 套件 |
-| **任意語言的 Codebase** | ✅ 通用   | 框架與語言無關，可套用到任何語言的 codebase                            |
+| 工具 | 支援狀態 | 說明 |
+| --- | --- | --- |
+| GitHub Copilot Chat | ✅ 支援 | 使用 `.github/` 內的 agents、prompts、hooks、skills |
+| OpenAI Codex | ✅ 支援 | 使用 `AGENTS.md`、`.codex/`、`.agents/skills/` 作為入口 |
+| VS Code | ✅ 支援 | Copilot 與 Codex IDE extension 都可使用 |
+| Python 3.8+ | ⚡ 選用 | hooks 與輔助腳本需要；純自然語言流程不一定需要 |
+| Obsidian | ✅ 相容 | `wiki/` 可直接當作 Vault 使用 |
+| 任意語言的 codebase | ✅ 通用 | 框架不依賴特定程式語言 |
 
 ---
 
