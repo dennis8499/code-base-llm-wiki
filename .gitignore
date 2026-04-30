@@ -1,2 +1,3 @@
 .github/hooks/logs/
+.codex/hooks/logs/
 __pycache__/

@@ -4,10 +4,14 @@
 
 ---
 
-## [Unreleased] — 2026-04-29
+## [Unreleased] — 2026-04-30
 
 ### 新增
 
+- **新增 Codex 原生框架結構**：加入 `.codex/` 與 `.agents/skills/codebase-wiki/`，讓 OpenAI Codex 可使用 project-local hooks、custom agents 與 repo-local skill，而不必依賴 Copilot `.github/` 元件
+- **新增 Codex custom agents**：將 `.github/agents/` 五個 Copilot agent 轉寫為 `.codex/agents/*.toml`，包含 `wiki-keeper`、`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`
+- **新增 Codex hooks**：加入 `.codex/hooks.json` 與 `.codex/hooks/scripts/`，提供 `SessionStart` wiki 狀態摘要、`PreToolUse` 寫入保護與 `PostToolUse` log reminder
+- **新增 Codex repo-local skill**：將 `codebase-wiki` skill 複製到 `.agents/skills/codebase-wiki/`，並加入 `agents/openai.yaml` 作為 Codex skill metadata
 - **新增 OpenAI Codex 版入口**：加入根目錄 `AGENTS.md`，將 Codebase LLM Wiki 的意圖路由、Ingest / Query / Lint / Archaeology / ADR 工作流程、frontmatter 規格與禁止事項整理成 Codex 可直接讀取的專案指令
 - **README 新增雙版本使用說明**：補上 GitHub Copilot 版與 OpenAI Codex 版的支援矩陣、安裝方式、快速開始、自然語言工作流與相容性說明
 - **wiki-query 建議行動與自動交接（Hand-Off）功能**：查詢代理在產生建議後，會透過 `vscode/askQuestions` 向使用者呈現可執行的行動清單，使用者確認後自動委派給對應的專業子代理執行。
@@ -22,6 +26,8 @@
 
 ### 變更
 
+- **AGENTS.md 對齊 Codex 原生路徑**：將 Codex skill 與輔助腳本路徑從 `.github/skills/codebase-wiki/` 更新為 `.agents/skills/codebase-wiki/`，並補充 `.codex/agents` 只在明確委派時使用
+- **README 改為三層 Codex 說明**：Codex 版文件現在同時描述 `AGENTS.md`、`.codex/`、`.agents/skills/`，並新增 Codex Custom Agents 對照表與 Codex Hooks 說明
 - **wiki-query 禁止行為更新**：從「不得修改任何檔案」調整為「不得直接修改任何檔案」，所有寫入操作僅能透過委派子代理間接執行
 - **query-wiki prompt 更新**：同步加入 Hand-Off 流程說明與新的建議行動回答格式
 - **統一 wiki agents 的 `tools` 宣告格式**：`wiki-keeper`、`wiki-query`、`wiki-ingest`、`wiki-lint`、`wiki-archaeologist` 全數改為 inline YAML array（例如 `tools: [read, edit, search]`），讓代理能力清單更精簡且更容易比對
@@ -43,7 +49,18 @@
 | 檔案 | 變更類型 |
 |------|----------|
 | `AGENTS.md` | 新增（OpenAI Codex 版專案指令） |
-| `README.md` | 更新（新增 Copilot / Codex 雙版本說明） |
+| `README.md` | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents 與 hooks） |
+| `.codex/config.toml` | 新增（Codex hooks 與 subagent defaults） |
+| `.codex/hooks.json` | 新增（Codex hook 事件設定） |
+| `.codex/agents/wiki-keeper.toml` | 新增（Codex wiki 路由 custom agent） |
+| `.codex/agents/wiki-ingest.toml` | 新增（Codex wiki 攝入 custom agent） |
+| `.codex/agents/wiki-query.toml` | 新增（Codex wiki 查詢 custom agent） |
+| `.codex/agents/wiki-lint.toml` | 新增（Codex wiki 健康檢查 custom agent） |
+| `.codex/agents/wiki-archaeologist.toml` | 新增（Codex 程式碼考古 custom agent） |
+| `.codex/hooks/scripts/wiki-write-guard.py` | 新增（Codex 寫入保護 hook） |
+| `.codex/hooks/scripts/wiki-log-reminder.py` | 新增（Codex log reminder hook） |
+| `.codex/hooks/scripts/wiki-session-init.py` | 新增（Codex session state hook） |
+| `.agents/skills/codebase-wiki/` | 新增（Codex repo-local skill，含 templates、references、scripts） |
 | `.github/agents/wiki-query.agent.md` | 大幅擴充（+59/-3） |
 | `.github/prompts/query-wiki.prompt.md` | 更新（+11/-2） |
 | `.github/agents/wiki-keeper.agent.md` | 格式整理（`tools` 改為 inline array） |

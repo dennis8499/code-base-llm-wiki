@@ -2,7 +2,7 @@
 
 本檔案是 **OpenAI Codex 版**的 Codebase LLM Wiki 操作指令。當使用者要求建立、查詢、維護或健康檢查 `wiki/` 時，Codex 應依照本檔案行動。
 
-若目前正在維護的是 **Codebase LLM Wiki 框架本身**，且使用者明確要求修改框架文件或範本，則可以依請求修改 `README.md`、`ChangeLog.md`、`.github/`、`AGENTS.md` 等框架檔案；下方「不得修改 raw sources」規則主要適用於把本框架套用到目標 codebase 時的 wiki 維護工作。
+若目前正在維護的是 **Codebase LLM Wiki 框架本身**，且使用者明確要求修改框架文件或範本，則可以依請求修改 `README.md`、`ChangeLog.md`、`.github/`、`.codex/`、`.agents/`、`AGENTS.md` 等框架檔案；下方「不得修改 raw sources」規則主要適用於把本框架套用到目標 codebase 時的 wiki 維護工作。
 
 ## 核心模型
 
@@ -12,7 +12,14 @@ Codebase LLM Wiki 不是每次查詢都重新檢索原始碼的 RAG；它是一�
 | --- | --- | --- |
 | Raw Sources | 目標 codebase 的原始碼、設定檔、既有文件 | 唯讀。wiki 任務中只讀取、不修改 |
 | Wiki | `wiki/` | Codex 產生並維護的結構化知識庫 |
-| Schema | `AGENTS.md` 與可選的 `.github/skills/codebase-wiki/` | 驅動 Codex 行為的規則、範本、輔助腳本 |
+| Schema | `AGENTS.md`、`.codex/`、`.agents/skills/codebase-wiki/` | 驅動 Codex 行為的規則、範本、輔助腳本與可委派 agents |
+
+## Codex 原生元件
+
+- 一般 Codex wiki 任務由主 agent 依本檔案與 `$codebase-wiki` skill 處理。
+- `.agents/skills/codebase-wiki/` 是 Codex repo-local skill，包含模板、reference 文件與 Python 輔助腳本。
+- `.codex/hooks.json` 與 `.codex/hooks/scripts/` 提供 Codex hooks：SessionStart 狀態摘要、PreToolUse 寫入保護、PostToolUse log reminder。
+- `.codex/agents/*.toml` 是 specialized custom agents，只有在使用者明確要求 spawn、委派、subagents 或 parallel agent work 時才使用；不要因為一般查詢或一般 wiki 任務就自動 spawn。
 
 ## 意圖路由
 
@@ -94,7 +101,7 @@ decision_status: proposed | accepted | deprecated | superseded
 6. 更新 `wiki/index.md`。
 7. 追加 `wiki/log.md` 條目：`## [YYYY-MM-DD] ingest | {subject}`。
 
-若 `.github/skills/codebase-wiki/assets/` 存在，優先沿用其中模板。若不存在，仍依照本檔案規格產生頁面。
+若 `.agents/skills/codebase-wiki/assets/` 存在，優先沿用其中模板。若不存在，仍依照本檔案規格產生頁面。
 
 ## Query 流程
 
@@ -120,9 +127,9 @@ decision_status: proposed | accepted | deprecated | superseded
 可用輔助腳本（若存在）：
 
 ```bash
-python .github/skills/codebase-wiki/scripts/check-stale.py wiki/
-python .github/skills/codebase-wiki/scripts/wiki-stats.py wiki/
-python .github/skills/codebase-wiki/scripts/rebuild-index.py wiki/
+python .agents/skills/codebase-wiki/scripts/check-stale.py wiki/
+python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki/
+python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki/
 ```
 
 大範圍自動修復前，先輸出健康報告與建議行動；使用者確認後再修改 wiki。
