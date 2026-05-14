@@ -1,7 +1,9 @@
 ---
 title: Wiki Activity Log
 type: log
-last_updated: 2026-04-16
+sources: []
+last_updated: 2026-05-14
+tags: [log]
 status: active
 ---
 
@@ -17,3 +19,11 @@ status: active
 - 建立 Wiki 目錄骨架
 - 建立 index.md、log.md、overview.md
 - 建立子目錄：architecture、modules、entities、patterns、decisions、dependencies、guides、synthesis
+
+## [2026-05-14] ingest | 框架本身文件化
+
+- 全面閱讀專案所有核心文件（README.md、AGENTS.md、Codex.md、llm-wiki.md、agents、hooks、skills、prompts）
+- 更新 wiki/overview.md：從佔位符升級為詳細框架總覽（含三層架構圖、目錄結構、兩種入口對比）
+- 建立 wiki/guides/framework-introduction.md：完整功能介紹（五大 agents、六大操作、hooks、頁面規格、slash prompts、輔助腳本、模板、安裝指南、工作流程範例、相容性）
+- 更新 wiki/index.md：加入 framework-introduction 條目，補齊 frontmatter（sources、tags）
+- 受影響頁面：overview.md、index.md、log.md、guides/framework-introduction.md
