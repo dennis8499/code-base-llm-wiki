@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import re
 import sys
 from typing import Any
@@ -30,6 +31,15 @@ PATCH_FILE_PATTERN = re.compile(
 )
 
 ALLOWED_PREFIXES = ("wiki/", ".codex/", ".agents/", ".github/")
+ALLOWED_ROOT_FILES = {
+    "agents.md",
+    "readme.md",
+    "changelog.md",
+    "codex.md",
+    "llm-wiki.md",
+    "prompt.txt",
+}
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def configure_stdio() -> None:
@@ -44,13 +54,28 @@ def normalize_path(value: str) -> str:
     return value.replace("\\", "/").strip()
 
 
+def is_allowed_root_file(path: str) -> bool:
+    root_name = path.rsplit("/", 1)[-1]
+    if root_name not in ALLOWED_ROOT_FILES:
+        return False
+    if "/" not in path:
+        return True
+    try:
+        candidate = Path(path)
+        if not candidate.is_absolute():
+            candidate = REPO_ROOT / candidate
+        resolved = candidate.resolve(strict=False)
+    except Exception:
+        return False
+    return resolved.parent == REPO_ROOT and resolved.name.lower() in ALLOWED_ROOT_FILES
+
+
 def is_allowed_path(path: str) -> bool:
     normalized = normalize_path(path).lower()
     while normalized.startswith("./"):
         normalized = normalized[2:]
     return (
-        normalized == "agents.md"
-        or normalized.endswith("/agents.md")
+        is_allowed_root_file(normalized)
         or normalized.startswith(ALLOWED_PREFIXES)
         or any(f"/{prefix}" in normalized for prefix in ALLOWED_PREFIXES)
     )
@@ -163,7 +188,7 @@ def main() -> None:
             summarized_paths += f" 等 {len(disallowed_paths)} 個路徑"
         respond_deny(
             "Codebase LLM Wiki 任務預設只應寫入 `wiki/`、`.codex/`、"
-            "`.agents/`、`.github/` 或根目錄 `AGENTS.md`。"
+            "`.agents/`、`.github/` 或明確框架維護文件。"
             f"這次偵測到其他路徑：{summarized_paths}。"
         )
         return

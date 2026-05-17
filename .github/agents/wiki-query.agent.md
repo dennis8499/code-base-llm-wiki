@@ -8,7 +8,7 @@ description: >
   can be saved to wiki/synthesis/ with user confirmation.
   When suggestions are generated, offers hand-off buttons to let the user
   trigger follow-up actions (save synthesis, re-ingest, lint fix) automatically.
-tools: [vscode/askQuestions, read, agent, search]
+tools: [vscode/askQuestions, read, agent, search, ms-mssql.mssql/mssql_schema_designer, ms-mssql.mssql/mssql_dab, ms-mssql.mssql/mssql_connect, ms-mssql.mssql/mssql_disconnect, ms-mssql.mssql/mssql_list_servers, ms-mssql.mssql/mssql_list_databases, ms-mssql.mssql/mssql_get_connection_details, ms-mssql.mssql/mssql_change_database, ms-mssql.mssql/mssql_list_tables, ms-mssql.mssql/mssql_list_schemas, ms-mssql.mssql/mssql_list_views, ms-mssql.mssql/mssql_list_functions, ms-mssql.mssql/mssql_run_query]
 ---
 
 # Wiki Query — 知識查詢代理

@@ -4,10 +4,11 @@
 
 ---
 
-## [Unreleased] — 2026-04-30
+## [Unreleased] — 2026-05-17
 
 ### 新增
 
+- **wiki-query SQL Server live evidence 同步支援**：GitHub Copilot 端 `wiki-query` 新增 VS Code Microsoft SQL Server extension tools 後，Codex 端同步在 `AGENTS.md` 與 `.codex/agents/wiki-query.toml` 補上資料庫證據規則，允許 schema discovery、metadata lookup 與有界線的唯讀 `SELECT`
 - **新增 Codex 原生框架結構**：加入 `.codex/` 與 `.agents/skills/codebase-wiki/`，讓 OpenAI Codex 可使用 project-local hooks、custom agents 與 repo-local skill，而不必依賴 Copilot `.github/` 元件
 - **新增 Codex custom agents**：將 `.github/agents/` 五個 Copilot agent 轉寫為 `.codex/agents/*.toml`，包含 `wiki-keeper`、`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`
 - **新增 Codex hooks**：加入 `.codex/hooks.json` 與 `.codex/hooks/scripts/`，提供 `SessionStart` wiki 狀態摘要、`PreToolUse` 寫入保護與 `PostToolUse` log reminder
@@ -26,6 +27,8 @@
 
 ### 變更
 
+- **Codex Query 流程加入 DB live evidence 契約**：Query 回答若使用 DB-derived result，必須標註 `connected_at`、`source_tool`、`server`、`database`、`query_scope`、`result_limit`、`row_count`、`freshness_note`；DB 證據不得寫入 wiki frontmatter `sources`
+- **README 補上資料庫 Live Evidence 說明**：新增 Copilot / Codex 入口的 SQL Server live evidence 對照、唯讀限制、fallback 原則與查詢範例
 - **AGENTS.md 對齊 Codex 原生路徑**：將 Codex skill 與輔助腳本路徑從 `.github/skills/codebase-wiki/` 更新為 `.agents/skills/codebase-wiki/`，並補充 `.codex/agents` 只在明確委派時使用
 - **README 改為三層 Codex 說明**：Codex 版文件現在同時描述 `AGENTS.md`、`.codex/`、`.agents/skills/`，並新增 Codex Custom Agents 對照表與 Codex Hooks 說明
 - **wiki-query 禁止行為更新**：從「不得修改任何檔案」調整為「不得直接修改任何檔案」，所有寫入操作僅能透過委派子代理間接執行
@@ -39,6 +42,7 @@
 
 ### 修正
 
+- **Codex write guard 對齊框架維護規則**：`.codex/hooks/scripts/wiki-write-guard.py` 現在允許明確的框架維護工作更新根目錄 `README.md`、`ChangeLog.md`、`Codex.md`、`llm-wiki.md`、`prompt.txt` 與 `AGENTS.md`
 - **`wiki-write-guard.py` 改為真正可執行的寫入保護**：直接輸出 `permissionDecision` / `permissionDecisionReason`，並解析 `toolArgs`，現在會實際拒絕對 `wiki/`、`.github/` 以外路徑的寫入
 - **三個輔助腳本移除 `PyYAML` 硬依賴**：`check-stale.py`、`rebuild-index.py`、`wiki-stats.py` 已改用內建 frontmatter parser
 - **Windows 終端輸出相容性修正**：三個輔助腳本在執行前會切換為 UTF-8 stdio，避免 CP950 主控台因 emoji 或非 ASCII 字元輸出失敗
@@ -48,20 +52,20 @@
 
 | 檔案 | 變更類型 |
 |------|----------|
-| `AGENTS.md` | 新增（OpenAI Codex 版專案指令） |
-| `README.md` | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents 與 hooks） |
+| `AGENTS.md` | 新增 / 更新（OpenAI Codex 版專案指令；Query 流程新增 SQL Server live evidence 規則） |
+| `README.md` | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents、hooks 與資料庫 Live Evidence） |
 | `.codex/config.toml` | 新增（Codex hooks 與 subagent defaults） |
 | `.codex/hooks.json` | 新增（Codex hook 事件設定） |
 | `.codex/agents/wiki-keeper.toml` | 新增（Codex wiki 路由 custom agent） |
 | `.codex/agents/wiki-ingest.toml` | 新增（Codex wiki 攝入 custom agent） |
-| `.codex/agents/wiki-query.toml` | 新增（Codex wiki 查詢 custom agent） |
+| `.codex/agents/wiki-query.toml` | 新增 / 更新（Codex wiki 查詢 custom agent；同步 SQL Server live evidence 規則） |
 | `.codex/agents/wiki-lint.toml` | 新增（Codex wiki 健康檢查 custom agent） |
 | `.codex/agents/wiki-archaeologist.toml` | 新增（Codex 程式碼考古 custom agent） |
-| `.codex/hooks/scripts/wiki-write-guard.py` | 新增（Codex 寫入保護 hook） |
+| `.codex/hooks/scripts/wiki-write-guard.py` | 新增 / 更新（Codex 寫入保護 hook；允許明確框架維護文件） |
 | `.codex/hooks/scripts/wiki-log-reminder.py` | 新增（Codex log reminder hook） |
 | `.codex/hooks/scripts/wiki-session-init.py` | 新增（Codex session state hook） |
 | `.agents/skills/codebase-wiki/` | 新增（Codex repo-local skill，含 templates、references、scripts） |
-| `.github/agents/wiki-query.agent.md` | 大幅擴充（+59/-3） |
+| `.github/agents/wiki-query.agent.md` | 更新（Hand-Off 流程與 VS Code MSSQL tools） |
 | `.github/prompts/query-wiki.prompt.md` | 更新（+11/-2） |
 | `.github/agents/wiki-keeper.agent.md` | 格式整理（`tools` 改為 inline array） |
 | `.github/agents/wiki-ingest.agent.md` | 格式整理（`tools` 改為 inline array） |

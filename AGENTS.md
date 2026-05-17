@@ -108,8 +108,16 @@ decision_status: proposed | accepted | deprecated | superseded
 1. 先讀 `wiki/index.md` 定位相關頁面。
 2. 讀取 1-5 個最相關的 wiki 頁面。
 3. 若 wiki 資訊不足或疑似過時，依 `sources` 回溯 raw source 驗證。
-4. 回答時列出引用來源，例如 `[[auth-module]]` 與 `src/auth/service.ts`。
-5. 若回答具有長期價值，建議存入 `wiki/synthesis/`；未經使用者確認，不主動寫入 query 結果。
+4. 若問題需要資料庫事實，且目前 Codex 環境有 SQL Server / MSSQL 工具可用，可以取得 live evidence，但僅限唯讀的 schema discovery、metadata lookup 或有界線的 `SELECT`。
+5. 回答時列出引用來源，例如 `[[auth-module]]`、`src/auth/service.ts`，以及資料庫證據區塊（若有使用）。
+6. 若回答具有長期價值，建議存入 `wiki/synthesis/`；未經使用者確認，不主動寫入 query 結果。
+
+### Query 的 SQL Server live evidence 規則
+
+- 禁止 DML、DDL、`EXEC`、stored procedure execution、無限制全表掃描、揭露連線密碼或任何會改變資料庫狀態的操作。
+- 每個 DB-derived 結果必須標註 `connected_at`、`source_tool`、`server`、`database`、`query_scope`、`result_limit`、`row_count`、`freshness_note`。
+- DB 證據不是 repo 檔案，不得放進 wiki frontmatter `sources`；若日後存成 wiki 頁面，應放在正文的 evidence block。
+- 若 Codex 當前無法使用 MSSQL 工具，必須明確告知，並先詢問使用者是否改用 GitHub Copilot、MCP、CLI 或其他 fallback 路徑。
 
 ## Lint 流程
 
