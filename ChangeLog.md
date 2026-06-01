@@ -29,6 +29,7 @@
 
 ### 變更
 
+- **README Codex Workflow 功能範例擴寫**：新增「Codex Workflow 功能範例（逐項）」章節，逐項覆蓋 Interactive Ingest、Batch Ingest、Query、Query+SQL Server live evidence、Lint、Archaeology、ADR、Synthesis、Guide、Delegation，每項皆提供何時使用、可直接貼上的 prompt、預期產出與驗收重點
 - **Codex project instructions token 最佳化**：AGENTS.md 收斂為短核心規則，長流程與模板維持在 `$codebase-wiki` skill 的 `.agents/skills/codebase-wiki/` 下，讓 Codex 透過 progressive disclosure 按需載入
 - **Codex hooks feature key 更新**：`.codex/config.toml` 改用 `[features] hooks = true`，保留 `agents.max_threads = 6` 與 `agents.max_depth = 1`，避免遞迴 subagent fan-out 增加 token 與 latency
 - **Codex hook audit fallback**：`.codex/hooks/scripts/` 在 `.codex/hooks/logs/` 因 Windows ACL 無法寫入時，會退到 root-level `.codex-hook-logs/`，避免 SessionStart / log reminder 失去稽核輸出
@@ -58,7 +59,8 @@
 | 檔案 | 變更類型 |
 |------|----------|
 | `AGENTS.md` | 新增 / 更新（OpenAI Codex 版專案指令；Query 流程新增 SQL Server live evidence 規則） |
-| `README.md` | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents、hooks 與資料庫 Live Evidence） |
+| `README.md` | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents、hooks、資料庫 Live Evidence，以及 Codex workflow 功能逐項範例） |
+| `ChangeLog.md` | 更新（追加 README 的 Codex workflow 功能範例擴寫紀錄） |
 | `.codex/config.toml` | 新增（Codex hooks 與 subagent defaults） |
 | `.codex/hooks.json` | 新增（Codex hook 事件設定） |
 | `.codex/agents/wiki-keeper.toml` | 新增（Codex wiki 路由 custom agent） |

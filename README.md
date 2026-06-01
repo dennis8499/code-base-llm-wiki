@@ -20,6 +20,7 @@
 - [安裝與設定](#安裝與設定)
 - [快速開始](#快速開始)
 - [典型工作流程](#典型工作流程)
+- [Codex Workflow 功能範例（逐項）](#codex-workflow-功能範例逐項)
 - [資料庫 Live Evidence](#資料庫-live-evidence)
 - [元件一覽](#元件一覽)
 - [Wiki 結構與規格](#wiki-結構與規格)
@@ -278,6 +279,240 @@ discount_code 這個欄位是什麼時候、為什麼加進來的？
 ```text
 請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
 請把這次分析整理成一份 synthesis 頁面，並更新 index 與 log。
+```
+
+如果你要逐項查看每個 Codex workflow 功能的「何時用、怎麼下 prompt、會產生什麼結果、如何驗收」，請看下一節。
+
+## Codex Workflow 功能範例（逐項）
+
+> 以下範例都假設你在 Codex CLI、IDE extension、Codex app 或 cloud task 中操作，並要求流程遵守 `AGENTS.md` 與 `$codebase-wiki` skill。
+
+### 1. Interactive Ingest（單一模組）
+
+**何時使用**
+- 你剛修改了某個模組，想把該模組的責任、相依、風險增量寫入 wiki。
+
+**Prompt（可直接貼上）**
+```text
+請依照 AGENTS.md 的 Interactive Ingest 流程，分析 src/auth/，先摘要主要職責、相依關係與風險，再更新 wiki。
+```
+
+**預期產出**
+- 新增或更新 `wiki/modules/*.md`，必要時補 `wiki/entities/*.md`、`wiki/patterns/*.md`。
+- 同步更新 `wiki/index.md`。
+- 追加 `wiki/log.md`：`## [YYYY-MM-DD] ingest | src/auth/`。
+
+**驗收重點**
+- 新頁面 frontmatter 完整（`title/type/sources/last_updated/tags/status`）。
+- `sources` 都是存在的 repo 相對路徑。
+- 至少有一個有效 `[[wikilink]]` 連到相關頁面。
+
+**注意事項**
+- wiki 任務中 raw sources 唯讀，不可改 `src/` 原始碼。
+
+### 2. Batch Ingest（目錄批次攝入）
+
+**何時使用**
+- 專案剛導入框架，或你要一次掃描一個大型目錄建立初始 wiki。
+
+**Prompt（可直接貼上）**
+```text
+請依照 AGENTS.md 的 batch ingest 流程掃描 src/，建立初始 wiki，最後更新 index 與 log。
+```
+
+**預期產出**
+- 批次建立/更新 modules、entities、patterns、dependencies 類頁面。
+- `wiki/index.md` 收錄新頁面。
+- `wiki/log.md` 追加一筆批次 ingest 紀錄。
+
+**驗收重點**
+- 新增頁面都可由 `wiki/index.md` 導航到。
+- 無孤兒頁面（至少被 index 或其他頁面引用）。
+- `sources` 無失效路徑。
+
+**注意事項**
+- 大範圍 ingest 先摘要再寫入，避免長任務 context drift。
+
+### 3. Query（wiki-first）
+
+**何時使用**
+- 想知道某個功能怎麼運作，優先讀既有 wiki，必要時才回溯原始碼。
+
+**Prompt（可直接貼上）**
+```text
+請先查 wiki，再必要時回溯 sources，解釋 PaymentService 如何處理退款。
+```
+
+**預期產出**
+- 回答會先引用 `[[wiki-page]]`，不足處再補 source path 證據。
+- 預設不改任何檔案。
+
+**驗收重點**
+- 回答中有明確來源（wikilink 或路徑）。
+- 會指出 wiki 不足或過時處，而不是直接猜測。
+
+**注意事項**
+- 只有在你明確要求保存時，才應把 query 結果寫成 `wiki/synthesis/`。
+
+### 4. Query + SQL Server Live Evidence（唯讀資料庫證據）
+
+**何時使用**
+- 需要確認「wiki/source 描述」和「資料庫現況」是否一致。
+
+**Prompt（可直接貼上）**
+```text
+請先查 wiki，再必要時使用可用的 SQL Server 工具取得唯讀 live evidence，說明 Orders 資料表和 PaymentService 的退款流程有什麼關係。
+```
+
+**預期產出**
+- 回答包含 wiki/source 引用，並附 DB evidence metadata：`connected_at`、`source_tool`、`server`、`database`、`query_scope`、`result_limit`、`row_count`、`freshness_note`。
+- 若當前環境沒有 MSSQL 工具，會先明確告知並詢問是否改走 Copilot、MCP、CLI 或其他 fallback。
+
+**驗收重點**
+- 查詢操作保持唯讀（僅 schema/metadata/bounded SELECT）。
+- 回答內沒有把 DB 證據寫成 frontmatter `sources`。
+
+**注意事項**
+- 禁止 DML、DDL、`EXEC`、stored procedure execution 與無限制全表掃描。
+
+### 5. Lint（wiki 健康檢查）
+
+**何時使用**
+- 要做交付前健康檢查，或懷疑 wiki 有斷鏈、過時來源、frontmatter 異常。
+
+**Prompt（可直接貼上）**
+```text
+請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。
+```
+
+**預期產出**
+- 回傳健康報告：stale sources、broken links、orphan pages、index completeness 等。
+- 先給修復建議，不會直接大範圍改檔。
+
+**驗收重點**
+- finding 有分級（Critical/Warning/Info）。
+- 大修前會先確認，不會直接自動重寫大量頁面。
+
+**注意事項**
+- lint 不應改動 raw sources。
+
+### 6. Archaeology（程式碼考古）
+
+**何時使用**
+- 你想追「為什麼這樣寫」或「某欄位何時加入、設計脈絡是什麼」。
+
+**Prompt（可直接貼上）**
+```text
+請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
+```
+
+**預期產出**
+- 以入口點 + 呼叫鏈 + git history 證據形成解釋。
+- 若要求持久化，更新對應 wiki 頁面並同步 index/log。
+
+**驗收重點**
+- 內容清楚區分 evidence-supported 與 speculation。
+- 使用非破壞性 git 指令（例如 `git log`、`git blame`、`git show`）。
+
+**注意事項**
+- 不可使用破壞性 git 指令（`reset`、`checkout`、`clean`、`rebase`）。
+
+### 7. ADR（架構決策紀錄）
+
+**何時使用**
+- 功能有明確設計取捨，需要可追溯決策文件。
+
+**Prompt（可直接貼上）**
+```text
+請建立一份 ADR，說明為什麼在結帳流程中採用 Saga Pattern，寫入 wiki/decisions/，並同步更新 index 與 log。
+```
+
+**預期產出**
+- 新增 `wiki/decisions/{slug}.md`。
+- ADR frontmatter 包含 `decision_date` 與 `decision_status`。
+- `wiki/index.md` 與 `wiki/log.md` 同步更新。
+
+**驗收重點**
+- ADR 內容至少包含背景、決策、替代方案、影響與取捨、後續追蹤。
+- `decision_status` 使用有效值（`proposed/accepted/deprecated/superseded`）。
+
+**注意事項**
+- 沒有直接 raw source 時，frontmatter `sources` 應使用 `[]`。
+
+### 8. Synthesis（長期知識沉澱）
+
+**何時使用**
+- 查詢或分析結果具有長期價值，適合沉澱成跨頁整合知識。
+
+**Prompt（可直接貼上）**
+```text
+請把這次對結帳流程跨服務依賴的分析整理成 wiki/synthesis/ 頁面，保留來源並更新 index 與 log。
+```
+
+**預期產出**
+- 新增或更新 `wiki/synthesis/*.md`。
+- 補齊 cross-references，並更新 index/log。
+
+**驗收重點**
+- 內容有清楚來源（wiki pages / source paths / evidence blocks）。
+- 不是重複貼上 query 回答，而是有整理後的結構化知識。
+
+**注意事項**
+- DB-derived evidence 若需保留，放正文 evidence block，不進 frontmatter `sources`。
+
+### 9. Guide（Onboarding / 操作指南）
+
+**何時使用**
+- 要給新人或跨團隊讀者一份可直接上手的導覽。
+
+**Prompt（可直接貼上）**
+```text
+請根據目前 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。
+```
+
+**預期產出**
+- 新增 `wiki/guides/*.md`，涵蓋核心模組、閱讀順序、常見流程。
+- `wiki/index.md` 與 `wiki/log.md` 更新。
+
+**驗收重點**
+- 指南可獨立閱讀，不依賴讀者先知道內部脈絡。
+- 關鍵術語與流程都有對應 wikilink。
+
+**注意事項**
+- 指南內容需可追溯來源，避免生成不可驗證結論。
+
+### 10. Delegation（明確要求才用 Custom Agents）
+
+**何時使用**
+- 你明確要求 spawn / 委派 / subagents / parallel agent work。
+
+**Prompt（可直接貼上）**
+```text
+請使用 delegation，把這次工作拆成兩條平行子任務：
+1) 委派 wiki-ingest 分析 src/features/checkout/
+2) 委派 wiki-lint 做全站健康檢查
+最後整合結果並提出修復優先順序。
+```
+
+**預期產出**
+- 主 agent 委派 `.codex/agents/*.toml` 專業代理執行子任務。
+- 回傳整合後摘要與下一步建議。
+
+**驗收重點**
+- 沒有明確委派需求時，維持主 agent + `$codebase-wiki` skill，避免不必要 token 成本。
+- 委派結果仍遵守 `AGENTS.md` 邊界（raw sources 唯讀、index/log 規則）。
+
+**注意事項**
+- custom agents 是「可委派元件」，不是日常必切換入口。
+
+### 最小驗收清單（Codex 版）
+
+```text
+1) 任一 ingest/ADR/synthesis/guide 任務後，wiki/index.md 與 wiki/log.md 是否同步更新？
+2) 新頁面 frontmatter 是否完整且 sources 真實存在（或合理使用 sources: []）？
+3) query 是否先用 wiki，再必要時才回溯 sources？
+4) 涉及 SQL Server 時是否保持唯讀，且回答附 evidence metadata？
+5) 未明確要求 delegation 時，是否避免不必要 spawn custom agents？
 ```
 
 ---
