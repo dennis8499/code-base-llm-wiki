@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-05-14
+last_updated: 2026-06-01
 tags: [index]
 status: active
 ---
@@ -15,7 +15,7 @@ status: active
 
 - 瀏覽此頁面找到感興趣的主題
 - 點擊 `[[wikilink]]` 跳轉到對應頁面
-- 使用 `/query-wiki` Prompt 進行語意搜尋
+- Copilot 可使用 `/query-wiki` Prompt；Codex 可用 `Codex.md` 中的自然語言 recipe 進行語意搜尋
 
 ---
 

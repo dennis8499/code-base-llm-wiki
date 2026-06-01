@@ -32,7 +32,10 @@ PATCH_FILE_PATTERN = re.compile(
 )
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
-LOG_DIR = REPO_ROOT / ".codex" / "hooks" / "logs"
+LOG_DIR_CANDIDATES = (
+    REPO_ROOT / ".codex" / "hooks" / "logs",
+    REPO_ROOT / ".codex-hook-logs",
+)
 
 
 def configure_stdio() -> None:
@@ -126,13 +129,16 @@ def append_audit_entry(paths: list[str]) -> str | None:
         "paths": paths,
         "reminder": "Append an entry to wiki/log.md for ingest, lint, query save, or major wiki updates.",
     }
-    try:
-        LOG_DIR.mkdir(parents=True, exist_ok=True)
-        with (LOG_DIR / "wiki-log-reminder.jsonl").open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except OSError as exc:
-        return f"無法寫入 `.codex/hooks/logs/wiki-log-reminder.jsonl`：{exc}"
-    return None
+    errors: list[str] = []
+    for log_dir in LOG_DIR_CANDIDATES:
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            with (log_dir / "wiki-log-reminder.jsonl").open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            return None
+        except OSError as exc:
+            errors.append(f"`{log_dir.relative_to(REPO_ROOT)}/wiki-log-reminder.jsonl`: {exc}")
+    return "；".join(errors)
 
 
 def respond(additional_context: str | None = None) -> None:
@@ -168,7 +174,7 @@ def main() -> None:
             joined_paths += f" 等 {len(wiki_paths)} 個路徑"
         message = f"已偵測 wiki 頁面變更：{joined_paths}。若這是 ingest、lint 或重大更新，請追加 `wiki/log.md`。"
         if audit_error:
-            message += f"（{audit_error}）"
+            message += f"（無法寫入 Codex hook audit 檔：{audit_error}）"
         respond(message)
         return
 

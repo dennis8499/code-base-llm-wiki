@@ -1,3 +1,4 @@
 .github/hooks/logs/
 .codex/hooks/logs/
+.codex-hook-logs/
 __pycache__/

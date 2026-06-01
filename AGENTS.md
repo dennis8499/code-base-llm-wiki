@@ -4,6 +4,8 @@
 
 若目前正在維護的是 **Codebase LLM Wiki 框架本身**，且使用者明確要求修改框架文件或範本，則可以依請求修改 `README.md`、`ChangeLog.md`、`.github/`、`.codex/`、`.agents/`、`AGENTS.md` 等框架檔案；下方「不得修改 raw sources」規則主要適用於把本框架套用到目標 codebase 時的 wiki 維護工作。
 
+本檔保持短小，只放 Codex 每次都需要知道的高優先規則。詳細模板、長流程與檢查清單放在 `$codebase-wiki` skill 的 `.agents/skills/codebase-wiki/` 下，讓 Codex 透過 skill progressive disclosure 在需要時才載入，避免專案指令長期佔用過多 context。
+
 ## 核心模型
 
 Codebase LLM Wiki 不是每次查詢都重新檢索原始碼的 RAG；它是一個由 LLM 持續維護、可累積的 Markdown 知識庫。
@@ -20,6 +22,14 @@ Codebase LLM Wiki 不是每次查詢都重新檢索原始碼的 RAG；它是一�
 - `.agents/skills/codebase-wiki/` 是 Codex repo-local skill，包含模板、reference 文件與 Python 輔助腳本。
 - `.codex/hooks.json` 與 `.codex/hooks/scripts/` 提供 Codex hooks：SessionStart 狀態摘要、PreToolUse 寫入保護、PostToolUse log reminder。
 - `.codex/agents/*.toml` 是 specialized custom agents，只有在使用者明確要求 spawn、委派、subagents 或 parallel agent work 時才使用；不要因為一般查詢或一般 wiki 任務就自動 spawn。
+- `.github/` 與 `.codex/` 是同權維護的兩個入口：Copilot 使用 agents/prompts/hooks，Codex 使用 AGENTS.md/skills/custom agents/hooks。兩者應維持相同 wiki 能力、邊界、安全規則與驗收結果，但不需要使用相同 UI 入口。
+
+## Token 使用原則
+
+- 預設用主 agent + `$codebase-wiki` skill 完成 wiki 任務；只有使用者明確要求 delegation、subagents 或 parallel work 時才 spawn `.codex/agents/*.toml`。
+- Query 先讀 `wiki/index.md`，再讀 1-5 個最相關 wiki 頁面；只有 wiki 不足、過時或矛盾時才回溯 `sources`，避免不必要的 repo-wide 掃描。
+- Ingest 先摘要發現再寫入；batch ingest 每 3-5 個模組回報一次進度，降低長任務 context drift。
+- Hooks 只做 deterministic guard/reminder，不把大量 wiki 內容注入 prompt；SessionStart 摘要由 hook 限制大小。
 
 ## 意圖路由
 

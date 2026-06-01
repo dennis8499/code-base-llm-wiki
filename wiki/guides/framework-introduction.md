@@ -14,7 +14,7 @@ sources:
   - .github/agents/wiki-archaeologist.agent.md
   - .agents/skills/codebase-wiki/SKILL.md
   - .agents/skills/codebase-wiki/references/ingest-workflow.md
-last_updated: 2026-05-14
+last_updated: 2026-06-01
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 ---
@@ -238,13 +238,13 @@ Raw Sources 層（唯讀原始碼）
 
 - **觸發時機**：每次 Session 啟動時（SessionStart）
 - **作用**：摘要 `wiki/index.md` 與 `wiki/log.md` 的最新狀態
-- **行為**：產出稽核工件到 `.github/hooks/logs/wiki-session-state.md`
+- **行為**：Copilot 產出稽核工件到 `.github/hooks/logs/wiki-session-state.md`；Codex 優先寫 `.codex/hooks/logs/wiki-session-state.md`，若 Windows ACL 擋住則退到 `.codex-hook-logs/wiki-session-state.md`
 
 ### wiki-log-reminder（Log 提醒）
 
 - **觸發時機**：wiki 頁面被修改後（PostToolUse）
 - **作用**：提醒補上 `wiki/log.md` 條目
-- **行為**：寫入 `.github/hooks/logs/wiki-log-reminder.jsonl`
+- **行為**：Copilot 寫入 `.github/hooks/logs/wiki-log-reminder.jsonl`；Codex 優先寫 `.codex/hooks/logs/wiki-log-reminder.jsonl`，若 Windows ACL 擋住則退到 `.codex-hook-logs/wiki-log-reminder.jsonl`
 
 **Copilot 版設定檔**：
 - `wiki-write-guard.json`
@@ -317,6 +317,19 @@ Copilot 版提供 8 個 slash prompts，可在 Copilot Chat 中直接呼叫：
 | `/onboarding-guide`       | 產出 Onboarding 指南           |
 | `/save-synthesis {topic}` | 儲存綜合分析至 wiki/synthesis/ |
 | `/update-index`           | 手動重建 wiki/index.md         |
+
+Codex 版不偽造 project-level custom slash prompts。Codex IDE / CLI 的 slash commands 是平台控制命令；本框架在 Codex 端以自然語言 recipe 達成同等流程：
+
+| Copilot prompt | Codex recipe |
+| --- | --- |
+| `/ingest-module {path}` | `請依照 AGENTS.md 的 Interactive Ingest 流程，分析 {path}，先摘要主要職責、相依關係與風險，再更新 wiki。` |
+| `/ingest-batch {path}` | `請依照 AGENTS.md 的 batch ingest 流程掃描 {path}，建立初始 wiki，最後更新 index 與 log。` |
+| `/query-wiki {question}` | `請先查 wiki，再必要時回溯 sources，回答：{question}` |
+| `/lint-wiki` | `請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。` |
+| `/new-adr {title}` | `請建立一份 ADR：{title}，寫入 wiki/decisions/，並同步更新 index 與 log。` |
+| `/onboarding-guide` | `請根據目前 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。` |
+| `/save-synthesis {topic}` | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。` |
+| `/update-index` | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。` |
 
 ---
 

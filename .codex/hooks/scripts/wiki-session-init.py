@@ -13,7 +13,10 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 WIKI_ROOT = REPO_ROOT / "wiki"
 INDEX_FILE = WIKI_ROOT / "index.md"
 LOG_FILE = WIKI_ROOT / "log.md"
-STATE_FILE = REPO_ROOT / ".codex" / "hooks" / "logs" / "wiki-session-state.md"
+STATE_FILE_CANDIDATES = (
+    REPO_ROOT / ".codex" / "hooks" / "logs" / "wiki-session-state.md",
+    REPO_ROOT / ".codex-hook-logs" / "wiki-session-state.md",
+)
 
 INDEX_MAX_LINES = 60
 LOG_TAIL_ENTRIES = 10
@@ -94,6 +97,18 @@ def respond(additional_context: str) -> None:
     )
 
 
+def write_state_file(message: str) -> str | None:
+    errors: list[str] = []
+    for state_file in STATE_FILE_CANDIDATES:
+        try:
+            state_file.parent.mkdir(parents=True, exist_ok=True)
+            state_file.write_text(message, encoding="utf-8")
+            return None
+        except OSError as exc:
+            errors.append(f"`{state_file.relative_to(REPO_ROOT)}`: {exc}")
+    return "；".join(errors)
+
+
 def main() -> None:
     configure_stdio()
     try:
@@ -102,11 +117,9 @@ def main() -> None:
         pass
 
     message = build_message(read_index_summary(), read_log_tail())
-    try:
-        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATE_FILE.write_text(message, encoding="utf-8")
-    except OSError as exc:
-        message += f"\n\n> 無法寫入 `.codex/hooks/logs/wiki-session-state.md`：{exc}"
+    audit_error = write_state_file(message)
+    if audit_error:
+        message += f"\n\n> 無法寫入 Codex hook audit 檔：{audit_error}"
     respond(message)
 
 

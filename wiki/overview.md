@@ -7,7 +7,7 @@ sources:
   - Codex.md
   - llm-wiki.md
   - .github/copilot-instructions.md
-last_updated: 2026-05-14
+last_updated: 2026-06-01
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 ---
@@ -112,6 +112,8 @@ code-base-llm-wiki/
 | **OpenAI Codex 版**   | `AGENTS.md` + `.codex/` + `.agents/` | Codex CLI / IDE / 雲端任務，以自然語言驅動                 |
 
 兩版共用同一個 `wiki/` 骨架，可共存於同一個 repo。
+
+本框架採雙入口同權維護：Copilot 與 Codex 維持同一組 wiki 能力、邊界、安全規則與驗收結果。Copilot 使用 agents、prompts、hooks 與 `.github/skills/`；Codex 使用 `AGENTS.md`、`.codex/agents/`、`.codex/hooks.json` 與 `.agents/skills/codebase-wiki/`。Codex 不模擬 Copilot 的 project-level slash prompt files，而是以自然語言 recipe 觸發同等工作流程。
 
 ## 核心功能
 

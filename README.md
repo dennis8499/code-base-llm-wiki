@@ -76,7 +76,20 @@
 | **OpenAI Codex 版** | `AGENTS.md`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/agents/`、`.agents/skills/codebase-wiki/` | 你想讓 Codex CLI、IDE extension、Codex app 或 cloud task 直接讀取專案規則與 repo-local skill；Codex query 流程會同步遵守 SQL Server live evidence 的唯讀規則 |
 | **共用 Wiki 骨架** | `wiki/` | 兩種版本共用的知識庫輸出位置 |
 
-你可以只選其中一條路線，也可以讓兩套檔案共存於同一個 repo。
+你可以只選其中一條路線，也可以讓兩套檔案共存於同一個 repo。本框架採 **雙入口同權維護**：Copilot 與 Codex 共享同一組 wiki 能力、邊界、安全規則與驗收結果，但各自使用平台原生入口。
+
+### Copilot ↔ Codex 功能對照
+
+| 能力 | GitHub Copilot | OpenAI Codex |
+| --- | --- | --- |
+| 全域規則 | `.github/copilot-instructions.md` | `AGENTS.md` |
+| 專業代理 | `.github/agents/*.agent.md` | `.codex/agents/*.toml` |
+| 使用者入口 | `.github/prompts/*.prompt.md` slash prompts | `Codex.md` 內的自然語言 recipe |
+| Workflow 細節 | `.github/skills/codebase-wiki/` | `.agents/skills/codebase-wiki/` |
+| Hooks | `.github/hooks/*.json` | `.codex/hooks.json` |
+| 輸出 | `wiki/` | `wiki/` |
+
+Codex 不模擬 Copilot 的 project-level slash prompt files；Codex IDE / CLI 的 slash commands 是平台控制命令，日常 wiki 操作用自然語言 recipe 觸發。
 
 ---
 
@@ -123,7 +136,8 @@ wiki/
 
 ### 執行期產物
 
-- `.codex/hooks/logs/`：當 Codex hooks 啟用時，SessionStart 與 log reminder 會在這裡留下執行期輸出。
+- `.codex/hooks/logs/`：當 Codex hooks 啟用時，SessionStart 與 log reminder 會優先在這裡留下執行期輸出。
+- `.codex-hook-logs/`：若 Windows ACL 擋住 `.codex/hooks/logs/` 寫入，Codex hooks 會退到這個 root-level ignored 目錄。
 
 ---
 

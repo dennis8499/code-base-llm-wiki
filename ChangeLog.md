@@ -4,10 +4,12 @@
 
 ---
 
-## [Unreleased] — 2026-05-17
+## [Unreleased] — 2026-06-01
 
 ### 新增
 
+- **雙入口同權維護說明**：README 與 Codex.md 補上 Copilot ↔ Codex parity table，明確定義兩邊維持同一組 wiki 能力、邊界、安全規則與驗收結果，但各自使用平台原生入口
+- **Codex 自然語言 recipe 對照**：Codex.md 新增 8 個 Copilot slash prompt 對應的 Codex recipe，避免偽造 Codex project-level custom slash prompts
 - **wiki-query SQL Server live evidence 同步支援**：GitHub Copilot 端 `wiki-query` 新增 VS Code Microsoft SQL Server extension tools 後，Codex 端同步在 `AGENTS.md` 與 `.codex/agents/wiki-query.toml` 補上資料庫證據規則，允許 schema discovery、metadata lookup 與有界線的唯讀 `SELECT`
 - **新增 Codex 原生框架結構**：加入 `.codex/` 與 `.agents/skills/codebase-wiki/`，讓 OpenAI Codex 可使用 project-local hooks、custom agents 與 repo-local skill，而不必依賴 Copilot `.github/` 元件
 - **新增 Codex custom agents**：將 `.github/agents/` 五個 Copilot agent 轉寫為 `.codex/agents/*.toml`，包含 `wiki-keeper`、`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`
@@ -27,6 +29,9 @@
 
 ### 變更
 
+- **Codex project instructions token 最佳化**：AGENTS.md 收斂為短核心規則，長流程與模板維持在 `$codebase-wiki` skill 的 `.agents/skills/codebase-wiki/` 下，讓 Codex 透過 progressive disclosure 按需載入
+- **Codex hooks feature key 更新**：`.codex/config.toml` 改用 `[features] hooks = true`，保留 `agents.max_threads = 6` 與 `agents.max_depth = 1`，避免遞迴 subagent fan-out 增加 token 與 latency
+- **Codex hook audit fallback**：`.codex/hooks/scripts/` 在 `.codex/hooks/logs/` 因 Windows ACL 無法寫入時，會退到 root-level `.codex-hook-logs/`，避免 SessionStart / log reminder 失去稽核輸出
 - **Codex Query 流程加入 DB live evidence 契約**：Query 回答若使用 DB-derived result，必須標註 `connected_at`、`source_tool`、`server`、`database`、`query_scope`、`result_limit`、`row_count`、`freshness_note`；DB 證據不得寫入 wiki frontmatter `sources`
 - **README 補上資料庫 Live Evidence 說明**：新增 Copilot / Codex 入口的 SQL Server live evidence 對照、唯讀限制、fallback 原則與查詢範例
 - **AGENTS.md 對齊 Codex 原生路徑**：將 Codex skill 與輔助腳本路徑從 `.github/skills/codebase-wiki/` 更新為 `.agents/skills/codebase-wiki/`，並補充 `.codex/agents` 只在明確委派時使用
