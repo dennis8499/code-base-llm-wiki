@@ -4,10 +4,13 @@
 
 ---
 
-## [Unreleased] — 2026-06-01
+## [Unreleased] — 2026-06-03
 
 ### 新增
 
+- **Codex 版完整重建**：依 OpenAI Codex 官方 customization surface 重新落地 `AGENTS.md`、`Codex.md`、`.agents/skills/codebase-wiki/`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/hooks/scripts/` 與 `.codex/agents/*.toml`，讓 README 宣稱的 Codex 支援重新有實體檔案支撐
+- **Codex hook 官方 schema 對齊**：Codex hooks 使用 `SessionStart`、`PreToolUse`、`PostToolUse` 事件與 `hookSpecificOutput` 輸出格式，並保留 `.codex/hooks/logs/` 到 `.codex-hook-logs/` 的 audit fallback
+- **README 新增 Codex 版完整使用範例**：新增從安裝、初始化、增量維護、wiki-first query、synthesis 保存、SQL Server live evidence、lint 修復、custom agents delegation 到交付前檢查的端到端操作劇本
 - **雙入口同權維護說明**：README 與 Codex.md 補上 Copilot ↔ Codex parity table，明確定義兩邊維持同一組 wiki 能力、邊界、安全規則與驗收結果，但各自使用平台原生入口
 - **Codex 自然語言 recipe 對照**：Codex.md 新增 8 個 Copilot slash prompt 對應的 Codex recipe，避免偽造 Codex project-level custom slash prompts
 - **wiki-query SQL Server live evidence 同步支援**：GitHub Copilot 端 `wiki-query` 新增 VS Code Microsoft SQL Server extension tools 後，Codex 端同步在 `AGENTS.md` 與 `.codex/agents/wiki-query.toml` 補上資料庫證據規則，允許 schema discovery、metadata lookup 與有界線的唯讀 `SELECT`
@@ -29,7 +32,7 @@
 
 ### 變更
 
-- **README Codex Workflow 功能範例擴寫**：新增「Codex Workflow 功能範例（逐項）」章節，逐項覆蓋 Interactive Ingest、Batch Ingest、Query、Query+SQL Server live evidence、Lint、Archaeology、ADR、Synthesis、Guide、Delegation，每項皆提供何時使用、可直接貼上的 prompt、預期產出與驗收重點
+- **README Codex Workflow 功能範例擴寫**：新增「Codex 版完整使用範例」與「Codex Workflow 功能範例（逐項）」章節，逐項覆蓋 Interactive Ingest、Batch Ingest、Query、Query+SQL Server live evidence、Lint、Archaeology、ADR、Synthesis、Guide、Delegation，每項皆提供何時使用、可直接貼上的 prompt、預期產出與驗收重點
 - **Codex project instructions token 最佳化**：AGENTS.md 收斂為短核心規則，長流程與模板維持在 `$codebase-wiki` skill 的 `.agents/skills/codebase-wiki/` 下，讓 Codex 透過 progressive disclosure 按需載入
 - **Codex hooks feature key 更新**：`.codex/config.toml` 改用 `[features] hooks = true`，保留 `agents.max_threads = 6` 與 `agents.max_depth = 1`，避免遞迴 subagent fan-out 增加 token 與 latency
 - **Codex hook audit fallback**：`.codex/hooks/scripts/` 在 `.codex/hooks/logs/` 因 Windows ACL 無法寫入時，會退到 root-level `.codex-hook-logs/`，避免 SessionStart / log reminder 失去稽核輸出
@@ -48,6 +51,7 @@
 
 ### 修正
 
+- **README / 實體檔案一致性修復**：恢復 README 中列出的 Codex 入口檔案，避免 `AGENTS.md`、`Codex.md`、`.codex/` 與 `.agents/skills/codebase-wiki/` 被文件引用但不存在
 - **Codex write guard 對齊框架維護規則**：`.codex/hooks/scripts/wiki-write-guard.py` 現在允許明確的框架維護工作更新根目錄 `README.md`、`ChangeLog.md`、`Codex.md`、`llm-wiki.md`、`prompt.txt` 與 `AGENTS.md`
 - **`wiki-write-guard.py` 改為真正可執行的寫入保護**：直接輸出 `permissionDecision` / `permissionDecisionReason`，並解析 `toolArgs`，現在會實際拒絕對 `wiki/`、`.github/` 以外路徑的寫入
 - **三個輔助腳本移除 `PyYAML` 硬依賴**：`check-stale.py`、`rebuild-index.py`、`wiki-stats.py` 已改用內建 frontmatter parser

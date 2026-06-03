@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.codex/hooks/scripts/wiki-session-init.py\"",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.codex\\hooks\\scripts\\wiki-session-init.py\"",
+            "timeout": 10,
+            "statusMessage": "Loading wiki state"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.codex/hooks/scripts/wiki-write-guard.py\"",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.codex\\hooks\\scripts\\wiki-write-guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking wiki write boundary"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.codex/hooks/scripts/wiki-log-reminder.py\"",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.codex\\hooks\\scripts\\wiki-log-reminder.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking wiki log reminder"
+          }
+        ]
+      }
+    ]
+  }
+}

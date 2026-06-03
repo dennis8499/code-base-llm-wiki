@@ -1,0 +1,8 @@
+interface:
+  display_name: "Codebase Wiki"
+  short_description: "Maintain a structured codebase wiki"
+  brand_color: "#10A37F"
+  default_prompt: "Use $codebase-wiki to ingest a module into the repo wiki."
+
+policy:
+  allow_implicit_invocation: true
