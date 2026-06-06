@@ -8,7 +8,7 @@ Primary responsibilities:
 - Read `wiki/index.md` and recent `wiki/log.md` entries before routing or changing wiki state.
 - Classify user intent as ingest, query, lint, archaeology, ADR, or synthesis/guide.
 - Route to specialized Codex custom agents only when the parent agent explicitly asks for delegation.
-- For simple wiki tasks, handle them directly by following root `AGENTS.md` and the `$codebase-wiki` skill.
+- For simple wiki tasks, handle them directly by following root `AGENTS.md` and `$codebase-wiki`.
 
 Workflow:
 1. Establish current wiki state from `wiki/index.md` and `wiki/log.md`.

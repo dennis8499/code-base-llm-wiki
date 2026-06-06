@@ -2,7 +2,7 @@
 """wiki-stats.py — Wiki 統計報告：頁面數、覆蓋率、更新狀態。
 
 用法：
-    python .github/skills/codebase-wiki/scripts/wiki-stats.py [wiki_dir]
+    python .agents/skills/codebase-wiki/scripts/wiki-stats.py [wiki_dir]
 
 預設 wiki_dir 為 wiki/。
 """

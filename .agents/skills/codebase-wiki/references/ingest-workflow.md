@@ -9,7 +9,7 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
 
 ## 兩種模式
 
-### Interactive 模式（`/ingest-module`）
+### Interactive 模式（Codex recipe: `請依照 Interactive Ingest 流程分析 {path}`）
 
 適用於日常維護、逐模組深入理解。
 
@@ -38,7 +38,7 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
    - 追加 `wiki/log.md` 條目
    - 向使用者報告建立/更新的頁面清單
 
-### Batch 模式（`/ingest-batch`）
+### Batch 模式（Codex recipe: `請依照 Batch Ingest 流程掃描 {path}`）
 
 適用於初始化、大規模攝入。
 

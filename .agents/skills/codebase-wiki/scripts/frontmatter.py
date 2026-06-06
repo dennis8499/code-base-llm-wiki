@@ -2,8 +2,8 @@
 
 This intentionally supports only the YAML subset used by the wiki templates:
 plain scalars, quoted scalars, inline arrays, and simple block arrays.
-Keeping it dependency-free lets the helper scripts run in a clean Copilot
-agent environment without requiring PyYAML.
+Keeping it dependency-free lets the helper scripts run in a clean Codex
+environment without requiring PyYAML.
 """
 
 from __future__ import annotations

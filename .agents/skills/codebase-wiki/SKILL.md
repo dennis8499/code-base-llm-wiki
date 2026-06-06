@@ -25,7 +25,7 @@ description: >
 |---|---|---|
 | **Raw Sources** | codebase 本身 | 唯讀。LLM 讀取但**永不修改** |
 | **Wiki** | `wiki/` 目錄 | LLM 產生並維護的 markdown 知識庫 |
-| **Schema** | `AGENTS.md`、`.codex/`、`.agents/skills/codebase-wiki/` | 驅動 Codex 行為的規則、範本與工作流 |
+| **Schema** | `AGENTS.md`、`.codex/`、`.agents/skills/codebase-wiki/` | 驅動 Codex 行為的規則與工作流 |
 
 ---
 
@@ -101,7 +101,7 @@ wiki/
 ```yaml
 ---
 title: 頁面標題
-type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture
+type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
 sources:
   - path/to/source/file.ts
 last_updated: YYYY-MM-DD

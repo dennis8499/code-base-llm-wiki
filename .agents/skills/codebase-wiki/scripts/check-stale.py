@@ -2,7 +2,7 @@
 """check-stale.py — 比對 wiki frontmatter sources 與實際檔案，找出陳舊頁面。
 
 用法：
-    python .github/skills/codebase-wiki/scripts/check-stale.py [wiki_dir] [repo_root]
+    python .agents/skills/codebase-wiki/scripts/check-stale.py [wiki_dir] [repo_root]
 
 預設 wiki_dir 為 wiki/，repo_root 為當前目錄。
 """

@@ -2,7 +2,7 @@
 """rebuild-index.py — 掃描 wiki/ 目錄，重建 index.md。
 
 用法：
-    python .github/skills/codebase-wiki/scripts/rebuild-index.py [wiki_dir]
+    python .agents/skills/codebase-wiki/scripts/rebuild-index.py [wiki_dir]
 
 預設 wiki_dir 為當前目錄下的 wiki/。
 """
