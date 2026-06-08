@@ -1,15 +1,10 @@
 ---
 name: codebase-wiki
 description: >
-  Builds and maintains a persistent, structured wiki for any codebase using
-  incremental LLM-driven knowledge extraction. Use this skill whenever the user
-  wants to understand, document, or explore a codebase — including ingesting
-  modules into the wiki, querying the knowledge base, running wiki health checks,
-  creating Architecture Decision Records, generating onboarding guides, or
-  performing code archaeology on legacy systems. Invoke even when the user
-  mentions "文件化" "知識庫" "wiki" "ingest" "onboarding" "程式碼考古"
-  "技術債" "ADR" or asks to understand how a module works, trace a feature's
-  history, or get an overview of the project structure.
+  Build and maintain a persistent codebase wiki. Use for wiki ingest, query,
+  lint, ADRs, onboarding guides, and code archaeology, or when the user asks to
+  document or understand a module, trace behavior or history, or mentions
+  "文件化" "知識庫" "wiki" "ingest" "onboarding" "程式碼考古" "技術債" "ADR".
 ---
 
 # Codebase Wiki — LLM 驅動的 Codebase 知識庫
