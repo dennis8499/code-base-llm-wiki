@@ -1,107 +1,115 @@
 ---
 name: codebase-wiki
 description: >
-  Builds and maintains a persistent, structured wiki for any codebase using
-  incremental LLM-driven knowledge extraction. Use this skill whenever the user
-  wants to understand, document, or explore a codebase — including ingesting
-  modules into the wiki, querying the knowledge base, running wiki health checks,
-  creating Architecture Decision Records, generating onboarding guides, or
-  performing code archaeology on legacy systems. Invoke even when the user
-  mentions "文件化" "知識庫" "wiki" "ingest" "onboarding" "程式碼考古"
-  "技術債" "ADR" or asks to understand how a module works, trace a feature's
-  history, or get an overview of the project structure.
+  Build, use, and maintain Codebase LLM Wiki, a persistent Markdown knowledge
+  base for codebases. Use when the agent needs to install or operate this
+  repo-local wiki framework, ingest modules, answer wiki-first questions, lint
+  wiki health, create ADRs, save synthesis or onboarding guides, run code
+  archaeology, update wiki/index.md or wiki/log.md, or explain how AGENTS.md,
+  .codex/, .agents/skills/codebase-wiki/, .github/, and wiki/ fit together.
+  Trigger on "Codebase LLM Wiki", "codebase wiki", "文件化", "知識庫",
+  "ingest", "query wiki", "lint wiki", "onboarding", "程式碼考古", "技術債",
+  or "ADR".
 ---
 
-# Codebase Wiki — LLM 驅動的 Codebase 知識庫
+# Codebase LLM Wiki
 
-讓 LLM 為任意 codebase 增量建構並維護結構化知識庫。
-不是 RAG（每次重新檢索），而是**持久累積的 wiki 產物**——交叉引用已建立、矛盾已標記、綜合分析已反映所有已讀內容。
+Use this skill to operate the Codebase LLM Wiki framework in a target repo, or
+to maintain this framework repo itself. Treat the wiki as a durable Markdown
+knowledge base that compounds over time. It is not RAG: query the existing wiki
+first, then inspect raw sources only when the wiki is missing, stale, or
+contradictory.
 
----
+## Project Structure
 
-## 三層架構
+Recognize these repo-level surfaces:
 
-| 層 | 對應 | 職責 |
-|---|---|---|
-| **Raw Sources** | codebase 本身 | 唯讀。LLM 讀取但**永不修改** |
-| **Wiki** | `wiki/` 目錄 | LLM 產生並維護的 markdown 知識庫 |
-| **Schema** | `.github/` 底下的 Copilot 元件 | 驅動 LLM 行為的規則與工作流 |
-
----
-
-## 適用範圍
-
-**適用：**
-- 為 codebase 建立結構化知識庫（新人 Onboarding、持續文件維護）
-- 記錄架構決策（ADR）
-- 追蹤遺留系統的隱含邏輯（程式碼考古）
-- 跨團隊知識共享
-- Wiki 健康檢查與品質維護
-
-**不適用：**
-- 修改原始碼（wiki agents 只讀不改 codebase）
-- 即時程式除錯（用預設 agent）
-- 測試撰寫（用專門的測試 agent）
-
----
-
-## 三大操作
-
-### 1. Ingest（知識攝入）
-
-讀取 codebase 原始碼 → 產出結構化 wiki 頁面 → 更新 index 與 log。
-
-兩種模式：
-- **Interactive**：逐模組處理，LLM 先摘要讓使用者確認後再寫入 wiki
-- **Batch**：掃描整個目錄 / glob，按依賴順序批次產出頁面
-
-> 載入 `references/ingest-workflow.md` 取得完整 Ingest 流程步驟與判斷邏輯。
-
-### 2. Query（知識查詢）
-
-讀取 wiki index → 定位相關頁面 → 綜合回答 → 引用 wiki 頁面。
-有價值的分析結果應存入 `wiki/synthesis/` 目錄，讓探索成果持續累積。
-
-### 3. Lint（健康檢查）
-
-定期檢查 wiki 品質：
-- 陳舊頁面（source 已刪除/搬移）
-- 孤島頁面（無 inbound link）
-- 矛盾（頁面間不一致描述）
-- 缺失頁面（重要模組無 wiki 頁面）
-- 缺少 cross-references
-
-> 載入 `references/lint-checklist.md` 取得完整健康檢查清單。
-
----
-
-## Wiki 目錄結構
-
-```
+```text
+AGENTS.md                         Codex rules, routing, and safety boundaries
+Codex.md                          Human-facing Codex setup and usage guide
+README.md                         Framework overview and install instructions
+.codex/
+  config.toml                     Codex hooks and bounded delegation settings
+  hooks.json                      Hook wiring
+  hooks/scripts/                  Guardrails and reminders
+  agents/*.toml                   Optional custom agents for explicit delegation
+.agents/skills/codebase-wiki/
+  SKILL.md                        This workflow entrypoint
+  references/                     Detailed workflow specs loaded on demand
+  assets/                         Page templates
+  scripts/                        Deterministic wiki checks and index helpers
+  agents/openai.yaml              UI metadata for the skill
+.github/                          GitHub Copilot entrypoint, prompts, agents, hooks
 wiki/
-├── index.md          — 主索引（LLM 自動維護）
-├── log.md            — 時序活動紀錄（append-only）
-├── overview.md       — codebase 高階總覽
-├── architecture/     — 架構文件
-├── modules/          — 按模組/目錄的文件頁面
-├── entities/         — 關鍵實體（類別、服務、API 端點）
-├── patterns/         — 使用到的設計模式
-├── decisions/        — Architecture Decision Records (ADR)
-├── dependencies/     — 相依性分析
-├── guides/           — Onboarding、除錯、貢獻指南
-└── synthesis/        — 綜合分析（技術債、風險區域、改善建議）
+  index.md                        Maintained navigation index
+  log.md                          Append-only activity log
+  overview.md                     Codebase overview
+  architecture/ modules/ entities/
+  patterns/ decisions/ dependencies/
+  guides/ synthesis/              Typed wiki pages
 ```
 
----
+In this framework repo, schema maintenance may update `README.md`, `Codex.md`,
+`AGENTS.md`, `.codex/`, `.agents/`, `.github/`, and `wiki/` when explicitly
+requested. In an installed target repo, wiki tasks must keep raw sources
+read-only and write only the wiki or framework schema files that the user asked
+to maintain.
 
-## 頁面類型與 Frontmatter
+## Intent Routing
 
-每個 wiki 頁面必須包含標準 YAML frontmatter：
+Classify the request before acting:
+
+| Intent | User signals | Default action |
+| --- | --- | --- |
+| Install / setup | install, setup, use this framework, Codex bundle | Read `README.md` and `Codex.md`; explain or copy required surfaces when requested |
+| Ingest | document, analyze, ingest, add to wiki, 文件化 | Read wiki state, inspect sources read-only, then create or update wiki pages |
+| Query | explain, find, where, how, 查詢 | Read `wiki/index.md`, then relevant pages; inspect sources only if needed |
+| Lint | health, stale, broken links, lint, 品質 | Audit wiki quality and report findings before broad repairs |
+| ADR | decision, ADR, architecture choice | Create `wiki/decisions/` record with ADR frontmatter |
+| Synthesis / Guide | save analysis, onboarding, guide, synthesis | Persist durable analysis under `wiki/synthesis/` or `wiki/guides/` |
+| Archaeology | why, history, legacy, git, 考古 | Trace code paths and non-destructive git history; separate evidence from inference |
+| Delegation | subagents, parallel, delegation, swarm | Use `.codex/agents/*.toml` only when explicitly requested |
+
+Ask at most one clarifying question only when local inspection cannot resolve
+scope safely.
+
+## Resource Loading
+
+Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
+
+| Need | Load |
+| --- | --- |
+| Ingest sequence, page creation rules, dependency ordering | `references/ingest-workflow.md` |
+| Wiki health checks, severities, report format | `references/lint-checklist.md` |
+| Required frontmatter fields and allowed values | `references/frontmatter-spec.md` |
+| Page structures and examples by type | `references/page-types.md` |
+| New page starting points | Matching template under `assets/` |
+| Stale source checks, stats, or index rebuilds | Matching script under `scripts/` |
+
+Read the chosen reference file completely before using it. Prefer scripts for
+deterministic checks instead of reimplementing parsing in prose.
+
+## Core Rules
+
+- Keep raw sources read-only during wiki tasks.
+- Preserve user-authored wiki notes; update around them instead of overwriting.
+- Use `[[page-name]]` wikilinks between wiki pages.
+- Cite source paths with backticks, for example `src/auth/service.ts`.
+- Put only real repo-relative paths in `frontmatter.sources`; use `sources: []`
+  when there is no direct raw source.
+- Distinguish source-backed facts, inference, and speculation.
+- Do not create project-level Codex slash prompt files. Codex usage is through
+  natural-language recipes and optional `$codebase-wiki` invocation.
+- Use `.codex/agents/*.toml` only for explicit delegation requests.
+
+## Wiki Update Rules
+
+Every wiki page must include:
 
 ```yaml
 ---
-title: 頁面標題
-type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture
+title: Page Title
+type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
 sources:
   - path/to/source/file.ts
 last_updated: YYYY-MM-DD
@@ -110,49 +118,93 @@ status: active | stale | placeholder
 ---
 ```
 
-> 載入 `references/frontmatter-spec.md` 取得各 type 的完整欄位定義。
-> 載入 `references/page-types.md` 取得各頁面類型的結構範例。
+ADR pages also require:
 
----
+```yaml
+decision_date: YYYY-MM-DD
+decision_status: proposed | accepted | deprecated | superseded
+```
 
-## Cross-Referencing 規則
+When adding, deleting, renaming, or substantially updating wiki pages, update
+`wiki/index.md`. For ingest, lint, ADR, synthesis, guide, or major wiki updates,
+append a new entry to `wiki/log.md`; never delete or rewrite existing log
+entries.
 
-- 跨 wiki 頁面引用：使用 `[[page-name]]` wikilink（Obsidian 相容）
-- 引用原始碼檔案：使用反引號路徑 `` `src/services/auth.ts` ``
-- 每頁至少一個 outbound `[[wikilink]]`
-- index.md 必須列出所有頁面
+## Workflows
 
----
+### Ingest
 
-## 品質判斷準則
+1. Read `wiki/index.md` and recent `wiki/log.md`.
+2. Load `references/ingest-workflow.md`.
+3. Inspect target paths read-only, prioritizing README files, entrypoints,
+   exports/imports, routes, services, models, and config.
+4. For interactive ingest, summarize responsibilities, public interfaces,
+   dependencies, patterns, special logic, risks, and open questions before
+   writing.
+5. Create or update only evidence-backed wiki pages.
+6. Add cross-references, update `wiki/index.md`, and append `wiki/log.md`.
 
-一個 wiki 頁面的品質由以下指標衡量：
+### Query
 
-1. **可追溯性**：每個事實陳述都能追溯到 `sources` 中列出的檔案
-2. **連結完整性**：所有 `[[wikilink]]` 指向真實存在的頁面
-3. **時效性**：`status` 反映頁面當前狀態；`last_updated` 在每次修改後更新
-4. **cross-reference 密度**：關鍵概念都有對應的 wikilink
-5. **結構一致性**：頁面遵循對應 type 的結構模板
+1. Read `wiki/index.md`.
+2. Read 1-5 relevant wiki pages.
+3. Inspect listed `sources` only when wiki content is insufficient, stale, or
+   contradictory.
+4. Answer with `[[wiki-page]]` links and source paths.
+5. Do not persist query output unless the user asks to save it.
 
----
+### Lint
 
-## 禁止事項
+1. Load `references/lint-checklist.md`.
+2. Check stale sources, orphan pages, broken wikilinks, missing pages,
+   frontmatter, contradictions, index completeness, and coverage.
+3. Use `scripts/check-stale.py`, `scripts/wiki-stats.py`, or
+   `scripts/rebuild-index.py` when useful.
+4. Report Critical, Warning, and Info findings before broad automatic repairs.
 
-- **不得修改 raw sources**：只能讀取 codebase，絕不修改
-- **不得刪除 log 條目**：log.md 為 append-only
-- **不得偽造 sources**：frontmatter.sources 必須指向真實存在的檔案
-- **不得跳過 index 更新**：新增/刪除頁面後必須同步 index.md
-- **不得跳過 log 記錄**：ingest / lint / 重大更新後必須追加 log 條目
+### ADR, Guide, And Synthesis
 
----
+- Use `wiki/decisions/` for ADRs, `wiki/guides/` for onboarding or operation
+  guides, and `wiki/synthesis/` for durable cross-cutting analysis.
+- Base content on wiki pages, raw source evidence, or clearly labeled inference.
+- Update `wiki/index.md` and append `wiki/log.md` after writing.
 
-## 快速路由
+### Code Archaeology
 
-| 需要了解 | 載入 |
-|---------|------|
-| 各頁面類型的完整結構與範例 | `references/page-types.md` |
-| Ingest 完整流程與判斷邏輯 | `references/ingest-workflow.md` |
-| 健康檢查完整清單 | `references/lint-checklist.md` |
-| Frontmatter 欄位完整規格 | `references/frontmatter-spec.md` |
-| 頁面模板（即貼即用） | `assets/` 目錄下的各類模板 |
-| 自動化工具 | `scripts/` 目錄下的 Python 腳本 |
+- Start from concrete entrypoints or field names.
+- Trace call paths and unusual branches.
+- Use only non-destructive git commands such as `git log`, `git blame`, and
+  `git show`.
+- Persist findings only when requested, then update index and log.
+
+## SQL Server Live Evidence
+
+Use SQL Server or MSSQL tools only when the current environment actually exposes
+them. Allowed operations are connection metadata, schema discovery, metadata
+lookup, and bounded read-only `SELECT`.
+
+Forbidden operations: DML, DDL, `EXEC`, stored procedure execution, unbounded
+table scans, credential disclosure, and anything that changes persistent state.
+
+Every DB-derived answer must include `connected_at`, `source_tool`, `server`,
+`database`, `query_scope`, `result_limit`, `row_count`, and `freshness_note`.
+DB evidence is not a repo file and must not be placed in frontmatter `sources`;
+if persisted, keep it in a body evidence block after user confirmation.
+
+## Verification
+
+Before finishing wiki or schema work, report:
+
+- Files changed.
+- Whether `wiki/index.md` was updated when required.
+- Whether `wiki/log.md` was appended when required.
+- Checks run and their results.
+- Any stale, speculative, skipped, or unverified points.
+
+Useful checks:
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
+python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
+python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki\
+```
