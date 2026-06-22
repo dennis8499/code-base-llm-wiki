@@ -236,6 +236,7 @@ Codex 版的必要元件只有：
 /ingest-module src/features/checkout/
 /new-adr 為什麼在結帳流程中採用 Saga Pattern
 /save-synthesis 結帳流程跨服務依賴分析
+/system-analysis-doc 結帳流程
 ```
 
 **Codex**
@@ -246,6 +247,8 @@ Codex 版的必要元件只有：
 請建立一份 ADR，說明為什麼在結帳流程中採用 Saga Pattern，寫入 wiki/decisions/，並同步更新 index 與 log。
 
 請把這次對結帳流程跨服務依賴的分析整理成 wiki/synthesis/ 頁面，保留來源並更新 index 與 log。
+
+請基於目前 wiki 內容產出結帳流程的 SA 系統分析文件，寫入 wiki/synthesis/checkout-flow-system-analysis.md，標示 coverage gaps，並更新 index 與 log。
 ```
 
 ### 情境三：知識查詢與健康維護
@@ -756,7 +759,31 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 **注意事項**
 - 指南內容需可追溯來源，避免生成不可驗證結論。
 
-### 10. Delegation（明確要求才用 Custom Agents）
+### 10. System Analysis / SA（系統分析文件）
+
+**何時使用**
+- 要把既有 wiki 知識整理成可交付的 SA 系統分析文件。
+
+**Prompt（可直接貼上）**
+```text
+請基於目前 wiki 內容產出整體系統的 SA 系統分析文件，寫入 wiki/synthesis/system-analysis.md，標示 coverage gaps，並更新 index 與 log。
+```
+
+**預期產出**
+- 新增或更新 `wiki/synthesis/system-analysis.md`，指定範圍時使用 `wiki/synthesis/{kebab-scope}-system-analysis.md`。
+- frontmatter 使用 `type: synthesis` 與 `tags: [synthesis, system-analysis]`。
+- 文件涵蓋目的與範圍、系統總覽、架構與元件、模組職責、主要流程、API/介面、資料流、外部整合、權限安全、設定維運、非功能需求、錯誤模式、風險與待確認事項。
+
+**驗收重點**
+- 來源優先使用 wiki，只有在不足、過時或矛盾時才回溯 raw sources。
+- 沒有可靠證據的章節標示 `待補` / `Gap`，並列出建議後續 ingest 目標。
+- `wiki/index.md` 與 `wiki/log.md` 同步更新。
+
+**注意事項**
+- 預設只輸出 Markdown；Word/PDF 匯出屬於後續獨立任務。
+- 不新增 `wiki/sa/` 目錄，也不新增 `type: sa`。
+
+### 11. Delegation（明確要求才用 Custom Agents）
 
 **何時使用**
 - 你明確要求 spawn / 委派 / subagents / parallel agent work。
@@ -783,7 +810,7 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 ### 最小驗收清單（Codex 版）
 
 ```text
-1) 任一 ingest/ADR/synthesis/guide 任務後，wiki/index.md 與 wiki/log.md 是否同步更新？
+1) 任一 ingest/ADR/synthesis/guide/system-analysis 任務後，wiki/index.md 與 wiki/log.md 是否同步更新？
 2) 新頁面 frontmatter 是否完整且 sources 真實存在（或合理使用 sources: []）？
 3) query 是否先用 wiki，再必要時才回溯 sources？
 4) 涉及 SQL Server 時是否保持唯讀，且回答附 evidence metadata？
@@ -817,7 +844,7 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 | 元件 | 位置 | 用途 |
 | --- | --- | --- |
 | Agents | `.github/agents/` | `wiki-keeper` 等 5 個專業 agent，負責路由、ingest、query、lint、archaeology；`wiki-query` 可在 VS Code MSSQL tools 可用時取得唯讀 DB live evidence |
-| Prompts | `.github/prompts/` | `/ingest-module`、`/lint-wiki`、`/save-synthesis` 等對話入口 |
+| Prompts | `.github/prompts/` | `/ingest-module`、`/lint-wiki`、`/save-synthesis`、`/system-analysis-doc` 等對話入口 |
 | Hooks | `.github/hooks/` | 寫入保護與稽核提醒 |
 | Skill | `.github/skills/codebase-wiki/` | 共用模板、reference 文件與腳本 |
 

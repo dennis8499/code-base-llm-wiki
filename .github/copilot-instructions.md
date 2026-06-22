@@ -35,7 +35,7 @@ wiki/
 ├── decisions/        — Architecture Decision Records (ADR)
 ├── dependencies/     — 相依性分析
 ├── guides/           — Onboarding、除錯、貢獻指南
-└── synthesis/        — 綜合分析（技術債、風險區域、改善建議）
+└── synthesis/        — 綜合分析（技術債、風險區域、改善建議、SA 系統分析文件）
 ```
 
 ### Frontmatter 標準
@@ -75,7 +75,7 @@ status: active | stale | placeholder
 - 列出受影響的頁面
 ```
 
-operation 可為：`ingest`、`query`、`lint`、`update`、`init`
+operation 可為：`ingest`、`query`、`lint`、`update`、`init`、`synthesis`
 
 ## 禁止事項
 

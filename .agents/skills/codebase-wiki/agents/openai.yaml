@@ -1,8 +1,8 @@
 interface:
   display_name: "Codebase Wiki"
-  short_description: "Use and maintain a persistent codebase wiki"
+  short_description: "Document, query, and generate SA docs"
   brand_color: "#10A37F"
-  default_prompt: "Use $codebase-wiki to document, query, lint, or maintain this repo's persistent codebase wiki."
+  default_prompt: "Use $codebase-wiki to document, query, lint, generate SA docs, or maintain this repo's persistent codebase wiki."
 
 policy:
   allow_implicit_invocation: true

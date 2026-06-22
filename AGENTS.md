@@ -41,6 +41,7 @@ Classify the user's wiki request before acting:
 | Archaeology | why, history, legacy, git, 考古 | Trace code paths and non-destructive git history |
 | ADR | decision, ADR, architecture choice | Create `wiki/decisions/` record |
 | Synthesis / Guide | save analysis, onboarding, guide, synthesis | Persist durable analysis under `wiki/synthesis/` or `wiki/guides/` |
+| System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a Markdown SA document under `wiki/synthesis/` from wiki-first evidence |
 
 Ask a concise clarifying question only when local inspection cannot resolve
 scope or intent safely.
@@ -51,7 +52,7 @@ scope or intent safely.
 - Codex may create and update Markdown pages under `wiki/`.
 - `wiki/log.md` is append-only. Do not delete or rewrite existing log entries.
 - Any wiki page add, delete, rename, or major update must be reflected in `wiki/index.md`.
-- Any ingest, lint, ADR, synthesis, guide, or major wiki update must append `wiki/log.md`.
+- Any ingest, lint, ADR, synthesis, guide, SA document, or major wiki update must append `wiki/log.md`.
 - `frontmatter.sources` must point to real repo-relative paths. Use `sources: []` when there is no direct raw source.
 - Mention wiki pages with Obsidian-style `[[page-name]]` wikilinks, not relative Markdown links.
 - Cite source paths with backticks, for example `src/auth/service.ts`.
@@ -117,6 +118,14 @@ Query:
 2. Read 1-5 relevant wiki pages.
 3. Inspect `sources` only when wiki content is insufficient, stale, or contradictory.
 4. Answer with wiki links and source paths. Do not persist query results unless the user confirms.
+
+System Analysis / SA:
+
+1. Load `.agents/skills/codebase-wiki/references/system-analysis-workflow.md`.
+2. Build the SA document from wiki pages first, then inspect raw sources only for gaps, stale content, or contradictions.
+3. Write Markdown output under `wiki/synthesis/` using `type: synthesis` and `tags: [synthesis, system-analysis]`.
+4. Preserve standard SA sections and mark missing evidence as gaps instead of inventing behavior.
+5. Update `wiki/index.md` and append `wiki/log.md`.
 
 Lint:
 

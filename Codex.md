@@ -44,6 +44,7 @@ Copy-Item -Recurse wiki C:\path\to\your-repo\wiki
 | `/new-adr {title}` | `請建立一份 ADR：{title}，寫入 wiki/decisions/，並同步更新 index 與 log。` |
 | `/onboarding-guide` | `請根據目前 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。` |
 | `/save-synthesis {topic}` | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。` |
+| `/system-analysis-doc {scope}` | `請基於目前 wiki 內容產出 {scope} 的 SA 系統分析文件，寫入 wiki/synthesis/，標示 coverage gaps，並更新 index 與 log。` |
 | `/update-index` | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。` |
 
 Codex CLI and IDE slash commands are platform controls. Do not add project-level
@@ -79,6 +80,12 @@ Code archaeology:
 
 ```text
 請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
+```
+
+System analysis document:
+
+```text
+請使用 $codebase-wiki，基於目前 wiki 內容產出整體系統的 SA 系統分析文件，寫入 wiki/synthesis/system-analysis.md，標示 coverage gaps，並更新 index 與 log。
 ```
 
 Explicit delegation:

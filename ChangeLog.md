@@ -4,20 +4,21 @@
 
 ---
 
-## [Unreleased] — 2026-06-03
+## [Unreleased] — 2026-06-22
 
 ### 新增
 
 - **Codex 版完整重建**：依 OpenAI Codex 官方 customization surface 重新落地 `AGENTS.md`、`Codex.md`、`.agents/skills/codebase-wiki/`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/hooks/scripts/` 與 `.codex/agents/*.toml`，讓 README 宣稱的 Codex 支援重新有實體檔案支撐
 - **Codex hook 官方 schema 對齊**：Codex hooks 使用 `SessionStart`、`PreToolUse`、`PostToolUse` 事件與 `hookSpecificOutput` 輸出格式，並保留 `.codex/hooks/logs/` 到 `.codex-hook-logs/` 的 audit fallback
-- **README 新增 Codex 版完整使用範例**：新增從安裝、初始化、增量維護、wiki-first query、synthesis 保存、SQL Server live evidence、lint 修復、custom agents delegation 到交付前檢查的端到端操作劇本
+- **README 新增 Codex 版完整使用範例**：新增從安裝、初始化、增量維護、wiki-first query、synthesis 保存、SA 系統分析文件、SQL Server live evidence、lint 修復、custom agents delegation 到交付前檢查的端到端操作劇本
 - **雙入口同權維護說明**：README 與 Codex.md 補上 Copilot ↔ Codex parity table，明確定義兩邊維持同一組 wiki 能力、邊界、安全規則與驗收結果，但各自使用平台原生入口
-- **Codex 自然語言 recipe 對照**：Codex.md 新增 8 個 Copilot slash prompt 對應的 Codex recipe，避免偽造 Codex project-level custom slash prompts
+- **Codex 自然語言 recipe 對照**：Codex.md 新增 9 個 Copilot slash prompt 對應的 Codex recipe，包含 SA 系統分析文件產出，避免偽造 Codex project-level custom slash prompts
 - **wiki-query SQL Server live evidence 同步支援**：GitHub Copilot 端 `wiki-query` 新增 VS Code Microsoft SQL Server extension tools 後，Codex 端同步在 `AGENTS.md` 與 `.codex/agents/wiki-query.toml` 補上資料庫證據規則，允許 schema discovery、metadata lookup 與有界線的唯讀 `SELECT`
 - **新增 Codex 原生框架結構**：加入 `.codex/` 與 `.agents/skills/codebase-wiki/`，讓 OpenAI Codex 可使用 project-local hooks、custom agents 與 repo-local skill，而不必依賴 Copilot `.github/` 元件
 - **新增 Codex custom agents**：將 `.github/agents/` 五個 Copilot agent 轉寫為 `.codex/agents/*.toml`，包含 `wiki-keeper`、`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`
 - **新增 Codex hooks**：加入 `.codex/hooks.json` 與 `.codex/hooks/scripts/`，提供 `SessionStart` wiki 狀態摘要、`PreToolUse` 寫入保護與 `PostToolUse` log reminder
 - **新增 Codex repo-local skill**：將 `codebase-wiki` skill 複製到 `.agents/skills/codebase-wiki/`，並加入 `agents/openai.yaml` 作為 Codex skill metadata
+- **新增 SA 系統分析文件 workflow**：`$codebase-wiki` 現在可依 wiki-first 流程產生 Markdown SA 文件，使用 `wiki/synthesis/`、`type: synthesis` 與 `tags: [synthesis, system-analysis]`，並提供 coverage gap 標示規則與模板
 - **新增 OpenAI Codex 版入口**：加入根目錄 `AGENTS.md`，將 Codebase LLM Wiki 的意圖路由、Ingest / Query / Lint / Archaeology / ADR 工作流程、frontmatter 規格與禁止事項整理成 Codex 可直接讀取的專案指令
 - **README 新增雙版本使用說明**：補上 GitHub Copilot 版與 OpenAI Codex 版的支援矩陣、安裝方式、快速開始、自然語言工作流與相容性說明
 - **wiki-query 建議行動與自動交接（Hand-Off）功能**：查詢代理在產生建議後，會透過 `vscode/askQuestions` 向使用者呈現可執行的行動清單，使用者確認後自動委派給對應的專業子代理執行。
@@ -32,7 +33,7 @@
 
 ### 變更
 
-- **README Codex Workflow 功能範例擴寫**：新增「Codex 版完整使用範例」與「Codex Workflow 功能範例（逐項）」章節，逐項覆蓋 Interactive Ingest、Batch Ingest、Query、Query+SQL Server live evidence、Lint、Archaeology、ADR、Synthesis、Guide、Delegation，每項皆提供何時使用、可直接貼上的 prompt、預期產出與驗收重點
+- **README Codex Workflow 功能範例擴寫**：新增「Codex 版完整使用範例」與「Codex Workflow 功能範例（逐項）」章節，逐項覆蓋 Interactive Ingest、Batch Ingest、Query、Query+SQL Server live evidence、Lint、Archaeology、ADR、Synthesis、Guide、System Analysis / SA、Delegation，每項皆提供何時使用、可直接貼上的 prompt、預期產出與驗收重點
 - **Codex project instructions token 最佳化**：AGENTS.md 收斂為短核心規則，長流程與模板維持在 `$codebase-wiki` skill 的 `.agents/skills/codebase-wiki/` 下，讓 Codex 透過 progressive disclosure 按需載入
 - **Codex hooks feature key 更新**：`.codex/config.toml` 改用 `[features] hooks = true`，保留 `agents.max_threads = 6` 與 `agents.max_depth = 1`，避免遞迴 subagent fan-out 增加 token 與 latency
 - **Codex hook audit fallback**：`.codex/hooks/scripts/` 在 `.codex/hooks/logs/` 因 Windows ACL 無法寫入時，會退到 root-level `.codex-hook-logs/`，避免 SessionStart / log reminder 失去稽核輸出
@@ -65,6 +66,11 @@
 | `AGENTS.md` | 新增 / 更新（OpenAI Codex 版專案指令；Query 流程新增 SQL Server live evidence 規則） |
 | `README.md` | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents、hooks、資料庫 Live Evidence，以及 Codex workflow 功能逐項範例） |
 | `ChangeLog.md` | 更新（追加 README 的 Codex workflow 功能範例擴寫紀錄） |
+| `.agents/skills/codebase-wiki/references/system-analysis-workflow.md` | 新增（Codex SA 系統分析文件 workflow） |
+| `.agents/skills/codebase-wiki/assets/system-analysis-template.md` | 新增（Codex SA 文件模板） |
+| `.github/prompts/system-analysis-doc.prompt.md` | 新增（Copilot SA 文件 slash prompt） |
+| `.github/skills/codebase-wiki/references/system-analysis-workflow.md` | 新增（Copilot SA 系統分析文件 workflow） |
+| `.github/skills/codebase-wiki/assets/system-analysis-template.md` | 新增（Copilot SA 文件模板） |
 | `.codex/config.toml` | 新增（Codex hooks 與 subagent defaults） |
 | `.codex/hooks.json` | 新增（Codex hook 事件設定） |
 | `.codex/agents/wiki-keeper.toml` | 新增（Codex wiki 路由 custom agent） |

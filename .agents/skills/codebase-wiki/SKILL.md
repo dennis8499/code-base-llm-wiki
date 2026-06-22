@@ -4,12 +4,13 @@ description: >
   Build, use, and maintain Codebase LLM Wiki, a persistent Markdown knowledge
   base for codebases. Use when the agent needs to install or operate this
   repo-local wiki framework, ingest modules, answer wiki-first questions, lint
-  wiki health, create ADRs, save synthesis or onboarding guides, run code
-  archaeology, update wiki/index.md or wiki/log.md, or explain how AGENTS.md,
+  wiki health, create ADRs, save synthesis or onboarding guides, generate
+  system analysis / SA documents, run code archaeology, update wiki/index.md
+  or wiki/log.md, or explain how AGENTS.md,
   .codex/, .agents/skills/codebase-wiki/, .github/, and wiki/ fit together.
   Trigger on "Codebase LLM Wiki", "codebase wiki", "文件化", "知識庫",
   "ingest", "query wiki", "lint wiki", "onboarding", "程式碼考古", "技術債",
-  or "ADR".
+  "ADR", "SA文件", "系統分析", "system analysis", or "SAD".
 ---
 
 # Codebase LLM Wiki
@@ -67,6 +68,7 @@ Classify the request before acting:
 | Lint | health, stale, broken links, lint, 品質 | Audit wiki quality and report findings before broad repairs |
 | ADR | decision, ADR, architecture choice | Create `wiki/decisions/` record with ADR frontmatter |
 | Synthesis / Guide | save analysis, onboarding, guide, synthesis | Persist durable analysis under `wiki/synthesis/` or `wiki/guides/` |
+| System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a Markdown SA document under `wiki/synthesis/` from wiki-first evidence |
 | Archaeology | why, history, legacy, git, 考古 | Trace code paths and non-destructive git history; separate evidence from inference |
 | Delegation | subagents, parallel, delegation, swarm | Use `.codex/agents/*.toml` only when explicitly requested |
 
@@ -83,6 +85,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Wiki health checks, severities, report format | `references/lint-checklist.md` |
 | Required frontmatter fields and allowed values | `references/frontmatter-spec.md` |
 | Page structures and examples by type | `references/page-types.md` |
+| SA document generation, coverage map, gap handling | `references/system-analysis-workflow.md` |
 | New page starting points | Matching template under `assets/` |
 | Stale source checks, stats, or index rebuilds | Matching script under `scripts/` |
 
@@ -168,6 +171,17 @@ entries.
   guides, and `wiki/synthesis/` for durable cross-cutting analysis.
 - Base content on wiki pages, raw source evidence, or clearly labeled inference.
 - Update `wiki/index.md` and append `wiki/log.md` after writing.
+
+### System Analysis Documents
+
+- Load `references/system-analysis-workflow.md` before producing SA documents.
+- Use `assets/system-analysis-template.md` as the starting structure.
+- Write Markdown output under `wiki/synthesis/`; use `system-analysis.md` for
+  whole-system output and `{kebab-scope}-system-analysis.md` for scoped output.
+- Keep `type: synthesis` and `tags: [synthesis, system-analysis]`; do not add a
+  new wiki type or `wiki/sa/` directory.
+- Preserve standard SA sections and mark missing evidence as gaps instead of
+  inventing system behavior.
 
 ### Code Archaeology
 
