@@ -6,13 +6,13 @@ surfaces directly instead of Copilot slash prompt files.
 
 ## Codex Bundle
 
-| Path | Required | Purpose |
-| --- | --- | --- |
-| `AGENTS.md` | Yes | Durable Codex project rules |
-| `.agents/skills/codebase-wiki/` | Yes | Skill instructions, references, templates, and helper scripts |
-| `.codex/` | Recommended | Hooks, config, and explicit-delegation custom agents |
-| `wiki/` | Yes | Generated knowledge base |
-| `.github/` | Optional | Keep only when the repo also supports GitHub Copilot |
+| Path                            | Required    | Purpose                                                       |
+| ------------------------------- | ----------- | ------------------------------------------------------------- |
+| `AGENTS.md`                     | Yes         | Durable Codex project rules                                   |
+| `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, references, templates, and helper scripts |
+| `.codex/`                       | Recommended | Hooks, config, and explicit-delegation custom agents          |
+| `wiki/`                         | Yes         | Generated knowledge base                                      |
+| `.github/`                      | Optional    | Keep only when the repo also supports GitHub Copilot          |
 
 Copy into a target repository:
 
@@ -23,6 +23,10 @@ Copy-Item -Recurse .agents\skills\codebase-wiki C:\path\to\your-repo\.agents\ski
 Copy-Item -Recurse .codex C:\path\to\your-repo\.codex
 Copy-Item -Recurse wiki C:\path\to\your-repo\wiki
 ```
+
+After installing into an application repository, set
+`.codex/config.toml` `[wiki_guard] mode = "target"`. Use `framework` only when
+maintaining this framework repository.
 
 ## How Codex Uses It
 
@@ -35,17 +39,19 @@ Copy-Item -Recurse wiki C:\path\to\your-repo\wiki
 
 ## Copilot Prompt To Codex Recipe
 
-| Copilot prompt | Codex recipe |
-| --- | --- |
-| `/ingest-module {path}` | `請依照 AGENTS.md 的 Interactive Ingest 流程，分析 {path}，先摘要主要職責、相依關係與風險，再更新 wiki。` |
-| `/ingest-batch {path}` | `請依照 AGENTS.md 的 Batch Ingest 流程掃描 {path}，建立初始 wiki，最後更新 index 與 log。` |
-| `/query-wiki {question}` | `請先查 wiki，再必要時回溯 sources，回答：{question}` |
-| `/lint-wiki` | `請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。` |
-| `/new-adr {title}` | `請建立一份 ADR：{title}，寫入 wiki/decisions/，並同步更新 index 與 log。` |
-| `/onboarding-guide` | `請根據目前 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。` |
-| `/save-synthesis {topic}` | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。` |
+| Copilot prompt                 | Codex recipe                                                                                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `/ingest-module {path}`        | `請依照 AGENTS.md 的 Interactive Ingest 流程，分析 {path}，先摘要主要職責、相依關係與風險，再更新 wiki。`              |
+| `/ingest-batch {path}`         | `請依照 AGENTS.md 的 Batch Ingest 流程掃描 {path}，建立初始 wiki，最後更新 index 與 log。`                             |
+| `/query-wiki {question}`       | `請先查 wiki，再必要時回溯 sources，回答：{question}`                                                                  |
+| `/lint-wiki`                   | `請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。`                                            |
+| `/new-adr {title}`             | `請建立一份 ADR：{title}，寫入 wiki/decisions/，並同步更新 index 與 log。`                                             |
+| `/onboarding-guide`            | `請根據目前 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。`                              |
+| `/save-guide {topic}`          | `請把目前分析整理成 wiki/guides/{topic} 指南，標示來源、gap 與步驟，並更新 index 與 log。`                             |
+| `/save-synthesis {topic}`      | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。`                                        |
+| `/code-archaeology {target}`   | `請依 code archaeology 流程追蹤 {target} 的目前行為與 git history，清楚區分證據、推測與不確定性。`                     |
 | `/system-analysis-doc {scope}` | `請基於目前 wiki 內容產出 {scope} 的 SA 系統分析文件，寫入 wiki/synthesis/，標示 coverage gaps，並更新 index 與 log。` |
-| `/update-index` | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。` |
+| `/update-index`                | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。`                                   |
 
 Codex CLI and IDE slash commands are platform controls. Do not add project-level
 Codex slash prompt files for this framework.
@@ -82,6 +88,12 @@ Code archaeology:
 請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
 ```
 
+Durable guide:
+
+```text
+請使用 $codebase-wiki，把這次排查流程整理成 wiki/guides/refund-debugging.md，寫清楚目標讀者、前置條件、步驟、常見問題與 gap，並更新 index 與 log。
+```
+
 System analysis document:
 
 ```text
@@ -102,6 +114,9 @@ Explicit delegation:
 [features]
 hooks = true
 
+[wiki_guard]
+mode = "framework" # change to "target" after installing into an application repo
+
 [agents]
 max_threads = 6
 max_depth = 1
@@ -109,41 +124,31 @@ max_depth = 1
 
 `.codex/hooks.json` configures:
 
-| Event | Script | Purpose |
-| --- | --- | --- |
-| `SessionStart` | `.codex/hooks/scripts/wiki-session-init.py` | Adds bounded wiki state context |
-| `PreToolUse` | `.codex/hooks/scripts/wiki-write-guard.py` | Blocks unexpected writes outside wiki/schema/framework paths |
-| `PostToolUse` | `.codex/hooks/scripts/wiki-log-reminder.py` | Reminds Codex to append `wiki/log.md` after wiki page edits |
+| Event          | Script                                      | Purpose                                                                          |
+| -------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `SessionStart` | `.codex/hooks/scripts/wiki-session-init.py` | Adds bounded wiki state context                                                  |
+| `PreToolUse`   | `.codex/hooks/scripts/wiki-write-guard.py`  | Blocks unexpected writes outside the configured `target` or `framework` boundary |
+| `PostToolUse`  | `.codex/hooks/scripts/wiki-log-reminder.py` | Reminds Codex to append `wiki/log.md` after wiki page edits                      |
 
 Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
 
 Hook audit files are written to `.codex/hooks/logs/` when possible, with fallback
-to `.codex-hook-logs/`. Both paths should stay ignored by git.
+to `.codex-hook-logs/`. Both paths should stay ignored by git. The complete hook
+I/O contract is in `.agents/skills/codebase-wiki/references/hooks-specification.md`.
 
 ## SQL Server Live Evidence
 
 The Codex query workflow supports SQL Server live evidence only when the active
-Codex environment exposes MSSQL tools or an approved MCP/app/CLI fallback.
+Codex environment exposes MSSQL tools or an approved MCP/app/CLI fallback. The
+source of truth is
+`.agents/skills/codebase-wiki/references/mssql-evidence-rules.md`.
 
-Allowed:
-
-- Connection metadata.
-- Schema discovery.
-- Metadata lookup.
-- Bounded read-only `SELECT`.
-
-Forbidden:
-
-- DML or DDL.
-- `EXEC` or stored procedure execution.
-- Unbounded table scans.
-- Credential disclosure.
-- Any operation that changes persistent database state.
-
-Every DB-derived answer must include `connected_at`, `source_tool`, `server`,
-`database`, `query_scope`, `result_limit`, `row_count`, and `freshness_note`. DB
-evidence must not be put in frontmatter `sources`.
+Summary: allow schema discovery, metadata lookup, connection details, and
+bounded read-only `SELECT`; forbid DML, DDL, `EXEC`, stored procedure execution,
+unbounded scans, credential disclosure, and persistent state changes. DB-derived
+answers must include the metadata listed in the reference, and DB evidence must
+not be put in frontmatter `sources`.
 
 ## Validation Checklist
 
@@ -156,7 +161,8 @@ Test-Path .codex\config.toml
 Test-Path .codex\hooks.json
 Test-Path .agents\skills\codebase-wiki\SKILL.md
 python -m py_compile .codex\hooks\scripts\wiki-session-init.py .codex\hooks\scripts\wiki-write-guard.py .codex\hooks\scripts\wiki-log-reminder.py
-python -m py_compile .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
+python -m py_compile .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\validate-frontmatter.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
+python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 ```
@@ -179,7 +185,8 @@ Hooks do not run:
 Write guard blocks a change:
 
 - Normal wiki work should write only `wiki/`.
-- Framework maintenance may also update `AGENTS.md`, `Codex.md`, `README.md`, `ChangeLog.md`, `.github/`, `.codex/`, and `.agents/`.
+- In installed target repos, keep `.codex/config.toml` `[wiki_guard] mode = "target"`.
+- Framework maintenance may set `[wiki_guard] mode = "framework"` to update `AGENTS.md`, `Codex.md`, `README.md`, `ChangeLog.md`, `.github/`, `.codex/`, and `.agents/`.
 - If a raw source change is desired, ask Codex for a normal coding task rather than a wiki task.
 
 Skill does not trigger:

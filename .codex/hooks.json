@@ -16,7 +16,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "^(apply_patch|Edit|Write)$",
+        "matcher": "^(apply_patch|Edit|Write|create|create_file|edit|editFiles|str_replace|str_replace_editor|multi_replace_string_in_file|replace_string_in_file|write)$",
         "hooks": [
           {
             "type": "command",
@@ -30,7 +30,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "^(apply_patch|Edit|Write)$",
+        "matcher": "^(apply_patch|Edit|Write|create|create_file|edit|editFiles|str_replace|str_replace_editor|multi_replace_string_in_file|replace_string_in_file|write)$",
         "hooks": [
           {
             "type": "command",

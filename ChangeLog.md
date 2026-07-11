@@ -4,10 +4,14 @@
 
 ---
 
-## [Unreleased] — 2026-06-22
+## [Unreleased] — 2026-07-01
 
 ### 新增
 
+- **雙入口 SSOT references**：新增並鏡像 `intent-routing.md`、`log-operations.md`、`mssql-evidence-rules.md`、`hooks-specification.md`、`adr-workflow.md`、`code-archaeology-workflow.md`、`guide-workflow.md`、`synthesis-workflow.md`，讓 Copilot 與 Codex 入口各自獨立安裝但以同步檢查維持一致
+- **新增 Copilot prompts**：加入 `/code-archaeology` 與通用 `/save-guide`，保留 `/onboarding-guide` 作為新人導覽專用入口
+- **新增 deterministic validation scripts**：加入並鏡像 `validate-frontmatter.py` 與 `check-dual-entry-sync.py`，分別驗證 wiki frontmatter schema 與 `.agents` / `.github` skills、`.codex` / `.github` hook scripts 是否漂移
+- **新增 hook guard mode config**：新增 `.github/hooks/config.toml`，並在 `.codex/config.toml` 加入 `[wiki_guard] mode`，支援 `target` 與 `framework` 兩種寫入邊界
 - **Codex 版完整重建**：依 OpenAI Codex 官方 customization surface 重新落地 `AGENTS.md`、`Codex.md`、`.agents/skills/codebase-wiki/`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/hooks/scripts/` 與 `.codex/agents/*.toml`，讓 README 宣稱的 Codex 支援重新有實體檔案支撐
 - **Codex hook 官方 schema 對齊**：Codex hooks 使用 `SessionStart`、`PreToolUse`、`PostToolUse` 事件與 `hookSpecificOutput` 輸出格式，並保留 `.codex/hooks/logs/` 到 `.codex-hook-logs/` 的 audit fallback
 - **README 新增 Codex 版完整使用範例**：新增從安裝、初始化、增量維護、wiki-first query、synthesis 保存、SA 系統分析文件、SQL Server live evidence、lint 修復、custom agents delegation 到交付前檢查的端到端操作劇本
@@ -33,6 +37,11 @@
 
 ### 變更
 
+- **入口內 DRY 收斂**：`AGENTS.md`、`.github/copilot-instructions.md`、`.github/instructions/wiki-pages.instructions.md`、`SKILL.md` 與 wiki agents 改為保留摘要並指向對應 references；frontmatter、log operation、SQL live evidence 與 workflow 細節不再多點展開
+- **Intent routing 統一為 9 類**：Install / setup、Ingest、Query、Lint、ADR、Synthesis / Guide、System Analysis / SA、Archaeology、Delegation 在 Copilot keeper、Codex keeper、AGENTS、SKILL 與 Copilot instructions 中對齊
+- **Log operation 清單統一**：`wiki/log.md` operation 統一為 `ingest|query|lint|update|init|adr|synthesis|guide|archaeology`
+- **Hook scripts 跨平台鏡像**：`wiki-session-init.py`、`wiki-write-guard.py`、`wiki-log-reminder.py` 改為同一份跨 Copilot / Codex 相容腳本，並對齊 edit tool matcher 與 audit fallback path 慣例
+- **README / Codex.md 更新**：補上新 prompts、guard mode 安裝提醒、frontmatter validation、雙入口 sync check 與 reference-first SQL 規則
 - **README Codex Workflow 功能範例擴寫**：新增「Codex 版完整使用範例」與「Codex Workflow 功能範例（逐項）」章節，逐項覆蓋 Interactive Ingest、Batch Ingest、Query、Query+SQL Server live evidence、Lint、Archaeology、ADR、Synthesis、Guide、System Analysis / SA、Delegation，每項皆提供何時使用、可直接貼上的 prompt、預期產出與驗收重點
 - **Codex project instructions token 最佳化**：AGENTS.md 收斂為短核心規則，長流程與模板維持在 `$codebase-wiki` skill 的 `.agents/skills/codebase-wiki/` 下，讓 Codex 透過 progressive disclosure 按需載入
 - **Codex hooks feature key 更新**：`.codex/config.toml` 改用 `[features] hooks = true`，保留 `agents.max_threads = 6` 與 `agents.max_depth = 1`，避免遞迴 subagent fan-out 增加 token 與 latency
@@ -52,6 +61,9 @@
 
 ### 修正
 
+- **修正 Copilot keeper 意圖缺漏**：`.github/agents/wiki-keeper.agent.md` 補齊 Synthesis / Guide、Install / setup、Delegation，並改指向 `intent-routing.md`
+- **修正目標 repo write guard 過寬**：target mode 現在只允許 `wiki/` 寫入；framework mode 才允許框架 schema/docs 路徑
+- **修正多處 log operation 不一致**：Copilot instructions、wiki page instructions、prompts 與 docs 對齊 `log-operations.md`
 - **README / 實體檔案一致性修復**：恢復 README 中列出的 Codex 入口檔案，避免 `AGENTS.md`、`Codex.md`、`.codex/` 與 `.agents/skills/codebase-wiki/` 被文件引用但不存在
 - **Codex write guard 對齊框架維護規則**：`.codex/hooks/scripts/wiki-write-guard.py` 現在允許明確的框架維護工作更新根目錄 `README.md`、`ChangeLog.md`、`Codex.md`、`llm-wiki.md`、`prompt.txt` 與 `AGENTS.md`
 - **`wiki-write-guard.py` 改為真正可執行的寫入保護**：直接輸出 `permissionDecision` / `permissionDecisionReason`，並解析 `toolArgs`，現在會實際拒絕對 `wiki/`、`.github/` 以外路徑的寫入
@@ -61,47 +73,47 @@
 
 ### 受影響的檔案
 
-| 檔案 | 變更類型 |
-|------|----------|
-| `AGENTS.md` | 新增 / 更新（OpenAI Codex 版專案指令；Query 流程新增 SQL Server live evidence 規則） |
-| `README.md` | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents、hooks、資料庫 Live Evidence，以及 Codex workflow 功能逐項範例） |
-| `ChangeLog.md` | 更新（追加 README 的 Codex workflow 功能範例擴寫紀錄） |
-| `.agents/skills/codebase-wiki/references/system-analysis-workflow.md` | 新增（Codex SA 系統分析文件 workflow） |
-| `.agents/skills/codebase-wiki/assets/system-analysis-template.md` | 新增（Codex SA 文件模板） |
-| `.github/prompts/system-analysis-doc.prompt.md` | 新增（Copilot SA 文件 slash prompt） |
-| `.github/skills/codebase-wiki/references/system-analysis-workflow.md` | 新增（Copilot SA 系統分析文件 workflow） |
-| `.github/skills/codebase-wiki/assets/system-analysis-template.md` | 新增（Copilot SA 文件模板） |
-| `.codex/config.toml` | 新增（Codex hooks 與 subagent defaults） |
-| `.codex/hooks.json` | 新增（Codex hook 事件設定） |
-| `.codex/agents/wiki-keeper.toml` | 新增（Codex wiki 路由 custom agent） |
-| `.codex/agents/wiki-ingest.toml` | 新增（Codex wiki 攝入 custom agent） |
-| `.codex/agents/wiki-query.toml` | 新增 / 更新（Codex wiki 查詢 custom agent；同步 SQL Server live evidence 規則） |
-| `.codex/agents/wiki-lint.toml` | 新增（Codex wiki 健康檢查 custom agent） |
-| `.codex/agents/wiki-archaeologist.toml` | 新增（Codex 程式碼考古 custom agent） |
-| `.codex/hooks/scripts/wiki-write-guard.py` | 新增 / 更新（Codex 寫入保護 hook；允許明確框架維護文件） |
-| `.codex/hooks/scripts/wiki-log-reminder.py` | 新增（Codex log reminder hook） |
-| `.codex/hooks/scripts/wiki-session-init.py` | 新增（Codex session state hook） |
-| `.agents/skills/codebase-wiki/` | 新增（Codex repo-local skill，含 templates、references、scripts） |
-| `.github/agents/wiki-query.agent.md` | 更新（Hand-Off 流程與 VS Code MSSQL tools） |
-| `.github/prompts/query-wiki.prompt.md` | 更新（+11/-2） |
-| `.github/agents/wiki-keeper.agent.md` | 格式整理（`tools` 改為 inline array） |
-| `.github/agents/wiki-ingest.agent.md` | 格式整理（`tools` 改為 inline array） |
-| `.github/agents/wiki-lint.agent.md` | 格式整理（`tools` 改為 inline array） |
-| `.github/agents/wiki-archaeologist.agent.md` | 格式整理（`tools` 改為 inline array） |
-| `.github/hooks/wiki-write-guard.json` | Hook schema 對齊（`version: 1`、`preToolUse`、`bash` / `powershell`） |
-| `.github/hooks/wiki-log-reminder.json` | Hook schema 對齊（`version: 1`、`postToolUse`、`bash` / `powershell`） |
-| `.github/hooks/wiki-session-init.json` | Hook schema 對齊（`version: 1`、`sessionStart`、`bash` / `powershell`） |
-| `.github/hooks/scripts/wiki-write-guard.py` | 寫入防護邏輯修正（改為直接回傳 `permissionDecision`） |
-| `.github/hooks/scripts/wiki-log-reminder.py` | 行為調整（改寫入 `.github/hooks/logs/wiki-log-reminder.jsonl`） |
-| `.github/hooks/scripts/wiki-session-init.py` | 行為調整（改寫入 `.github/hooks/logs/wiki-session-state.md`） |
-| `.github/copilot-instructions.md` | Frontmatter 規格補強（加入 `index` / `log` 與 `sources: []` 說明） |
-| `.github/instructions/wiki-pages.instructions.md` | Frontmatter 規格補強（加入 `index` / `log` 與 `sources: []` 說明） |
-| `.github/skills/codebase-wiki/assets/index-template.md` | 模板修正（補 `sources: []`、`tags: [index]`） |
-| `.github/skills/codebase-wiki/assets/log-template.md` | 模板修正（補 `sources: []`、`tags: [log]`） |
-| `.github/skills/codebase-wiki/references/page-types.md` | ADR 規格修正（加入 `decision_status`，釐清 `status` 語意） |
-| `.github/skills/codebase-wiki/references/lint-checklist.md` | `type` 驗證規則補上 `index` / `log` |
-| `.github/skills/codebase-wiki/scripts/frontmatter.py` | 新增（無外部依賴 frontmatter parser） |
-| `.github/skills/codebase-wiki/scripts/check-stale.py` | 相依修正（移除 `PyYAML`） |
-| `.github/skills/codebase-wiki/scripts/rebuild-index.py` | 相依與輸出修正（移除 `PyYAML`、補齊 index frontmatter） |
-| `.github/skills/codebase-wiki/scripts/wiki-stats.py` | 相依與輸出修正（移除 `PyYAML`、UTF-8 stdio） |
-| `.gitignore` | 新增忽略規則（hook logs、`__pycache__/`） |
+| 檔案                                                                  | 變更類型                                                                                                                    |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTS.md`                                                           | 新增 / 更新（OpenAI Codex 版專案指令；Query 流程新增 SQL Server live evidence 規則）                                        |
+| `README.md`                                                           | 更新（新增 Copilot / Codex 雙版本說明、Codex custom agents、hooks、資料庫 Live Evidence，以及 Codex workflow 功能逐項範例） |
+| `ChangeLog.md`                                                        | 更新（追加 README 的 Codex workflow 功能範例擴寫紀錄）                                                                      |
+| `.agents/skills/codebase-wiki/references/system-analysis-workflow.md` | 新增（Codex SA 系統分析文件 workflow）                                                                                      |
+| `.agents/skills/codebase-wiki/assets/system-analysis-template.md`     | 新增（Codex SA 文件模板）                                                                                                   |
+| `.github/prompts/system-analysis-doc.prompt.md`                       | 新增（Copilot SA 文件 slash prompt）                                                                                        |
+| `.github/skills/codebase-wiki/references/system-analysis-workflow.md` | 新增（Copilot SA 系統分析文件 workflow）                                                                                    |
+| `.github/skills/codebase-wiki/assets/system-analysis-template.md`     | 新增（Copilot SA 文件模板）                                                                                                 |
+| `.codex/config.toml`                                                  | 新增（Codex hooks 與 subagent defaults）                                                                                    |
+| `.codex/hooks.json`                                                   | 新增（Codex hook 事件設定）                                                                                                 |
+| `.codex/agents/wiki-keeper.toml`                                      | 新增（Codex wiki 路由 custom agent）                                                                                        |
+| `.codex/agents/wiki-ingest.toml`                                      | 新增（Codex wiki 攝入 custom agent）                                                                                        |
+| `.codex/agents/wiki-query.toml`                                       | 新增 / 更新（Codex wiki 查詢 custom agent；同步 SQL Server live evidence 規則）                                             |
+| `.codex/agents/wiki-lint.toml`                                        | 新增（Codex wiki 健康檢查 custom agent）                                                                                    |
+| `.codex/agents/wiki-archaeologist.toml`                               | 新增（Codex 程式碼考古 custom agent）                                                                                       |
+| `.codex/hooks/scripts/wiki-write-guard.py`                            | 新增 / 更新（Codex 寫入保護 hook；允許明確框架維護文件）                                                                    |
+| `.codex/hooks/scripts/wiki-log-reminder.py`                           | 新增（Codex log reminder hook）                                                                                             |
+| `.codex/hooks/scripts/wiki-session-init.py`                           | 新增（Codex session state hook）                                                                                            |
+| `.agents/skills/codebase-wiki/`                                       | 新增（Codex repo-local skill，含 templates、references、scripts）                                                           |
+| `.github/agents/wiki-query.agent.md`                                  | 更新（Hand-Off 流程與 VS Code MSSQL tools）                                                                                 |
+| `.github/prompts/query-wiki.prompt.md`                                | 更新（+11/-2）                                                                                                              |
+| `.github/agents/wiki-keeper.agent.md`                                 | 格式整理（`tools` 改為 inline array）                                                                                       |
+| `.github/agents/wiki-ingest.agent.md`                                 | 格式整理（`tools` 改為 inline array）                                                                                       |
+| `.github/agents/wiki-lint.agent.md`                                   | 格式整理（`tools` 改為 inline array）                                                                                       |
+| `.github/agents/wiki-archaeologist.agent.md`                          | 格式整理（`tools` 改為 inline array）                                                                                       |
+| `.github/hooks/wiki-write-guard.json`                                 | Hook schema 對齊（`version: 1`、`preToolUse`、`bash` / `powershell`）                                                       |
+| `.github/hooks/wiki-log-reminder.json`                                | Hook schema 對齊（`version: 1`、`postToolUse`、`bash` / `powershell`）                                                      |
+| `.github/hooks/wiki-session-init.json`                                | Hook schema 對齊（`version: 1`、`sessionStart`、`bash` / `powershell`）                                                     |
+| `.github/hooks/scripts/wiki-write-guard.py`                           | 寫入防護邏輯修正（改為直接回傳 `permissionDecision`）                                                                       |
+| `.github/hooks/scripts/wiki-log-reminder.py`                          | 行為調整（改寫入 `.github/hooks/logs/wiki-log-reminder.jsonl`）                                                             |
+| `.github/hooks/scripts/wiki-session-init.py`                          | 行為調整（改寫入 `.github/hooks/logs/wiki-session-state.md`）                                                               |
+| `.github/copilot-instructions.md`                                     | Frontmatter 規格補強（加入 `index` / `log` 與 `sources: []` 說明）                                                          |
+| `.github/instructions/wiki-pages.instructions.md`                     | Frontmatter 規格補強（加入 `index` / `log` 與 `sources: []` 說明）                                                          |
+| `.github/skills/codebase-wiki/assets/index-template.md`               | 模板修正（補 `sources: []`、`tags: [index]`）                                                                               |
+| `.github/skills/codebase-wiki/assets/log-template.md`                 | 模板修正（補 `sources: []`、`tags: [log]`）                                                                                 |
+| `.github/skills/codebase-wiki/references/page-types.md`               | ADR 規格修正（加入 `decision_status`，釐清 `status` 語意）                                                                  |
+| `.github/skills/codebase-wiki/references/lint-checklist.md`           | `type` 驗證規則補上 `index` / `log`                                                                                         |
+| `.github/skills/codebase-wiki/scripts/frontmatter.py`                 | 新增（無外部依賴 frontmatter parser）                                                                                       |
+| `.github/skills/codebase-wiki/scripts/check-stale.py`                 | 相依修正（移除 `PyYAML`）                                                                                                   |
+| `.github/skills/codebase-wiki/scripts/rebuild-index.py`               | 相依與輸出修正（移除 `PyYAML`、補齊 index frontmatter）                                                                     |
+| `.github/skills/codebase-wiki/scripts/wiki-stats.py`                  | 相依與輸出修正（移除 `PyYAML`、UTF-8 stdio）                                                                                |
+| `.gitignore`                                                          | 新增忽略規則（hook logs、`__pycache__/`）                                                                                   |

@@ -19,6 +19,10 @@ tools: [execute, read, edit, search]
 
 ## 工作流程
 
+完整流程以
+`.github/skills/codebase-wiki/references/code-archaeology-workflow.md` 為準；
+本段是 agent 執行摘要。
+
 1. **確認目標**：
    - 使用者想理解哪個功能/模組/行為？
    - 具體的疑問是什麼？（「為什麼這樣寫」vs「這段在做什麼」）

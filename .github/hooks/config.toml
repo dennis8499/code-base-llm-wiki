@@ -1,11 +1,4 @@
-[features]
-hooks = true
-
 [wiki_guard]
 # Use "target" after installing this framework into an application repo.
 # Use "framework" only when maintaining the Codebase LLM Wiki framework itself.
 mode = "framework"
-
-[agents]
-max_threads = 6
-max_depth = 1

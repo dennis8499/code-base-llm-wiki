@@ -16,6 +16,9 @@ tools: [read, edit, search]
 
 ## 工作流程
 
+完整流程以 `.github/skills/codebase-wiki/references/ingest-workflow.md`
+為準；本段是 agent 執行摘要。
+
 ### Interactive 模式（預設）
 
 1. **探索**：
@@ -62,6 +65,9 @@ tools: [read, edit, search]
 - 一個 database model/schema 定義
 
 ## Frontmatter 填寫
+
+完整規格以 `.github/skills/codebase-wiki/references/frontmatter-spec.md`
+為準。
 
 - `sources`：只列最核心的 1-5 個真實檔案路徑（相對 repo root）
 - `tags`：依模組功能領域標記

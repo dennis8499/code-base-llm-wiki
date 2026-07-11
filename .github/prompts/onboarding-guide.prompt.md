@@ -28,7 +28,7 @@ argument-hint: "可選：補充目標讀者，例如前端新人或維運工程�
    - 進一步閱讀建議
 6. 建立 `wiki/guides/onboarding.md`
 7. 更新 `wiki/index.md`（在 Guides section 新增條目）
-8. 追加 `wiki/log.md` 條目
+8. 追加 `wiki/log.md` 條目：`## [YYYY-MM-DD] guide | onboarding`
 
 ## 品質要求
 

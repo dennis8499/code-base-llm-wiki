@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""wiki-log-reminder.py — postToolUse hook，記錄 wiki 頁面異動線索。
+"""PostToolUse hook that records wiki edits needing wiki/log.md entries."""
 
-postToolUse hook 的輸出不會被注入 agent context，因此此腳本改為把異動線索
-寫到 `.github/hooks/logs/wiki-log-reminder.jsonl`，供稽核或後續人工檢查。
-"""
+from __future__ import annotations
 
 import json
 import pathlib
 import re
 import sys
 import time
+from typing import Any
 
 
 EDIT_TOOL_NAMES = {
     "apply_patch",
+    "Edit",
+    "Write",
     "create",
     "create_file",
     "edit",
@@ -30,29 +31,84 @@ PATCH_FILE_PATTERN = re.compile(
     re.MULTILINE,
 )
 
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
+
+
+def configure_stdio() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
+
+def current_platform() -> str:
+    parts = {part.lower() for part in pathlib.Path(__file__).resolve().parts}
+    if ".github" in parts:
+        return "github"
+    if ".codex" in parts:
+        return "codex"
+    return "unknown"
+
+
+def log_dir_candidates() -> tuple[pathlib.Path, ...]:
+    if current_platform() == "github":
+        return (
+            REPO_ROOT / ".github" / "hooks" / "logs",
+            REPO_ROOT / ".github-hook-logs",
+        )
+    return (
+        REPO_ROOT / ".codex" / "hooks" / "logs",
+        REPO_ROOT / ".codex-hook-logs",
+    )
+
 
 def normalize_path(value: str) -> str:
     return value.replace("\\", "/").strip()
 
 
+def repo_relative_path(path: str) -> str | None:
+    normalized = normalize_path(path).strip("\"'")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    try:
+        candidate = pathlib.Path(normalized)
+        if not candidate.is_absolute():
+            candidate = REPO_ROOT / candidate
+        resolved = candidate.resolve(strict=False)
+        rel = resolved.relative_to(REPO_ROOT.resolve(strict=False))
+    except Exception:
+        return None
+    return rel.as_posix()
+
+
 def is_wiki_markdown(path: str) -> bool:
-    normalized = normalize_path(path).lower()
-    return normalized.endswith(".md") and (
-        normalized.startswith("wiki/") or "/wiki/" in normalized
-    )
+    rel = repo_relative_path(path)
+    return bool(rel and rel.lower().endswith(".md") and rel.lower().startswith("wiki/"))
 
 
 def is_log_file(path: str) -> bool:
-    normalized = normalize_path(path).lower()
-    return normalized.endswith("wiki/log.md") or normalized.endswith("/wiki/log.md")
+    rel = repo_relative_path(path)
+    return bool(rel and rel.lower() == "wiki/log.md")
 
 
-def extract_paths_from_tool_input(tool_name: str, tool_input) -> list[str]:
+def extract_patch_text(tool_input: Any) -> str:
+    if isinstance(tool_input, str):
+        return tool_input
+    if not isinstance(tool_input, dict):
+        return ""
+    for key in ("command", "input", "patch", "content"):
+        value = tool_input.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+    return ""
+
+
+def extract_paths_from_tool_input(tool_name: str, tool_input: Any) -> list[str]:
     paths: list[str] = []
-    patch_text = ""
 
     if isinstance(tool_input, dict):
-        for key in ("filePath", "path"):
+        for key in ("filePath", "file_path", "path", "targetPath", "target_path"):
             value = tool_input.get(key)
             if isinstance(value, str) and value.strip():
                 paths.append(value)
@@ -63,19 +119,12 @@ def extract_paths_from_tool_input(tool_name: str, tool_input) -> list[str]:
                 if isinstance(item, str) and item.strip():
                     paths.append(item)
                 elif isinstance(item, dict):
-                    for key in ("filePath", "path"):
+                    for key in ("filePath", "file_path", "path"):
                         value = item.get(key)
                         if isinstance(value, str) and value.strip():
                             paths.append(value)
 
-        for key in ("input", "patch"):
-            value = tool_input.get(key)
-            if isinstance(value, str) and value.strip():
-                patch_text = value
-                break
-    elif isinstance(tool_input, str):
-        patch_text = tool_input
-
+    patch_text = extract_patch_text(tool_input)
     if tool_name == "apply_patch" or patch_text:
         paths.extend(match.group(1).strip() for match in PATCH_FILE_PATTERN.finditer(patch_text))
 
@@ -89,7 +138,7 @@ def extract_paths_from_tool_input(tool_name: str, tool_input) -> list[str]:
     return deduped
 
 
-def parse_tool_args(payload: dict) -> object:
+def parse_tool_input(payload: dict[str, Any]) -> Any:
     if "tool_input" in payload:
         return payload.get("tool_input")
     if "toolInput" in payload:
@@ -103,24 +152,37 @@ def parse_tool_args(payload: dict) -> object:
     return tool_args
 
 
-def append_audit_entry(paths: list[str]):
-    log_dir = pathlib.Path(".github/hooks/logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
+def append_audit_entry(paths: list[str]) -> str | None:
     entry = {
         "timestamp": int(time.time() * 1000),
         "event": "wiki_page_changed",
         "paths": paths,
-        "reminder": "Append an entry to wiki/log.md for ingest, lint, query save, or major wiki updates.",
+        "reminder": "Append an entry to wiki/log.md for ingest, lint, ADR, synthesis, guide, archaeology, or major wiki updates.",
     }
-    with (log_dir / "wiki-log-reminder.jsonl").open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    errors: list[str] = []
+    for log_dir in log_dir_candidates():
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            with (log_dir / "wiki-log-reminder.jsonl").open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            return None
+        except OSError as exc:
+            errors.append(f"`{log_dir.relative_to(REPO_ROOT)}/wiki-log-reminder.jsonl`: {exc}")
+    return "；".join(errors)
 
 
-def respond():
-    print("{}")
+def respond(additional_context: str | None = None) -> None:
+    payload: dict[str, Any] = {}
+    if additional_context:
+        payload["hookSpecificOutput"] = {
+            "hookEventName": "PostToolUse",
+            "additionalContext": additional_context,
+        }
+    print(json.dumps(payload, ensure_ascii=False))
 
 
-def main():
+def main() -> None:
+    configure_stdio()
     try:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
@@ -132,13 +194,20 @@ def main():
         respond()
         return
 
-    tool_input = parse_tool_args(payload)
-
-    changed_paths = extract_paths_from_tool_input(tool_name, tool_input)
+    changed_paths = extract_paths_from_tool_input(tool_name, parse_tool_input(payload))
     wiki_paths = [path for path in changed_paths if is_wiki_markdown(path) and not is_log_file(path)]
 
     if wiki_paths:
-        append_audit_entry(wiki_paths)
+        audit_error = append_audit_entry(wiki_paths)
+        joined_paths = ", ".join(f"`{path}`" for path in wiki_paths[:5])
+        if len(wiki_paths) > 5:
+            joined_paths += f" 等 {len(wiki_paths)} 個路徑"
+        message = f"已偵測 wiki 頁面變更：{joined_paths}。若這是 durable wiki 更新，請追加 `wiki/log.md`。"
+        if audit_error:
+            message += f"（無法寫入 hook audit 檔：{audit_error}）"
+        respond(message)
+        return
+
     respond()
 
 

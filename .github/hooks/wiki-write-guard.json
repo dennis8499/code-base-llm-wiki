@@ -3,6 +3,7 @@
   "hooks": {
     "preToolUse": [
       {
+        "matcher": "^(apply_patch|Edit|Write|create|create_file|edit|editFiles|str_replace|str_replace_editor|multi_replace_string_in_file|replace_string_in_file|write)$",
         "type": "command",
         "bash": "python3 .github/hooks/scripts/wiki-write-guard.py",
         "powershell": "python .github/hooks/scripts/wiki-write-guard.py",

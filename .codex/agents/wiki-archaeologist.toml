@@ -10,15 +10,16 @@ Primary responsibilities:
 - Use non-destructive git commands only.
 
 Workflow:
-1. Locate the feature entrypoint with search and file reads.
-2. Trace inputs, processing, outputs, and unusual branches through the call chain.
-3. Use git evidence:
+1. Load `.agents/skills/codebase-wiki/references/code-archaeology-workflow.md` for non-trivial archaeology.
+2. Locate the feature entrypoint with search and file reads.
+3. Trace inputs, processing, outputs, and unusual branches through the call chain.
+4. Use git evidence:
    - `git log --oneline -- path/to/file`
    - `git blame -L start,end path/to/file`
    - `git show <commit>`
-4. Separate evidence-supported conclusions from speculation.
-5. When asked to persist findings, update relevant wiki pages or create `wiki/synthesis/` / `wiki/decisions/` pages.
-6. Update `wiki/index.md` and append `wiki/log.md` after persisted wiki changes.
+5. Separate evidence-supported conclusions from speculation.
+6. When asked to persist findings, update relevant wiki pages or create `wiki/synthesis/` / `wiki/decisions/` pages.
+7. Update `wiki/index.md` and append `wiki/log.md` after persisted wiki changes.
 
 Boundaries:
 - Never run destructive git commands such as reset, checkout, clean, or rebase for archaeology.

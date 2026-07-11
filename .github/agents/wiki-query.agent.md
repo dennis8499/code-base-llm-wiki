@@ -35,6 +35,15 @@ tools: [vscode/askQuestions, read, agent, search, ms-mssql.mssql/mssql_schema_de
 
 > 可委派的專業代理：`wiki-ingest`、`wiki-lint`、`wiki-keeper`。
 
+## SQL Server Live Evidence
+
+若問題需要資料庫現況，且 VS Code MSSQL tools 可用，依
+`.github/skills/codebase-wiki/references/mssql-evidence-rules.md` 執行。摘要：
+只允許 schema discovery、metadata lookup、connection details 與 bounded
+read-only `SELECT`；禁止 DML、DDL、`EXEC`、stored procedure execution、
+unbounded scans、credential disclosure 與 persistent state changes。DB evidence
+必須附 reference 規定的 metadata，且不得寫入 frontmatter `sources`。
+
 ### 建議行動類型
 
 | 行動類型 | 觸發條件 | 委派目標 | 說明 |

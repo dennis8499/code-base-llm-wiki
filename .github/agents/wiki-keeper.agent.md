@@ -17,24 +17,27 @@ tools: [vscode/askQuestions, execute, read, agent, edit, search]
 
 ## 意圖分類
 
-收到使用者請求後，先判斷意圖類型：
+收到使用者請求後，先判斷意圖類型。權威 routing table 位於
+`.github/skills/codebase-wiki/references/intent-routing.md`；下表是摘要：
 
-| 意圖             | 特徵關鍵詞                                         | 路由目標                   |
-| ---------------- | -------------------------------------------------- | -------------------------- |
-| **Ingest**       | 「讀取」「分析」「ingest」「文件化」「加入 wiki」  | `wiki-ingest` agent        |
-| **Query**        | 「怎麼做」「在哪裡」「解釋」「查詢」「找」         | `wiki-query` agent         |
-| **Lint**         | 「檢查」「健康」「lint」「品質」「陳舊」           | `wiki-lint` agent          |
-| **Archaeology**  | 「歷史」「為什麼這樣寫」「追蹤」「legacy」「考古」 | `wiki-archaeologist` agent |
-| **ADR**          | 「決策」「ADR」「decision」「架構選擇」            | 自行處理（套用 ADR 模板）  |
-| **System Analysis / SA** | 「SA文件」「系統分析」「system analysis」「SAD」 | 自行處理（套用 SA workflow） |
-| **Simple Query** | 能從 index.md 直接回答的簡單問題                   | 自行處理                   |
+| 意圖 | 特徵關鍵詞 | 路由目標 |
+| --- | --- | --- |
+| **Install / setup** | install、setup、use this framework | 自行處理或交代安裝面 |
+| **Ingest** | 「讀取」「分析」「ingest」「文件化」「加入 wiki」 | `wiki-ingest` agent |
+| **Query** | 「怎麼做」「在哪裡」「解釋」「查詢」「找」 | `wiki-query` agent |
+| **Lint** | 「檢查」「健康」「lint」「品質」「陳舊」 | `wiki-lint` agent |
+| **ADR** | 「決策」「ADR」「decision」「架構選擇」 | 自行處理（載入 ADR workflow） |
+| **Synthesis / Guide** | save analysis、onboarding、guide、synthesis | 自行處理（載入 synthesis/guide workflow） |
+| **System Analysis / SA** | 「SA文件」「系統分析」「system analysis」「SAD」 | 自行處理（載入 SA workflow） |
+| **Archaeology** | 「歷史」「為什麼這樣寫」「追蹤」「legacy」「考古」 | `wiki-archaeologist` agent |
+| **Delegation** | subagents、parallel、delegation、swarm | 明確要求時才委派 |
 
 ## 工作流程
 
 1. **讀取 wiki 狀態**：先讀 `wiki/index.md` 和 `wiki/log.md` 最後幾條記錄，了解 wiki 當前狀態
 2. **意圖分類**：判斷使用者意圖屬於上述哪一類
 3. **澄清模糊請求**：若無法明確分類，使用 `vscode_askQuestions` 向使用者確認
-4. **路由或自行處理**：委派給專業代理，或處理簡單查詢；SA 文件任務先載入 `.github/skills/codebase-wiki/references/system-analysis-workflow.md`
+4. **路由或自行處理**：委派給專業代理，或處理簡單查詢；ADR、Synthesis、Guide、SA、Archaeology 先載入對應 `.github/skills/codebase-wiki/references/*-workflow.md`
 5. **品質把關**：確認操作後 index.md 和 log.md 已更新
 
 > 可委派的專業代理：`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`。
@@ -52,7 +55,7 @@ tools: [vscode/askQuestions, execute, read, agent, edit, search]
 
 - **不得修改 codebase 原始碼**：只能讀取 codebase，寫入僅限 `wiki/` 目錄
 - **不得刪除 wiki/log.md 既有條目**
-- **不得在 sources 中填入不存在的檔案路徑**
+- **不得在 sources 中填入不存在的檔案路徑；完整 frontmatter 規格見 `.github/skills/codebase-wiki/references/frontmatter-spec.md`**
 - **不得跳過 index.md 更新**
 
 ## 交接摘要格式

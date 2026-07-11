@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Codex PostToolUse hook that records wiki edits needing wiki/log.md entries."""
+"""PostToolUse hook that records wiki edits needing wiki/log.md entries."""
 
 from __future__ import annotations
 
@@ -32,10 +32,6 @@ PATCH_FILE_PATTERN = re.compile(
 )
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
-LOG_DIR_CANDIDATES = (
-    REPO_ROOT / ".codex" / "hooks" / "logs",
-    REPO_ROOT / ".codex-hook-logs",
-)
 
 
 def configure_stdio() -> None:
@@ -46,20 +42,54 @@ def configure_stdio() -> None:
             pass
 
 
+def current_platform() -> str:
+    parts = {part.lower() for part in pathlib.Path(__file__).resolve().parts}
+    if ".github" in parts:
+        return "github"
+    if ".codex" in parts:
+        return "codex"
+    return "unknown"
+
+
+def log_dir_candidates() -> tuple[pathlib.Path, ...]:
+    if current_platform() == "github":
+        return (
+            REPO_ROOT / ".github" / "hooks" / "logs",
+            REPO_ROOT / ".github-hook-logs",
+        )
+    return (
+        REPO_ROOT / ".codex" / "hooks" / "logs",
+        REPO_ROOT / ".codex-hook-logs",
+    )
+
+
 def normalize_path(value: str) -> str:
     return value.replace("\\", "/").strip()
 
 
+def repo_relative_path(path: str) -> str | None:
+    normalized = normalize_path(path).strip("\"'")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    try:
+        candidate = pathlib.Path(normalized)
+        if not candidate.is_absolute():
+            candidate = REPO_ROOT / candidate
+        resolved = candidate.resolve(strict=False)
+        rel = resolved.relative_to(REPO_ROOT.resolve(strict=False))
+    except Exception:
+        return None
+    return rel.as_posix()
+
+
 def is_wiki_markdown(path: str) -> bool:
-    normalized = normalize_path(path).lower()
-    return normalized.endswith(".md") and (
-        normalized.startswith("wiki/") or "/wiki/" in normalized
-    )
+    rel = repo_relative_path(path)
+    return bool(rel and rel.lower().endswith(".md") and rel.lower().startswith("wiki/"))
 
 
 def is_log_file(path: str) -> bool:
-    normalized = normalize_path(path).lower()
-    return normalized.endswith("wiki/log.md") or normalized.endswith("/wiki/log.md")
+    rel = repo_relative_path(path)
+    return bool(rel and rel.lower() == "wiki/log.md")
 
 
 def extract_patch_text(tool_input: Any) -> str:
@@ -127,10 +157,10 @@ def append_audit_entry(paths: list[str]) -> str | None:
         "timestamp": int(time.time() * 1000),
         "event": "wiki_page_changed",
         "paths": paths,
-        "reminder": "Append an entry to wiki/log.md for ingest, lint, query save, or major wiki updates.",
+        "reminder": "Append an entry to wiki/log.md for ingest, lint, ADR, synthesis, guide, archaeology, or major wiki updates.",
     }
     errors: list[str] = []
-    for log_dir in LOG_DIR_CANDIDATES:
+    for log_dir in log_dir_candidates():
         try:
             log_dir.mkdir(parents=True, exist_ok=True)
             with (log_dir / "wiki-log-reminder.jsonl").open("a", encoding="utf-8") as fh:
@@ -172,9 +202,9 @@ def main() -> None:
         joined_paths = ", ".join(f"`{path}`" for path in wiki_paths[:5])
         if len(wiki_paths) > 5:
             joined_paths += f" 等 {len(wiki_paths)} 個路徑"
-        message = f"已偵測 wiki 頁面變更：{joined_paths}。若這是 ingest、lint 或重大更新，請追加 `wiki/log.md`。"
+        message = f"已偵測 wiki 頁面變更：{joined_paths}。若這是 durable wiki 更新，請追加 `wiki/log.md`。"
         if audit_error:
-            message += f"（無法寫入 Codex hook audit 檔：{audit_error}）"
+            message += f"（無法寫入 hook audit 檔：{audit_error}）"
         respond(message)
         return
 

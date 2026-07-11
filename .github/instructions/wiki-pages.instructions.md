@@ -7,7 +7,8 @@ description: "Applies when editing any markdown file under the wiki/ directory. 
 
 ## Frontmatter 必填欄位
 
-每個 wiki 頁面的 YAML frontmatter **必須包含以下欄位**：
+完整規格以 `.github/skills/codebase-wiki/references/frontmatter-spec.md`
+為準。每個 wiki 頁面的 YAML frontmatter **至少必須包含以下欄位**：
 
 ```yaml
 ---
@@ -27,7 +28,10 @@ status: string # active | stale | placeholder
 
 - **decision**（ADR）：額外需要 `decision_date`、`decision_status`（proposed | accepted | deprecated | superseded）；`status` 仍保留頁面生命週期（active | stale | placeholder）
 - **entity**：額外建議 `entity_type`（class | service | api-endpoint | database-table）
-- **dependency**：額外建議 `package_name`、`version`
+- **dependency**：額外需要 `package_name`、`version`
+
+allowed `type`、`status`、日期格式與路徑對應規則以
+`frontmatter-spec.md` 為準。
 
 ## Cross-Reference 規則
 
@@ -136,4 +140,6 @@ status: string # active | stale | placeholder
 - 受影響頁面：[[page-1]]、[[page-2]]
 ```
 
-3. `operation` 限定為：`ingest`、`query`、`lint`、`update`、`init`
+3. `operation` 限定為
+   `ingest|query|lint|update|init|adr|synthesis|guide|archaeology`，完整語意
+   以 `.github/skills/codebase-wiki/references/log-operations.md` 為準。

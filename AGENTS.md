@@ -15,11 +15,11 @@ must treat that target codebase as raw source and keep it read-only.
 Codebase LLM Wiki is not RAG. It is a persistent Markdown wiki that compounds
 knowledge over time.
 
-| Layer | Location | Responsibility |
-| --- | --- | --- |
-| Raw Sources | Source code, config, existing docs | Read-only during wiki tasks |
-| Wiki | `wiki/` | Codex-generated and maintained knowledge base |
-| Schema | `AGENTS.md`, `.agents/skills/codebase-wiki/`, `.codex/` | Rules, workflows, templates, scripts, hooks, and optional agents |
+| Layer       | Location                                                | Responsibility                                                   |
+| ----------- | ------------------------------------------------------- | ---------------------------------------------------------------- |
+| Raw Sources | Source code, config, existing docs                      | Read-only during wiki tasks                                      |
+| Wiki        | `wiki/`                                                 | Codex-generated and maintained knowledge base                    |
+| Schema      | `AGENTS.md`, `.agents/skills/codebase-wiki/`, `.codex/` | Rules, workflows, templates, scripts, hooks, and optional agents |
 
 ## Codex Surfaces
 
@@ -31,17 +31,20 @@ knowledge over time.
 
 ## Intent Routing
 
-Classify the user's wiki request before acting:
+Classify the user's wiki request before acting. The full routing source of
+truth is `.agents/skills/codebase-wiki/references/intent-routing.md`.
 
-| Intent | Signals | Workflow |
-| --- | --- | --- |
-| Ingest | document, analyze, ingest, add to wiki, 文件化 | Read raw sources and update wiki pages |
-| Query | explain, find, where, how, 查詢 | Read wiki first, then sources only if needed |
-| Lint | health, stale, broken links, lint, 品質 | Audit wiki quality and report before broad fixes |
-| Archaeology | why, history, legacy, git, 考古 | Trace code paths and non-destructive git history |
-| ADR | decision, ADR, architecture choice | Create `wiki/decisions/` record |
-| Synthesis / Guide | save analysis, onboarding, guide, synthesis | Persist durable analysis under `wiki/synthesis/` or `wiki/guides/` |
-| System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a Markdown SA document under `wiki/synthesis/` from wiki-first evidence |
+| Intent               | Signals                                          | Workflow                                                                         |
+| -------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Install / setup      | install, setup, use this framework, Codex bundle | Explain or copy the required entrypoint surfaces                                 |
+| Ingest               | document, analyze, ingest, add to wiki, 文件化   | Read raw sources and update wiki pages                                           |
+| Query                | explain, find, where, how, 查詢                  | Read wiki first, then sources only if needed                                     |
+| Lint                 | health, stale, broken links, lint, 品質          | Audit wiki quality and report before broad fixes                                 |
+| Archaeology          | why, history, legacy, git, 考古                  | Trace code paths and non-destructive git history                                 |
+| ADR                  | decision, ADR, architecture choice               | Create `wiki/decisions/` record                                                  |
+| Synthesis / Guide    | save analysis, onboarding, guide, synthesis      | Persist durable analysis under `wiki/synthesis/` or `wiki/guides/`               |
+| System Analysis / SA | SA文件, 系統分析, system analysis, SAD           | Generate a Markdown SA document under `wiki/synthesis/` from wiki-first evidence |
+| Delegation           | subagents, parallel, delegation, swarm           | Use `.codex/agents/*.toml` only when explicitly requested                        |
 
 Ask a concise clarifying question only when local inspection cannot resolve
 scope or intent safely.
@@ -78,7 +81,9 @@ wiki/
 
 ## Frontmatter
 
-Every wiki page must include:
+Every wiki page must follow
+`.agents/skills/codebase-wiki/references/frontmatter-spec.md`. The common
+required fields are:
 
 ```yaml
 ---
@@ -95,22 +100,19 @@ status: active | stale | placeholder
 `wiki/index.md` uses `type: index`; `wiki/log.md` uses `type: log`. Both still
 need `sources: []`, `tags`, `last_updated`, and `status`.
 
-ADR pages also require:
-
-```yaml
-decision_date: YYYY-MM-DD
-decision_status: proposed | accepted | deprecated | superseded
-```
+ADR, dependency, index, and log page-specific fields are defined in
+`frontmatter-spec.md`.
 
 ## Workflow Summaries
 
 Ingest:
 
-1. Read `wiki/index.md` and recent `wiki/log.md`.
-2. Inspect target paths, prioritizing README files, entrypoints, exports/imports, routes, services, models, and config.
-3. Summarize responsibilities, public interfaces, dependencies, patterns, special logic, and risks before writing when the task is interactive.
-4. Create or update wiki pages only when source evidence supports them.
-5. Add cross-references, rebuild or update `wiki/index.md`, and append `wiki/log.md`.
+1. Load `.agents/skills/codebase-wiki/references/ingest-workflow.md`.
+2. Read `wiki/index.md` and recent `wiki/log.md`.
+3. Inspect target paths, prioritizing README files, entrypoints, exports/imports, routes, services, models, and config.
+4. Summarize responsibilities, public interfaces, dependencies, patterns, special logic, and risks before writing when the task is interactive.
+5. Create or update wiki pages only when source evidence supports them.
+6. Add cross-references, rebuild or update `wiki/index.md`, and append `wiki/log.md`.
 
 Query:
 
@@ -127,29 +129,39 @@ System Analysis / SA:
 4. Preserve standard SA sections and mark missing evidence as gaps instead of inventing behavior.
 5. Update `wiki/index.md` and append `wiki/log.md`.
 
+ADR / Synthesis / Guide:
+
+1. Load the matching workflow reference: `adr-workflow.md`,
+   `synthesis-workflow.md`, or `guide-workflow.md`.
+2. Persist only evidence-backed durable content under `wiki/decisions/`,
+   `wiki/synthesis/`, or `wiki/guides/`.
+3. Update `wiki/index.md` and append `wiki/log.md` with the operation from
+   `.agents/skills/codebase-wiki/references/log-operations.md`.
+
 Lint:
 
-1. Check stale sources, orphan pages, broken wikilinks, missing pages, frontmatter, contradictions, index completeness, and coverage.
-2. Use helper scripts under `.agents/skills/codebase-wiki/scripts/` when useful.
-3. Report findings by severity before broad repairs.
+1. Load `.agents/skills/codebase-wiki/references/lint-checklist.md`.
+2. Check stale sources, orphan pages, broken wikilinks, missing pages, frontmatter, contradictions, index completeness, and coverage.
+3. Use helper scripts under `.agents/skills/codebase-wiki/scripts/` when useful.
+4. Report findings by severity before broad repairs.
 
 Archaeology:
 
-1. Start from concrete entrypoints.
-2. Trace call paths and unusual branches.
-3. Use only non-destructive git commands such as `git log`, `git blame`, and `git show`.
-4. Persist findings only when requested, then update index/log.
+1. Load `.agents/skills/codebase-wiki/references/code-archaeology-workflow.md`.
+2. Start from concrete entrypoints.
+3. Trace call paths and unusual branches.
+4. Use only non-destructive git commands such as `git log`, `git blame`, and `git show`.
+5. Persist findings only when requested, then update index/log.
 
 ## SQL Server Live Evidence
 
-For query tasks that need database facts, use SQL Server / MSSQL tools only when
-they are actually available in the current Codex environment.
-
-- Allowed: schema discovery, metadata lookup, connection details, and bounded read-only `SELECT`.
-- Forbidden: DML, DDL, `EXEC`, stored procedure execution, unbounded table scans, credential disclosure, or any persistent state change.
-- Every DB-derived answer must include `connected_at`, `source_tool`, `server`, `database`, `query_scope`, `result_limit`, `row_count`, and `freshness_note`.
-- DB evidence is not a repo file and must not be placed in frontmatter `sources`. If persisted, keep it in a body evidence block after user confirmation.
-- If no MSSQL tool is available, state that clearly and ask before using Copilot, MCP, CLI, or another fallback.
+For query tasks that need database facts, use
+`.agents/skills/codebase-wiki/references/mssql-evidence-rules.md` as the source
+of truth. In short: use SQL Server / MSSQL tools only when available; allow only
+schema discovery, metadata lookup, connection details, and bounded read-only
+`SELECT`; never run DML, DDL, `EXEC`, stored procedure execution, unbounded
+scans, credential disclosure, or persistent state changes. DB evidence requires
+the reference metadata and must not be placed in frontmatter `sources`.
 
 ## Verification
 

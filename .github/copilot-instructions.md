@@ -15,6 +15,14 @@
 
 ## Wiki 慣例 (HOW)
 
+### 意圖路由
+
+完整 9 類意圖以
+`.github/skills/codebase-wiki/references/intent-routing.md` 為準：
+Install / setup、Ingest、Query、Lint、ADR、Synthesis / Guide、
+System Analysis / SA、Archaeology、Delegation。SQL Server live evidence 是
+Query 子模式，不是獨立意圖。
+
 ### 命名與連結
 
 - 頁面檔名使用 **kebab-case**：`user-auth-service.md`、`database-migration-pattern.md`
@@ -40,7 +48,8 @@ wiki/
 
 ### Frontmatter 標準
 
-每個 wiki 頁面的 YAML frontmatter 必須包含：
+完整規格以 `.github/skills/codebase-wiki/references/frontmatter-spec.md`
+為準。每個 wiki 頁面的 YAML frontmatter 至少必須包含：
 
 ```yaml
 ---
@@ -56,6 +65,8 @@ status: active | stale | placeholder
 ```
 
 `wiki/index.md` 與 `wiki/log.md` 也必須包含上述欄位；若沒有直接 raw source，使用 `sources: []`。
+ADR、Dependency、Index、Log 的類型專屬欄位與 allowed values 以
+`frontmatter-spec.md` 為準。
 
 ### 品質標準
 
@@ -75,9 +86,13 @@ status: active | stale | placeholder
 - 列出受影響的頁面
 ```
 
-operation 可為：`ingest`、`query`、`lint`、`update`、`init`、`synthesis`
+operation 以 `.github/skills/codebase-wiki/references/log-operations.md`
+為準：`ingest|query|lint|update|init|adr|synthesis|guide|archaeology`。
 
 ## 禁止事項
+
+禁止事項以 `.github/skills/codebase-wiki/SKILL.md` 的 **Core Rules** 為
+準；本段是摘要。
 
 - **不得修改 raw sources**：wiki agents 只能讀取 codebase 原始碼，不得以任何方式修改
 - **不得刪除 log 條目**：`log.md` 為 append-only，只能追加，不得修改或刪除既有條目

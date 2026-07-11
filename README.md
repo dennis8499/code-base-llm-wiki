@@ -47,14 +47,14 @@
 
 ## 文件入口
 
-| 文件 | 用途 |
-| --- | --- |
-| [README.md](README.md) | 專案總覽，說明 Copilot 與 Codex 兩種入口的定位與結構 |
-| [Codex.md](Codex.md) | 給框架使用者的 Codex 專用安裝、操作、排錯手冊 |
-| [AGENTS.md](AGENTS.md) | 給 Codex 讀取的機器指令，定義 wiki 邊界、流程與規則 |
-| [ChangeLog.md](ChangeLog.md) | 框架版本變更紀錄 |
-| [llm-wiki.md](llm-wiki.md) | 這套方法論的原始概念說明 |
-| [prompt.txt](prompt.txt) | 早期設計此框架時使用的提示草稿 |
+| 文件                         | 用途                                                 |
+| ---------------------------- | ---------------------------------------------------- |
+| [README.md](README.md)       | 專案總覽，說明 Copilot 與 Codex 兩種入口的定位與結構 |
+| [Codex.md](Codex.md)         | 給框架使用者的 Codex 專用安裝、操作、排錯手冊        |
+| [AGENTS.md](AGENTS.md)       | 給 Codex 讀取的機器指令，定義 wiki 邊界、流程與規則  |
+| [ChangeLog.md](ChangeLog.md) | 框架版本變更紀錄                                     |
+| [llm-wiki.md](llm-wiki.md)   | 這套方法論的原始概念說明                             |
+| [prompt.txt](prompt.txt)     | 早期設計此框架時使用的提示草稿                       |
 
 如果你是第一次接觸這個 repo，建議先讀 `README.md`；如果你要把這套框架套到自己的 repo 並用 Codex 操作，接著讀 [Codex.md](Codex.md)。
 
@@ -62,34 +62,34 @@
 
 ## 三層模型
 
-| 層 | 位置 | 職責 |
-| --- | --- | --- |
-| **Raw Sources** | 目標 codebase 的原始碼、設定檔、既有文件 | 唯讀。wiki 任務中只讀取、不修改 |
-| **Wiki** | `wiki/` | LLM 產生並維護的 Markdown 知識庫 |
-| **Schema** | `.github/` 或 `AGENTS.md` + `.codex/` + `.agents/skills/` | 驅動 agent 行為的規則、模板、腳本與工作流程 |
+| 層              | 位置                                                      | 職責                                        |
+| --------------- | --------------------------------------------------------- | ------------------------------------------- |
+| **Raw Sources** | 目標 codebase 的原始碼、設定檔、既有文件                  | 唯讀。wiki 任務中只讀取、不修改             |
+| **Wiki**        | `wiki/`                                                   | LLM 產生並維護的 Markdown 知識庫            |
+| **Schema**      | `.github/` 或 `AGENTS.md` + `.codex/` + `.agents/skills/` | 驅動 agent 行為的規則、模板、腳本與工作流程 |
 
 ---
 
 ## 支援入口
 
-| 入口 | 主要檔案 | 適合情境 |
-| --- | --- | --- |
-| **GitHub Copilot 版** | `.github/copilot-instructions.md`、`.github/agents/`、`.github/prompts/`、`.github/hooks/`、`.github/skills/` | 你想在 VS Code Copilot Chat 中使用自訂 agent、slash prompt、hook，並讓 `wiki-query` 在可用時透過 VS Code MSSQL tools 取得唯讀資料庫證據 |
-| **OpenAI Codex 版** | `AGENTS.md`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/agents/`、`.agents/skills/codebase-wiki/` | 你想讓 Codex CLI、IDE extension、Codex app 或 cloud task 直接讀取專案規則與 repo-local skill；Codex query 流程會同步遵守 SQL Server live evidence 的唯讀規則 |
-| **共用 Wiki 骨架** | `wiki/` | 兩種版本共用的知識庫輸出位置 |
+| 入口                  | 主要檔案                                                                                                      | 適合情境                                                                                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **GitHub Copilot 版** | `.github/copilot-instructions.md`、`.github/agents/`、`.github/prompts/`、`.github/hooks/`、`.github/skills/` | 你想在 VS Code Copilot Chat 中使用自訂 agent、slash prompt、hook，並讓 `wiki-query` 在可用時透過 VS Code MSSQL tools 取得唯讀資料庫證據                      |
+| **OpenAI Codex 版**   | `AGENTS.md`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/agents/`、`.agents/skills/codebase-wiki/`     | 你想讓 Codex CLI、IDE extension、Codex app 或 cloud task 直接讀取專案規則與 repo-local skill；Codex query 流程會同步遵守 SQL Server live evidence 的唯讀規則 |
+| **共用 Wiki 骨架**    | `wiki/`                                                                                                       | 兩種版本共用的知識庫輸出位置                                                                                                                                 |
 
 你可以只選其中一條路線，也可以讓兩套檔案共存於同一個 repo。本框架採 **雙入口同權維護**：Copilot 與 Codex 共享同一組 wiki 能力、邊界、安全規則與驗收結果，但各自使用平台原生入口。
 
 ### Copilot ↔ Codex 功能對照
 
-| 能力 | GitHub Copilot | OpenAI Codex |
-| --- | --- | --- |
-| 全域規則 | `.github/copilot-instructions.md` | `AGENTS.md` |
-| 專業代理 | `.github/agents/*.agent.md` | `.codex/agents/*.toml` |
-| 使用者入口 | `.github/prompts/*.prompt.md` slash prompts | `Codex.md` 內的自然語言 recipe |
-| Workflow 細節 | `.github/skills/codebase-wiki/` | `.agents/skills/codebase-wiki/` |
-| Hooks | `.github/hooks/*.json` | `.codex/hooks.json` |
-| 輸出 | `wiki/` | `wiki/` |
+| 能力          | GitHub Copilot                              | OpenAI Codex                    |
+| ------------- | ------------------------------------------- | ------------------------------- |
+| 全域規則      | `.github/copilot-instructions.md`           | `AGENTS.md`                     |
+| 專業代理      | `.github/agents/*.agent.md`                 | `.codex/agents/*.toml`          |
+| 使用者入口    | `.github/prompts/*.prompt.md` slash prompts | `Codex.md` 內的自然語言 recipe  |
+| Workflow 細節 | `.github/skills/codebase-wiki/`             | `.agents/skills/codebase-wiki/` |
+| Hooks         | `.github/hooks/*.json`                      | `.codex/hooks.json`             |
+| 輸出          | `wiki/`                                     | `wiki/`                         |
 
 Codex 不模擬 Copilot 的 project-level slash prompt files；Codex IDE / CLI 的 slash commands 是平台控制命令，日常 wiki 操作用自然語言 recipe 觸發。
 
@@ -140,6 +140,8 @@ wiki/
 
 - `.codex/hooks/logs/`：當 Codex hooks 啟用時，SessionStart 與 log reminder 會優先在這裡留下執行期輸出。
 - `.codex-hook-logs/`：若 Windows ACL 擋住 `.codex/hooks/logs/` 寫入，Codex hooks 會退到這個 root-level ignored 目錄。
+- `.github/hooks/logs/`：Copilot hooks 的稽核輸出位置。
+- `.github-hook-logs/`：若 `.github/hooks/logs/` 無法寫入，Copilot hooks 會退到這個 root-level ignored 目錄。
 
 ---
 
@@ -151,6 +153,10 @@ wiki/
 cp -r .github/ /path/to/your-repo/.github/
 cp -r wiki/ /path/to/your-repo/wiki/
 ```
+
+安裝到目標 codebase 後，請將 `.github/hooks/config.toml` 的
+`[wiki_guard] mode` 設為 `"target"`。只有維護本框架 repo 時才使用
+`"framework"`。
 
 安裝後請確認：
 
@@ -167,6 +173,10 @@ mkdir -p /path/to/your-repo/.agents/skills/
 cp -r .agents/skills/codebase-wiki/ /path/to/your-repo/.agents/skills/codebase-wiki/
 cp -r wiki/ /path/to/your-repo/wiki/
 ```
+
+安裝到目標 codebase 後，請將 `.codex/config.toml` 的
+`[wiki_guard] mode` 設為 `"target"`。只有維護本框架 repo 時才使用
+`"framework"`。
 
 Codex 版的必要元件只有：
 
@@ -216,6 +226,7 @@ Codex 版的必要元件只有：
 ```text
 /ingest-batch src/
 /onboarding-guide
+/save-guide 本機開發環境設定
 /update-index
 ```
 
@@ -224,6 +235,7 @@ Codex 版的必要元件只有：
 ```text
 請依照 AGENTS.md 的 batch ingest 流程掃描 src/，建立初始 wiki，最後更新 index 與 log。
 請根據目前的 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。
+請把本機開發環境設定整理成 wiki/guides/ 指南，標示來源、gap 與可操作步驟，並更新 index 與 log。
 ```
 
 更多 Codex 寫法可參考 [Codex.md](Codex.md)。
@@ -275,6 +287,7 @@ Codex 版的必要元件只有：
 
 ```text
 discount_code 這個欄位是什麼時候、為什麼加進來的？
+/code-archaeology discount_code
 /save-synthesis 折扣碼設計演進分析
 ```
 
@@ -489,7 +502,9 @@ freshness_note
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
+python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
+python .agents\skills\codebase-wiki\scripts\check-dual-entry-sync.py
 ```
 
 **確認後的修復 Prompt**
@@ -505,7 +520,7 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 **驗收重點**
 
 - Codex 不刪除 wiki 頁面，只標記 stale 或提出人工處理建議。
-- 修復後重新跑 `check-stale.py` 和 `wiki-stats.py`。
+- 修復後重新跑 `check-stale.py`、`validate-frontmatter.py` 和 `wiki-stats.py`。
 - `wiki/log.md` 有 lint 條目。
 
 ### 範例 G：明確要求 custom agents 委派
@@ -556,6 +571,7 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
+python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 ```
 
@@ -684,6 +700,12 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
 ```
 
+Copilot 可使用：
+
+```text
+/code-archaeology discount_code
+```
+
 **預期產出**
 - 以入口點 + 呼叫鏈 + git history 證據形成解釋。
 - 若要求持久化，更新對應 wiki 頁面並同步 index/log。
@@ -747,6 +769,14 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 ```text
 請根據目前 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。
 ```
+
+通用 guide 可使用：
+
+```text
+請把本機開發環境設定整理成 wiki/guides/ 指南，標示來源、gap 與可操作步驟，並更新 index 與 log。
+```
+
+Copilot 可使用 `/onboarding-guide` 或 `/save-guide {topic}`；前者保留給新人導覽，後者用於除錯、操作、runbook、維運或其他 durable guide。
 
 **預期產出**
 - 新增 `wiki/guides/*.md`，涵蓋核心模組、閱讀順序、常見流程。
@@ -823,17 +853,14 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 
 `wiki-query` 現在支援在查詢流程中納入 SQL Server live evidence，用來回答「wiki / source 描述」和「目前資料庫 schema 或資料」之間的關係。
 
-| 入口 | 行為 |
-| --- | --- |
-| GitHub Copilot | `.github/agents/wiki-query.agent.md` 宣告 VS Code Microsoft SQL Server extension tools；當工具可用時，可查 schema、metadata 與有界線的唯讀 `SELECT` |
-| OpenAI Codex | `AGENTS.md` 與 `.codex/agents/wiki-query.toml` 同步定義相同行為；當 Codex 環境沒有 MSSQL tool 時，必須先詢問使用者是否改走 Copilot、MCP、CLI 或其他 fallback |
+| 入口           | 行為                                                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GitHub Copilot | `.github/agents/wiki-query.agent.md` 宣告 VS Code Microsoft SQL Server extension tools；當工具可用時，可查 schema、metadata 與有界線的唯讀 `SELECT`          |
+| OpenAI Codex   | `AGENTS.md` 與 `.codex/agents/wiki-query.toml` 同步定義相同行為；當 Codex 環境沒有 MSSQL tool 時，必須先詢問使用者是否改走 Copilot、MCP、CLI 或其他 fallback |
 
 共同規則：
 
-- 只允許 schema discovery、metadata lookup 與 bounded read-only `SELECT`
-- 禁止 DML、DDL、`EXEC`、stored procedure execution、無限制全表掃描與任何會改變資料庫狀態的操作
-- DB-derived 回答必須標註 `connected_at`、`source_tool`、`server`、`database`、`query_scope`、`result_limit`、`row_count`、`freshness_note`
-- DB 證據不是 repo 檔案，不得寫入 wiki frontmatter `sources`；若要長期保存，應放在 `wiki/synthesis/` 或相關 wiki 頁面的正文 evidence block，並經使用者確認
+共同規則以 `references/mssql-evidence-rules.md` 為準。摘要：只允許 schema discovery、metadata lookup、connection details 與 bounded read-only `SELECT`；禁止 DML、DDL、`EXEC`、stored procedure execution、無限制全表掃描與任何會改變資料庫狀態的操作；DB-derived 回答必須標註 reference 規定的 metadata，且 DB 證據不得寫入 wiki frontmatter `sources`。
 
 ---
 
@@ -841,21 +868,21 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 
 ### Copilot 版
 
-| 元件 | 位置 | 用途 |
-| --- | --- | --- |
-| Agents | `.github/agents/` | `wiki-keeper` 等 5 個專業 agent，負責路由、ingest、query、lint、archaeology；`wiki-query` 可在 VS Code MSSQL tools 可用時取得唯讀 DB live evidence |
-| Prompts | `.github/prompts/` | `/ingest-module`、`/lint-wiki`、`/save-synthesis`、`/system-analysis-doc` 等對話入口 |
-| Hooks | `.github/hooks/` | 寫入保護與稽核提醒 |
-| Skill | `.github/skills/codebase-wiki/` | 共用模板、reference 文件與腳本 |
+| 元件    | 位置                            | 用途                                                                                                                                               |
+| ------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agents  | `.github/agents/`               | `wiki-keeper` 等 5 個專業 agent，負責路由、ingest、query、lint、archaeology；`wiki-query` 可在 VS Code MSSQL tools 可用時取得唯讀 DB live evidence |
+| Prompts | `.github/prompts/`              | `/ingest-module`、`/lint-wiki`、`/code-archaeology`、`/save-guide`、`/save-synthesis`、`/system-analysis-doc` 等對話入口                           |
+| Hooks   | `.github/hooks/`                | 寫入保護、稽核提醒與 `config.toml` guard mode                                                                                                      |
+| Skill   | `.github/skills/codebase-wiki/` | 共用模板、reference 文件與 `validate-frontmatter.py` / `check-dual-entry-sync.py` 等腳本                                                           |
 
 ### Codex 版
 
-| 元件 | 位置 | 用途 |
-| --- | --- | --- |
-| Root instructions | `AGENTS.md` | Codex 讀取的主要規則、流程與禁止事項 |
-| Repo-local skill | `.agents/skills/codebase-wiki/` | 模板、reference 文件與輔助腳本 |
-| Hooks | `.codex/config.toml`、`.codex/hooks.json`、`.codex/hooks/scripts/` | SessionStart 狀態摘要、寫入保護、log reminder |
-| Custom agents | `.codex/agents/` | 可委派的 specialized agents；只在明確要求 delegation 或 parallel agent work 時使用；`wiki-query` 內建 SQL Server live evidence 的唯讀與 fallback 規則 |
+| 元件              | 位置                                                               | 用途                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Root instructions | `AGENTS.md`                                                        | Codex 讀取的主要規則、流程與禁止事項                                                                                                                  |
+| Repo-local skill  | `.agents/skills/codebase-wiki/`                                    | 模板、reference 文件與輔助腳本                                                                                                                        |
+| Hooks             | `.codex/config.toml`、`.codex/hooks.json`、`.codex/hooks/scripts/` | SessionStart 狀態摘要、寫入保護、log reminder；`config.toml` 內設定 guard mode                                                                        |
+| Custom agents     | `.codex/agents/`                                                   | 可委派的 specialized agents；只在明確要求 delegation 或 parallel agent work 時使用；`wiki-query` 內建 SQL Server live evidence 的唯讀與 fallback 規則 |
 
 Codex 版的細節配置與常見誤解，集中整理在 [Codex.md](Codex.md)。
 
@@ -882,7 +909,7 @@ wiki/
 
 ### Frontmatter 規格
 
-每個 wiki 頁面都應包含：
+完整規格以 `references/frontmatter-spec.md` 為準。每個 wiki 頁面都應包含：
 
 ```yaml
 ---
@@ -896,7 +923,7 @@ status: active | stale | placeholder
 ---
 ```
 
-ADR 頁面另外需要：
+ADR、Dependency、Index、Log 的類型專屬欄位以 `frontmatter-spec.md` 為準。ADR 頁面另外需要：
 
 ```yaml
 decision_date: YYYY-MM-DD
@@ -915,14 +942,14 @@ decision_status: proposed | accepted | deprecated | superseded
 
 ## 相容性
 
-| 工具 | 支援狀態 | 說明 |
-| --- | --- | --- |
-| GitHub Copilot Chat | ✅ 支援 | 使用 `.github/` 內的 agents、prompts、hooks、skills |
-| OpenAI Codex | ✅ 支援 | 使用 `AGENTS.md`、`.codex/`、`.agents/skills/` 作為入口 |
-| VS Code | ✅ 支援 | Copilot 與 Codex IDE extension 都可使用 |
-| Python 3.8+ | ⚡ 選用 | hooks 與輔助腳本需要；純自然語言流程不一定需要 |
-| Obsidian | ✅ 相容 | `wiki/` 可直接當作 Vault 使用 |
-| 任意語言的 codebase | ✅ 通用 | 框架不依賴特定程式語言 |
+| 工具                | 支援狀態 | 說明                                                    |
+| ------------------- | -------- | ------------------------------------------------------- |
+| GitHub Copilot Chat | ✅ 支援   | 使用 `.github/` 內的 agents、prompts、hooks、skills     |
+| OpenAI Codex        | ✅ 支援   | 使用 `AGENTS.md`、`.codex/`、`.agents/skills/` 作為入口 |
+| VS Code             | ✅ 支援   | Copilot 與 Codex IDE extension 都可使用                 |
+| Python 3.8+         | ⚡ 選用   | hooks 與輔助腳本需要；純自然語言流程不一定需要          |
+| Obsidian            | ✅ 相容   | `wiki/` 可直接當作 Vault 使用                           |
+| 任意語言的 codebase | ✅ 通用   | 框架不依賴特定程式語言                                  |
 
 ---
 

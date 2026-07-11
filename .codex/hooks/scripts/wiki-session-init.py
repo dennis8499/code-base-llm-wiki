@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Codex SessionStart hook that summarizes current wiki state."""
+"""SessionStart hook that summarizes current wiki state."""
 
 from __future__ import annotations
 
@@ -12,10 +12,6 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 WIKI_ROOT = REPO_ROOT / "wiki"
 INDEX_FILE = WIKI_ROOT / "index.md"
 LOG_FILE = WIKI_ROOT / "log.md"
-STATE_FILE_CANDIDATES = (
-    REPO_ROOT / ".codex" / "hooks" / "logs" / "wiki-session-state.md",
-    REPO_ROOT / ".codex-hook-logs" / "wiki-session-state.md",
-)
 
 INDEX_MAX_LINES = 60
 LOG_TAIL_ENTRIES = 10
@@ -27,6 +23,27 @@ def configure_stdio() -> None:
             stream.reconfigure(encoding="utf-8")
         except Exception:
             pass
+
+
+def current_platform() -> str:
+    parts = {part.lower() for part in pathlib.Path(__file__).resolve().parts}
+    if ".github" in parts:
+        return "github"
+    if ".codex" in parts:
+        return "codex"
+    return "unknown"
+
+
+def state_file_candidates() -> tuple[pathlib.Path, ...]:
+    if current_platform() == "github":
+        return (
+            REPO_ROOT / ".github" / "hooks" / "logs" / "wiki-session-state.md",
+            REPO_ROOT / ".github-hook-logs" / "wiki-session-state.md",
+        )
+    return (
+        REPO_ROOT / ".codex" / "hooks" / "logs" / "wiki-session-state.md",
+        REPO_ROOT / ".codex-hook-logs" / "wiki-session-state.md",
+    )
 
 
 def read_index_summary() -> str:
@@ -55,11 +72,11 @@ def read_log_tail() -> str:
 
 
 def build_message(index_summary: str, log_tail: str) -> str:
-    parts: list[str] = ["## Wiki 狀態摘要（Codex SessionStart）", ""]
+    parts: list[str] = ["## Wiki 狀態摘要（SessionStart）", ""]
     if not index_summary and not log_tail:
         parts += [
             "`wiki/index.md` 尚未建立。",
-            "若要開始使用 wiki，請先要求 Codex 依 Codebase LLM Wiki ingest 流程攝入 codebase 模組。",
+            "若要開始使用 wiki，請先要求 agent 依 Codebase LLM Wiki ingest 流程攝入 codebase 模組。",
         ]
     else:
         if index_summary:
@@ -78,7 +95,7 @@ def build_message(index_summary: str, log_tail: str) -> str:
                 "```",
                 "",
             ]
-        parts.append("操作 wiki 時請保持 raw sources 唯讀，並在 ingest、lint 或重大更新後追加 `wiki/log.md`。")
+        parts.append("操作 wiki 時請保持 raw sources 唯讀，並在 durable wiki 更新後追加 `wiki/log.md`。")
     return "\n".join(parts)
 
 
@@ -98,7 +115,7 @@ def respond(additional_context: str) -> None:
 
 def write_state_file(message: str) -> str | None:
     errors: list[str] = []
-    for state_file in STATE_FILE_CANDIDATES:
+    for state_file in state_file_candidates():
         try:
             state_file.parent.mkdir(parents=True, exist_ok=True)
             state_file.write_text(message, encoding="utf-8")
@@ -118,7 +135,7 @@ def main() -> None:
     message = build_message(read_index_summary(), read_log_tail())
     audit_error = write_state_file(message)
     if audit_error:
-        message += f"\n\n> 無法寫入 Codex hook audit 檔：{audit_error}"
+        message += f"\n\n> 無法寫入 hook audit 檔：{audit_error}"
     respond(message)
 
 

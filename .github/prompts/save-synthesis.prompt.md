@@ -67,7 +67,7 @@ status: active
 ```
 
 5. **更新 `wiki/index.md`**（在 Synthesis section 新增條目）
-6. **追加 `wiki/log.md`** 條目：`## [YYYY-MM-DD] query | {主題標題}`
+6. **追加 `wiki/log.md`** 條目：`## [YYYY-MM-DD] synthesis | {主題標題}`
 
 ## 品質要求
 

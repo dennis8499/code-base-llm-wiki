@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-06-01
+last_updated: 2026-07-01
 tags: [log]
 status: active
 ---
@@ -34,3 +34,10 @@ status: active
 - README 與 Codex.md 補上 Copilot ↔ Codex 功能對照，明確 Codex 使用自然語言 recipe 而不是偽造 Copilot slash prompt files
 - 更新 wiki/overview.md 與 wiki/guides/framework-introduction.md，記錄雙入口同權維護與 Codex recipe 對照
 - 受影響頁面：[[overview]]、[[framework-introduction]]、[[index]]
+
+## [2026-07-01] update | 雙入口 workflow SSOT 與 hook 安全強化
+
+- 新增鏡像 references：intent routing、log operations、SQL live evidence、hooks specification、ADR、guide、synthesis、code archaeology workflow
+- 新增 `/code-archaeology`、`/save-guide`、`validate-frontmatter.py`、`check-dual-entry-sync.py`
+- 將 write guard 改為 `target` / `framework` 設定檔模式，並同步 Copilot / Codex hook scripts
+- 更新 README.md、Codex.md、AGENTS.md、ChangeLog.md、`.github/`、`.codex/`、`.agents/` 以維持雙入口獨立安裝與同步驗證

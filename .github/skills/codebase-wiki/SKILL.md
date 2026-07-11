@@ -58,7 +58,8 @@ to maintain.
 
 ## Intent Routing
 
-Classify the request before acting:
+Classify the request before acting. The authoritative routing table is
+`references/intent-routing.md`; keep this summary aligned with it.
 
 | Intent | User signals | Default action |
 | --- | --- | --- |
@@ -81,11 +82,19 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 
 | Need | Load |
 | --- | --- |
+| Intent routing and delegation boundaries | `references/intent-routing.md` |
 | Ingest sequence, page creation rules, dependency ordering | `references/ingest-workflow.md` |
 | Wiki health checks, severities, report format | `references/lint-checklist.md` |
 | Required frontmatter fields and allowed values | `references/frontmatter-spec.md` |
+| Allowed `wiki/log.md` operations and append format | `references/log-operations.md` |
 | Page structures and examples by type | `references/page-types.md` |
+| ADR creation and numbering | `references/adr-workflow.md` |
+| Durable guide creation | `references/guide-workflow.md` |
+| Durable synthesis creation | `references/synthesis-workflow.md` |
 | SA document generation, coverage map, gap handling | `references/system-analysis-workflow.md` |
+| Code archaeology and git-history evidence | `references/code-archaeology-workflow.md` |
+| SQL Server live evidence rules | `references/mssql-evidence-rules.md` |
+| Hook trigger, I/O, and guard-mode contract | `references/hooks-specification.md` |
 | New page starting points | Matching template under `assets/` |
 | Stale source checks, stats, or index rebuilds | Matching script under `scripts/` |
 
@@ -107,7 +116,8 @@ deterministic checks instead of reimplementing parsing in prose.
 
 ## Wiki Update Rules
 
-Every wiki page must include:
+Every wiki page must follow `references/frontmatter-spec.md`. The common
+required fields are:
 
 ```yaml
 ---
@@ -121,17 +131,10 @@ status: active | stale | placeholder
 ---
 ```
 
-ADR pages also require:
-
-```yaml
-decision_date: YYYY-MM-DD
-decision_status: proposed | accepted | deprecated | superseded
-```
-
 When adding, deleting, renaming, or substantially updating wiki pages, update
 `wiki/index.md`. For ingest, lint, ADR, synthesis, guide, or major wiki updates,
 append a new entry to `wiki/log.md`; never delete or rewrite existing log
-entries.
+entries. Allowed log operations are defined in `references/log-operations.md`.
 
 ## Workflows
 
@@ -167,6 +170,8 @@ entries.
 
 ### ADR, Guide, And Synthesis
 
+- Load `references/adr-workflow.md`, `references/guide-workflow.md`, or
+  `references/synthesis-workflow.md` for non-trivial persisted output.
 - Use `wiki/decisions/` for ADRs, `wiki/guides/` for onboarding or operation
   guides, and `wiki/synthesis/` for durable cross-cutting analysis.
 - Base content on wiki pages, raw source evidence, or clearly labeled inference.
@@ -185,6 +190,7 @@ entries.
 
 ### Code Archaeology
 
+- Load `references/code-archaeology-workflow.md` for non-trivial archaeology.
 - Start from concrete entrypoints or field names.
 - Trace call paths and unusual branches.
 - Use only non-destructive git commands such as `git log`, `git blame`, and
@@ -193,17 +199,13 @@ entries.
 
 ## SQL Server Live Evidence
 
-Use SQL Server or MSSQL tools only when the current environment actually exposes
-them. Allowed operations are connection metadata, schema discovery, metadata
-lookup, and bounded read-only `SELECT`.
-
-Forbidden operations: DML, DDL, `EXEC`, stored procedure execution, unbounded
-table scans, credential disclosure, and anything that changes persistent state.
-
-Every DB-derived answer must include `connected_at`, `source_tool`, `server`,
-`database`, `query_scope`, `result_limit`, `row_count`, and `freshness_note`.
-DB evidence is not a repo file and must not be placed in frontmatter `sources`;
-if persisted, keep it in a body evidence block after user confirmation.
+Use `references/mssql-evidence-rules.md` as the source of truth. In short:
+SQL Server / MSSQL tools may be used only when available, only for schema
+discovery, metadata lookup, connection details, and bounded read-only `SELECT`.
+Never run DML, DDL, `EXEC`, stored procedure execution, unbounded scans,
+credential disclosure, or persistent state changes. DB evidence requires the
+metadata listed in the reference and must not be placed in frontmatter
+`sources`.
 
 ## Verification
 
@@ -219,6 +221,7 @@ Useful checks:
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
+python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki\
 ```

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Codex PreToolUse hook that keeps wiki work inside wiki/schema paths."""
+"""PreToolUse hook that keeps wiki work inside the configured write boundary."""
 
 from __future__ import annotations
 
@@ -30,8 +30,10 @@ PATCH_FILE_PATTERN = re.compile(
     re.MULTILINE,
 )
 
-ALLOWED_PREFIXES = ("wiki/", ".codex/", ".agents/", ".github/")
-ALLOWED_ROOT_FILES = {
+REPO_ROOT = Path(__file__).resolve().parents[3]
+FRAMEWORK_PREFIXES = ("wiki/", ".codex/", ".agents/", ".github/")
+TARGET_PREFIXES = ("wiki/",)
+FRAMEWORK_ROOT_FILES = {
     "agents.md",
     "readme.md",
     "changelog.md",
@@ -39,7 +41,6 @@ ALLOWED_ROOT_FILES = {
     "llm-wiki.md",
     "prompt.txt",
 }
-REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def configure_stdio() -> None:
@@ -51,34 +52,82 @@ def configure_stdio() -> None:
 
 
 def normalize_path(value: str) -> str:
-    return value.replace("\\", "/").strip()
+    return value.replace("\\", "/").strip().strip("\"'")
 
 
-def is_allowed_root_file(path: str) -> bool:
-    root_name = path.rsplit("/", 1)[-1]
-    if root_name not in ALLOWED_ROOT_FILES:
-        return False
-    if "/" not in path:
-        return True
+def current_platform() -> str:
+    parts = {part.lower() for part in Path(__file__).resolve().parts}
+    if ".github" in parts:
+        return "github"
+    if ".codex" in parts:
+        return "codex"
+    return "unknown"
+
+
+def config_candidates() -> list[Path]:
+    github_config = REPO_ROOT / ".github" / "hooks" / "config.toml"
+    codex_config = REPO_ROOT / ".codex" / "config.toml"
+    if current_platform() == "github":
+        return [github_config, codex_config]
+    return [codex_config, github_config]
+
+
+def read_guard_mode() -> str:
+    """Read wiki_guard.mode from config.toml, failing closed to target mode."""
+    for config_path in config_candidates():
+        if not config_path.exists():
+            continue
+        section = ""
+        try:
+            lines = config_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for raw_line in lines:
+            line = raw_line.split("#", 1)[0].strip()
+            if not line:
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                section = line.strip("[]").strip()
+                continue
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip("\"'")
+            if section == "wiki_guard" and key == "mode" and value in {"target", "framework"}:
+                return value
+            if section == "wiki" and key == "guard_mode" and value in {"target", "framework"}:
+                return value
+    return "target"
+
+
+def repo_relative_path(path: str) -> str | None:
+    normalized = normalize_path(path)
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
     try:
-        candidate = Path(path)
+        candidate = Path(normalized)
         if not candidate.is_absolute():
             candidate = REPO_ROOT / candidate
         resolved = candidate.resolve(strict=False)
+        rel = resolved.relative_to(REPO_ROOT.resolve(strict=False))
     except Exception:
+        return None
+    return rel.as_posix().lower()
+
+
+def is_allowed_root_file(rel_path: str) -> bool:
+    return "/" not in rel_path and rel_path in FRAMEWORK_ROOT_FILES
+
+
+def is_allowed_path(path: str, mode: str) -> bool:
+    rel_path = repo_relative_path(path)
+    if not rel_path:
         return False
-    return resolved.parent == REPO_ROOT and resolved.name.lower() in ALLOWED_ROOT_FILES
-
-
-def is_allowed_path(path: str) -> bool:
-    normalized = normalize_path(path).lower()
-    while normalized.startswith("./"):
-        normalized = normalized[2:]
-    return (
-        is_allowed_root_file(normalized)
-        or normalized.startswith(ALLOWED_PREFIXES)
-        or any(f"/{prefix}" in normalized for prefix in ALLOWED_PREFIXES)
-    )
+    prefixes = FRAMEWORK_PREFIXES if mode == "framework" else TARGET_PREFIXES
+    if mode == "framework" and is_allowed_root_file(rel_path):
+        return True
+    return any(rel_path == prefix.rstrip("/") or rel_path.startswith(prefix) for prefix in prefixes)
 
 
 def extract_patch_text(tool_input: Any) -> str:
@@ -149,11 +198,13 @@ def respond_deny(reason: str) -> None:
     print(
         json.dumps(
             {
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
                     "permissionDecisionReason": reason,
-                }
+                },
             },
             ensure_ascii=False,
         )
@@ -165,7 +216,7 @@ def main() -> None:
     try:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
-        respond_deny("wiki-write-guard 無法解析 Codex hook 輸入，依 fail-safe 政策拒絕本次寫入。")
+        respond_deny("wiki-write-guard 無法解析 hook 輸入，依 fail-safe 政策拒絕本次寫入。")
         return
 
     tool_name = str(payload.get("tool_name") or payload.get("toolName") or "")
@@ -181,14 +232,15 @@ def main() -> None:
         )
         return
 
-    disallowed_paths = [path for path in target_paths if not is_allowed_path(path)]
+    mode = read_guard_mode()
+    disallowed_paths = [path for path in target_paths if not is_allowed_path(path, mode)]
     if disallowed_paths:
         summarized_paths = ", ".join(f"`{path}`" for path in disallowed_paths[:3])
         if len(disallowed_paths) > 3:
             summarized_paths += f" 等 {len(disallowed_paths)} 個路徑"
+        allowed_summary = "`wiki/`" if mode == "target" else "`wiki/` 與框架 schema/docs 路徑"
         respond_deny(
-            "Codebase LLM Wiki 任務預設只應寫入 `wiki/`、`.codex/`、"
-            "`.agents/`、`.github/` 或明確框架維護文件。"
+            f"Codebase LLM Wiki write guard 目前為 `{mode}` 模式，只允許寫入 {allowed_summary}。"
             f"這次偵測到其他路徑：{summarized_paths}。"
         )
         return
