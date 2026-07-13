@@ -15,7 +15,7 @@ argument-hint: "可選：補充只報告問題，或報告後協助修復"
 
 ## 檢查項目
 
-依照 `.github/skills/codebase-wiki/references/lint-checklist.md` 執行 8 項檢查：
+依照 `.agents/skills/codebase-wiki/references/lint-checklist.md` 執行 8 項檢查：
 
 1. **Stale Pages** — sources 路徑是否仍存在
 2. **Orphan Pages** — 是否有頁面無 inbound link
@@ -30,8 +30,8 @@ argument-hint: "可選：補充只報告問題，或報告後協助修復"
 
 可搭配執行：
 
-- `python .github/skills/codebase-wiki/scripts/check-stale.py wiki/`
-- `python .github/skills/codebase-wiki/scripts/wiki-stats.py wiki/`
+- `python .agents/skills/codebase-wiki/scripts/check-stale.py wiki/`
+- `python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki/`
 
 ## 輸出
 

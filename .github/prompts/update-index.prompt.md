@@ -24,7 +24,7 @@ argument-hint: "可選：補充這次重建索引的原因或範圍"
 也可以直接執行腳本：
 
 ```
-python .github/skills/codebase-wiki/scripts/rebuild-index.py wiki/
+python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki/
 ```
 
 腳本會自動掃描並重建 index.md。

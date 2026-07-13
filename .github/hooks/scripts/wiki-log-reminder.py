@@ -174,6 +174,7 @@ def append_audit_entry(paths: list[str]) -> str | None:
 def respond(additional_context: str | None = None) -> None:
     payload: dict[str, Any] = {}
     if additional_context:
+        payload["additionalContext"] = additional_context
         payload["hookSpecificOutput"] = {
             "hookEventName": "PostToolUse",
             "additionalContext": additional_context,

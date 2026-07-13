@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-07-01
+last_updated: 2026-07-13
 tags: [log]
 status: active
 ---
@@ -33,7 +33,6 @@ status: active
 - 重建並優化 Codex 入口：`AGENTS.md`、`Codex.md`、`.codex/`，改用短 AGENTS.md + `$codebase-wiki` skill 的 token-friendly 流程
 - README 與 Codex.md 補上 Copilot ↔ Codex 功能對照，明確 Codex 使用自然語言 recipe 而不是偽造 Copilot slash prompt files
 - 更新 wiki/overview.md 與 wiki/guides/framework-introduction.md，記錄雙入口同權維護與 Codex recipe 對照
-- 受影響頁面：[[overview]]、[[framework-introduction]]、[[index]]
 
 ## [2026-07-01] update | 雙入口 workflow SSOT 與 hook 安全強化
 
@@ -41,3 +40,10 @@ status: active
 - 新增 `/code-archaeology`、`/save-guide`、`validate-frontmatter.py`、`check-dual-entry-sync.py`
 - 將 write guard 改為 `target` / `framework` 設定檔模式，並同步 Copilot / Codex hook scripts
 - 更新 README.md、Codex.md、AGENTS.md、ChangeLog.md、`.github/`、`.codex/`、`.agents/` 以維持雙入口獨立安裝與同步驗證
+
+## [2026-07-13] update | 共用 FTS5／Tree-sitter Runtime 與入口 parity
+
+- 新增 `.codebase-wiki/runtime/` 共用 CLI、SQLite FTS5 索引、Tree-sitter query packs、setup/doctor/index/search 與冪等安裝器
+- 將 `.agents/skills/codebase-wiki/` 定為 Copilot/Codex 唯一共同 skill，移除手動 `.github/skills` 鏡像並加入 capability parity check
+- 更新雙入口 instructions、README、Codex 使用手冊與 Wiki 導覽；Query 維持唯讀，索引快取可重建且不進版控
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]

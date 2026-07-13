@@ -17,10 +17,10 @@ argument-hint: "可選：補充範圍，例如：整體系統、src/auth/、結�
 
 1. 讀取 `wiki/index.md` 與近期 `wiki/log.md`。
 2. 讀取 `wiki/overview.md`，以及與範圍相關的 architecture、modules、entities、patterns、dependencies、decisions、synthesis 頁面。
-3. 載入 `.github/skills/codebase-wiki/references/system-analysis-workflow.md`。
+3. 載入 `.agents/skills/codebase-wiki/references/system-analysis-workflow.md`。
 4. 建立 SA coverage map，判斷每個章節是 `covered`、`partial` 或 `gap`。
 5. 只有在 wiki 不足、過時或互相矛盾時，才依相關頁面的 `sources` 回溯 raw sources。
-6. 使用 `.github/skills/codebase-wiki/assets/system-analysis-template.md` 產出 SA 文件：
+6. 使用 `.agents/skills/codebase-wiki/assets/system-analysis-template.md` 產出 SA 文件：
    - 整體系統：`wiki/synthesis/system-analysis.md`
    - 指定範圍：`wiki/synthesis/{kebab-scope}-system-analysis.md`
 7. 更新 `wiki/index.md`。

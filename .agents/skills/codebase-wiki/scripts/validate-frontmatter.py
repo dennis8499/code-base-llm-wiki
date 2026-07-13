@@ -93,6 +93,14 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
 
     if "sources" in fm and not is_list(fm.get("sources")):
         errors.append(f"{rel}: sources must be an array")
+    elif "sources" in fm:
+        for source in fm.get("sources", []):
+            if not isinstance(source, str) or not source.strip():
+                errors.append(f"{rel}: every sources entry must be a non-empty repo-relative string")
+                continue
+            source_path = pathlib.PurePosixPath(source.replace("\\", "/"))
+            if source_path.is_absolute() or ".." in source_path.parts:
+                errors.append(f"{rel}: source must stay inside the repository: {source!r}")
 
     if "last_updated" in fm and not is_valid_date(fm.get("last_updated")):
         errors.append(f"{rel}: last_updated must be a valid YYYY-MM-DD date")

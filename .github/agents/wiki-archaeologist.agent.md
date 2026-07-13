@@ -20,7 +20,7 @@ tools: [execute, read, edit, search]
 ## 工作流程
 
 完整流程以
-`.github/skills/codebase-wiki/references/code-archaeology-workflow.md` 為準；
+`.agents/skills/codebase-wiki/references/code-archaeology-workflow.md` 為準；
 本段是 agent 執行摘要。
 
 1. **確認目標**：
@@ -43,15 +43,9 @@ tools: [execute, read, edit, search]
    - `run_in_terminal`：`git blame -L {start},{end} {file}` 查看特定段落的提交者與時間
    - 從 commit message 與 blame 推斷設計決策的時機與脈絡
 
-5. **產出文件**：
-   - 功能路徑文件 → `wiki/modules/` 或 `wiki/entities/`
-   - 隱含業務規則 → `wiki/patterns/` 或 `wiki/synthesis/`
-   - 技術債標記 → `wiki/synthesis/technical-debt-{area}.md`
-   - Architecture Decision Records → `wiki/decisions/`
+5. **產出報告**：在對話中輸出考古結果；只有使用者明確要求保存時，才建立或更新 Wiki 頁面。
 
-6. **收尾**：
-   - 更新 `wiki/index.md`
-   - 追加 `wiki/log.md` 條目
+6. **保存時收尾**：更新 `wiki/index.md` 並追加 `wiki/log.md`；未要求保存時維持唯讀。
 
 ## 輸出格式
 

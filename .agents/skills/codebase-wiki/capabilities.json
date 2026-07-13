@@ -1,0 +1,22 @@
+{
+  "contract_version": 1,
+  "surfaces": ["copilot", "codex"],
+  "intents": {
+    "install": {"writes_by_default": false, "requires_confirmation": true},
+    "ingest": {"writes_by_default": false, "requires_confirmation": true},
+    "query": {"writes_by_default": false, "requires_confirmation": false},
+    "lint": {"writes_by_default": false, "requires_confirmation": true},
+    "archaeology": {"writes_by_default": false, "requires_confirmation": true},
+    "adr": {"writes_by_default": true, "requires_confirmation": true},
+    "guide": {"writes_by_default": true, "requires_confirmation": true},
+    "synthesis": {"writes_by_default": true, "requires_confirmation": true},
+    "system_analysis": {"writes_by_default": true, "requires_confirmation": true},
+    "delegation": {"writes_by_default": false, "requires_confirmation": true}
+  },
+  "cli": {
+    "setup": "codebase-wiki setup",
+    "doctor": "codebase-wiki doctor --format json",
+    "index": "codebase-wiki index update --format json",
+    "search": "codebase-wiki search QUERY --format json"
+  }
+}

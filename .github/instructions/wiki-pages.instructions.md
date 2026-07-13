@@ -7,7 +7,7 @@ description: "Applies when editing any markdown file under the wiki/ directory. 
 
 ## Frontmatter 必填欄位
 
-完整規格以 `.github/skills/codebase-wiki/references/frontmatter-spec.md`
+完整規格以 `.agents/skills/codebase-wiki/references/frontmatter-spec.md`
 為準。每個 wiki 頁面的 YAML frontmatter **至少必須包含以下欄位**：
 
 ```yaml
@@ -142,4 +142,4 @@ allowed `type`、`status`、日期格式與路徑對應規則以
 
 3. `operation` 限定為
    `ingest|query|lint|update|init|adr|synthesis|guide|archaeology`，完整語意
-   以 `.github/skills/codebase-wiki/references/log-operations.md` 為準。
+   以 `.agents/skills/codebase-wiki/references/log-operations.md` 為準。

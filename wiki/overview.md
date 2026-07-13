@@ -7,7 +7,11 @@ sources:
   - Codex.md
   - llm-wiki.md
   - .github/copilot-instructions.md
-last_updated: 2026-06-01
+  - .agents/skills/codebase-wiki/SKILL.md
+  - .agents/skills/codebase-wiki/capabilities.json
+  - .codebase-wiki/config.toml
+  - .codebase-wiki/runtime/codebase_wiki_runtime/cli.py
+last_updated: 2026-07-13
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 ---
@@ -32,7 +36,7 @@ status: active
 
 ## 技術棧
 
-- **語言**：Markdown（wiki 頁面）、Python 3.8+（輔助腳本）、TOML（Codex 設定）、JSON（Hook 設定）、YAML（Frontmatter）
+- **語言**：Markdown（wiki 頁面）、Python 3.11+（Runtime 與輔助腳本）、TOML（設定）、JSON（Hook／capability）、YAML（Frontmatter）
 - **整合平台**：GitHub Copilot（VS Code）、OpenAI Codex（CLI / IDE / Cloud Tasks）
 - **相容工具**：Obsidian（wikilink 語法）、Marp（簡報）、Dataview（動態查詢）
 
@@ -72,10 +76,12 @@ code-base-llm-wiki/
 ├── .github/                      — GitHub Copilot 版元件
 │   ├── copilot-instructions.md   — Copilot 全域指令
 │   ├── agents/                   — 5 個 Copilot 自訂 agents
-│   ├── prompts/                  — 8 個 Slash prompts
+│   ├── prompts/                  — 11 個 Slash prompts（IDE 專用）
 │   ├── hooks/                    — 3 個 Copilot hooks
-│   ├── instructions/             — wiki 頁面格式規範
-│   └── skills/                   — codebase-wiki skill
+│   └── instructions/             — wiki 頁面格式規範
+│
+├── .codebase-wiki/               — 共用搜尋 Runtime 與本機快取設定
+│   └── runtime/                  — SQLite FTS5、Tree-sitter、CLI
 │
 ├── .codex/                       — OpenAI Codex 版元件
 │   ├── config.toml               — Codex 設定
@@ -87,8 +93,8 @@ code-base-llm-wiki/
 │   └── skills/codebase-wiki/     — Repo-local skill
 │       ├── SKILL.md              — Skill 主文件
 │       ├── assets/               — 6 種頁面模板
-│       ├── references/           — 4 份 reference 文件
-│       └── scripts/              — 4 個 Python 輔助腳本
+│       ├── references/           — 工作流、規格與安全參考
+│       └── scripts/              — Wiki 檢查與 parity scripts
 │
 └── wiki/                         — 知識庫輸出位置
     ├── index.md                  — 主索引
@@ -113,7 +119,7 @@ code-base-llm-wiki/
 
 兩版共用同一個 `wiki/` 骨架，可共存於同一個 repo。
 
-本框架採雙入口同權維護：Copilot 與 Codex 維持同一組 wiki 能力、邊界、安全規則與驗收結果。Copilot 使用 agents、prompts、hooks 與 `.github/skills/`；Codex 使用 `AGENTS.md`、`.codex/agents/`、`.codex/hooks.json` 與 `.agents/skills/codebase-wiki/`。Codex 不模擬 Copilot 的 project-level slash prompt files，而是以自然語言 recipe 觸發同等工作流程。
+本框架採雙入口同權維護：Copilot 與 Codex 維持同一組 wiki 能力、邊界、安全規則與驗收結果。兩者共用 `.agents/skills/codebase-wiki/` 與 `.codebase-wiki/runtime/`；Copilot 額外使用 agents、prompts、hooks，Codex 使用 `AGENTS.md`、`.codex/agents/` 與 `.codex/hooks.json`。Codex 不模擬 Copilot 的 project-level slash prompt files，而是以自然語言 recipe 觸發同等工作流程。
 
 ## 核心功能
 

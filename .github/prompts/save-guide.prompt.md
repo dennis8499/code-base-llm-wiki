@@ -16,7 +16,7 @@ argument-hint: "指南主題，例如：本機開發環境設定、退款流程�
 ## 流程
 
 1. 讀取 `wiki/index.md` 與近期 `wiki/log.md`。
-2. 載入 `.github/skills/codebase-wiki/references/guide-workflow.md`。
+2. 載入 `.agents/skills/codebase-wiki/references/guide-workflow.md`。
 3. 讀取 `wiki/overview.md` 與相關 architecture、modules、entities、patterns、dependencies、decisions、synthesis 頁面。
 4. 只有 wiki 不足、過時或互相矛盾時，才回溯 raw sources。
 5. 決定輸出檔名：`wiki/guides/{kebab-topic}.md`。

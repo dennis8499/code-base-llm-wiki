@@ -36,10 +36,13 @@ README.md                         Framework overview and install instructions
   agents/*.toml                   Optional custom agents for explicit delegation
 .agents/skills/codebase-wiki/
   SKILL.md                        This workflow entrypoint
+  capabilities.json                Shared intent and parity contract
   references/                     Detailed workflow specs loaded on demand
   assets/                         Page templates
   scripts/                        Deterministic wiki checks and index helpers
   agents/openai.yaml              UI metadata for the skill
+.codebase-wiki/
+  runtime/                        Common FTS5 and Tree-sitter CLI runtime
 .github/                          GitHub Copilot entrypoint, prompts, agents, hooks
 wiki/
   index.md                        Maintained navigation index
@@ -113,6 +116,19 @@ deterministic checks instead of reimplementing parsing in prose.
 - Do not create project-level Codex slash prompt files. Codex usage is through
   natural-language recipes and optional `$codebase-wiki` invocation.
 - Use `.codex/agents/*.toml` only for explicit delegation requests.
+
+## Shared Search Runtime
+
+Both Copilot and Codex call the same repo-local runtime through
+`.codebase-wiki/runtime/scripts/codebase-wiki.py`. The runtime owns the
+versioned JSON contract and supports `setup`, `doctor`, `index`, and `search`.
+SQLite is a rebuildable local cache; `wiki/` remains the durable source of
+truth. Query is read-only and never refreshes the index implicitly. Use
+`index update` explicitly when the cache is stale.
+
+Tree-sitter structure indexing covers Python, JavaScript/JSX, TypeScript/TSX,
+and C#. Missing grammars or parse errors must be reported as diagnostics and
+must not be replaced by fabricated symbols.
 
 ## Wiki Update Rules
 

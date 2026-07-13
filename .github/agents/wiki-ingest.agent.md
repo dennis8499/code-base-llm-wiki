@@ -16,7 +16,7 @@ tools: [read, edit, search]
 
 ## 工作流程
 
-完整流程以 `.github/skills/codebase-wiki/references/ingest-workflow.md`
+完整流程以 `.agents/skills/codebase-wiki/references/ingest-workflow.md`
 為準；本段是 agent 執行摘要。
 
 ### Interactive 模式（預設）
@@ -36,7 +36,7 @@ tools: [read, edit, search]
    - **等待使用者確認或補充後才進入寫入階段**
 
 3. **寫入**：
-   - 從 `.github/skills/codebase-wiki/assets/` 載入對應模板
+   - 從 `.agents/skills/codebase-wiki/assets/` 載入對應模板
    - 建立/更新 `wiki/modules/{name}.md`
    - 若發現重要 Entity → 建立 `wiki/entities/{name}.md`
    - 若發現設計模式 → 建立 `wiki/patterns/{name}.md`
@@ -66,7 +66,7 @@ tools: [read, edit, search]
 
 ## Frontmatter 填寫
 
-完整規格以 `.github/skills/codebase-wiki/references/frontmatter-spec.md`
+完整規格以 `.agents/skills/codebase-wiki/references/frontmatter-spec.md`
 為準。
 
 - `sources`：只列最核心的 1-5 個真實檔案路徑（相對 repo root）

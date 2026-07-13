@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codebase-llm-wiki-runtime"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "tree-sitter==0.26.0",
+  "tree-sitter-c-sharp==0.23.5",
+  "tree-sitter-javascript==0.25.0",
+  "tree-sitter-python==0.25.0",
+  "tree-sitter-typescript==0.23.2",
+]
+
+[project.scripts]
+codebase-wiki = "codebase_wiki_runtime.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

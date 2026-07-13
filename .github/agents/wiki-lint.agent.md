@@ -17,7 +17,7 @@ tools: [execute, read, edit, search]
 ## 工作流程
 
 1. **掃描 wiki 結構**：`list_dir wiki/` 取得所有 wiki 頁面清單
-2. **逐項檢查**：按照 `.github/skills/codebase-wiki/references/lint-checklist.md` 中的 8 大檢查項目逐一執行；frontmatter allowed values 以 `.github/skills/codebase-wiki/references/frontmatter-spec.md` 為準
+2. **逐項檢查**：按照 `.agents/skills/codebase-wiki/references/lint-checklist.md` 中的 8 大檢查項目逐一執行；frontmatter allowed values 以 `.agents/skills/codebase-wiki/references/frontmatter-spec.md` 為準
 3. **產出報告**：使用標準健康報告格式
 4. **自動修復**（經使用者確認後）：
    - 將 sources 全部失效的頁面標記為 `stale`
@@ -38,16 +38,16 @@ tools: [execute, read, edit, search]
 | 7   | Index Completeness     | 比對實際 wiki 檔案與 index.md 列表                   |
 | 8   | Coverage Report        | 統計 wiki 覆蓋率                                     |
 
-> 完整檢查清單請參閱 `.github/skills/codebase-wiki/references/lint-checklist.md`。
+> 完整檢查清單請參閱 `.agents/skills/codebase-wiki/references/lint-checklist.md`。
 
 ## 自動化工具
 
 可以執行以下腳本輔助檢查：
 
-- `python .github/skills/codebase-wiki/scripts/check-stale.py wiki/` — 批次檢查 stale sources
-- `python .github/skills/codebase-wiki/scripts/validate-frontmatter.py wiki/` — 驗證 frontmatter 欄位、enum 與日期格式
-- `python .github/skills/codebase-wiki/scripts/rebuild-index.py wiki/` — 重建 index.md
-- `python .github/skills/codebase-wiki/scripts/wiki-stats.py wiki/` — 產出統計報告
+- `python .agents/skills/codebase-wiki/scripts/check-stale.py wiki/` — 批次檢查 stale sources
+- `python .agents/skills/codebase-wiki/scripts/validate-frontmatter.py wiki/` — 驗證 frontmatter 欄位、enum 與日期格式
+- `python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki/` — 重建 index.md
+- `python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki/` — 產出統計報告
 
 ## 報告格式
 

@@ -31,8 +31,8 @@ PATCH_FILE_PATTERN = re.compile(
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-FRAMEWORK_PREFIXES = ("wiki/", ".codex/", ".agents/", ".github/")
-TARGET_PREFIXES = ("wiki/",)
+FRAMEWORK_PREFIXES = ("wiki/", ".codex/", ".agents/", ".github/", ".codebase-wiki/")
+TARGET_PREFIXES = ("wiki/", ".codebase-wiki/cache/")
 FRAMEWORK_ROOT_FILES = {
     "agents.md",
     "readme.md",
@@ -68,8 +68,8 @@ def config_candidates() -> list[Path]:
     github_config = REPO_ROOT / ".github" / "hooks" / "config.toml"
     codex_config = REPO_ROOT / ".codex" / "config.toml"
     if current_platform() == "github":
-        return [github_config, codex_config]
-    return [codex_config, github_config]
+        return [github_config]
+    return [codex_config]
 
 
 def read_guard_mode() -> str:

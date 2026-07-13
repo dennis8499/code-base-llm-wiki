@@ -14,7 +14,11 @@ sources:
   - .github/agents/wiki-archaeologist.agent.md
   - .agents/skills/codebase-wiki/SKILL.md
   - .agents/skills/codebase-wiki/references/ingest-workflow.md
-last_updated: 2026-06-01
+  - .agents/skills/codebase-wiki/capabilities.json
+  - .codebase-wiki/runtime/codebase_wiki_runtime/storage.py
+  - .codebase-wiki/runtime/codebase_wiki_runtime/structure.py
+  - .codebase-wiki/runtime/codebase_wiki_runtime/cli.py
+last_updated: 2026-07-13
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 ---
@@ -305,7 +309,7 @@ decision_status: proposed | accepted | deprecated | superseded
 
 ## 7. Slash Prompts（Copilot 版）
 
-Copilot 版提供 8 個 slash prompts，可在 Copilot Chat 中直接呼叫：
+Copilot 版提供 11 個 slash prompts，可在 VS Code Copilot Chat 中直接呼叫；Copilot CLI 使用 agents、skills 或自然語言：
 
 | Prompt                    | 功能                           |
 | ------------------------- | ------------------------------ |
@@ -316,6 +320,9 @@ Copilot 版提供 8 個 slash prompts，可在 Copilot Chat 中直接呼叫：
 | `/new-adr {title}`        | 建立架構決策記錄               |
 | `/onboarding-guide`       | 產出 Onboarding 指南           |
 | `/save-synthesis {topic}` | 儲存綜合分析至 wiki/synthesis/ |
+| `/save-guide {topic}`      | 儲存操作指南至 wiki/guides/      |
+| `/code-archaeology {target}` | 追蹤目前行為與 Git history       |
+| `/system-analysis-doc {scope}` | 產出 SA 系統分析文件          |
 | `/update-index`           | 手動重建 wiki/index.md         |
 
 Codex 版不偽造 project-level custom slash prompts。Codex IDE / CLI 的 slash commands 是平台控制命令；本框架在 Codex 端以自然語言 recipe 達成同等流程：
@@ -335,7 +342,7 @@ Codex 版不偽造 project-level custom slash prompts。Codex IDE / CLI 的 slas
 
 ## 8. 輔助腳本
 
-位於 `.agents/skills/codebase-wiki/scripts/`（Codex 版）與 `.github/skills/codebase-wiki/scripts/`（Copilot 版），**無需安裝外部套件**（已移除 PyYAML 依賴）：
+位於 `.agents/skills/codebase-wiki/scripts/`，Copilot 與 Codex 共用同一份 helper scripts；搜尋 Runtime 位於 `.codebase-wiki/runtime/`，**無需全域安裝套件**：
 
 | 腳本               | 功能                                              |
 | ------------------ | ------------------------------------------------- |
@@ -343,6 +350,9 @@ Codex 版不偽造 project-level custom slash prompts。Codex IDE / CLI 的 slas
 | `rebuild-index.py` | 重建 `wiki/index.md`                              |
 | `wiki-stats.py`    | 產出 wiki 統計報告（頁面數、類型分佈、近期更新）  |
 | `frontmatter.py`   | 無依賴的 frontmatter 解析函式庫（供其他腳本引用） |
+| `parity-check.py`  | 驗證 Copilot/Codex capability 與路徑契約           |
+| `structure-index.py` | 舊版 JSON 結構索引腳本（建議改用共用 CLI）          |
+| `tree-sitter-preflight.py` | 舊版 grammar 檢查腳本（建議改用 `doctor`）      |
 
 **使用方式**：
 ```bash

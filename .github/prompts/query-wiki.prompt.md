@@ -23,7 +23,7 @@ argument-hint: "你想問的 codebase 問題，例如：登入流程在哪裡實
 3. 若 wiki 內容不足，根據 `sources` 回溯原始碼
 4. 綜合回答，附上引用來源
 5. 若分析結果有持續價值，建議存入 `wiki/synthesis/`
-6. **建議行動與 Hand-Off**：若有任何建議（存入 synthesis、重新 ingest、lint 修復），使用 `#tool:vscode/askQuestions 列出建議清單讓使用者勾選，確認後自動委派給對應子代理執行
+6. **建議行動與 Hand-Off**：若有任何建議（存入 synthesis、重新 ingest、lint 修復），在支援互動工具時使用 `#tool:vscode/askQuestions`，否則以純文字列出建議並等待使用者確認；確認後才委派給對應子代理執行
 
 ## 回答格式
 

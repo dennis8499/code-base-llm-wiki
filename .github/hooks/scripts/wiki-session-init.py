@@ -103,6 +103,7 @@ def respond(additional_context: str) -> None:
     print(
         json.dumps(
             {
+                "additionalContext": additional_context,
                 "hookSpecificOutput": {
                     "hookEventName": "SessionStart",
                     "additionalContext": additional_context,

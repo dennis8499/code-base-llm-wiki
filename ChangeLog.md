@@ -4,9 +4,13 @@
 
 ---
 
-## [Unreleased] — 2026-07-01
+## [Unreleased] — 2026-07-13
 
 ### 新增
+
+- **共用搜尋 Runtime**：新增 `.codebase-wiki/runtime/` Python CLI、受管 venv setup、SQLite FTS5 Wiki 搜尋、Tree-sitter Python/JavaScript/JSX/TypeScript/TSX/C# 結構索引、版本化 query packs 與 JSON contract
+- **冪等安裝器與 parity manifest**：新增 `install` / `upgrade` / `doctor`、`.agents/skills/codebase-wiki/capabilities.json`、`parity-check.py`，Copilot 與 Codex 改由同一份 skill 與 Runtime 驅動
+- **索引品質與安全**：加入 CJK bigram／identifier normalization、唯讀 search、增量快取邊界、stale dirty-source 檢查、target cache write allowance 與跨 CLI hook context 輸出
 
 - **雙入口 SSOT references**：新增並鏡像 `intent-routing.md`、`log-operations.md`、`mssql-evidence-rules.md`、`hooks-specification.md`、`adr-workflow.md`、`code-archaeology-workflow.md`、`guide-workflow.md`、`synthesis-workflow.md`，讓 Copilot 與 Codex 入口各自獨立安裝但以同步檢查維持一致
 - **新增 Copilot prompts**：加入 `/code-archaeology` 與通用 `/save-guide`，保留 `/onboarding-guide` 作為新人導覽專用入口
@@ -36,6 +40,9 @@
 - **新增 hook 稽核輸出忽略規則**：根目錄 `.gitignore` 新增 `.github/hooks/logs/` 與 `__pycache__/`
 
 ### 變更
+
+- **移除手動 `.github/skills` 鏡像**：現代 Copilot 與 Codex 共用 `.agents/skills/codebase-wiki/`；VS Code prompt 仍保留為 IDE 入口糖衣，CLI 透過 agents、skills 與自然語言使用
+- **統一寫入語意**：Query／Archaeology 預設唯讀，只有明確確認才持久化 Wiki；hook guard 明確定位為 edit-tool 防呆層，不取代 shell sandbox
 
 - **入口內 DRY 收斂**：`AGENTS.md`、`.github/copilot-instructions.md`、`.github/instructions/wiki-pages.instructions.md`、`SKILL.md` 與 wiki agents 改為保留摘要並指向對應 references；frontmatter、log operation、SQL live evidence 與 workflow 細節不再多點展開
 - **Intent routing 統一為 9 類**：Install / setup、Ingest、Query、Lint、ADR、Synthesis / Guide、System Analysis / SA、Archaeology、Delegation 在 Copilot keeper、Codex keeper、AGENTS、SKILL 與 Copilot instructions 中對齊

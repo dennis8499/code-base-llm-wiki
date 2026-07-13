@@ -3,3 +3,6 @@
 .codex/hooks/logs/
 .codex-hook-logs/
 __pycache__/
+.codebase-wiki/.venv/
+.codebase-wiki/cache/
+.codebase-wiki/logs/

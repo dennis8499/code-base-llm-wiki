@@ -10,23 +10,21 @@ surfaces directly instead of Copilot slash prompt files.
 | ------------------------------- | ----------- | ------------------------------------------------------------- |
 | `AGENTS.md`                     | Yes         | Durable Codex project rules                                   |
 | `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, references, templates, and helper scripts |
+| `.codebase-wiki/`               | Yes         | Shared FTS5/Tree-sitter runtime and rebuildable local cache   |
 | `.codex/`                       | Recommended | Hooks, config, and explicit-delegation custom agents          |
 | `wiki/`                         | Yes         | Generated knowledge base                                      |
 | `.github/`                      | Optional    | Keep only when the repo also supports GitHub Copilot          |
 
-Copy into a target repository:
+The recommended installation is an idempotent dry-run followed by explicit
+apply:
 
 ```powershell
-Copy-Item AGENTS.md C:\path\to\your-repo\AGENTS.md
-New-Item -ItemType Directory -Force C:\path\to\your-repo\.agents\skills | Out-Null
-Copy-Item -Recurse .agents\skills\codebase-wiki C:\path\to\your-repo\.agents\skills\codebase-wiki
-Copy-Item -Recurse .codex C:\path\to\your-repo\.codex
-Copy-Item -Recurse wiki C:\path\to\your-repo\wiki
+python .codebase-wiki\runtime\scripts\codebase-wiki.py install --target C:\path\to\your-repo --surface codex
+python .codebase-wiki\runtime\scripts\codebase-wiki.py install --target C:\path\to\your-repo --surface codex --apply
 ```
 
-After installing into an application repository, set
-`.codex/config.toml` `[wiki_guard] mode = "target"`. Use `framework` only when
-maintaining this framework repository.
+The installer uses target mode for application repositories. Use framework mode
+only when maintaining this framework repository.
 
 ## How Codex Uses It
 
@@ -36,6 +34,18 @@ maintaining this framework repository.
 4. Most work should stay in the main agent.
 5. `.codex/agents/*.toml` are for explicit delegation, subagents, or parallel work.
 6. `.codex/hooks.json` runs after the project `.codex/` layer is trusted.
+
+The shared search runtime is explicit and read-only by default:
+
+```powershell
+python .codebase-wiki\runtime\scripts\codebase-wiki.py setup --format json
+python .codebase-wiki\runtime\scripts\codebase-wiki.py doctor --format json
+python .codebase-wiki\runtime\scripts\codebase-wiki.py index update --format json
+python .codebase-wiki\runtime\scripts\codebase-wiki.py search "退款流程" --format json
+```
+
+`index update` writes only `.codebase-wiki/cache/`; `search` never refreshes
+the cache or writes Wiki pages.
 
 ## Copilot Prompt To Codex Recipe
 
@@ -160,11 +170,14 @@ Test-Path Codex.md
 Test-Path .codex\config.toml
 Test-Path .codex\hooks.json
 Test-Path .agents\skills\codebase-wiki\SKILL.md
+Test-Path .codebase-wiki\runtime\scripts\codebase-wiki.py
 python -m py_compile .codex\hooks\scripts\wiki-session-init.py .codex\hooks\scripts\wiki-write-guard.py .codex\hooks\scripts\wiki-log-reminder.py
 python -m py_compile .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\validate-frontmatter.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
+python .agents\skills\codebase-wiki\scripts\parity-check.py
+python .codebase-wiki\runtime\scripts\codebase-wiki.py doctor --format json
 ```
 
 Ask Codex to confirm setup:

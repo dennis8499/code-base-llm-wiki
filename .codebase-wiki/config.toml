@@ -1,0 +1,7 @@
+schema_version = 1
+mode = "framework"
+surfaces = ["copilot", "codex"]
+languages = ["python", "javascript", "jsx", "typescript", "tsx", "csharp"]
+max_file_bytes = 1048576
+default_scope = "wiki"
+database = ".codebase-wiki/cache/index.sqlite3"

@@ -16,7 +16,7 @@ argument-hint: "決策標題，例如：採用 Obsidian wikilink 作為內部連
 ## 流程
 
 1. 讀取 `wiki/decisions/` 目錄，確定下一個 ADR 編號（格式：`ADR-NNN`）
-2. 從 `.github/skills/codebase-wiki/assets/adr-template.md` 載入 ADR 模板
+2. 從 `.agents/skills/codebase-wiki/assets/adr-template.md` 載入 ADR 模板
 3. 與使用者討論以下內容：
    - **背景**：什麼情境促使做出這個決策？
    - **考慮過的替代方案**：列出 2-3 個方案的優缺點

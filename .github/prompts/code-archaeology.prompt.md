@@ -18,7 +18,7 @@ argument-hint: "要追蹤的功能、欄位、路由或問題，例如：discoun
 ## 流程
 
 1. 讀取 `wiki/index.md` 和相關 wiki 頁面作為路由地圖。
-2. 載入 `.github/skills/codebase-wiki/references/code-archaeology-workflow.md`。
+2. 載入 `.agents/skills/codebase-wiki/references/code-archaeology-workflow.md`。
 3. 從具體 entrypoint 開始：route、UI page、command、handler、field、public API 或 function name。
 4. 讀取目前 source，追蹤 inputs、processing、outputs 與 unusual branches。
 5. 使用非破壞性 git 指令取得歷史證據：`git log`、`git blame`、`git show`。

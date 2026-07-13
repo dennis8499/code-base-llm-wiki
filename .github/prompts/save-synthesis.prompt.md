@@ -71,6 +71,6 @@ status: active
 
 ## 品質要求
 
-- `sources` 只列涉及分析的真實檔案路徑或 wiki 頁面
+- `frontmatter.sources` 只列涉及分析的真實 repo-relative raw source 路徑；wiki 頁面請放在「相關頁面」wikilinks，不要放入 sources
 - 每頁至少兩個對外的 `[[wikilink]]`
 - 若分析跨越多個模組，清楚標記每個發現來源於哪個模組

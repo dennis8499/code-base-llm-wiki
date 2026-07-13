@@ -2,14 +2,14 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-06-01
+last_updated: 2026-07-13
 tags: [index]
 status: active
 ---
 
 # Codebase Wiki — 索引
 
-> 此索引由 LLM 自動維護。每次 Ingest / Query / Lint 操作後自動更新。
+> 此索引由 LLM 維護；Query 預設唯讀，不會自動寫入索引或 Wiki。
 
 ## 使用方式
 
@@ -53,7 +53,7 @@ _（尚無頁面。執行 Ingest 後將自動產生。）_
 
 | 頁面 | 摘要 |
 |------|------|
-| [[framework-introduction]] | 框架完整功能介紹：五大 agents、六大操作、hooks、模板、安裝指南與工作流程範例 |
+| [[framework-introduction]] | 框架完整功能介紹：雙入口、共用 Runtime、FTS5、Tree-sitter、hooks、模板與工作流程 |
 
 ## Synthesis
 
