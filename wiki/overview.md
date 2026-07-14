@@ -11,7 +11,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .codebase-wiki/config.toml
   - .codebase-wiki/runtime/codebase_wiki_runtime/cli.py
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 ---
@@ -70,8 +70,8 @@ code-base-llm-wiki/
 ├── AGENTS.md                     — Codex 版機器指令
 ├── Codex.md                      — Codex 版人類操作手冊
 ├── ChangeLog.md                  — 版本變更紀錄
-├── llm-wiki.md                   — 框架方法論原始概念
-├── prompt.txt                    — 早期設計草稿
+├── llm-wiki.md                   — 框架方法論原始概念（歷史參考）
+├── prompt.txt                    — 早期設計草稿（歷史參考）
 │
 ├── .github/                      — GitHub Copilot 版元件
 │   ├── copilot-instructions.md   — Copilot 全域指令

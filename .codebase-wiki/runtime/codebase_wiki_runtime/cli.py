@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Sequence
 
 from . import CONTRACT_VERSION, __version__
-from .constants import DEFAULT_DB_PATH
+from .constants import DEFAULT_DB_PATH, SUPPORTED_LANGUAGES
 from .indexer import build_index
 from .installer import apply_install, plan_install
 from .storage import IndexStore
@@ -29,6 +29,15 @@ def _paths() -> tuple[Path, Path]:
     return root, root / DEFAULT_DB_PATH
 
 
+def _is_indexed_path(path: str) -> bool:
+    normalized = path.replace("\\", "/").strip().strip('"\'')
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    if normalized.startswith("wiki/"):
+        return normalized.lower().endswith(".md")
+    return Path(normalized).suffix.lower() in SUPPORTED_LANGUAGES
+
+
 def _index_stale(root: Path) -> bool:
     try:
         result = subprocess.run(
@@ -40,7 +49,17 @@ def _index_stale(root: Path) -> bool:
             text=True,
             check=True,
         )
-        return bool(result.stdout.strip())
+        dirty_paths: set[str] = set()
+        for line in result.stdout.splitlines():
+            if len(line) < 4:
+                continue
+            value = line[3:].strip()
+            if " -> " in value:
+                old_path, new_path = value.rsplit(" -> ", 1)
+                dirty_paths.update((old_path, new_path))
+            else:
+                dirty_paths.add(value)
+        return any(_is_indexed_path(path) for path in dirty_paths)
     except (OSError, subprocess.CalledProcessError):
         return False
 
@@ -102,6 +121,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             _json(payload)
         else:
             print(f"FTS5: {'yes' if payload['capabilities']['fts5'] else 'no'}")
+            tree_sitter = payload["capabilities"]["tree_sitter"]
+            tree_sitter_ok = bool(tree_sitter) and all(bool(item.get("ok")) for item in tree_sitter.values())
+            print(f"Tree-sitter: {'yes' if tree_sitter_ok else 'no'}")
         return 0 if payload["ok"] else 3
 
     root, database = _paths()

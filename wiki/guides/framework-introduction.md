@@ -18,7 +18,7 @@ sources:
   - .codebase-wiki/runtime/codebase_wiki_runtime/storage.py
   - .codebase-wiki/runtime/codebase_wiki_runtime/structure.py
   - .codebase-wiki/runtime/codebase_wiki_runtime/cli.py
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 ---
@@ -34,7 +34,7 @@ status: active
 1. [什麼是 Codebase LLM Wiki？](#1-什麼是-codebase-llm-wiki)
 2. [核心概念：三層模型](#2-核心概念三層模型)
 3. [五大 Agents](#3-五大-agents)
-4. [六大核心操作](#4-六大核心操作)
+4. [核心操作與擴充流程](#4-核心操作與擴充流程)
 5. [Hooks 自動保護機制](#5-hooks-自動保護機制)
 6. [Wiki 頁面類型與規格](#6-wiki-頁面類型與規格)
 7. [Slash Prompts（Copilot 版）](#7-slash-promptscopilot-版)
@@ -198,7 +198,7 @@ Raw Sources 層（唯讀原始碼）
 
 ---
 
-## 4. 六大核心操作
+## 4. 核心操作與擴充流程
 
 ### Ingest（知識攝入）
 
@@ -225,6 +225,21 @@ Raw Sources 層（唯讀原始碼）
 從已有 wiki 內容提煉：
 - `wiki/synthesis/`：技術債分析、風險評估、架構總結
 - `wiki/guides/`：Onboarding 指南、除錯指南、貢獻指南
+
+### System Analysis / SA（系統分析）
+
+基於既有 wiki 頁面產出結構化系統分析文件，寫入
+`wiki/synthesis/`，並將 coverage gaps 明確標示為待補證據，不臆測缺失行為。
+
+### Delegation（明確委派）
+
+只有使用者明確要求 delegation、parallel 或 subagents 時，才使用
+`.codex/agents/*.toml` 或對應的 Copilot agents；一般 wiki 工作由目前 agent
+直接處理。
+
+路由規則以 `intent-routing.md` 的 9 類使用者意圖為準；機器可讀的
+`capabilities.json` 會將 Synthesis 與 Guide 分成兩個可寫入 capability，這是
+執行契約的拆分，不是額外的路由類別。
 
 ---
 
@@ -482,7 +497,7 @@ Codex 版必要元件：
 | Obsidian                             | ✅ wikilink 語法相容，graph view 可視化        |
 | Marp                                 | ✅ 可從 wiki 內容產出 Markdown 簡報            |
 | Obsidian Dataview                    | ✅ 可查詢頁面 frontmatter                      |
-| Python                               | 需要 3.8+（輔助腳本，無額外套件需求）         |
+| Python                               | 需要 3.11+（Runtime 與輔助腳本的共同基線）     |
 
 ### Windows 相容性
 

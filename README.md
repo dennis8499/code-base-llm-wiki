@@ -53,8 +53,8 @@
 | [Codex.md](Codex.md)         | 給框架使用者的 Codex 專用安裝、操作、排錯手冊        |
 | [AGENTS.md](AGENTS.md)       | 給 Codex 讀取的機器指令，定義 wiki 邊界、流程與規則  |
 | [ChangeLog.md](ChangeLog.md) | 框架版本變更紀錄                                     |
-| [llm-wiki.md](llm-wiki.md)   | 這套方法論的原始概念說明                             |
-| [prompt.txt](prompt.txt)     | 早期設計此框架時使用的提示草稿                       |
+| [llm-wiki.md](llm-wiki.md)   | 這套方法論的原始概念說明（歷史參考，非現行操作規範）   |
+| [prompt.txt](prompt.txt)     | 早期設計此框架時使用的提示草稿（歷史參考，非現行操作規範） |
 
 如果你是第一次接觸這個 repo，建議先讀 `README.md`；如果你要把這套框架套到自己的 repo 並用 Codex 操作，接著讀 [Codex.md](Codex.md)。
 
@@ -74,7 +74,7 @@
 
 | 入口                  | 主要檔案                                                                                                      | 適合情境                                                                                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **GitHub Copilot 版** | `.github/copilot-instructions.md`、`.github/agents/`、`.github/prompts/`、`.github/hooks/`、`.agents/skills/` | 你想在 VS Code Copilot Chat 或 Copilot CLI 使用自訂 agent、slash prompt、hook，並讓 `wiki-query` 在可用時透過 MSSQL tools 取得唯讀資料庫證據 |
+| **GitHub Copilot 版** | `.github/copilot-instructions.md`、`.github/agents/`、`.github/prompts/`、`.github/hooks/`、`.agents/skills/` | 你想在 VS Code Copilot Chat 或 Copilot CLI 使用自訂 agent、slash prompt、hook，並讓 `wiki-query` 在可用時透過 MSSQL tools 取得唯讀資料庫證據                 |
 | **OpenAI Codex 版**   | `AGENTS.md`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/agents/`、`.agents/skills/codebase-wiki/`     | 你想讓 Codex CLI、IDE extension、Codex app 或 cloud task 直接讀取專案規則與 repo-local skill；Codex query 流程會同步遵守 SQL Server live evidence 的唯讀規則 |
 | **共用 Wiki 骨架**    | `wiki/`                                                                                                       | 兩種版本共用的知識庫輸出位置                                                                                                                                 |
 
@@ -884,7 +884,7 @@ Copilot 可使用 `/onboarding-guide` 或 `/save-guide {topic}`；前者保留�
 | Agents  | `.github/agents/`               | `wiki-keeper` 等 5 個專業 agent，負責路由、ingest、query、lint、archaeology；`wiki-query` 可在 VS Code MSSQL tools 可用時取得唯讀 DB live evidence |
 | Prompts | `.github/prompts/`              | `/ingest-module`、`/lint-wiki`、`/code-archaeology`、`/save-guide`、`/save-synthesis`、`/system-analysis-doc` 等對話入口                           |
 | Hooks   | `.github/hooks/`                | 寫入保護、稽核提醒與 `config.toml` guard mode                                                                                                      |
-| Skill   | `.agents/skills/codebase-wiki/` | Copilot/Codex 共用模板、reference 文件、capability manifest 與 helper scripts                                                       |
+| Skill   | `.agents/skills/codebase-wiki/` | Copilot/Codex 共用模板、reference 文件、capability manifest 與 helper scripts                                                                      |
 
 ### Codex 版
 
@@ -958,7 +958,7 @@ decision_status: proposed | accepted | deprecated | superseded
 | GitHub Copilot Chat | ✅ 支援   | 使用 `.github/` 內的 agents、prompts、hooks、skills     |
 | OpenAI Codex        | ✅ 支援   | 使用 `AGENTS.md`、`.codex/`、`.agents/skills/` 作為入口 |
 | VS Code             | ✅ 支援   | Copilot 與 Codex IDE extension 都可使用                 |
-| Python 3.11+        | ✅ 建議   | setup、hooks、FTS5 與 Tree-sitter Runtime 的共同基線   |
+| Python 3.11+        | ✅ 建議   | setup、hooks、FTS5 與 Tree-sitter Runtime 的共同基線    |
 | Obsidian            | ✅ 相容   | `wiki/` 可直接當作 Vault 使用                           |
 | 任意語言的 codebase | ✅ 通用   | 框架不依賴特定程式語言                                  |
 

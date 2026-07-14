@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 tags: [log]
 status: active
 ---
@@ -46,4 +46,19 @@ status: active
 - 新增 `.codebase-wiki/runtime/` 共用 CLI、SQLite FTS5 索引、Tree-sitter query packs、setup/doctor/index/search 與冪等安裝器
 - 將 `.agents/skills/codebase-wiki/` 定為 Copilot/Codex 唯一共同 skill，移除手動 `.github/skills` 鏡像並加入 capability parity check
 - 更新雙入口 instructions、README、Codex 使用手冊與 Wiki 導覽；Query 維持唯讀，索引快取可重建且不進版控
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-07-14] update | Runtime 健康檢查與文件一致性修復
+
+- 修正索引 stale 判斷，忽略不會被索引的根目錄文件，並正確處理 renamed source
+- `doctor` 純文字輸出新增 Tree-sitter 狀態；JSON contract version 維持 1
+- 恢復 runtime 測試並補上非索引文件、rename 與 doctor 回歸測試
+- 更新 README、overview 與 framework guide 的歷史文件標籤及 Python 3.11+ 基線
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-07-14] lint | Wiki 健康檢查與孤兒產物盤點
+
+- 驗證 frontmatter、source 路徑、入口 parity、雙入口同步、索引查詢與 Tree-sitter 結構解析
+- 清理範圍限定為未版本控制的空鏡像目錄、空 runtime 目錄與非 venv 的可重建 `__pycache__`
+- 現有 README staged 變更仍可能使 stale checker 保守提示 warning；未發現缺失 source
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
