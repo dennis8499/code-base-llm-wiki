@@ -1,5 +1,5 @@
 {
-  "contract_version": 1,
+  "contract_version": 2,
   "surfaces": ["copilot", "codex"],
   "intents": {
     "install": {"writes_by_default": false, "requires_confirmation": true},
@@ -14,9 +14,7 @@
     "delegation": {"writes_by_default": false, "requires_confirmation": true}
   },
   "cli": {
-    "setup": "codebase-wiki setup",
-    "doctor": "codebase-wiki doctor --format json",
-    "index": "codebase-wiki index update --format json",
-    "search": "codebase-wiki search QUERY --format json"
+    "install": "python .agents/skills/codebase-wiki/scripts/install-framework.py install --target TARGET --surface SURFACE",
+    "upgrade": "python .agents/skills/codebase-wiki/scripts/install-framework.py upgrade --target TARGET --surface SURFACE"
   }
 }

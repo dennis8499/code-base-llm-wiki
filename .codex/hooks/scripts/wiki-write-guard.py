@@ -31,8 +31,8 @@ PATCH_FILE_PATTERN = re.compile(
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-FRAMEWORK_PREFIXES = ("wiki/", ".codex/", ".agents/", ".github/", ".codebase-wiki/")
-TARGET_PREFIXES = ("wiki/", ".codebase-wiki/cache/")
+FRAMEWORK_PREFIXES = ("wiki/", ".codex/", ".agents/", ".github/")
+TARGET_PREFIXES = ("wiki/",)
 FRAMEWORK_ROOT_FILES = {
     "agents.md",
     "readme.md",

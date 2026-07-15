@@ -9,8 +9,7 @@ surfaces directly instead of Copilot slash prompt files.
 | Path                            | Required    | Purpose                                                       |
 | ------------------------------- | ----------- | ------------------------------------------------------------- |
 | `AGENTS.md`                     | Yes         | Durable Codex project rules                                   |
-| `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, references, templates, and helper scripts |
-| `.codebase-wiki/`               | Yes         | Shared FTS5/Tree-sitter runtime and rebuildable local cache   |
+| `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, installer, references, templates, and helper scripts |
 | `.codex/`                       | Recommended | Hooks, config, and explicit-delegation custom agents          |
 | `wiki/`                         | Yes         | Generated knowledge base                                      |
 | `.github/`                      | Optional    | Keep only when the repo also supports GitHub Copilot          |
@@ -19,12 +18,17 @@ The recommended installation is an idempotent dry-run followed by explicit
 apply:
 
 ```powershell
-python .codebase-wiki\runtime\scripts\codebase-wiki.py install --target C:\path\to\your-repo --surface codex
-python .codebase-wiki\runtime\scripts\codebase-wiki.py install --target C:\path\to\your-repo --surface codex --apply
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --apply --format json
 ```
 
 The installer uses target mode for application repositories. Use framework mode
 only when maintaining this framework repository.
+
+When upgrading an older target, replace `install` with `upgrade`. The installer
+reports a legacy `.codebase-wiki/` directory through `obsolete_paths` but never
+deletes it. Review that directory for user-authored content before removing it
+manually.
 
 ## How Codex Uses It
 
@@ -35,17 +39,10 @@ only when maintaining this framework repository.
 5. `.codex/agents/*.toml` are for explicit delegation, subagents, or parallel work.
 6. `.codex/hooks.json` runs after the project `.codex/` layer is trusted.
 
-The shared search runtime is explicit and read-only by default:
-
-```powershell
-python .codebase-wiki\runtime\scripts\codebase-wiki.py setup --format json
-python .codebase-wiki\runtime\scripts\codebase-wiki.py doctor --format json
-python .codebase-wiki\runtime\scripts\codebase-wiki.py index update --format json
-python .codebase-wiki\runtime\scripts\codebase-wiki.py search "退款流程" --format json
-```
-
-`index update` writes only `.codebase-wiki/cache/`; `search` never refreshes
-the cache or writes Wiki pages.
+Queries use the Markdown Wiki directly. Read `wiki/index.md`, then 1–5 relevant
+pages, and inspect their listed raw sources only when the Wiki is insufficient,
+stale, or contradictory. The framework does not create a local search database
+or source-code structure index.
 
 ## Copilot Prompt To Codex Recipe
 
@@ -170,14 +167,13 @@ Test-Path Codex.md
 Test-Path .codex\config.toml
 Test-Path .codex\hooks.json
 Test-Path .agents\skills\codebase-wiki\SKILL.md
-Test-Path .codebase-wiki\runtime\scripts\codebase-wiki.py
+Test-Path .agents\skills\codebase-wiki\scripts\install-framework.py
 python -m py_compile .codex\hooks\scripts\wiki-session-init.py .codex\hooks\scripts\wiki-write-guard.py .codex\hooks\scripts\wiki-log-reminder.py
-python -m py_compile .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\validate-frontmatter.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
+python -m py_compile .agents\skills\codebase-wiki\scripts\install-framework.py .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\validate-frontmatter.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 python .agents\skills\codebase-wiki\scripts\parity-check.py
-python .codebase-wiki\runtime\scripts\codebase-wiki.py doctor --format json
 ```
 
 Ask Codex to confirm setup:

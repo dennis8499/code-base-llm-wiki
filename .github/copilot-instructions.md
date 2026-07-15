@@ -13,16 +13,10 @@
 | Wiki | `wiki/` 目錄 | LLM 產生並維護的 markdown 知識庫 |
 | Schema | `.github/` 底下的 Copilot 元件 | 驅動 LLM 行為的規則與工作流 |
 
-Copilot 與 Codex 共用 `.agents/skills/codebase-wiki/` 及
-`.codebase-wiki/runtime/`。需要檢索時使用共同 CLI：
-
-```powershell
-python .codebase-wiki\runtime\scripts\codebase-wiki.py search "{query}" --format json
-```
-
-`search` 是唯讀；只有使用者明確要求更新時才執行
-`codebase-wiki index update --format json`。不要把 SQLite 快取當作 Wiki
-真實來源，也不要將完整原始碼寫入索引。
+Copilot 與 Codex 共用 `.agents/skills/codebase-wiki/`。Query 必須先讀取
+`wiki/index.md` 與 1–5 個相關 Markdown 頁面；只有 Wiki 不足、過時或矛盾
+時才回溯 frontmatter 列出的 raw sources。框架不建立本機搜尋資料庫，也不
+解析或複製完整原始碼到衍生索引。
 
 ## Wiki 慣例 (HOW)
 

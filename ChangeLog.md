@@ -4,13 +4,11 @@
 
 ---
 
-## [Unreleased] — 2026-07-13
+## [Unreleased] — 2026-07-15
 
 ### 新增
 
-- **共用搜尋 Runtime**：新增 `.codebase-wiki/runtime/` Python CLI、受管 venv setup、SQLite FTS5 Wiki 搜尋、Tree-sitter Python/JavaScript/JSX/TypeScript/TSX/C# 結構索引、版本化 query packs 與 JSON contract
-- **冪等安裝器與 parity manifest**：新增 `install` / `upgrade` / `doctor`、`.agents/skills/codebase-wiki/capabilities.json`、`parity-check.py`，Copilot 與 Codex 改由同一份 skill 與 Runtime 驅動
-- **索引品質與安全**：加入 CJK bigram／identifier normalization、唯讀 search、增量快取邊界、stale dirty-source 檢查、target cache write allowance 與跨 CLI hook context 輸出
+- **獨立框架安裝器與 parity manifest**：新增無第三方依賴的 `install-framework.py`、`install` / `upgrade` dry-run／apply 流程、legacy path 回報、`.agents/skills/codebase-wiki/capabilities.json` contract v2 與 `parity-check.py`
 
 - **雙入口 SSOT references**：新增並鏡像 `intent-routing.md`、`log-operations.md`、`mssql-evidence-rules.md`、`hooks-specification.md`、`adr-workflow.md`、`code-archaeology-workflow.md`、`guide-workflow.md`、`synthesis-workflow.md`，讓 Copilot 與 Codex 入口各自獨立安裝但以同步檢查維持一致
 - **新增 Copilot prompts**：加入 `/code-archaeology` 與通用 `/save-guide`，保留 `/onboarding-guide` 作為新人導覽專用入口
@@ -65,6 +63,12 @@
 - **Hook 輸出策略調整為稽核工件**：`wiki-log-reminder.py` 與 `wiki-session-init.py` 不再嘗試輸出 `systemMessage` 注入 agent context，改為寫入 `.github/hooks/logs/` 下的稽核檔案
 - **Index / Log frontmatter 規格正式化**：`index.md`、`log.md` 現在明確使用 `type: index` / `type: log`，並要求 `sources: []` 與 `tags`
 - **ADR 規格統一**：ADR 的決策狀態改由 `decision_status` 表示，`status` 保留給頁面生命週期（`active` / `stale` / `placeholder`）
+
+### 移除
+
+- **移除本機搜尋 Runtime**：刪除 `.codebase-wiki/`、受管 venv、SQLite FTS5 索引、Tree-sitter parsers／query packs，以及 `setup`、`doctor`、`index`、`search`、`show` 命令
+- **移除舊結構索引腳本與快取寫入例外**：刪除 `structure-index.py`、`tree-sitter-preflight.py` 和 runtime-only 測試；target mode write guard 回復為只允許 `wiki/`
+- **Breaking migration**：舊 target repo 的 `.codebase-wiki/` 不會被 upgrade 自動刪除；新安裝器只透過 `obsolete_paths` 回報，必須確認沒有人工內容後手動清理
 
 ### 修正
 

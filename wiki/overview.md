@@ -9,9 +9,8 @@ sources:
   - .github/copilot-instructions.md
   - .agents/skills/codebase-wiki/SKILL.md
   - .agents/skills/codebase-wiki/capabilities.json
-  - .codebase-wiki/config.toml
-  - .codebase-wiki/runtime/codebase_wiki_runtime/cli.py
-last_updated: 2026-07-14
+  - .agents/skills/codebase-wiki/scripts/install-framework.py
+last_updated: 2026-07-15
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 ---
@@ -36,7 +35,7 @@ status: active
 
 ## 技術棧
 
-- **語言**：Markdown（wiki 頁面）、Python 3.11+（Runtime 與輔助腳本）、TOML（設定）、JSON（Hook／capability）、YAML（Frontmatter）
+- **語言**：Markdown（wiki 頁面）、Python 3.11+（安裝器、Hooks 與輔助腳本）、TOML（設定）、JSON（Hook／capability）、YAML（Frontmatter）
 - **整合平台**：GitHub Copilot（VS Code）、OpenAI Codex（CLI / IDE / Cloud Tasks）
 - **相容工具**：Obsidian（wikilink 語法）、Marp（簡報）、Dataview（動態查詢）
 
@@ -80,9 +79,6 @@ code-base-llm-wiki/
 │   ├── hooks/                    — 3 個 Copilot hooks
 │   └── instructions/             — wiki 頁面格式規範
 │
-├── .codebase-wiki/               — 共用搜尋 Runtime 與本機快取設定
-│   └── runtime/                  — SQLite FTS5、Tree-sitter、CLI
-│
 ├── .codex/                       — OpenAI Codex 版元件
 │   ├── config.toml               — Codex 設定
 │   ├── hooks.json                — Codex hook 事件設定
@@ -119,7 +115,7 @@ code-base-llm-wiki/
 
 兩版共用同一個 `wiki/` 骨架，可共存於同一個 repo。
 
-本框架採雙入口同權維護：Copilot 與 Codex 維持同一組 wiki 能力、邊界、安全規則與驗收結果。兩者共用 `.agents/skills/codebase-wiki/` 與 `.codebase-wiki/runtime/`；Copilot 額外使用 agents、prompts、hooks，Codex 使用 `AGENTS.md`、`.codex/agents/` 與 `.codex/hooks.json`。Codex 不模擬 Copilot 的 project-level slash prompt files，而是以自然語言 recipe 觸發同等工作流程。
+本框架採雙入口同權維護：Copilot 與 Codex 維持同一組 wiki 能力、邊界、安全規則與驗收結果。兩者共用 `.agents/skills/codebase-wiki/`，包含零依賴安裝器與 Wiki 輔助腳本；Copilot 額外使用 agents、prompts、hooks，Codex 使用 `AGENTS.md`、`.codex/agents/` 與 `.codex/hooks.json`。Codex 不模擬 Copilot 的 project-level slash prompt files，而是以自然語言 recipe 觸發同等工作流程。Query 直接讀取 Markdown Wiki，再按需回溯 raw sources，不建立衍生搜尋索引。
 
 ## 核心功能
 

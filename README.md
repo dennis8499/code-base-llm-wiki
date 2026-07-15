@@ -121,9 +121,6 @@ prompt.txt
 ├── prompts/
 ├── hooks/
 └── instructions/
-.codebase-wiki/
-├── config.toml
-└── runtime/                  # FTS5、Tree-sitter、共用 CLI
 wiki/
 ├── index.md
 ├── log.md
@@ -152,11 +149,13 @@ wiki/
 ### GitHub Copilot 版
 
 ```bash
-python .codebase-wiki/runtime/scripts/codebase-wiki.py install --target /path/to/your-repo --surface copilot --apply
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface copilot --format json
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface copilot --apply --format json
 ```
 
-安裝器預設以 dry-run 顯示檔案與衝突；確認後才加上 `--apply`。target
-模式會寫入本機索引快取，不會把 framework 權限帶入目標 repo。
+安裝器不需要第三方套件，預設以 dry-run 顯示檔案與衝突；確認後才加上
+`--apply`。安裝時會將 hook guard 設定轉成 target mode，不會把 framework
+寫入權限帶入目標 repo。
 
 安裝後請確認：
 
@@ -167,7 +166,8 @@ python .codebase-wiki/runtime/scripts/codebase-wiki.py install --target /path/to
 ### OpenAI Codex 版
 
 ```bash
-python .codebase-wiki/runtime/scripts/codebase-wiki.py install --target /path/to/your-repo --surface codex --apply
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface codex --format json
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface codex --apply --format json
 ```
 
 安裝器會以 target mode 產生設定；只有維護本框架 repo 時才使用
@@ -178,29 +178,30 @@ Codex 版的必要元件只有：
 - `AGENTS.md`
 - `.codex/`
 - `.agents/skills/codebase-wiki/`
-- `.codebase-wiki/runtime/`
 - `wiki/`
 
 `.github/` 不是 Codex 的必要依賴。完整操作說明、自然語言範例與排錯請看 [Codex.md](Codex.md)。
+
+### 從含搜尋 Runtime 的舊版升級
+
+```bash
+python .agents/skills/codebase-wiki/scripts/install-framework.py upgrade --target /path/to/your-repo --surface codex --format json
+python .agents/skills/codebase-wiki/scripts/install-framework.py upgrade --target /path/to/your-repo --surface codex --apply --format json
+```
+
+`upgrade` 不會自動刪除目標 repo 的舊 `.codebase-wiki/`。若輸出中的
+`obsolete_paths` 列出該目錄，請先確認其中沒有自訂或人工維護內容，再由
+repo 擁有者手動清理。
 
 ---
 
 ## 快速開始
 
-### 建立本機搜尋索引
+### Wiki-first Query 原則
 
-兩個入口都使用同一個 CLI。首次使用先執行 setup，再明確更新索引；
-`search` 只讀取既有快取，不會自行安裝依賴或改寫 Wiki。
-
-```powershell
-python .codebase-wiki\runtime\scripts\codebase-wiki.py setup --format json
-python .codebase-wiki\runtime\scripts\codebase-wiki.py doctor --format json
-python .codebase-wiki\runtime\scripts\codebase-wiki.py index update --format json
-python .codebase-wiki\runtime\scripts\codebase-wiki.py search "登入流程" --format json
-```
-
-索引包含 Wiki 全文以及 Python、JavaScript/JSX、TypeScript/TSX、C# 的
-Tree-sitter symbols；完整原始碼不會被複製到 SQLite。
+兩個入口都直接讀取持久化的 Markdown Wiki，不建立本機搜尋資料庫或原始碼
+結構索引。Query 先讀 `wiki/index.md` 與 1–5 個相關頁面；只有內容不足、
+過時或矛盾時，才回溯 frontmatter 中列出的 raw sources。
 
 ### Copilot
 
@@ -958,7 +959,7 @@ decision_status: proposed | accepted | deprecated | superseded
 | GitHub Copilot Chat | ✅ 支援   | 使用 `.github/` 內的 agents、prompts、hooks、skills     |
 | OpenAI Codex        | ✅ 支援   | 使用 `AGENTS.md`、`.codex/`、`.agents/skills/` 作為入口 |
 | VS Code             | ✅ 支援   | Copilot 與 Codex IDE extension 都可使用                 |
-| Python 3.11+        | ✅ 建議   | setup、hooks、FTS5 與 Tree-sitter Runtime 的共同基線    |
+| Python 3.11+        | ✅ 建議   | 安裝器、hooks 與 Wiki 輔助腳本的共同基線               |
 | Obsidian            | ✅ 相容   | `wiki/` 可直接當作 Vault 使用                           |
 | 任意語言的 codebase | ✅ 通用   | 框架不依賴特定程式語言                                  |
 

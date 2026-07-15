@@ -39,10 +39,8 @@ README.md                         Framework overview and install instructions
   capabilities.json                Shared intent and parity contract
   references/                     Detailed workflow specs loaded on demand
   assets/                         Page templates
-  scripts/                        Deterministic wiki checks and index helpers
+  scripts/                        Installer and deterministic wiki checks
   agents/openai.yaml              UI metadata for the skill
-.codebase-wiki/
-  runtime/                        Common FTS5 and Tree-sitter CLI runtime
 .github/                          GitHub Copilot entrypoint, prompts, agents, hooks
 wiki/
   index.md                        Maintained navigation index
@@ -117,18 +115,18 @@ deterministic checks instead of reimplementing parsing in prose.
   natural-language recipes and optional `$codebase-wiki` invocation.
 - Use `.codex/agents/*.toml` only for explicit delegation requests.
 
-## Shared Search Runtime
+## Framework Installer
 
-Both Copilot and Codex call the same repo-local runtime through
-`.codebase-wiki/runtime/scripts/codebase-wiki.py`. The runtime owns the
-versioned JSON contract and supports `setup`, `doctor`, `index`, and `search`.
-SQLite is a rebuildable local cache; `wiki/` remains the durable source of
-truth. Query is read-only and never refreshes the index implicitly. Use
-`index update` explicitly when the cache is stale.
+Both Copilot and Codex use the dependency-free installer at
+`scripts/install-framework.py`. It supports `install` and `upgrade`, plans
+changes by default, and writes only when `--apply` is supplied and no conflicts
+exist. The installer never deletes a legacy `.codebase-wiki/` directory from a
+target repository; it reports that path through `obsolete_paths` for manual
+review.
 
-Tree-sitter structure indexing covers Python, JavaScript/JSX, TypeScript/TSX,
-and C#. Missing grammars or parse errors must be reported as diagnostics and
-must not be replaced by fabricated symbols.
+The framework has no local search database or source parser. Query workflows
+read `wiki/index.md` and relevant Markdown pages first, then inspect listed raw
+sources only when the Wiki is insufficient, stale, or contradictory.
 
 ## Wiki Update Rules
 
@@ -153,6 +151,14 @@ append a new entry to `wiki/log.md`; never delete or rewrite existing log
 entries. Allowed log operations are defined in `references/log-operations.md`.
 
 ## Workflows
+
+### Install Or Upgrade
+
+1. Run `scripts/install-framework.py install` or `upgrade` with `--target` and
+   `--surface copilot|codex` to preview the file plan.
+2. Resolve any reported conflicts before rerunning with `--apply`.
+3. If `obsolete_paths` reports `.codebase-wiki/`, review and remove it manually
+   only when it contains no user-authored content.
 
 ### Ingest
 

@@ -20,7 +20,6 @@ knowledge over time.
 | Raw Sources | Source code, config, existing docs                      | Read-only during wiki tasks                                      |
 | Wiki        | `wiki/`                                                 | Codex-generated and maintained knowledge base                    |
 | Schema      | `AGENTS.md`, `.agents/skills/codebase-wiki/`, `.codex/` | Rules, workflows, templates, scripts, hooks, and optional agents |
-| Runtime     | `.codebase-wiki/runtime/`                              | Rebuildable SQLite FTS5 and Tree-sitter cache tooling            |
 
 ## Codex Surfaces
 
@@ -53,9 +52,6 @@ scope or intent safely.
 ## Wiki Rules
 
 - Raw sources are read-only during wiki tasks.
-- `.codebase-wiki/cache/` is derived local state; `index update` may write only
-  this ignored cache and must never modify raw sources, Wiki pages, `index.md`,
-  or `log.md`.
 - Codex may create and update Markdown pages under `wiki/`.
 - `wiki/log.md` is append-only. Do not delete or rewrite existing log entries.
 - Any wiki page add, delete, rename, or major update must be reflected in `wiki/index.md`.

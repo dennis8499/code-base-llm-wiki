@@ -15,10 +15,8 @@ sources:
   - .agents/skills/codebase-wiki/SKILL.md
   - .agents/skills/codebase-wiki/references/ingest-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
-  - .codebase-wiki/runtime/codebase_wiki_runtime/storage.py
-  - .codebase-wiki/runtime/codebase_wiki_runtime/structure.py
-  - .codebase-wiki/runtime/codebase_wiki_runtime/cli.py
-last_updated: 2026-07-14
+  - .agents/skills/codebase-wiki/scripts/install-framework.py
+last_updated: 2026-07-15
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 ---
@@ -357,7 +355,7 @@ Codex 版不偽造 project-level custom slash prompts。Codex IDE / CLI 的 slas
 
 ## 8. 輔助腳本
 
-位於 `.agents/skills/codebase-wiki/scripts/`，Copilot 與 Codex 共用同一份 helper scripts；搜尋 Runtime 位於 `.codebase-wiki/runtime/`，**無需全域安裝套件**：
+位於 `.agents/skills/codebase-wiki/scripts/`，Copilot 與 Codex 共用同一份零第三方依賴的安裝器與 helper scripts：
 
 | 腳本               | 功能                                              |
 | ------------------ | ------------------------------------------------- |
@@ -366,14 +364,14 @@ Codex 版不偽造 project-level custom slash prompts。Codex IDE / CLI 的 slas
 | `wiki-stats.py`    | 產出 wiki 統計報告（頁面數、類型分佈、近期更新）  |
 | `frontmatter.py`   | 無依賴的 frontmatter 解析函式庫（供其他腳本引用） |
 | `parity-check.py`  | 驗證 Copilot/Codex capability 與路徑契約           |
-| `structure-index.py` | 舊版 JSON 結構索引腳本（建議改用共用 CLI）          |
-| `tree-sitter-preflight.py` | 舊版 grammar 檢查腳本（建議改用 `doctor`）      |
+| `install-framework.py` | Dry-run／apply 安裝或升級 Copilot、Codex framework surfaces |
 
 **使用方式**：
 ```bash
 python .agents/skills/codebase-wiki/scripts/check-stale.py wiki/
 python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki/
 python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki/
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/repo --surface codex --format json
 ```
 
 ---
@@ -398,8 +396,8 @@ python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki/
 ### GitHub Copilot 版（最小安裝）
 
 ```bash
-cp -r .github/ /path/to/your-repo/.github/
-cp -r wiki/ /path/to/your-repo/wiki/
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface copilot --format json
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface copilot --apply --format json
 ```
 
 前提條件：
@@ -410,12 +408,13 @@ cp -r wiki/ /path/to/your-repo/wiki/
 ### OpenAI Codex 版（最小安裝）
 
 ```bash
-cp AGENTS.md /path/to/your-repo/AGENTS.md
-cp -r .codex/ /path/to/your-repo/.codex/
-mkdir -p /path/to/your-repo/.agents/skills/
-cp -r .agents/skills/codebase-wiki/ /path/to/your-repo/.agents/skills/codebase-wiki/
-cp -r wiki/ /path/to/your-repo/wiki/
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface codex --format json
+python .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/your-repo --surface codex --apply --format json
 ```
+
+兩種 surface 都先 dry-run，再於沒有衝突時加上 `--apply`。升級舊安裝時改用
+`upgrade`；若輸出包含 `obsolete_paths`，必須先確認列出的 legacy 目錄沒有
+人工內容，再由 repo 擁有者手動清理。
 
 Codex 版必要元件：
 - `AGENTS.md`（主要專案指令）
@@ -497,7 +496,7 @@ Codex 版必要元件：
 | Obsidian                             | ✅ wikilink 語法相容，graph view 可視化        |
 | Marp                                 | ✅ 可從 wiki 內容產出 Markdown 簡報            |
 | Obsidian Dataview                    | ✅ 可查詢頁面 frontmatter                      |
-| Python                               | 需要 3.11+（Runtime 與輔助腳本的共同基線）     |
+| Python                               | 需要 3.11+（安裝器、Hooks 與輔助腳本的共同基線） |
 
 ### Windows 相容性
 

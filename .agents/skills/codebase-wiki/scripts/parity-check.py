@@ -20,9 +20,22 @@ def main() -> int:
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
             issues.append(f"manifest missing surface: {surface}")
+    if manifest.get("contract_version") != 2:
+        issues.append("manifest contract_version must be 2")
+    cli = manifest.get("cli", {})
+    if not isinstance(cli, dict):
+        issues.append("manifest cli must be an object")
+        cli = {}
+    for action in ("install", "upgrade"):
+        command = cli.get(action, "")
+        if not isinstance(command, str) or f"install-framework.py {action}" not in command:
+            issues.append(f"manifest missing installer command: {action}")
+    stale_runtime_commands = sorted(set(cli) & {"setup", "doctor", "index", "search", "show"})
+    if stale_runtime_commands:
+        issues.append("manifest retains removed runtime commands: " + ", ".join(stale_runtime_commands))
     for path in (
         root / ".agents" / "skills" / "codebase-wiki" / "SKILL.md",
-        root / ".codebase-wiki" / "runtime" / "scripts" / "codebase-wiki.py",
+        root / ".agents" / "skills" / "codebase-wiki" / "scripts" / "install-framework.py",
         root / ".github" / "copilot-instructions.md",
         root / "AGENTS.md",
     ):

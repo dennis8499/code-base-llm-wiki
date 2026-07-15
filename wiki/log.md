@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-07-14
+last_updated: 2026-07-15
 tags: [log]
 status: active
 ---
@@ -61,4 +61,11 @@ status: active
 - 驗證 frontmatter、source 路徑、入口 parity、雙入口同步、索引查詢與 Tree-sitter 結構解析
 - 清理範圍限定為未版本控制的空鏡像目錄、空 runtime 目錄與非 venv 的可重建 `__pycache__`
 - 現有 README staged 變更仍可能使 stale checker 保守提示 warning；未發現缺失 source
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-07-15] update | 移除本機搜尋 Runtime 並抽離框架安裝器
+
+- 移除 SQLite FTS5、Tree-sitter、受管 venv、索引快取、舊 CLI 與結構索引腳本
+- 新增零第三方依賴的 `install-framework.py`，提供 contract v2、dry-run／apply、雙 surface 與 legacy path 回報
+- Query 回歸直接讀取 Markdown Wiki，再按需回溯 raw sources；同步更新安裝手冊、write guard 與 parity contract
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]

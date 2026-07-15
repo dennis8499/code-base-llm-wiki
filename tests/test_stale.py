@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 import tempfile
 import unittest
-import importlib.util
 from pathlib import Path
 
 
-SCRIPTS = Path(__file__).parents[2] / ".agents" / "skills" / "codebase-wiki" / "scripts"
+SCRIPTS = Path(__file__).parents[1] / ".agents" / "skills" / "codebase-wiki" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 spec = importlib.util.spec_from_file_location("check_stale", SCRIPTS / "check-stale.py")
@@ -25,7 +25,8 @@ class StaleTests(unittest.TestCase):
             (root / "wiki").mkdir()
             (root / "service.py").write_text("return 1\n", encoding="utf-8")
             (root / "wiki" / "service.md").write_text(
-                "---\ntitle: Service\ntype: module\nsources:\n  - service.py\nlast_updated: 2026-07-01\ntags: [module]\nstatus: active\n---\n",
+                "---\ntitle: Service\ntype: module\nsources:\n  - service.py\n"
+                "last_updated: 2026-07-01\ntags: [module]\nstatus: active\n---\n",
                 encoding="utf-8",
             )
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
@@ -56,3 +57,7 @@ class StaleTests(unittest.TestCase):
 
             self.assertTrue(result["critical"])
             self.assertEqual(result["critical"][0]["invalid_sources"], ["../outside.py"])
+
+
+if __name__ == "__main__":
+    unittest.main()

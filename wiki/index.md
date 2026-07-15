@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-07-14
+last_updated: 2026-07-15
 tags: [index]
 status: active
 ---
@@ -53,7 +53,7 @@ _（尚無頁面。執行 Ingest 後將自動產生。）_
 
 | 頁面 | 摘要 |
 |------|------|
-| [[framework-introduction]] | 框架完整功能介紹：雙入口、共用 Runtime、FTS5、Tree-sitter、hooks、模板與工作流程 |
+| [[framework-introduction]] | 框架完整功能介紹：雙入口、零依賴安裝器、Wiki-first query、hooks、模板與工作流程 |
 
 ## Synthesis
 
