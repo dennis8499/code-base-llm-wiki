@@ -4,123 +4,99 @@ type: overview
 sources:
   - README.md
   - AGENTS.md
-  - Codex.md
-  - llm-wiki.md
-  - .github/copilot-instructions.md
+  - docs/architecture/README.md
   - .agents/skills/codebase-wiki/SKILL.md
-  - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
-last_updated: 2026-07-15
+last_updated: 2026-07-22
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 ---
 
 # Codebase LLM Wiki — 專案總覽
 
-> 讓 GitHub Copilot 或 OpenAI Codex 為任意 codebase 增量建構並維護結構化知識庫。
+> 讓 GitHub Copilot 或 OpenAI Codex 為任意 codebase 增量建構並維護可追溯的 Markdown 知識庫。
 
-## 專案簡介
+## 核心定位
 
-**Codebase LLM Wiki** 是一套面向 coding agents 的框架，讓 LLM 把 codebase 持續整理成一個可累積、可交叉引用、可追溯來源的 Markdown wiki。
+Codebase LLM Wiki 是面向 coding agents 的持久知識框架。Agent 將已理解的模組、實體、模式、決策與操作經驗保存到 `wiki/`；後續問題先讀 Wiki，只有內容不足、過時或矛盾時才回溯 raw sources。
 
-**核心差異：這不是 RAG。**
+**這不是 RAG。** 框架不建立向量資料庫、本機 source index 或完整原始碼副本。知識直接以可閱讀、可版本控制、可交叉引用的 Markdown 累積。
 
-| 模式     | RAG（傳統）                  | Codebase LLM Wiki                |
-| -------- | ---------------------------- | -------------------------------- |
-| 知識儲存 | 向量資料庫，每次查詢重新檢索 | 持久 Markdown wiki，知識不斷累積 |
-| 交叉引用 | 查詢時動態拼裝               | 事先建立，wikilink 已存在        |
-| 矛盾偵測 | 無                           | Lint 流程主動發現並標記          |
-| 歷史脈絡 | 無                           | Archaeology 流程追蹤 git history |
-| 維護方式 | 無須維護                     | LLM 增量維護，人類導向           |
+## 三層模型
 
-## 技術棧
+| 層 | 位置 | 責任 |
+| --- | --- | --- |
+| Raw Sources | 目標專案的原始碼、設定與既有文件 | Wiki 任務中唯讀 |
+| Wiki | `wiki/` | 持久知識、主索引、活動紀錄 |
+| Schema | `AGENTS.md`、`.agents/`、`.github/`、`.codex/` | 意圖、工作流、模板、scripts、hooks 與平台入口 |
 
-- **語言**：Markdown（wiki 頁面）、Python 3.11+（安裝器、Hooks 與輔助腳本）、TOML（設定）、JSON（Hook／capability）、YAML（Frontmatter）
-- **整合平台**：GitHub Copilot（VS Code）、OpenAI Codex（CLI / IDE / Cloud Tasks）
-- **相容工具**：Obsidian（wikilink 語法）、Marp（簡報）、Dataview（動態查詢）
-
-## 架構模式：三層模型
-
-```
-┌─────────────────────────────────────────────────────┐
-│                     Schema 層                        │
-│   .github/ 或 AGENTS.md + .codex/ + .agents/        │
-│   驅動 agent 行為的規則、模板、腳本與工作流程         │
-└───────────────────┬─────────────────────────────────┘
-                    │ 讀取規則，產出 wiki
-┌───────────────────▼─────────────────────────────────┐
-│                      Wiki 層                         │
-│                     wiki/                            │
-│         LLM 產生並維護的 Markdown 知識庫             │
-└───────────────────┬─────────────────────────────────┘
-                    │ 讀取來源，寫入 wiki
-┌───────────────────▼─────────────────────────────────┐
-│                  Raw Sources 層                      │
-│           目標 codebase 的原始碼、設定檔             │
-│                   唯讀，永不修改                     │
-└─────────────────────────────────────────────────────┘
+```text
+Schema instructions + Skill
+            │
+            ▼
+     Copilot / Codex
+       │           │
+       │ Wiki-first│ evidence gap
+       ▼           ▼
+     wiki/      Raw Sources
+       ▲           │
+       └───────────┘
+       evidence-backed updates
 ```
 
-## 目錄結構
+## Repo 產品結構
 
 ```text
 code-base-llm-wiki/
-├── README.md                     — 專案總覽
-├── AGENTS.md                     — Codex 版機器指令
-├── Codex.md                      — Codex 版人類操作手冊
-├── ChangeLog.md                  — 版本變更紀錄
-├── llm-wiki.md                   — 框架方法論原始概念（歷史參考）
-├── prompt.txt                    — 早期設計草稿（歷史參考）
-│
-├── .github/                      — GitHub Copilot 版元件
-│   ├── copilot-instructions.md   — Copilot 全域指令
-│   ├── agents/                   — 5 個 Copilot 自訂 agents
-│   ├── prompts/                  — 11 個 Slash prompts（IDE 專用）
-│   ├── hooks/                    — 3 個 Copilot hooks
-│   └── instructions/             — wiki 頁面格式規範
-│
-├── .codex/                       — OpenAI Codex 版元件
-│   ├── config.toml               — Codex 設定
-│   ├── hooks.json                — Codex hook 事件設定
-│   ├── agents/                   — 5 個 Codex 自訂 agents
-│   └── hooks/scripts/            — Hook 腳本
-│
-├── .agents/                      — 跨平台共用元件
-│   └── skills/codebase-wiki/     — Repo-local skill
-│       ├── SKILL.md              — Skill 主文件
-│       ├── assets/               — 6 種頁面模板
-│       ├── references/           — 工作流、規格與安全參考
-│       └── scripts/              — Wiki 檢查與 parity scripts
-│
-└── wiki/                         — 知識庫輸出位置
-    ├── index.md                  — 主索引
-    ├── log.md                    — 時序活動紀錄
-    ├── overview.md               — 高階總覽（本頁）
-    ├── architecture/
-    ├── modules/
-    ├── entities/
-    ├── patterns/
-    ├── decisions/
-    ├── dependencies/
-    ├── guides/
-    └── synthesis/
+├── .agents/skills/codebase-wiki/  — 雙平台共用 Skill、規格、模板與 scripts
+├── .github/                        — Copilot agents、prompts、hooks、instructions
+├── .codex/                         — Codex hooks、設定與 optional agents
+├── docs/                           — 架構、安裝、工作流、驗證與歷史文件
+├── samples/task-tracker/           — 無第三方依賴的 E2E 驗證 codebase
+├── tests/                          — Deterministic regression tests
+├── wiki/                           — 本 Repo 的持久知識庫
+├── AGENTS.md                       — Codex 專案規則
+├── Codex.md                        — 可隨 Codex surface 安裝的操作手冊
+├── ChangeLog.md                    — 重要變更
+└── README.md                       — 公開導覽與快速開始
 ```
 
-## 兩種入口
+`docs/`、`samples/`、`tests/` 是框架 Repo 的產品文件與驗證資產，不會被 installer 複製到目標專案。框架自己的 `wiki/` 也不會外洩到目標；installer 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 建立乾淨 Wiki 骨架。原始方法論與早期 prompt 保留於 `docs/history/`。
 
-| 入口                  | 主要檔案                             | 適合情境                                                   |
-| --------------------- | ------------------------------------ | ---------------------------------------------------------- |
-| **GitHub Copilot 版** | `.github/`                           | VS Code Copilot Chat，支援自訂 agent、slash prompt 與 hook |
-| **OpenAI Codex 版**   | `AGENTS.md` + `.codex/` + `.agents/` | Codex CLI / IDE / 雲端任務，以自然語言驅動                 |
+## 雙平台入口
 
-兩版共用同一個 `wiki/` 骨架，可共存於同一個 repo。
+| 能力 | GitHub Copilot | OpenAI Codex |
+| --- | --- | --- |
+| 全域規則 | `.github/copilot-instructions.md` | `AGENTS.md` |
+| 共用工作流 | `.agents/skills/codebase-wiki/` | `.agents/skills/codebase-wiki/` |
+| 專業代理 | `.github/agents/*.agent.md` | `.codex/agents/*.toml` |
+| 使用者入口 | `.github/prompts/*.prompt.md` | `Codex.md` recipes |
+| Hooks | `.github/hooks/` | `.codex/hooks.json`、`.codex/hooks/scripts/` |
 
-本框架採雙入口同權維護：Copilot 與 Codex 維持同一組 wiki 能力、邊界、安全規則與驗收結果。兩者共用 `.agents/skills/codebase-wiki/`，包含零依賴安裝器與 Wiki 輔助腳本；Copilot 額外使用 agents、prompts、hooks，Codex 使用 `AGENTS.md`、`.codex/agents/` 與 `.codex/hooks.json`。Codex 不模擬 Copilot 的 project-level slash prompt files，而是以自然語言 recipe 觸發同等工作流程。Query 直接讀取 Markdown Wiki，再按需回溯 raw sources，不建立衍生搜尋索引。
+兩個入口共用 contract version 2、九類意圖、Wiki page schema、安全邊界與驗收標準。Delegation 只有使用者明確要求時啟用，不是日常工作流的必要階段。
 
-## 核心功能
+## 核心工作流
 
-詳細說明請參閱 [[framework-introduction]]。
+- **Install / setup**：Installer 先 dry-run，`--apply` 且無 conflicts 才寫入。
+- **Ingest**：讀 source evidence，建立或更新 module、entity、pattern 等頁面。
+- **Query**：先讀 `wiki/index.md` 與 1–5 個相關頁面，預設唯讀。
+- **Lint**：檢查 stale、orphan、broken link、frontmatter、index 與 coverage。
+- **Archaeology**：追蹤 call path 與非破壞性 Git history。
+- **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
+- **Delegation**：明確要求時才路由給專業代理。
+
+## 安全與品質
+
+- `frontmatter.sources` 只能列出真實 Repo-relative paths。
+- Wiki pages 透過 `[[wikilink]]` 互相引用。
+- `wiki/log.md` 只能追加，不能刪除或改寫既有條目。
+- Target guard mode 只允許 Wiki 寫入；framework mode 才允許維護 schema、docs、samples 與 tests。
+- SQL Server live evidence 只允許 bounded read-only 查詢，且不得放入 frontmatter sources。
+
+## 驗證方式
+
+框架提供 installer/contract/guard/format tests，以及 parity、frontmatter、stale-source 與 Wiki stats scripts。`samples/task-tracker/` 讓 Copilot 與 Codex 以相同 raw source 分別驗證 Ingest → Query → Lint，同時確認 raw source hashes 未變更。
 
 ## 相關頁面
 
-- [[framework-introduction]] — 完整功能介紹與使用指南
+- [[framework-introduction]] — 安裝、操作、驗收與常見陷阱指南

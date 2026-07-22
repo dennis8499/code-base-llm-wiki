@@ -3,7 +3,8 @@
 ## 技術背景 (WHAT)
 
 本倉庫是一套 **Codebase LLM Wiki 框架**——讓 LLM 為任意 codebase 增量建構並維護結構化知識庫。
-框架由 `.github/` 底下的 Copilot 自訂化元件驅動，產出儲存於 `wiki/` 目錄。
+Copilot 入口位於 `.github/`，與 Codex 共用 `.agents/skills/codebase-wiki/`，
+產品文件與驗證資產分別位於 `docs/`、`samples/`、`tests/`，Wiki 產出儲存於 `wiki/`。
 
 ### 三層架構
 
@@ -11,12 +12,26 @@
 |---|---|---|
 | Raw Sources | codebase 本身（原始碼、設定檔、既有文件） | 唯讀。LLM 讀取但**永不修改** |
 | Wiki | `wiki/` 目錄 | LLM 產生並維護的 markdown 知識庫 |
-| Schema | `.github/` 底下的 Copilot 元件 | 驅動 LLM 行為的規則與工作流 |
+| Schema | `.github/` 與共用 `.agents/skills/` | 驅動 LLM 行為的規則與工作流 |
 
 Copilot 與 Codex 共用 `.agents/skills/codebase-wiki/`。Query 必須先讀取
 `wiki/index.md` 與 1–5 個相關 Markdown 頁面；只有 Wiki 不足、過時或矛盾
 時才回溯 frontmatter 列出的 raw sources。框架不建立本機搜尋資料庫，也不
 解析或複製完整原始碼到衍生索引。
+
+### Framework Repo 結構
+
+```text
+.agents/skills/codebase-wiki/  共用 Skill、規格、模板與 scripts
+.github/                       Copilot agents、prompts、hooks、instructions
+.codex/                        Codex hooks 與 optional agents
+docs/                          架構、安裝、工作流、驗證與歷史文件
+samples/task-tracker/          無第三方依賴的 E2E 樣例
+tests/                         Installer、contract、guard 與格式回歸
+wiki/                          持久知識庫、index 與 append-only log
+```
+
+`docs/`、`samples/`、`tests/` 只屬於框架 Repo，不會由 installer 複製到目標專案。
 
 ## Wiki 慣例 (HOW)
 

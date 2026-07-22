@@ -5,10 +5,11 @@ long workflows, templates, references, and scripts live in `$codebase-wiki` at
 `.agents/skills/codebase-wiki/`.
 
 This repository is the framework repository, so Codex may update framework files
-such as `README.md`, `ChangeLog.md`, `AGENTS.md`, `Codex.md`, `.github/`,
-`.codex/`, `.agents/`, and `wiki/` when the user explicitly asks for framework
-maintenance. When the framework is installed into a target codebase, wiki tasks
-must treat that target codebase as raw source and keep it read-only.
+such as `README.md`, `ChangeLog.md`, `AGENTS.md`, `Codex.md`, `docs/`,
+`samples/`, `tests/`, `.github/`, `.codex/`, `.agents/`, and `wiki/` when the
+user explicitly asks for framework maintenance. When the framework is installed
+into a target codebase, wiki tasks must treat that target codebase as raw source
+and keep it read-only.
 
 ## Core Model
 

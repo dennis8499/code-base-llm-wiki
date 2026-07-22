@@ -195,7 +195,7 @@ Write guard blocks a change:
 
 - Normal wiki work should write only `wiki/`.
 - In installed target repos, keep `.codex/config.toml` `[wiki_guard] mode = "target"`.
-- Framework maintenance may set `[wiki_guard] mode = "framework"` to update `AGENTS.md`, `Codex.md`, `README.md`, `ChangeLog.md`, `.github/`, `.codex/`, and `.agents/`.
+- Framework maintenance may set `[wiki_guard] mode = "framework"` to update the approved root entrypoints plus `docs/`, `samples/`, `tests/`, `wiki/`, `.github/`, `.codex/`, and `.agents/`.
 - If a raw source change is desired, ask Codex for a normal coding task rather than a wiki task.
 
 Skill does not trigger:
