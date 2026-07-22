@@ -1,0 +1,129 @@
+# 安裝、升級與平台設定
+
+本文件涵蓋 Codebase LLM Wiki 的兩種安裝 surface、guard mode、升級與常見問題。架構背景請看 [架構文件](../architecture/README.md)。
+
+## 前置需求
+
+- Git
+- Python 3.11 或更新版本
+- 欲使用 Copilot surface：VS Code 與 GitHub Copilot Chat
+- 欲使用 Codex surface：OpenAI Codex CLI、IDE extension、App 或 Cloud task
+
+Installer 不需要 PyYAML、Node.js、資料庫、向量模型或其他第三方套件。
+
+目標專案的 `wiki/` 由共用 Skill 內的乾淨 starter 建立；框架 Repo 自己的 Wiki pages 與活動歷史不會被複製。
+
+## Dry-run 優先
+
+所有安裝與升級都先執行 dry-run。JSON 回應包含 `files`、`conflicts`、`obsolete_paths` 與 `applied`；只有 `--apply` 且 `conflicts` 為空時才寫入。
+
+### GitHub Copilot surface
+
+PowerShell：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface copilot --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface copilot --apply --format json
+```
+
+macOS / Linux：
+
+```bash
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface copilot --format json
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface copilot --apply --format json
+```
+
+Copilot surface 安裝 `AGENTS.md`、`.agents/`、`.github/` 與 `wiki/`，不安裝 `.codex/` 或 `Codex.md`。
+
+### OpenAI Codex surface
+
+PowerShell：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --apply --format json
+```
+
+macOS / Linux：
+
+```bash
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface codex --format json
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface codex --apply --format json
+```
+
+Codex surface 安裝 `AGENTS.md`、`Codex.md`、`.agents/`、`.codex/` 與 `wiki/`，不安裝 `.github/`。
+
+## Guard mode
+
+| Mode | 使用位置 | 允許的 Wiki 任務寫入 |
+| --- | --- | --- |
+| `target` | 安裝框架的應用程式 Repo | 僅 `wiki/` |
+| `framework` | Codebase LLM Wiki 框架 Repo 本身 | Wiki、schema、docs、samples、tests 與核准的根入口文件 |
+
+Installer 會把安裝來源的 framework mode 設定轉成 target mode。不要為了繞過 raw-source 唯讀規則而切換 mode；一般程式碼修改應作為獨立 coding task 執行。
+
+## 升級
+
+將 `install` 改成 `upgrade`，仍先 dry-run：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --target C:\path\to\target --surface codex --format json
+```
+
+- 目標檔案不存在或內容完全相同時可安全規劃。
+- 內容不同時列入 `conflicts`，整次 apply 不會執行。
+- Installer 不做三方 merge，也沒有 `--force`。
+- `.codebase-wiki/` 只會出現在 `obsolete_paths`；確認沒有人工內容後由維護者另行處理。
+
+## 平台啟用
+
+### GitHub Copilot
+
+1. 以 VS Code 開啟目標 Repo。
+2. 確認 Copilot Chat 可使用 Agent mode 與 repository custom instructions。
+3. 依 VS Code 信任流程允許專案 hooks。
+4. 使用自然語言或 `.github/prompts/` 的 prompts。
+
+### OpenAI Codex
+
+1. 以 Codex 開啟目標 Repo，確認 `AGENTS.md` 被讀取。
+2. 確認 `.agents/skills/codebase-wiki/SKILL.md` 可被發現。
+3. 在 `/hooks` 或產品對應介面信任 project-local hooks。
+4. 需要完整 recipes 時閱讀根目錄 `Codex.md`。
+
+## 常見問題
+
+### 回報 conflicts
+
+先閱讀 JSON 中的精確路徑，比對目標專案是否已有人工設定。Installer 不會覆蓋；請人工合併後讓內容與來源一致，再重新 dry-run。
+
+### Hooks 沒有執行
+
+- 確認 Python 可用。
+- 確認平台已信任 project-local hooks。
+- Codex 檢查 `.codex/config.toml` 的 hooks feature。
+- Copilot 檢查 `.github/hooks/` 設定與 VS Code 支援版本。
+- 修改設定後重啟平台工作階段。
+
+### Write guard 阻擋變更
+
+- 目標 Repo 的 Wiki 任務只能寫 `wiki/`，這通常是正確行為。
+- 框架 Repo 維護才使用 `framework` mode。
+- 若需求是修改應用程式原始碼，請結束 Wiki 任務並改成一般 coding task。
+
+### Skill 沒有觸發
+
+- 確認 `.agents/skills/codebase-wiki/SKILL.md` 存在。
+- Codex 可明確輸入 `$codebase-wiki`。
+- Copilot 可選擇對應 Agent 或 prompt。
+- 新增 skill 後重新開啟工作階段。
+
+## 安裝後驗證
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\parity-check.py
+python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
+python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
+```
+
+完整的框架 Repo 發佈檢查請看 [驗證手冊](../validation/README.md)。

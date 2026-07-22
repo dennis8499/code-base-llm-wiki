@@ -29,6 +29,9 @@ Recognize these repo-level surfaces:
 AGENTS.md                         Codex rules, routing, and safety boundaries
 Codex.md                          Human-facing Codex setup and usage guide
 README.md                         Framework overview and install instructions
+docs/                            Architecture, setup, workflows, validation, history
+samples/                         Framework-only end-to-end validation codebases
+tests/                           Deterministic framework regression tests
 .codex/
   config.toml                     Codex hooks and bounded delegation settings
   hooks.json                      Hook wiring
@@ -39,6 +42,7 @@ README.md                         Framework overview and install instructions
   capabilities.json                Shared intent and parity contract
   references/                     Detailed workflow specs loaded on demand
   assets/                         Page templates
+    wiki-starter/                 Clean target Wiki skeleton used by installer
   scripts/                        Installer and deterministic wiki checks
   agents/openai.yaml              UI metadata for the skill
 .github/                          GitHub Copilot entrypoint, prompts, agents, hooks
@@ -52,10 +56,11 @@ wiki/
 ```
 
 In this framework repo, schema maintenance may update `README.md`, `Codex.md`,
-`AGENTS.md`, `.codex/`, `.agents/`, `.github/`, and `wiki/` when explicitly
-requested. In an installed target repo, wiki tasks must keep raw sources
-read-only and write only the wiki or framework schema files that the user asked
-to maintain.
+`AGENTS.md`, `docs/`, `samples/`, `tests/`, `.codex/`, `.agents/`, `.github/`,
+and `wiki/` when explicitly requested. In an installed target repo, wiki tasks
+must keep raw sources read-only and write only the wiki or framework schema
+files that the user asked to maintain. Framework-only `docs/`, `samples/`, and
+`tests/` are not copied by the installer.
 
 ## Intent Routing
 
@@ -123,6 +128,11 @@ changes by default, and writes only when `--apply` is supplied and no conflicts
 exist. The installer never deletes a legacy `.codebase-wiki/` directory from a
 target repository; it reports that path through `obsolete_paths` for manual
 review.
+
+The framework repository's own `wiki/` documents this framework and is not
+copied into targets. Target `wiki/` files are seeded from
+`assets/wiki-starter/`, preventing framework-only sources and activity history
+from leaking into installed codebases.
 
 The framework has no local search database or source parser. Query workflows
 read `wiki/index.md` and relevant Markdown pages first, then inspect listed raw

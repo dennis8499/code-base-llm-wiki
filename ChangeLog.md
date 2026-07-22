@@ -4,9 +4,14 @@
 
 ---
 
-## [Unreleased] — 2026-07-15
+## [Unreleased] — 2026-07-22
 
 ### 新增
+
+- **Repo 產品化文件分層**：新增 `docs/architecture/`、`docs/setup/`、`docs/workflows/`、`docs/validation/` 與 `docs/history/`，將架構、安裝、11 個工作流、驗證與歷史脈絡從單一 README 拆分為可導覽文件
+- **Task Tracker E2E 樣例**：新增無第三方依賴的 `samples/task-tracker/`，涵蓋 entity、repository abstraction、設定驗證、狀態轉換、錯誤分支、injected clock 與 Copilot/Codex 手動驗收流程
+- **Repo 格式、write guard 與 sample contract 測試**：驗證本機文件連結、framework/target guard boundary、雙 surface 安裝與 sample raw-source hashes
+- **乾淨 Target Wiki starter**：Installer 改由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 建立目標 Wiki，避免複製框架自身的文件 sources 與活動歷史
 
 - **獨立框架安裝器與 parity manifest**：新增無第三方依賴的 `install-framework.py`、`install` / `upgrade` dry-run／apply 流程、legacy path 回報、`.agents/skills/codebase-wiki/capabilities.json` contract v2 與 `parity-check.py`
 
@@ -38,6 +43,11 @@
 - **新增 hook 稽核輸出忽略規則**：根目錄 `.gitignore` 新增 `.github/hooks/logs/` 與 `__pycache__/`
 
 ### 變更
+
+- **README 收斂為產品入口**：根 README 改為專案定位、結構、核心元件、特色、快速開始、E2E 樣例與文件索引；詳細操作移至 `docs/`
+- **Framework guard boundary 擴充**：framework mode 允許 `docs/`、`samples/`、`tests/`，target mode 維持只允許 `wiki/`；Copilot/Codex hook scripts 保持鏡像
+- **歷史文件歸檔**：`llm-wiki.md` 與 `prompt.txt` 移至 `docs/history/`，不刪除原始內容，並同步更新 Wiki sources 與內部連結
+- **框架 Wiki 同步**：更新 `wiki/overview.md`、`wiki/guides/framework-introduction.md` 與 index，並在 append-only log 追加產品化重整紀錄
 
 - **移除手動 `.github/skills` 鏡像**：現代 Copilot 與 Codex 共用 `.agents/skills/codebase-wiki/`；VS Code prompt 仍保留為 IDE 入口糖衣，CLI 透過 agents、skills 與自然語言使用
 - **統一寫入語意**：Query／Archaeology 預設唯讀，只有明確確認才持久化 Wiki；hook guard 明確定位為 edit-tool 防呆層，不取代 shell sandbox

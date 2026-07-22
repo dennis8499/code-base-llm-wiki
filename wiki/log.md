@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-07-15
+last_updated: 2026-07-22
 tags: [log]
 status: active
 ---
@@ -69,3 +69,17 @@ status: active
 - 新增零第三方依賴的 `install-framework.py`，提供 contract v2、dry-run／apply、雙 surface 與 legacy path 回報
 - Query 回歸直接讀取 Markdown Wiki，再按需回溯 raw sources；同步更新安裝手冊、write guard 與 parity contract
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-07-22] update | Repo 產品化分層與 E2E 樣例
+
+- 依執行元件、產品文件、驗證樣例與持久 Wiki 分層重整 Repo；README 收斂為導覽入口，詳細內容移至 `docs/`
+- 新增無第三方依賴的 `samples/task-tracker/`，用於驗證 Copilot/Codex 的 Ingest、Query、Lint 與 raw-source protection
+- Framework write guard 新增 `docs/`、`samples/`、`tests/` 邊界；target mode 仍只允許 `wiki/`
+- 將歷史方法論與早期 prompt 移至 `docs/history/`，同步更新 evidence paths
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-07-22] update | Target Wiki starter 與框架 Wiki 分離
+
+- Installer 改由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 建立目標 Wiki，避免複製框架自己的 pages、source references 與 log history
+- 保留 `install|upgrade`、`copilot|codex`、contract version 2 與 target-mode 轉換介面
+- 受影響頁面：[[overview]]、[[framework-introduction]]

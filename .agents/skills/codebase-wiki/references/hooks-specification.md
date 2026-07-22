@@ -66,7 +66,9 @@ Allowed values:
 
 - `target`: allow wiki writes only. This is the safe mode for installed target
   codebases.
-- `framework`: allow wiki plus framework schema/docs writes. Use this only when
-  maintaining the Codebase LLM Wiki framework repository itself.
+- `framework`: allow `wiki/`, `.codex/`, `.agents/`, `.github/`, `docs/`,
+  `samples/`, `tests/`, and approved root entrypoints (`AGENTS.md`, `README.md`,
+  `ChangeLog.md`, `Codex.md`). Use this only when maintaining the Codebase LLM
+  Wiki framework repository itself.
 
 If the config is missing or invalid, the guard fails closed to `target`.

@@ -18,9 +18,10 @@ from typing import Sequence
 CONTRACT_VERSION = 2
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SURFACE_PATHS = {
-    "codex": ("AGENTS.md", "Codex.md", ".agents", ".codex", "wiki"),
-    "copilot": ("AGENTS.md", ".agents", ".github", "wiki"),
+    "codex": ("AGENTS.md", "Codex.md", ".agents", ".codex"),
+    "copilot": ("AGENTS.md", ".agents", ".github"),
 }
+WIKI_STARTER_PATH = ".agents/skills/codebase-wiki/assets/wiki-starter"
 EXCLUDED_PARTS = {"__pycache__", "logs", ".venv", "cache"}
 TARGET_MODE_CONFIGS = {".codex/config.toml", ".github/hooks/config.toml"}
 LEGACY_RUNTIME_PATH = ".codebase-wiki/"
@@ -48,6 +49,16 @@ def _target_bytes(source: Path, relative: str) -> bytes:
     return data
 
 
+def _surface_files(root: Path, surface: str) -> list[tuple[Path, str]]:
+    files: list[tuple[Path, str]] = []
+    for relative_root in SURFACE_PATHS[surface]:
+        files.extend(_files(root, relative_root))
+    for source, relative in _files(root, WIKI_STARTER_PATH):
+        starter_relative = Path(relative).relative_to(WIKI_STARTER_PATH)
+        files.append((source, (Path("wiki") / starter_relative).as_posix()))
+    return files
+
+
 def _obsolete_paths(target_root: Path) -> list[str]:
     return [LEGACY_RUNTIME_PATH] if (target_root / LEGACY_RUNTIME_PATH).exists() else []
 
@@ -57,16 +68,15 @@ def plan_install(source_root: Path, target_root: Path, surface: str) -> dict[str
         raise ValueError(f"unknown surface: {surface}")
     files: list[str] = []
     conflicts: list[str] = []
-    for relative_root in SURFACE_PATHS[surface]:
-        for source, relative in _files(source_root, relative_root):
-            files.append(relative)
-            target = target_root / relative
-            expected = _target_bytes(source, relative)
-            if target.is_dir() or (
-                target.exists()
-                and hashlib.sha256(expected).digest() != hashlib.sha256(target.read_bytes()).digest()
-            ):
-                conflicts.append(relative)
+    for source, relative in _surface_files(source_root, surface):
+        files.append(relative)
+        target = target_root / relative
+        expected = _target_bytes(source, relative)
+        if target.is_dir() or (
+            target.exists()
+            and hashlib.sha256(expected).digest() != hashlib.sha256(target.read_bytes()).digest()
+        ):
+            conflicts.append(relative)
     return {
         "surface": surface,
         "files": sorted(set(files)),
@@ -79,11 +89,10 @@ def apply_install(source_root: Path, target_root: Path, surface: str) -> dict[st
     plan = plan_install(source_root, target_root, surface)
     if plan["conflicts"]:
         raise FileExistsError("Installation conflicts: " + ", ".join(plan["conflicts"]))
-    for relative_root in SURFACE_PATHS[surface]:
-        for source, relative in _files(source_root, relative_root):
-            destination = target_root / relative
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(_target_bytes(source, relative))
+    for source, relative in _surface_files(source_root, surface):
+        destination = target_root / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(_target_bytes(source, relative))
     return plan
 
 

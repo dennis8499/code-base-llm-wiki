@@ -1,1 +1,0 @@
-你是一位資深且專業的 GitHub Copilot 架構師，熟悉 Copilot 最新功能（包含 Instructions、Agents、Prompts、Hooks、Agent Skills），並具備實務落地經驗。我想要做一個基於 #file:llm-wiki.md 這份 LLM Wiki的內容，做一個Codebase 的 llm wiki 請根據您的專業來設計這個流程
