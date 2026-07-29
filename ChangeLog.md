@@ -4,10 +4,20 @@
 
 ---
 
-## [Unreleased] — 2026-07-22
+## [Unreleased] — 2026-07-29
 
 ### 新增
 
+- **Predictability contract**：contract v2 新增九個 intent groups、十個
+  machine operations、authorization policy 與完整 entrypoint mapping
+- **唯讀 Wiki lint**：新增 `lint-wiki.py` 與 `rebuild-index.py --check`，
+  deterministic 檢查 frontmatter、sources、links、orphans 與 index，並把
+  contradictions／module coverage 標為 `agent_review_required`
+- **完整 page templates**：補齊 overview、architecture、dependency、
+  guide 與 synthesis assets，`page-types.md` 收斂為 template catalog
+- **Predictability regression**：新增 installer allowlist、upgrade Wiki
+  preservation、instruction budget、canonical hooks、SessionStart budget 與
+  lint JSON regression tests
 - **Repo 產品化文件分層**：新增 `docs/architecture/`、`docs/setup/`、`docs/workflows/`、`docs/validation/` 與 `docs/history/`，將架構、安裝、11 個工作流、驗證與歷史脈絡從單一 README 拆分為可導覽文件
 - **Task Tracker E2E 樣例**：新增無第三方依賴的 `samples/task-tracker/`，涵蓋 entity、repository abstraction、設定驗證、狀態轉換、錯誤分支、injected clock 與 Copilot/Codex 手動驗收流程
 - **Repo 格式、write guard 與 sample contract 測試**：驗證本機文件連結、framework/target guard boundary、雙 surface 安裝與 sample raw-source hashes
@@ -19,7 +29,7 @@
 - **新增 Copilot prompts**：加入 `/code-archaeology` 與通用 `/save-guide`，保留 `/onboarding-guide` 作為新人導覽專用入口
 - **新增 deterministic validation scripts**：加入並鏡像 `validate-frontmatter.py` 與 `check-dual-entry-sync.py`，分別驗證 wiki frontmatter schema 與 `.agents` / `.github` skills、`.codex` / `.github` hook scripts 是否漂移
 - **新增 hook guard mode config**：新增 `.github/hooks/config.toml`，並在 `.codex/config.toml` 加入 `[wiki_guard] mode`，支援 `target` 與 `framework` 兩種寫入邊界
-- **Codex 版完整重建**：依 OpenAI Codex 官方 customization surface 重新落地 `AGENTS.md`、`Codex.md`、`.agents/skills/codebase-wiki/`、`.codex/config.toml`、`.codex/hooks.json`、`.codex/hooks/scripts/` 與 `.codex/agents/*.toml`，讓 README 宣稱的 Codex 支援重新有實體檔案支撐
+- **Codex 版完整重建**：依 OpenAI Codex customization surface 重新落地 `AGENTS.md`、`Codex.md`、`.agents/skills/codebase-wiki/`、`.codex/config.toml`、`.codex/hooks.json` 與 `.codex/agents/*.toml`，讓 README 宣稱的 Codex 支援有實體檔案支撐
 - **Codex hook 官方 schema 對齊**：Codex hooks 使用 `SessionStart`、`PreToolUse`、`PostToolUse` 事件與 `hookSpecificOutput` 輸出格式，並保留 `.codex/hooks/logs/` 到 `.codex-hook-logs/` 的 audit fallback
 - **README 新增 Codex 版完整使用範例**：新增從安裝、初始化、增量維護、wiki-first query、synthesis 保存、SA 系統分析文件、SQL Server live evidence、lint 修復、custom agents delegation 到交付前檢查的端到端操作劇本
 - **雙入口同權維護說明**：README 與 Codex.md 補上 Copilot ↔ Codex parity table，明確定義兩邊維持同一組 wiki 能力、邊界、安全規則與驗收結果，但各自使用平台原生入口
@@ -27,25 +37,29 @@
 - **wiki-query SQL Server live evidence 同步支援**：GitHub Copilot 端 `wiki-query` 新增 VS Code Microsoft SQL Server extension tools 後，Codex 端同步在 `AGENTS.md` 與 `.codex/agents/wiki-query.toml` 補上資料庫證據規則，允許 schema discovery、metadata lookup 與有界線的唯讀 `SELECT`
 - **新增 Codex 原生框架結構**：加入 `.codex/` 與 `.agents/skills/codebase-wiki/`，讓 OpenAI Codex 可使用 project-local hooks、custom agents 與 repo-local skill，而不必依賴 Copilot `.github/` 元件
 - **新增 Codex custom agents**：將 `.github/agents/` 五個 Copilot agent 轉寫為 `.codex/agents/*.toml`，包含 `wiki-keeper`、`wiki-ingest`、`wiki-query`、`wiki-lint`、`wiki-archaeologist`
-- **新增 Codex hooks**：加入 `.codex/hooks.json` 與 `.codex/hooks/scripts/`，提供 `SessionStart` wiki 狀態摘要、`PreToolUse` 寫入保護與 `PostToolUse` log reminder
+- **新增 Codex hooks**：加入 `.codex/hooks.json`，呼叫共用 Skill 下的 canonical hooks，提供 `SessionStart` 狀態摘要、`PreToolUse` 寫入保護與 `PostToolUse` log reminder
 - **新增 Codex repo-local skill**：將 `codebase-wiki` skill 複製到 `.agents/skills/codebase-wiki/`，並加入 `agents/openai.yaml` 作為 Codex skill metadata
 - **新增 SA 系統分析文件 workflow**：`$codebase-wiki` 現在可依 wiki-first 流程產生 Markdown SA 文件，使用 `wiki/synthesis/`、`type: synthesis` 與 `tags: [synthesis, system-analysis]`，並提供 coverage gap 標示規則與模板
 - **新增 OpenAI Codex 版入口**：加入根目錄 `AGENTS.md`，將 Codebase LLM Wiki 的意圖路由、Ingest / Query / Lint / Archaeology / ADR 工作流程、frontmatter 規格與禁止事項整理成 Codex 可直接讀取的專案指令
 - **README 新增雙版本使用說明**：補上 GitHub Copilot 版與 OpenAI Codex 版的支援矩陣、安裝方式、快速開始、自然語言工作流與相容性說明
-- **wiki-query 建議行動與自動交接（Hand-Off）功能**：查詢代理在產生建議後，會透過 `vscode/askQuestions` 向使用者呈現可執行的行動清單，使用者確認後自動委派給對應的專業子代理執行。
-  - 三種建議行動類型：
-    - `save-synthesis`：將有持續價值的綜合分析存入 `wiki/synthesis/`（委派 `wiki-keeper`）
-    - `re-ingest`：對內容過時的 wiki 頁面重新執行知識攝入（委派 `wiki-ingest`）
-    - `lint-fix`：修復斷裂連結、缺失 frontmatter 等品質問題（委派 `wiki-lint`）
-  - 標準化的交接摘要格式，確保子代理獲得充足的背景脈絡
-- **wiki-query 新增子代理協作能力**：工具清單加入 `agent` 與 `vscode/askQuestions`，代理清單加入 `wiki-ingest`、`wiki-lint`、`wiki-keeper`
 - **新增無外部依賴的 frontmatter parser**：加入 `.github/skills/codebase-wiki/scripts/frontmatter.py`，讓 `check-stale.py`、`rebuild-index.py`、`wiki-stats.py` 在沒有 `PyYAML` 的環境也能執行
 - **新增 hook 稽核輸出忽略規則**：根目錄 `.gitignore` 新增 `.github/hooks/logs/` 與 `__pycache__/`
 
 ### 變更
 
+- **Installer allowlist 與 action 分離**：只發佈 `codebase-wiki` Skill；
+  `install` 建立 starter Wiki，`upgrade` 永遠保留既有 Wiki，conflict-safe
+  策略維持不變
+- **Progressive disclosure**：`SKILL.md`、`AGENTS.md`、Copilot instructions
+  與 Wiki file instructions 收斂為 router／不變量；各 branch 使用具
+  completion criterion 的 reference
+- **Explicit delegation 統一**：Copilot/Codex agent descriptions 都以前置
+  marker 宣告 explicit-delegation only；Query 維持唯讀並只建議獨立後續
+  操作
+- **Canonical hooks**：移除兩平台鏡像 scripts，設定統一呼叫
+  `.agents/skills/codebase-wiki/scripts/hooks/`；SessionStart 限制為 30 行／4 KB
 - **README 收斂為產品入口**：根 README 改為專案定位、結構、核心元件、特色、快速開始、E2E 樣例與文件索引；詳細操作移至 `docs/`
-- **Framework guard boundary 擴充**：framework mode 允許 `docs/`、`samples/`、`tests/`，target mode 維持只允許 `wiki/`；Copilot/Codex hook scripts 保持鏡像
+- **Framework guard boundary 擴充**：framework mode 允許 `docs/`、`samples/`、`tests/`，target mode 維持只允許 `wiki/`；Copilot/Codex 設定共用 canonical hook scripts
 - **歷史文件歸檔**：`llm-wiki.md` 與 `prompt.txt` 移至 `docs/history/`，不刪除原始內容，並同步更新 Wiki sources 與內部連結
 - **框架 Wiki 同步**：更新 `wiki/overview.md`、`wiki/guides/framework-introduction.md` 與 index，並在 append-only log 追加產品化重整紀錄
 
@@ -55,18 +69,18 @@
 - **入口內 DRY 收斂**：`AGENTS.md`、`.github/copilot-instructions.md`、`.github/instructions/wiki-pages.instructions.md`、`SKILL.md` 與 wiki agents 改為保留摘要並指向對應 references；frontmatter、log operation、SQL live evidence 與 workflow 細節不再多點展開
 - **Intent routing 統一為 9 類**：Install / setup、Ingest、Query、Lint、ADR、Synthesis / Guide、System Analysis / SA、Archaeology、Delegation 在 Copilot keeper、Codex keeper、AGENTS、SKILL 與 Copilot instructions 中對齊
 - **Log operation 清單統一**：`wiki/log.md` operation 統一為 `ingest|query|lint|update|init|adr|synthesis|guide|archaeology`
-- **Hook scripts 跨平台鏡像**：`wiki-session-init.py`、`wiki-write-guard.py`、`wiki-log-reminder.py` 改為同一份跨 Copilot / Codex 相容腳本，並對齊 edit tool matcher 與 audit fallback path 慣例
+- **Hook scripts 跨平台共用**：`wiki-session-init.py`、`wiki-write-guard.py`、`wiki-log-reminder.py` 使用單一 canonical implementation，平台設定只提供 adapter 參數
 - **README / Codex.md 更新**：補上新 prompts、guard mode 安裝提醒、frontmatter validation、雙入口 sync check 與 reference-first SQL 規則
 - **README Codex Workflow 功能範例擴寫**：新增「Codex 版完整使用範例」與「Codex Workflow 功能範例（逐項）」章節，逐項覆蓋 Interactive Ingest、Batch Ingest、Query、Query+SQL Server live evidence、Lint、Archaeology、ADR、Synthesis、Guide、System Analysis / SA、Delegation，每項皆提供何時使用、可直接貼上的 prompt、預期產出與驗收重點
 - **Codex project instructions token 最佳化**：AGENTS.md 收斂為短核心規則，長流程與模板維持在 `$codebase-wiki` skill 的 `.agents/skills/codebase-wiki/` 下，讓 Codex 透過 progressive disclosure 按需載入
 - **Codex hooks feature key 更新**：`.codex/config.toml` 改用 `[features] hooks = true`，保留 `agents.max_threads = 6` 與 `agents.max_depth = 1`，避免遞迴 subagent fan-out 增加 token 與 latency
-- **Codex hook audit fallback**：`.codex/hooks/scripts/` 在 `.codex/hooks/logs/` 因 Windows ACL 無法寫入時，會退到 root-level `.codex-hook-logs/`，避免 SessionStart / log reminder 失去稽核輸出
+- **Codex hook audit fallback**：canonical hooks 在 `.codex/hooks/logs/` 因 Windows ACL 無法寫入時，會退到 root-level `.codex-hook-logs/`
 - **Codex Query 流程加入 DB live evidence 契約**：Query 回答若使用 DB-derived result，必須標註 `connected_at`、`source_tool`、`server`、`database`、`query_scope`、`result_limit`、`row_count`、`freshness_note`；DB 證據不得寫入 wiki frontmatter `sources`
 - **README 補上資料庫 Live Evidence 說明**：新增 Copilot / Codex 入口的 SQL Server live evidence 對照、唯讀限制、fallback 原則與查詢範例
 - **AGENTS.md 對齊 Codex 原生路徑**：將 Codex skill 與輔助腳本路徑從 `.github/skills/codebase-wiki/` 更新為 `.agents/skills/codebase-wiki/`，並補充 `.codex/agents` 只在明確委派時使用
 - **README 改為三層 Codex 說明**：Codex 版文件現在同時描述 `AGENTS.md`、`.codex/`、`.agents/skills/`，並新增 Codex Custom Agents 對照表與 Codex Hooks 說明
-- **wiki-query 禁止行為更新**：從「不得修改任何檔案」調整為「不得直接修改任何檔案」，所有寫入操作僅能透過委派子代理間接執行
-- **query-wiki prompt 更新**：同步加入 Hand-Off 流程說明與新的建議行動回答格式
+- **wiki-query 唯讀契約**：Query 可提出 re-ingest、lint 或 synthesis
+  建議，但不直接寫入或自動 Hand-Off
 - **統一 wiki agents 的 `tools` 宣告格式**：`wiki-keeper`、`wiki-query`、`wiki-ingest`、`wiki-lint`、`wiki-archaeologist` 全數改為 inline YAML array（例如 `tools: [read, edit, search]`），讓代理能力清單更精簡且更容易比對
 - **Hook 設定對齊 GitHub Copilot hooks schema**：三個 hook 設定檔改為 `version: 1`，事件名稱改用 `preToolUse`、`postToolUse`、`sessionStart`，並改以 `bash` / `powershell` 與 `timeoutSec` 宣告執行方式
 - **wiki agents manifest 移除非官方 frontmatter 欄位**：`wiki-keeper`、`wiki-query`、`wiki-ingest`、`wiki-lint`、`wiki-archaeologist` 不再在 frontmatter 中宣告 `hooks:` 或 `agents:`，避免讓維護者誤以為 Copilot 會自動載入這些非標準欄位

@@ -1,6 +1,6 @@
 # Wiki 工作流手冊
 
-本文件把 Codebase LLM Wiki 的九類意圖展開成 11 個常用操作情境。所有工作流都遵守 Wiki-first、raw sources 唯讀、evidence-backed 與 append-only log 規則。
+本文件把九個使用者意圖群組（十個 machine operations）展開成 11 個常用操作情境。所有工作流都遵守 Wiki-first、raw sources 唯讀、evidence-backed 與 append-only log 規則。
 
 ## 共通流程
 
@@ -32,6 +32,15 @@ flowchart LR
 | 9. Guide | `/save-guide {topic}` | `建立 {topic} 操作指南` | `wiki/guides/` page |
 | 10. System Analysis / SA | `/system-analysis-doc {scope}` | `產出 {scope} SA 文件` | synthesis + coverage gaps |
 | 11. Delegation | 明確選擇或要求 agents | `請使用 subagents/parallel...` | 受限範圍的代理協作 |
+
+## Authorization
+
+- Install / upgrade：dry-run 後以 `--apply` 授權。
+- Interactive Ingest：先摘要，再確認寫入；明確 Batch Ingest 直接授權該範圍。
+- Query 與預設 Archaeology：唯讀。
+- Lint：先報告，再確認 repairs。
+- ADR、Guide、Synthesis、SA：明確建立要求即授權輸出。
+- Delegation：只有使用者明確要求才啟用。
 
 ## 1. Interactive Ingest
 
@@ -91,4 +100,4 @@ Delegation 只有在使用者明確要求時啟用。委派內容必須包含目
 - 需要時確認 `wiki/log.md` 只有追加。
 - 列出執行的 deterministic checks 與結果。
 - 明確說明 stale、speculative、skipped 或 unverified points。
-
+- 逐項滿足 matching workflow reference 的 completion criterion。

@@ -17,9 +17,10 @@ from typing import Sequence
 
 CONTRACT_VERSION = 2
 REPO_ROOT = Path(__file__).resolve().parents[4]
+COMMON_SURFACE_PATHS = ("AGENTS.md", ".agents/skills/codebase-wiki")
 SURFACE_PATHS = {
-    "codex": ("AGENTS.md", "Codex.md", ".agents", ".codex"),
-    "copilot": ("AGENTS.md", ".agents", ".github"),
+    "codex": ("Codex.md", ".codex"),
+    "copilot": (".github",),
 }
 WIKI_STARTER_PATH = ".agents/skills/codebase-wiki/assets/wiki-starter"
 EXCLUDED_PARTS = {"__pycache__", "logs", ".venv", "cache"}
@@ -49,13 +50,14 @@ def _target_bytes(source: Path, relative: str) -> bytes:
     return data
 
 
-def _surface_files(root: Path, surface: str) -> list[tuple[Path, str]]:
+def _surface_files(root: Path, surface: str, action: str = "install") -> list[tuple[Path, str]]:
     files: list[tuple[Path, str]] = []
-    for relative_root in SURFACE_PATHS[surface]:
+    for relative_root in (*COMMON_SURFACE_PATHS, *SURFACE_PATHS[surface]):
         files.extend(_files(root, relative_root))
-    for source, relative in _files(root, WIKI_STARTER_PATH):
-        starter_relative = Path(relative).relative_to(WIKI_STARTER_PATH)
-        files.append((source, (Path("wiki") / starter_relative).as_posix()))
+    if action == "install":
+        for source, relative in _files(root, WIKI_STARTER_PATH):
+            starter_relative = Path(relative).relative_to(WIKI_STARTER_PATH)
+            files.append((source, (Path("wiki") / starter_relative).as_posix()))
     return files
 
 
@@ -63,12 +65,19 @@ def _obsolete_paths(target_root: Path) -> list[str]:
     return [LEGACY_RUNTIME_PATH] if (target_root / LEGACY_RUNTIME_PATH).exists() else []
 
 
-def plan_install(source_root: Path, target_root: Path, surface: str) -> dict[str, object]:
+def plan_install(
+    source_root: Path,
+    target_root: Path,
+    surface: str,
+    action: str = "install",
+) -> dict[str, object]:
     if surface not in SURFACE_PATHS:
         raise ValueError(f"unknown surface: {surface}")
+    if action not in {"install", "upgrade"}:
+        raise ValueError(f"unknown action: {action}")
     files: list[str] = []
     conflicts: list[str] = []
-    for source, relative in _surface_files(source_root, surface):
+    for source, relative in _surface_files(source_root, surface, action):
         files.append(relative)
         target = target_root / relative
         expected = _target_bytes(source, relative)
@@ -85,11 +94,16 @@ def plan_install(source_root: Path, target_root: Path, surface: str) -> dict[str
     }
 
 
-def apply_install(source_root: Path, target_root: Path, surface: str) -> dict[str, object]:
-    plan = plan_install(source_root, target_root, surface)
+def apply_install(
+    source_root: Path,
+    target_root: Path,
+    surface: str,
+    action: str = "install",
+) -> dict[str, object]:
+    plan = plan_install(source_root, target_root, surface, action)
     if plan["conflicts"]:
         raise FileExistsError("Installation conflicts: " + ", ".join(plan["conflicts"]))
-    for source, relative in _surface_files(source_root, surface):
+    for source, relative in _surface_files(source_root, surface, action):
         destination = target_root / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(_target_bytes(source, relative))
@@ -111,10 +125,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     target_root = args.target.resolve()
-    plan = plan_install(REPO_ROOT, target_root, args.surface)
+    plan = plan_install(REPO_ROOT, target_root, args.surface, args.action)
     applied = False
     if args.apply and not plan["conflicts"]:
-        apply_install(REPO_ROOT, target_root, args.surface)
+        apply_install(REPO_ROOT, target_root, args.surface, args.action)
         applied = True
 
     payload = {

@@ -102,74 +102,11 @@
 
 ---
 
-## 完整範例
+## Templates
 
-### Module 頁面
-
-```yaml
----
-title: Authentication Module
-type: module
-sources:
-  - src/modules/auth/
-  - src/modules/auth/auth.service.ts
-  - src/modules/auth/auth.controller.ts
-last_updated: 2026-04-16
-tags: [auth, security, core]
-status: active
----
-```
-
-### ADR 頁面
-
-```yaml
----
-title: "ADR-001: 選用 JWT 作為 Session 管理方案"
-type: decision
-decision_date: 2026-03-15
-decision_status: accepted
-sources:
-  - src/modules/auth/jwt.strategy.ts
-  - src/config/auth.config.ts
-last_updated: 2026-04-16
-tags: [adr, auth, jwt]
-status: active
----
-```
-
-### Entity 頁面
-
-```yaml
----
-title: UserService
-type: entity
-entity_type: service
-parent_module: auth-module
-sources:
-  - src/modules/auth/user.service.ts
-last_updated: 2026-04-16
-tags: [auth, user, service]
-status: active
----
-```
-
-### Dependency 頁面
-
-```yaml
----
-title: Express.js
-type: dependency
-package_name: express
-version: "^4.18.2"
-registry: npm
-sources:
-  - package.json
-  - src/main.ts
-last_updated: 2026-04-16
-tags: [dependency, framework, http]
-status: active
----
-```
+Frontmatter examples live only in the exact assets selected by
+`page-types.md`. This file remains the schema source of truth; assets remain the
+page-shape source of truth.
 
 ---
 

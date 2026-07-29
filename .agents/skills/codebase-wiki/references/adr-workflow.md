@@ -19,20 +19,10 @@ decision rationale, or architectural choice.
 - Template: `assets/adr-template.md`.
 - Log operation: `adr`.
 
-## Required Frontmatter
+## Template
 
-```yaml
----
-title: "ADR-{NNN}: {decision title}"
-type: decision
-decision_date: YYYY-MM-DD
-decision_status: proposed | accepted | deprecated | superseded
-sources: []
-last_updated: YYYY-MM-DD
-tags: [adr]
-status: active
----
-```
+Use `assets/adr-template.md`. Field validity and decision-specific enums remain
+defined only in `frontmatter-spec.md`.
 
 ## Writing Rules
 
@@ -42,3 +32,10 @@ status: active
 - Use `sources: []` only when no source or wiki evidence directly supports the
   decision.
 - Update `wiki/index.md` and append `wiki/log.md`.
+
+## Completion Criterion
+
+The ADR is complete when its number is unique, required frontmatter validates,
+background/options/decision/rationale/consequences/risks are present, evidence
+and inference are separated, the index links it, and one append-only `adr` entry
+records it.

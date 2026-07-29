@@ -1,121 +1,37 @@
 # Copilot Instructions — Codebase LLM Wiki
 
-## 技術背景 (WHAT)
+Copilot 與 Codex 共用 `.agents/skills/codebase-wiki/`；它是 intent、
+workflow、schema、template 與 hook logic 的共同來源。
 
-本倉庫是一套 **Codebase LLM Wiki 框架**——讓 LLM 為任意 codebase 增量建構並維護結構化知識庫。
-Copilot 入口位於 `.github/`，與 Codex 共用 `.agents/skills/codebase-wiki/`，
-產品文件與驗證資產分別位於 `docs/`、`samples/`、`tests/`，Wiki 產出儲存於 `wiki/`。
+## 模型
 
-### 三層架構
+| Layer | Wiki task policy |
+| --- | --- |
+| Raw source code、config、既有文件、Git history | Read-only |
+| `wiki/` | 經授權的持久 Wiki 產出 |
+| Framework schema/docs/tests | 僅 framework maintenance |
 
-| 層 | 對應 | 職責 |
-|---|---|---|
-| Raw Sources | codebase 本身（原始碼、設定檔、既有文件） | 唯讀。LLM 讀取但**永不修改** |
-| Wiki | `wiki/` 目錄 | LLM 產生並維護的 markdown 知識庫 |
-| Schema | `.github/` 與共用 `.agents/skills/` | 驅動 LLM 行為的規則與工作流 |
+使用 `.agents/skills/codebase-wiki/SKILL.md` 路由，並在行動前完整載入
+`references/intent-routing.md` 選出的 workflow reference。
 
-Copilot 與 Codex 共用 `.agents/skills/codebase-wiki/`。Query 必須先讀取
-`wiki/index.md` 與 1–5 個相關 Markdown 頁面；只有 Wiki 不足、過時或矛盾
-時才回溯 frontmatter 列出的 raw sources。框架不建立本機搜尋資料庫，也不
-解析或複製完整原始碼到衍生索引。
+## 不變量
 
-### Framework Repo 結構
+- Wiki-first：index、相關頁面、最後才是 evidence gap 的 sources。
+- Evidence-first：標示 inference、speculation 與 gap。
+- `frontmatter.sources` 使用真實 repo-relative paths 或 `sources: []`。
+- Wiki links 使用 `[[page-name]]`；source paths 使用反引號。
+- 保留人工內容，`wiki/log.md` 維持 append-only。
+- page add/delete/rename/major update 同步 `wiki/index.md`。
+- Lint 先報告 findings，再確認 repairs。
+- Custom agents 是 explicit-delegation only；一般任務由目前 agent 完成。
 
-```text
-.agents/skills/codebase-wiki/  共用 Skill、規格、模板與 scripts
-.github/                       Copilot agents、prompts、hooks、instructions
-.codex/                        Codex hooks 與 optional agents
-docs/                          架構、安裝、工作流、驗證與歷史文件
-samples/task-tracker/          無第三方依賴的 E2E 樣例
-tests/                         Installer、contract、guard 與格式回歸
-wiki/                          持久知識庫、index 與 append-only log
-```
+## Copilot Adapter
 
-`docs/`、`samples/`、`tests/` 只屬於框架 Repo，不會由 installer 複製到目標專案。
+- Prompts：`.github/prompts/`
+- Explicit-delegation agents：`.github/agents/`
+- Hook configuration：`.github/hooks/`
+- Canonical hook logic：`.agents/skills/codebase-wiki/scripts/hooks/`
+- Page schema/template selection：`.agents/skills/codebase-wiki/references/`
 
-## Wiki 慣例 (HOW)
-
-### 意圖路由
-
-完整 9 類意圖以
-`.agents/skills/codebase-wiki/references/intent-routing.md` 為準：
-Install / setup、Ingest、Query、Lint、ADR、Synthesis / Guide、
-System Analysis / SA、Archaeology、Delegation。SQL Server live evidence 是
-Query 子模式，不是獨立意圖。
-
-### 命名與連結
-
-- 頁面檔名使用 **kebab-case**：`user-auth-service.md`、`database-migration-pattern.md`
-- 跨頁引用使用 **Wikilink 語法**：`[[page-name]]`（Obsidian 相容）
-- 提到其他 wiki 頁面時**必須**使用 wikilink，不使用相對路徑連結
-
-### 目錄結構
-
-```
-wiki/
-├── index.md          — 主索引（LLM 自動維護）
-├── log.md            — 時序活動紀錄（append-only）
-├── overview.md       — codebase 高階總覽
-├── architecture/     — 架構文件（系統架構、部署架構、資料流）
-├── modules/          — 按模組/目錄的文件頁面
-├── entities/         — 關鍵實體（類別、服務、API 端點）
-├── patterns/         — 使用到的設計模式
-├── decisions/        — Architecture Decision Records (ADR)
-├── dependencies/     — 相依性分析
-├── guides/           — Onboarding、除錯、貢獻指南
-└── synthesis/        — 綜合分析（技術債、風險區域、改善建議、SA 系統分析文件）
-```
-
-### Frontmatter 標準
-
-完整規格以 `.agents/skills/codebase-wiki/references/frontmatter-spec.md`
-為準。每個 wiki 頁面的 YAML frontmatter 至少必須包含：
-
-```yaml
----
-title: 頁面標題
-type: module | entity | pattern | decision | dependency | guide | synthesis | overview | architecture | index | log
-sources:
-  - path/to/source/file.ts
-  - path/to/another/file.py
-last_updated: YYYY-MM-DD
-tags: [tag1, tag2]
-status: active | stale | placeholder
----
-```
-
-`wiki/index.md` 與 `wiki/log.md` 也必須包含上述欄位；若沒有直接 raw source，使用 `sources: []`。
-ADR、Dependency、Index、Log 的類型專屬欄位與 allowed values 以
-`frontmatter-spec.md` 為準。
-
-### 品質標準
-
-- 每頁必須在 `sources` 中標註引用的原始碼檔案路徑
-- 每頁至少要有一個 inbound 或 outbound `[[wikilink]]`
-- `status` 欄位必須反映頁面當前狀態
-- 事實陳述必須可追溯到 sources 中列出的檔案
-
-### Log 格式
-
-`log.md` 為 append-only，每筆條目格式：
-
-```markdown
-## [YYYY-MM-DD] {operation} | {subject}
-
-- 簡要描述變更內容
-- 列出受影響的頁面
-```
-
-operation 以 `.agents/skills/codebase-wiki/references/log-operations.md`
-為準：`ingest|query|lint|update|init|adr|synthesis|guide|archaeology`。
-
-## 禁止事項
-
-禁止事項以 `.agents/skills/codebase-wiki/SKILL.md` 的 **Core Rules** 為
-準；本段是摘要。
-
-- **不得修改 raw sources**：wiki agents 只能讀取 codebase 原始碼，不得以任何方式修改
-- **不得刪除 log 條目**：`log.md` 為 append-only，只能追加，不得修改或刪除既有條目
-- **不得偽造 sources**：`frontmatter.sources` 必須指向真實存在的檔案路徑
-- **不得跳過 index 更新**：任何新增或刪除 wiki 頁面後，必須同步更新 `wiki/index.md`
-- **不得跳過 log 記錄**：任何 ingest / lint / 重大更新操作後，必須在 `wiki/log.md` 追加條目
+只有 workflow completion criterion、deterministic checks、index coupling 與
+append-only log coupling 全部完成後，才回報 durable task 完成。

@@ -1,5 +1,5 @@
 name = "wiki-ingest"
-description = "Codebase Wiki ingestion specialist. Use only when explicitly delegating module, directory, or batch ingestion into wiki pages."
+description = "Explicit delegation only. Ingest modules or directories into evidence-backed Wiki pages."
 
 developer_instructions = '''
 You are the Codebase Wiki ingestion specialist.

@@ -142,3 +142,11 @@ Lint 操作對 wiki 進行全面健康檢查，找出品質問題並提供修復
 
 1. ...
 ```
+
+## Completion Criterion
+
+Lint is complete when all eight checks have a Critical, Warning, Info, OK, or
+`agent_review_required` result. Deterministic checks cover frontmatter, sources,
+wikilinks, orphans, index completeness, and statistics. Missing-module coverage
+and semantic contradictions remain explicit agent-review items when they cannot
+be proven deterministically. Repairs begin only after confirmation.

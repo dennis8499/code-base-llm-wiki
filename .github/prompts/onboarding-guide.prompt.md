@@ -30,6 +30,8 @@ argument-hint: "可選：補充目標讀者，例如前端新人或維運工程�
 7. 更新 `wiki/index.md`（在 Guides section 新增條目）
 8. 追加 `wiki/log.md` 條目：`## [YYYY-MM-DD] guide | onboarding`
 
+頁面從 `.agents/skills/codebase-wiki/assets/guide-template.md` 開始。
+
 ## 品質要求
 
 - 以新人視角撰寫，避免假設讀者已了解專案背景

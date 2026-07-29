@@ -13,28 +13,14 @@ argument-hint: "可選：補充只報告問題，或報告後協助修復"
 
 對整個 `wiki/` 目錄執行全面健康檢查。
 
-## 檢查項目
+依 `.agents/skills/codebase-wiki/references/lint-checklist.md` 執行八類檢查，
+並先執行：
 
-依照 `.agents/skills/codebase-wiki/references/lint-checklist.md` 執行 8 項檢查：
+```powershell
+python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki/
+```
 
-1. **Stale Pages** — sources 路徑是否仍存在
-2. **Orphan Pages** — 是否有頁面無 inbound link
-3. **Broken Links** — `[[wikilink]]` 目標是否存在
-4. **Missing Pages** — 重要模組是否遺漏
-5. **Frontmatter Validation** — 欄位完整性
-6. **Contradictions** — 多頁描述同一實體時是否一致
-7. **Index Completeness** — index.md 與實際檔案是否同步
-8. **Coverage Report** — wiki 覆蓋率統計
-
-## 自動化工具
-
-可搭配執行：
-
-- `python .agents/skills/codebase-wiki/scripts/check-stale.py wiki/`
-- `python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki/`
-
-## 輸出
-
-產出標準健康報告後，列出建議的修復動作。
+產出報告時保留 deterministic 結果，並將 missing-module coverage 與
+contradictions 標為 `agent_review_required`。
 經使用者確認後可自動修復簡單問題（標記 stale、修正 link、更新 index）。
-完成後追加 `wiki/log.md` 條目。
+完成修復後同步 index 並只追加一筆 lint log。

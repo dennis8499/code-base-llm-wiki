@@ -71,6 +71,11 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
 
         title = fm.get("title", fp.stem)
         rel_path = fp.relative_to(wiki_dir)
+        try:
+            repo_page_path = fp.resolve().relative_to(repo_root.resolve()).as_posix()
+        except ValueError:
+            repo_page_path = ""
+        page_is_dirty = repo_page_path in dirty_paths
         missing = []
         existing = []
         stale = []
@@ -108,7 +113,10 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
                     missing.append(src)
                     continue
             normalized = src.rstrip("/").replace("\\", "/")
-            dirty = normalized in dirty_paths or any(item.startswith(normalized + "/") for item in dirty_paths)
+            dirty = not page_is_dirty and (
+                normalized in dirty_paths
+                or any(item.startswith(normalized + "/") for item in dirty_paths)
+            )
             changed_after_page = bool(page_date and (latest := latest_source_date(repo_root, normalized)) and latest > page_date)
             if dirty or changed_after_page:
                 stale.append(src)
@@ -151,11 +159,16 @@ def main():
     print("=" * 60)
 
     if results["critical"]:
-        print(f"\n🔴 CRITICAL — All sources missing ({len(results['critical'])} pages):\n")
+        print(f"\n🔴 CRITICAL — Invalid or missing sources ({len(results['critical'])} pages):\n")
         for item in results["critical"]:
             print(f"  {item['page']} ({item['title']})")
-            for src in item["all_missing"]:
-                print(f"    ✗ {src}")
+            if "invalid_sources" in item:
+                invalid = item["invalid_sources"]
+                values = invalid if isinstance(invalid, list) else [invalid]
+                for src in values:
+                    print(f"    invalid: {src}")
+            for src in item.get("all_missing", []):
+                print(f"    missing: {src}")
 
     if results["warning"]:
         print(f"\n🟡 WARNING — Some sources missing or stale ({len(results['warning'])} pages):\n")

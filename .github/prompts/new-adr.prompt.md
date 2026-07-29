@@ -26,17 +26,5 @@ argument-hint: "決策標題，例如：採用 Obsidian wikilink 作為內部連
 5. 更新 `wiki/index.md`（在 Decisions section 新增條目）
 6. 追加 `wiki/log.md` 條目
 
-## Frontmatter
-
-```yaml
----
-title: "ADR-{NNN}: {決策標題}"
-type: decision
-decision_date: { today }
-decision_status: proposed
-sources: []
-last_updated: { today }
-tags: [adr]
-status: active
----
-```
+Frontmatter 直接沿用 `assets/adr-template.md`，allowed values 以
+`references/frontmatter-spec.md` 為準。

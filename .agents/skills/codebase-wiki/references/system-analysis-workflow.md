@@ -73,23 +73,18 @@ Mark each row as:
 
 1. Choose the output path.
 2. Write or update the SA document under `wiki/synthesis/`.
-3. Include frontmatter:
-
-```yaml
----
-title: System Analysis Document
-type: synthesis
-sources:
-  - wiki/overview.md
-last_updated: YYYY-MM-DD
-tags: [synthesis, system-analysis]
-status: active
----
-```
-
+3. Start from `assets/system-analysis-template.md`.
 4. Replace `sources` with real repo-relative wiki/source paths used by the
    document. Use `sources: []` only if no reliable source file or wiki page is
    available.
 5. Update `wiki/index.md`.
 6. Append `wiki/log.md` with operation `synthesis`.
 7. Report coverage gaps and verification commands.
+
+## Completion Criterion
+
+The SA document is complete when every coverage-map row and every standard
+section is marked `covered`, `partial`, or `gap`; evidence and inference are
+separated; frontmatter and links validate; the index links the document; one
+append-only `synthesis` entry records it; and all follow-up ingest targets are
+concrete repo paths or Wiki pages.

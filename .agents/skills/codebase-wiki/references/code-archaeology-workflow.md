@@ -27,3 +27,11 @@ code path.
 - If persisted, write to an appropriate existing page or
   `wiki/synthesis/{topic}.md`, update `wiki/index.md`, and append
   `wiki/log.md` with operation `archaeology`.
+
+## Completion Criterion
+
+Archaeology is complete when the current call path is explained before its
+history, every historical claim cites a Git command result, inference and
+uncertainty are labeled, and the working tree remains unchanged unless
+persistence was explicit. Persisted output also requires valid frontmatter,
+index coupling, and one append-only `archaeology` entry.

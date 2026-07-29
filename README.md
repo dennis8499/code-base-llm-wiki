@@ -73,10 +73,10 @@ flowchart LR
 | 共用流程 | `.agents/skills/codebase-wiki/` | `.agents/skills/codebase-wiki/` |
 | 專業代理 | `.github/agents/*.agent.md` | `.codex/agents/*.toml` |
 | 使用者入口 | `.github/prompts/*.prompt.md` | `Codex.md` 自然語言 recipes |
-| Hooks | `.github/hooks/` | `.codex/hooks.json`、`.codex/hooks/scripts/` |
+| Hooks | `.github/hooks/` | `.codex/hooks.json` |
 | 輸出 | `wiki/` | `wiki/` |
 
-兩個入口維持相同的九類意圖與安全邊界，但使用各平台原生能力。日常任務由目前 Agent 處理；只有使用者明確要求 subagents、parallel 或 delegation 時才使用自訂代理。
+兩個入口維持九個使用者意圖群組、十個 machine operations 與相同安全邊界。日常任務由目前 Agent 處理；只有使用者明確要求 subagents、parallel 或 delegation 時才使用自訂代理。
 
 ### Wiki 工作流
 
@@ -104,7 +104,8 @@ flowchart LR
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
 - **安全邊界**：target mode 只允許 Wiki 寫入；framework mode 才允許維護框架檔案。
 - **零第三方依賴 installer**：Python 標準函式庫即可 dry-run、安裝與升級。
-- **可驗證**：提供 parity、frontmatter、stale-source、統計與單元測試。
+- **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
+- **可驗證**：提供 parity、唯讀 Wiki lint、frontmatter、stale-source、統計與單元測試。
 
 ---
 
@@ -133,6 +134,9 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py install --targe
 ```
 
 安裝器遇到既有且內容不同的檔案會回報 `conflicts` 並停止，不會覆寫。完整安裝、升級與排錯說明請看 [安裝手冊](docs/setup/README.md)。
+
+Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的其他 Skills
+不會外帶。`upgrade` 只同步 framework surface，既有 `wiki/` 保持不變。
 
 ---
 

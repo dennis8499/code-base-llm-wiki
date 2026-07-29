@@ -34,3 +34,10 @@ contribution, or runbook-style guidance.
 When the user specifically asks for newcomer onboarding, keep using the
 specialized onboarding workflow and prompt. Use the general guide workflow for
 all other durable guide topics.
+
+## Completion Criterion
+
+The guide is complete when its audience, prerequisites, actionable steps,
+pitfalls, gaps, and related pages are present; commands and runtime claims are
+evidence-backed; frontmatter validates; the index links it; and one append-only
+`guide` entry records it.

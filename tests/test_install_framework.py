@@ -183,6 +183,53 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue(legacy.exists())
             self.assertEqual(legacy.read_text(encoding="utf-8"), "keep me\n")
 
+    def test_installer_excludes_unrelated_local_skills(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            target = root / "target"
+            (source / ".agents/skills/codebase-wiki").mkdir(parents=True)
+            (source / ".agents/skills/unrelated").mkdir(parents=True)
+            (source / ".codex").mkdir()
+            target.mkdir()
+            (source / "AGENTS.md").write_text("rules\n", encoding="utf-8")
+            (source / "Codex.md").write_text("guide\n", encoding="utf-8")
+            (source / ".agents/skills/codebase-wiki/SKILL.md").write_text(
+                "shared\n", encoding="utf-8"
+            )
+            (source / ".agents/skills/unrelated/SKILL.md").write_text(
+                "private\n", encoding="utf-8"
+            )
+            (source / ".codex/config.toml").write_text(
+                '[wiki_guard]\nmode = "framework"\n', encoding="utf-8"
+            )
+
+            plan = installer.plan_install(source, target, "codex")
+
+            self.assertIn(".agents/skills/codebase-wiki/SKILL.md", plan["files"])
+            self.assertNotIn(".agents/skills/unrelated/SKILL.md", plan["files"])
+
+    def test_upgrade_preserves_modified_target_wiki(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+            installer.apply_install(REPO_ROOT, target, "codex", "install")
+            index_path = target / "wiki/index.md"
+            index_path.write_text(
+                index_path.read_text(encoding="utf-8") + "\nlocal knowledge\n",
+                encoding="utf-8",
+            )
+            before = index_path.read_bytes()
+
+            plan = installer.plan_install(REPO_ROOT, target, "codex", "upgrade")
+            installer.apply_install(REPO_ROOT, target, "codex", "upgrade")
+
+            self.assertFalse(any(path.startswith("wiki/") for path in plan["files"]))
+            self.assertEqual(plan["conflicts"], [])
+            self.assertEqual(index_path.read_bytes(), before)
+
     def test_script_resolves_framework_root_outside_repo_working_directory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

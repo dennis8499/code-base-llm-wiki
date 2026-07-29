@@ -28,3 +28,10 @@ technical debt, risk review, architecture summary, or query findings under
 - Keep DB live evidence in a page body evidence block, never in
   `frontmatter.sources`.
 - Update `wiki/index.md` and append `wiki/log.md`.
+
+## Completion Criterion
+
+Synthesis is complete when every finding is tied to Wiki/source evidence or
+labeled inference, gaps remain visible, frontmatter validates, related pages
+resolve, the index links the output, and one append-only `synthesis` entry
+records it.

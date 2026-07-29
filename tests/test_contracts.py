@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -20,9 +21,85 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(manifest["surfaces"], ["copilot", "codex"])
         self.assertIn("query", manifest["intents"])
         self.assertFalse(manifest["intents"]["query"]["writes_by_default"])
+        self.assertEqual(manifest["intents"]["query"]["authorization_policy"], "read_only")
+        self.assertEqual(manifest["intents"]["delegation"]["authorization_policy"], "explicit_delegation")
+        self.assertEqual(len(manifest["intents"]), 10)
+        self.assertEqual(len(manifest["intent_groups"]), 9)
+        grouped = [
+            operation
+            for operations in manifest["intent_groups"].values()
+            for operation in operations
+        ]
+        self.assertEqual(len(grouped), len(set(grouped)))
+        self.assertEqual(set(grouped), set(manifest["intents"]))
+        for operation in ("adr", "guide", "synthesis", "system_analysis"):
+            self.assertTrue(manifest["intents"][operation]["writes_by_default"])
+            self.assertFalse(manifest["intents"][operation]["requires_confirmation"])
+            self.assertEqual(
+                manifest["intents"][operation]["authorization_policy"],
+                "explicit_request",
+            )
+        self.assertFalse(manifest["intents"]["delegation"]["requires_confirmation"])
         self.assertEqual(set(manifest["cli"]), {"install", "upgrade"})
         self.assertIn("install-framework.py install", manifest["cli"]["install"])
         self.assertIn("install-framework.py upgrade", manifest["cli"]["upgrade"])
+
+    def test_high_frequency_instruction_budgets(self) -> None:
+        budgets = {
+            "AGENTS.md": 100,
+            ".agents/skills/codebase-wiki/SKILL.md": 140,
+            ".github/copilot-instructions.md": 80,
+            ".github/instructions/wiki-pages.instructions.md": 60,
+        }
+        for relative, maximum in budgets.items():
+            with self.subTest(relative=relative):
+                lines = (REPO_ROOT / relative).read_text(encoding="utf-8").splitlines()
+                self.assertLessEqual(len(lines), maximum)
+
+    def test_workflows_and_templates_have_single_authoritative_resources(self) -> None:
+        reference_root = (
+            REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "references"
+        )
+        for filename in (
+            "ingest-workflow.md",
+            "query-workflow.md",
+            "lint-checklist.md",
+            "adr-workflow.md",
+            "guide-workflow.md",
+            "synthesis-workflow.md",
+            "system-analysis-workflow.md",
+            "code-archaeology-workflow.md",
+        ):
+            with self.subTest(workflow=filename):
+                text = (reference_root / filename).read_text(encoding="utf-8")
+                self.assertRegex(text, r"Completion Criterion|完成條件")
+
+        catalog = (reference_root / "page-types.md").read_text(encoding="utf-8")
+        assets = re.findall(r"`assets/([a-z-]+-template\.md)`", catalog)
+        self.assertEqual(len(assets), len(set(assets)))
+        for filename in assets:
+            with self.subTest(asset=filename):
+                self.assertTrue(
+                    (
+                        REPO_ROOT
+                        / ".agents"
+                        / "skills"
+                        / "codebase-wiki"
+                        / "assets"
+                        / filename
+                    ).is_file()
+                )
+
+    def test_agents_are_explicit_delegation_only_and_compact(self) -> None:
+        for directory, pattern in (
+            (REPO_ROOT / ".codex" / "agents", "*.toml"),
+            (REPO_ROOT / ".github" / "agents", "*.agent.md"),
+        ):
+            for path in directory.glob(pattern):
+                with self.subTest(agent=path.name):
+                    text = path.read_text(encoding="utf-8")
+                    self.assertIn("Explicit delegation only.", text)
+                    self.assertLessEqual(len(text.splitlines()), 40)
 
 
 if __name__ == "__main__":

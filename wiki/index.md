@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-07-22
+last_updated: 2026-07-29
 tags: [index]
 status: active
 ---
@@ -23,7 +23,7 @@ status: active
 
 | 頁面 | 摘要 |
 |------|------|
-| [[overview]] | Codebase LLM Wiki 框架總覽：三層模型、產品化 Repo 結構、雙入口與安全邊界 |
+| [[overview]] | 框架總覽：Wiki-first 三層模型、authorization contract、canonical hooks 與安全邊界 |
 
 ## Architecture
 
@@ -53,7 +53,7 @@ _（尚無頁面。執行 Ingest 後將自動產生。）_
 
 | 頁面 | 摘要 |
 |------|------|
-| [[framework-introduction]] | 框架使用指南：安裝、Ingest、Wiki-first Query、驗證、E2E 樣例與常見陷阱 |
+| [[framework-introduction]] | 使用指南：安全 install/upgrade、工作流 authorization、唯讀 lint 與重複 E2E 驗收 |
 
 ## Synthesis
 

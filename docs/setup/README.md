@@ -12,6 +12,8 @@
 Installer 不需要 PyYAML、Node.js、資料庫、向量模型或其他第三方套件。
 
 目標專案的 `wiki/` 由共用 Skill 內的乾淨 starter 建立；框架 Repo 自己的 Wiki pages 與活動歷史不會被複製。
+Installer allowlist 只包含 `.agents/skills/codebase-wiki/`，不會複製同一
+工作目錄中的其他個人或 workspace Skills。
 
 ## Dry-run 優先
 
@@ -72,6 +74,8 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 
 - 目標檔案不存在或內容完全相同時可安全規劃。
 - 內容不同時列入 `conflicts`，整次 apply 不會執行。
+- `upgrade` 只規劃 framework surface，既有 `wiki/` 不參與 conflict
+  判斷且保持 byte-for-byte 不變。
 - Installer 不做三方 merge，也沒有 `--force`。
 - `.codebase-wiki/` 只會出現在 `obsolete_paths`；確認沒有人工內容後由維護者另行處理。
 
@@ -123,6 +127,7 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 ```powershell
 python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
+python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 ```
 

@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$(git rev-parse --show-toplevel)/.codex/hooks/scripts/wiki-session-init.py\"",
-            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.codex\\hooks\\scripts\\wiki-session-init.py\"",
+            "command": "python \"$(git rev-parse --show-toplevel)/.agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py\" --platform codex",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-session-init.py\" --platform codex",
             "timeout": 10,
             "statusMessage": "Loading wiki state"
           }
@@ -20,8 +20,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$(git rev-parse --show-toplevel)/.codex/hooks/scripts/wiki-write-guard.py\"",
-            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.codex\\hooks\\scripts\\wiki-write-guard.py\"",
+            "command": "python \"$(git rev-parse --show-toplevel)/.agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py\" --platform codex",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-write-guard.py\" --platform codex",
             "timeout": 10,
             "statusMessage": "Checking wiki write boundary"
           }
@@ -34,8 +34,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$(git rev-parse --show-toplevel)/.codex/hooks/scripts/wiki-log-reminder.py\"",
-            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.codex\\hooks\\scripts\\wiki-log-reminder.py\"",
+            "command": "python \"$(git rev-parse --show-toplevel)/.agents/skills/codebase-wiki/scripts/hooks/wiki-log-reminder.py\" --platform codex",
+            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-log-reminder.py\" --platform codex",
             "timeout": 10,
             "statusMessage": "Checking wiki log reminder"
           }

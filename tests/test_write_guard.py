@@ -2,16 +2,19 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import sys
 import unittest
 
 
 REPO_ROOT = Path(__file__).parents[1]
-CODEX_GUARD = REPO_ROOT / ".codex" / "hooks" / "scripts" / "wiki-write-guard.py"
-COPILOT_GUARD = REPO_ROOT / ".github" / "hooks" / "scripts" / "wiki-write-guard.py"
+HOOKS = REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "scripts" / "hooks"
+CANONICAL_GUARD = HOOKS / "wiki-write-guard.py"
+SESSION_HOOK = HOOKS / "wiki-session-init.py"
+sys.path.insert(0, str(HOOKS))
 
 
 def load_guard():
-    spec = importlib.util.spec_from_file_location("wiki_write_guard_under_test", CODEX_GUARD)
+    spec = importlib.util.spec_from_file_location("wiki_write_guard_under_test", CANONICAL_GUARD)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -19,8 +22,25 @@ def load_guard():
 
 
 class WriteGuardTests(unittest.TestCase):
-    def test_copilot_and_codex_guard_scripts_are_mirrored(self) -> None:
-        self.assertEqual(CODEX_GUARD.read_bytes(), COPILOT_GUARD.read_bytes())
+    def test_platform_configs_use_canonical_hooks(self) -> None:
+        codex = (REPO_ROOT / ".codex/hooks.json").read_text(encoding="utf-8")
+        self.assertIn(".agents/skills/codebase-wiki/scripts/hooks/", codex.replace("\\", "/"))
+        self.assertIn("--platform codex", codex)
+        for path in (REPO_ROOT / ".github/hooks").glob("*.json"):
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(".agents/skills/codebase-wiki/scripts/hooks/", text)
+            self.assertIn("--platform copilot", text)
+
+    def test_session_context_stays_within_budget(self) -> None:
+        spec = importlib.util.spec_from_file_location("wiki_session_under_test", SESSION_HOOK)
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        message = module.build_message(REPO_ROOT)
+        self.assertLessEqual(len(message.encode("utf-8")), 4 * 1024)
+        self.assertLessEqual(len(message.splitlines()), 30)
+        oversized = module.bounded_message(["中" * 5_000])
+        self.assertLessEqual(len(oversized.encode("utf-8")), 4 * 1024)
 
     def test_framework_mode_allows_product_and_schema_paths(self) -> None:
         guard = load_guard()
@@ -59,4 +79,3 @@ class WriteGuardTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

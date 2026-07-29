@@ -1,8 +1,8 @@
 # Intent Routing
 
-Use this table as the source of truth for Codebase LLM Wiki request routing.
-Top-level instructions and agents may summarize it, but should not maintain a
-separate intent taxonomy.
+Use this table as the source of truth for the nine user-facing intent groups.
+`capabilities.json` maps them to ten machine operations because Guide and
+Synthesis have distinct output contracts.
 
 | Intent | User signals | Default action |
 | --- | --- | --- |
@@ -23,3 +23,8 @@ separate intent taxonomy.
 - Onboarding guides are a specialized guide workflow; keep them distinct from
   general `save-guide` prompts when the user specifically asks for newcomer
   onboarding.
+- Explicit creation requests authorize ADR, Guide, Synthesis, and SA output.
+- Interactive Ingest previews before confirmation; explicit Batch Ingest
+  authorizes scoped Wiki writes.
+- Lint reports before repairs, Query is read-only, and Delegation requires an
+  explicit delegation request.

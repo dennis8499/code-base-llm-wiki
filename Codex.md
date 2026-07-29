@@ -34,7 +34,7 @@ manually.
 
 1. Codex reads `AGENTS.md` before work starts.
 2. Wiki requests can trigger `$codebase-wiki` implicitly, or you can invoke it explicitly.
-3. The skill loads detailed references and scripts only when needed.
+3. The skill loads one branch reference and exact page asset only when needed.
 4. Most work should stay in the main agent.
 5. `.codex/agents/*.toml` are for explicit delegation, subagents, or parallel work.
 6. `.codex/hooks.json` runs after the project `.codex/` layer is trusted.
@@ -133,9 +133,13 @@ max_depth = 1
 
 | Event          | Script                                      | Purpose                                                                          |
 | -------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
-| `SessionStart` | `.codex/hooks/scripts/wiki-session-init.py` | Adds bounded wiki state context                                                  |
-| `PreToolUse`   | `.codex/hooks/scripts/wiki-write-guard.py`  | Blocks unexpected writes outside the configured `target` or `framework` boundary |
-| `PostToolUse`  | `.codex/hooks/scripts/wiki-log-reminder.py` | Reminds Codex to append `wiki/log.md` after wiki page edits                      |
+| `SessionStart` | shared `wiki-session-init.py` | Adds a ≤30-line / ≤4 KB Wiki state summary |
+| `PreToolUse`   | shared `wiki-write-guard.py` | Enforces the configured `target` or `framework` boundary |
+| `PostToolUse`  | shared `wiki-log-reminder.py` | Reminds Codex to append `wiki/log.md` after durable edits |
+
+All three implementations live under
+`.agents/skills/codebase-wiki/scripts/hooks/`; `.codex/hooks.json` supplies
+`--platform codex`.
 
 Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
@@ -168,11 +172,13 @@ Test-Path .codex\config.toml
 Test-Path .codex\hooks.json
 Test-Path .agents\skills\codebase-wiki\SKILL.md
 Test-Path .agents\skills\codebase-wiki\scripts\install-framework.py
-python -m py_compile .codex\hooks\scripts\wiki-session-init.py .codex\hooks\scripts\wiki-write-guard.py .codex\hooks\scripts\wiki-log-reminder.py
+python -m py_compile .agents\skills\codebase-wiki\scripts\hooks\common.py .agents\skills\codebase-wiki\scripts\hooks\wiki-session-init.py .agents\skills\codebase-wiki\scripts\hooks\wiki-write-guard.py .agents\skills\codebase-wiki\scripts\hooks\wiki-log-reminder.py
 python -m py_compile .agents\skills\codebase-wiki\scripts\install-framework.py .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\validate-frontmatter.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
+python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
+python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 python .agents\skills\codebase-wiki\scripts\parity-check.py
 ```
 

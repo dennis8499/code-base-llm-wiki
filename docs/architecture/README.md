@@ -28,11 +28,11 @@ flowchart TB
 
 ## 雙入口與共用契約
 
-`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 2、支援 surface 與 intent 寫入語意。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
+`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 2、九個使用者意圖群組、十個 machine operations 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
 
 - intent routing、frontmatter、log operations 與工作流 references；
 - Wiki page templates；
-- installer、parity、frontmatter、stale-source 與統計 scripts；
+- installer、parity、frontmatter、stale-source、唯讀 lint 與統計 scripts；
 - Raw Sources 唯讀、Wiki-first、append-only log 與 evidence-backed 的核心規則。
 
 平台 adapter 不需要逐 byte 相同；`parity-check.py` 驗證兩邊仍公開相同能力且沒有指向已移除的舊路徑。
@@ -57,7 +57,8 @@ flowchart TB
 
 ## Hooks 與安全邊界
 
-兩個平台各自配置相同目的的三個 hook：
+兩個平台各自配置相同目的的三個 hook，但共用
+`.agents/skills/codebase-wiki/scripts/hooks/` 的 canonical implementation：
 
 | Hook | 時機 | 作用 |
 | --- | --- | --- |
@@ -77,7 +78,9 @@ Hooks 是 deterministic guardrail，不取代平台 sandbox，也不授權 Agent
 2. 指定 `--apply` 且沒有 conflicts 時才寫入；
 3. `--surface copilot|codex` 決定平台入口；
 4. framework config 在安裝到目標 Repo 時轉成 `target` mode；
-5. 舊 `.codebase-wiki/` 只透過 `obsolete_paths` 回報，不自動刪除。
+5. `install` 建立乾淨 Wiki starter；`upgrade` 永遠保留既有 `wiki/`；
+6. 只安裝 `codebase-wiki` Skill，不外帶同層其他 Skills；
+7. 舊 `.codebase-wiki/` 只透過 `obsolete_paths` 回報，不自動刪除。
 
 框架 Repo 根目錄的 `wiki/` 是框架自己的持久知識，不會複製到目標專案；目標 Wiki 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 的乾淨骨架建立。`docs/`、`samples/` 與 `tests/` 同樣不屬於 installer surface。
 

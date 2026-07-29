@@ -2,16 +2,84 @@
   "contract_version": 2,
   "surfaces": ["copilot", "codex"],
   "intents": {
-    "install": {"writes_by_default": false, "requires_confirmation": true},
-    "ingest": {"writes_by_default": false, "requires_confirmation": true},
-    "query": {"writes_by_default": false, "requires_confirmation": false},
-    "lint": {"writes_by_default": false, "requires_confirmation": true},
-    "archaeology": {"writes_by_default": false, "requires_confirmation": true},
-    "adr": {"writes_by_default": true, "requires_confirmation": true},
-    "guide": {"writes_by_default": true, "requires_confirmation": true},
-    "synthesis": {"writes_by_default": true, "requires_confirmation": true},
-    "system_analysis": {"writes_by_default": true, "requires_confirmation": true},
-    "delegation": {"writes_by_default": false, "requires_confirmation": true}
+    "install": {
+      "writes_by_default": false,
+      "requires_confirmation": true,
+      "authorization_policy": "apply_flag"
+    },
+    "ingest": {
+      "writes_by_default": false,
+      "requires_confirmation": true,
+      "authorization_policy": "interactive_preview_or_explicit_batch"
+    },
+    "query": {
+      "writes_by_default": false,
+      "requires_confirmation": false,
+      "authorization_policy": "read_only"
+    },
+    "lint": {
+      "writes_by_default": false,
+      "requires_confirmation": true,
+      "authorization_policy": "confirm_repairs"
+    },
+    "archaeology": {
+      "writes_by_default": false,
+      "requires_confirmation": true,
+      "authorization_policy": "explicit_persist"
+    },
+    "adr": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
+    },
+    "guide": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
+    },
+    "synthesis": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
+    },
+    "system_analysis": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
+    },
+    "delegation": {
+      "writes_by_default": false,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_delegation"
+    }
+  },
+  "intent_groups": {
+    "install_setup": ["install"],
+    "ingest": ["ingest"],
+    "query": ["query"],
+    "lint": ["lint"],
+    "adr": ["adr"],
+    "synthesis_guide": ["synthesis", "guide"],
+    "system_analysis": ["system_analysis"],
+    "archaeology": ["archaeology"],
+    "delegation": ["delegation"]
+  },
+  "entrypoints": {
+    "copilot": {
+      "install": [],
+      "ingest": ["ingest-module.prompt.md", "ingest-batch.prompt.md"],
+      "query": ["query-wiki.prompt.md"],
+      "lint": ["lint-wiki.prompt.md"],
+      "archaeology": ["code-archaeology.prompt.md"],
+      "adr": ["new-adr.prompt.md"],
+      "guide": ["save-guide.prompt.md", "onboarding-guide.prompt.md"],
+      "synthesis": ["save-synthesis.prompt.md"],
+      "system_analysis": ["system-analysis-doc.prompt.md"],
+      "delegation": []
+    },
+    "codex": {
+      "recipe_document": "Codex.md"
+    }
   },
   "cli": {
     "install": "python .agents/skills/codebase-wiki/scripts/install-framework.py install --target TARGET --surface SURFACE",

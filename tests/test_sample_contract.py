@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -118,6 +119,58 @@ class SampleContractTests(unittest.TestCase):
                         )
                     self.assertIn('mode = "target"', config)
                     self.assertNotIn('mode = "framework"', config)
+
+                    platform = "codex" if surface == "codex" else "copilot"
+                    hook = (
+                        target
+                        / ".agents"
+                        / "skills"
+                        / "codebase-wiki"
+                        / "scripts"
+                        / "hooks"
+                        / "wiki-session-init.py"
+                    )
+                    hook_result = subprocess.run(
+                        [sys.executable, str(hook), "--platform", platform],
+                        cwd=target,
+                        input="{}",
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                    )
+                    self.assertEqual(
+                        hook_result.returncode,
+                        0,
+                        hook_result.stdout + hook_result.stderr,
+                    )
+                    context = json.loads(hook_result.stdout)["additionalContext"]
+                    self.assertLessEqual(len(context.encode("utf-8")), 4 * 1024)
+                    self.assertLessEqual(len(context.splitlines()), 30)
+                    for hook_name in ("wiki-write-guard.py", "wiki-log-reminder.py"):
+                        executable_hook = hook.with_name(hook_name)
+                        executable_result = subprocess.run(
+                            [
+                                sys.executable,
+                                str(executable_hook),
+                                "--platform",
+                                platform,
+                            ],
+                            cwd=target,
+                            input=json.dumps({"tool_name": "read", "tool_input": {}}),
+                            check=False,
+                            capture_output=True,
+                            text=True,
+                            encoding="utf-8",
+                            errors="replace",
+                        )
+                        self.assertEqual(
+                            executable_result.returncode,
+                            0,
+                            executable_result.stdout + executable_result.stderr,
+                        )
+                        self.assertEqual(json.loads(executable_result.stdout), {})
 
 
 if __name__ == "__main__":

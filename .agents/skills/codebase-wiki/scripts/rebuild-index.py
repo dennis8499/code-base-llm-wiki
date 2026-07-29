@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""rebuild-index.py — 掃描 wiki/ 目錄，重建 index.md。
+"""rebuild-index.py — 掃描 wiki/ 目錄，重建或唯讀檢查 index.md。
 
 用法：
     python .agents/skills/codebase-wiki/scripts/rebuild-index.py [wiki_dir]
+    python .agents/skills/codebase-wiki/scripts/rebuild-index.py [wiki_dir] --check
 
 預設 wiki_dir 為當前目錄下的 wiki/。
 """
 
+import argparse
+from collections import defaultdict
 import pathlib
 import re
 import sys
@@ -49,6 +52,60 @@ TYPE_SECTIONS = {
 }
 
 SKIP_FILES = {"index.md", "log.md"}
+
+
+def expected_index_entries(wiki_dir: pathlib.Path) -> dict[str, str]:
+    expected: dict[str, str] = {}
+    for path in sorted(wiki_dir.rglob("*.md")):
+        if path.name in SKIP_FILES:
+            continue
+        section = TYPE_SECTIONS.get(str(parse_frontmatter(path).get("type", "")))
+        if section:
+            expected[path.stem] = section
+    return expected
+
+
+def actual_index_entries(text: str) -> dict[str, list[str]]:
+    visible = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+    visible = re.sub(r"`[^`\n]*`", "", visible)
+    entries: dict[str, list[str]] = defaultdict(list)
+    section = ""
+    valid_sections = set(TYPE_SECTIONS.values())
+    for line in visible.splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+            continue
+        if section not in valid_sections:
+            continue
+        for raw in re.findall(r"\[\[([^\]]+)\]\]", line):
+            target = raw.split("|", 1)[0].split("#", 1)[0].strip().replace("\\", "/")
+            if target:
+                entries[pathlib.PurePosixPath(target).stem].append(section)
+    return dict(entries)
+
+
+def check_index(wiki_dir: pathlib.Path) -> dict[str, object]:
+    expected = expected_index_entries(wiki_dir)
+    index_path = wiki_dir / "index.md"
+    actual = (
+        actual_index_entries(index_path.read_text(encoding="utf-8"))
+        if index_path.is_file()
+        else {}
+    )
+    wrong_section = {
+        target: {"expected": expected[target], "actual": sections}
+        for target, sections in actual.items()
+        if target in expected and any(section != expected[target] for section in sections)
+    }
+    duplicates = {
+        target: sections for target, sections in actual.items() if len(sections) > 1
+    }
+    return {
+        "missing": set(expected) - set(actual),
+        "unknown": set(actual) - set(expected),
+        "wrong_section": wrong_section,
+        "duplicates": duplicates,
+    }
 
 
 def rebuild_index(wiki_dir: pathlib.Path) -> str:
@@ -109,18 +166,45 @@ def rebuild_index(wiki_dir: pathlib.Path) -> str:
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None) -> int:
     configure_utf8_stdio()
-    wiki_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path("wiki")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("wiki_dir", nargs="?", type=pathlib.Path, default=pathlib.Path("wiki"))
+    parser.add_argument("--check", action="store_true")
+    args = parser.parse_args(argv)
+    wiki_dir = args.wiki_dir
     if not wiki_dir.is_dir():
         print(f"Error: wiki directory not found: {wiki_dir}", file=sys.stderr)
-        sys.exit(1)
+        return 1
+
+    if args.check:
+        differences = check_index(wiki_dir)
+        if any(differences.values()):
+            missing = differences["missing"]
+            unknown = differences["unknown"]
+            wrong_section = differences["wrong_section"]
+            duplicates = differences["duplicates"]
+            if missing:
+                print("Missing from index: " + ", ".join(sorted(missing)))
+            if unknown:
+                print("Index targets without pages: " + ", ".join(sorted(unknown)))
+            for target, sections in sorted(wrong_section.items()):
+                print(
+                    f"Wrong section for {target}: expected {sections['expected']}; "
+                    f"found {', '.join(sections['actual'])}"
+                )
+            for target, sections in sorted(duplicates.items()):
+                print(f"Duplicate index entry for {target}: {', '.join(sections)}")
+            return 1
+        print(f"OK: {wiki_dir / 'index.md'} matches expected page/type entries")
+        return 0
 
     content = rebuild_index(wiki_dir)
     index_path = wiki_dir / "index.md"
     index_path.write_text(content, encoding="utf-8")
     print(f"✅ index.md rebuilt at {index_path}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

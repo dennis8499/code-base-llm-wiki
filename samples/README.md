@@ -76,6 +76,9 @@ Agent 產出的頁面名稱可以不同，但必須滿足以下行為契約：
 - Lint 沒有 Critical；若有 coverage gaps，必須明確列出而不是虛構內容。
 - `src/` 和 `config/` 的 hashes 與執行前相同。
 
+上述 Query、Interactive Ingest、Lint 與明確 Delegation 驗收需在每個
+surface 各重複三次；比較 process invariants，不比較自然語言逐字內容。
+
 ## Deterministic checks
 
 在樣例目標目錄執行：
@@ -84,6 +87,8 @@ Agent 產出的頁面名稱可以不同，但必須滿足以下行為契約：
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
+python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
+python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 ```
 
 框架 Repo 的完整發佈檢查請看 [驗證手冊](../docs/validation/README.md)。

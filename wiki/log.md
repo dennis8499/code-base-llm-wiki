@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-07-22
+last_updated: 2026-07-29
 tags: [log]
 status: active
 ---
@@ -83,3 +83,11 @@ status: active
 - Installer 改由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 建立目標 Wiki，避免複製框架自己的 pages、source references 與 log history
 - 保留 `install|upgrade`、`copilot|codex`、contract version 2 與 target-mode 轉換介面
 - 受影響頁面：[[overview]]、[[framework-introduction]]
+
+## [2026-07-29] update | Predictability contract 與單一實作收斂
+
+- Installer 改用 Skill allowlist，分離 install/upgrade 並保留既有 target Wiki
+- 高頻 instructions 收斂為 router，workflows 加入 completion criteria，頁面類型改用唯一 template assets
+- Copilot/Codex agents 對齊 explicit delegation；Query 移除自動 Hand-Off
+- 兩平台 hooks 改用 canonical implementation，新增 bounded SessionStart、唯讀 Wiki lint、index check 與 predictability regressions
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]

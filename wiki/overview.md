@@ -6,8 +6,11 @@ sources:
   - AGENTS.md
   - docs/architecture/README.md
   - .agents/skills/codebase-wiki/SKILL.md
+  - .agents/skills/codebase-wiki/capabilities.json
+  - .agents/skills/codebase-wiki/references/hooks-specification.md
   - .agents/skills/codebase-wiki/scripts/install-framework.py
-last_updated: 2026-07-22
+  - .agents/skills/codebase-wiki/scripts/lint-wiki.py
+last_updated: 2026-07-29
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 ---
@@ -71,16 +74,21 @@ code-base-llm-wiki/
 | 共用工作流 | `.agents/skills/codebase-wiki/` | `.agents/skills/codebase-wiki/` |
 | 專業代理 | `.github/agents/*.agent.md` | `.codex/agents/*.toml` |
 | 使用者入口 | `.github/prompts/*.prompt.md` | `Codex.md` recipes |
-| Hooks | `.github/hooks/` | `.codex/hooks.json`、`.codex/hooks/scripts/` |
+| Hooks | `.github/hooks/` | `.codex/hooks.json` |
 
-兩個入口共用 contract version 2、九類意圖、Wiki page schema、安全邊界與驗收標準。Delegation 只有使用者明確要求時啟用，不是日常工作流的必要階段。
+兩個入口共用 contract version 2、九個使用者意圖群組、十個 machine
+operations、authorization policy、Wiki page schema、安全邊界與驗收標準。
+Hook configuration 共同呼叫 `.agents/skills/codebase-wiki/scripts/hooks/`
+的 canonical implementation。Delegation 只有使用者明確要求時啟用。
 
 ## 核心工作流
 
-- **Install / setup**：Installer 先 dry-run，`--apply` 且無 conflicts 才寫入。
+- **Install / setup**：Installer 只發佈 `codebase-wiki` Skill；install 建立
+  starter，upgrade 保留既有 Wiki；`--apply` 且無 conflicts 才寫入。
 - **Ingest**：讀 source evidence，建立或更新 module、entity、pattern 等頁面。
 - **Query**：先讀 `wiki/index.md` 與 1–5 個相關頁面，預設唯讀。
-- **Lint**：檢查 stale、orphan、broken link、frontmatter、index 與 coverage。
+- **Lint**：唯讀聚合 frontmatter、stale、orphan、broken link、index 與
+  stats；語意 coverage/contradiction 標為 `agent_review_required`。
 - **Archaeology**：追蹤 call path 與非破壞性 Git history。
 - **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
 - **Delegation**：明確要求時才路由給專業代理。
@@ -95,7 +103,10 @@ code-base-llm-wiki/
 
 ## 驗證方式
 
-框架提供 installer/contract/guard/format tests，以及 parity、frontmatter、stale-source 與 Wiki stats scripts。`samples/task-tracker/` 讓 Copilot 與 Codex 以相同 raw source 分別驗證 Ingest → Query → Lint，同時確認 raw source hashes 未變更。
+框架提供 installer/contract/guard/format tests，以及 parity、frontmatter、
+stale-source、唯讀 lint、index check 與 Wiki stats scripts。
+`samples/task-tracker/` 以三次重複情境驗證兩平台的 process invariants，
+同時確認 raw source hashes 未變更。
 
 ## 相關頁面
 

@@ -1,5 +1,5 @@
 name = "wiki-query"
-description = "Read-only Codebase Wiki query specialist. Use only when explicitly delegating codebase questions, implementation lookup, module relationship analysis, or SQL Server-backed live evidence lookup."
+description = "Explicit delegation only. Answer codebase questions Wiki-first and remain read-only."
 sandbox_mode = "read-only"
 
 developer_instructions = '''

@@ -5,8 +5,8 @@
       {
         "matcher": "startup|resume",
         "type": "command",
-        "bash": "python3 .github/hooks/scripts/wiki-session-init.py",
-        "powershell": "python .github/hooks/scripts/wiki-session-init.py",
+        "bash": "python3 .agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py --platform copilot",
+        "powershell": "python .agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py --platform copilot",
         "cwd": ".",
         "timeoutSec": 10
       }

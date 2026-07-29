@@ -29,42 +29,9 @@ argument-hint: "可選：補充分析主題名稱，例如：登入流程跨模�
    - 檔名：`wiki/synthesis/{kebab-case-topic}.md`
    - 範例：`cross-module-auth-flow.md`、`technical-debt-overview.md`
 
-4. **寫入 Synthesis 頁面**：
-
-```yaml
----
-title: "{主題標題}"
-type: synthesis
-sources:
-  - （引用本次對話涉及的原始碼或 wiki 頁面）
-last_updated: { today }
-tags: [synthesis, { 相關標籤 }]
-status: active
----
-```
-
-頁面結構：
-
-```markdown
-# {主題標題}
-
-## 摘要
-
-{核心發現，2-4 句}
-
-## 詳細分析
-
-{展開說明，可包含表格、程式碼引用}
-
-## 相關頁面
-
-- [[wiki-page-a]]
-- [[wiki-page-b]]
-
-## 後續建議
-
-{建議後續深入 ingest 的模組、值得追蹤的問題}
-```
+4. **寫入 Synthesis 頁面**：直接使用
+   `.agents/skills/codebase-wiki/assets/synthesis-template.md`；schema 與
+   allowed values 以 `references/frontmatter-spec.md` 為準。
 
 5. **更新 `wiki/index.md`**（在 Synthesis section 新增條目）
 6. **追加 `wiki/log.md`** 條目：`## [YYYY-MM-DD] synthesis | {主題標題}`

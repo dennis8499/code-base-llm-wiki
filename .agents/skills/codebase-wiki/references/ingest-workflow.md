@@ -121,3 +121,15 @@ Ingest 一個模組時，需檢查並更新以下頁面的 cross-references：
 2. **import 新模組的模組**：在「相依關係」段落加入 `[[new-module]]`
 3. **overview.md**：若新模組是頂層模組，加入模組清單
 4. **相關 entity 頁面**：若新模組包含已有 entity 頁面的 import，建立連結
+
+## Completion Criterion
+
+Ingest is complete only when:
+
+- every changed page uses the selected asset and valid frontmatter;
+- every source path exists and every material claim is evidence-backed;
+- related pages have resolvable `[[wikilink]]` connections;
+- every added, renamed, deleted, or majorly updated page appears in
+  `wiki/index.md`;
+- one append-only `ingest` entry records all affected pages;
+- frontmatter, stale-source, and Wiki lint checks pass without Critical issues.

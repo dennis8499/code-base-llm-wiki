@@ -6,8 +6,9 @@ sources:
   - Codex.md
   - docs/setup/README.md
   - docs/workflows/README.md
+  - docs/validation/README.md
   - samples/README.md
-last_updated: 2026-07-22
+last_updated: 2026-07-29
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 ---
@@ -35,8 +36,8 @@ status: active
 
 | 需求 | 建議入口 | 安裝內容 |
 | --- | --- | --- |
-| VS Code Copilot agents、prompts、hooks | Copilot surface | `AGENTS.md`、`.agents/`、`.github/`、`wiki/` |
-| Codex CLI、IDE、App、Cloud task | Codex surface | `AGENTS.md`、`Codex.md`、`.agents/`、`.codex/`、`wiki/` |
+| VS Code Copilot agents、prompts、hooks | Copilot surface | `AGENTS.md`、`codebase-wiki` Skill、`.github/`、`wiki/` |
+| Codex CLI、IDE、App、Cloud task | Codex surface | `AGENTS.md`、`Codex.md`、`codebase-wiki` Skill、`.codex/`、`wiki/` |
 | 同一 Repo 同時支援兩者 | 分別評估並合併兩種 surface | 共用 `.agents/` 與 `wiki/` |
 
 雙入口的能力相同，但平台 adapter 不相同。Codex 不使用 project-level slash prompts；Copilot prompts 也不會被假裝成 Codex 功能。
@@ -48,7 +49,10 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py install --targe
 python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --apply --format json
 ```
 
-將 `codex` 換成 `copilot` 即可安裝另一入口。Installer 只有在沒有 `conflicts` 時才 apply；不會覆蓋不同內容，也不會自動刪除 legacy `.codebase-wiki/`。目標 `wiki/` 由共用 Skill 的乾淨 starter 建立，不會包含框架 Repo 自己的 Wiki pages 或 log history。
+將 `codex` 換成 `copilot` 即可安裝另一入口。Installer allowlist 只包含
+`codebase-wiki` Skill。`install` 建立乾淨 starter；`upgrade` 保留既有
+Wiki。只有沒有 `conflicts` 時才 apply，且不會自動刪除 legacy
+`.codebase-wiki/`。
 
 ## 3. 第一次 Ingest
 
@@ -106,13 +110,15 @@ python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
+python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
+python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 ```
 
 Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不要以虛構 sources 或刪除 log 歷史規避檢查。
 
 ## 8. E2E 樣例
 
-`samples/task-tracker/` 包含 `TaskItem`、Repository pattern、設定載入、狀態轉換、錯誤分支與 injected clock。依 `samples/README.md` 複製到暫存目錄後，分別安裝 Copilot/Codex surface 並執行 Ingest → Query → Lint。
+`samples/task-tracker/` 包含 `TaskItem`、Repository pattern、設定載入、狀態轉換、錯誤分支與 injected clock。依 `samples/README.md` 複製到暫存目錄後，兩平台各重複三次 Query、Interactive Ingest、Lint 與 Delegation 情境。
 
 驗收不比較 Agent 文字是否完全相同，而是確認：
 
@@ -120,6 +126,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 - index、wikilinks、frontmatter 與 append-only log 正確；
 - Lint 沒有 Critical；
 - raw source hashes 維持不變。
+- 自然語言可不同，但每次 process invariants 相同。
 
 ## 9. 常見陷阱
 

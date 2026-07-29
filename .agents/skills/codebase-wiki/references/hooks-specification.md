@@ -1,23 +1,26 @@
 # Hook Specification
 
-This file documents the three Codebase LLM Wiki hooks shared by the Copilot and
-Codex entrypoints. Hook scripts should stay mirrored across entrypoints; platform
-differences belong in hook configuration and this specification.
+This file documents the three canonical Codebase LLM Wiki hooks shared by the
+Copilot and Codex entrypoints. Platform differences belong in configuration and
+the required `--platform codex|copilot` argument.
 
 ## Hooks
 
 | Hook | Event | Script | Purpose | Side effect |
 | --- | --- | --- | --- | --- |
-| `wiki-session-init` | Session start | `wiki-session-init.py` | Summarize `wiki/index.md` and recent `wiki/log.md` for audit/context. | Writes a session state Markdown file. |
+| `wiki-session-init` | Session start | `wiki-session-init.py` | Summarize bounded Wiki statistics and recent operations for audit/context. | Writes a session state Markdown file. |
 | `wiki-write-guard` | Before edit tools | `wiki-write-guard.py` | Deny writes outside the configured wiki/framework boundary. | No persistent state. |
 | `wiki-log-reminder` | After edit tools | `wiki-log-reminder.py` | Detect wiki page edits that may require a `wiki/log.md` entry. | Appends a JSONL audit entry. |
 
 ## Platform Configuration
 
-| Platform | Configuration | Event names | Script location |
+| Platform | Configuration | Event names | Platform argument |
 | --- | --- | --- | --- |
-| GitHub Copilot | `.github/hooks/*.json` | `sessionStart`, `preToolUse`, `postToolUse` | `.github/hooks/scripts/` |
-| OpenAI Codex | `.codex/hooks.json` | `SessionStart`, `PreToolUse`, `PostToolUse` | `.codex/hooks/scripts/` |
+| GitHub Copilot | `.github/hooks/*.json` | `sessionStart`, `preToolUse`, `postToolUse` | `--platform copilot` |
+| OpenAI Codex | `.codex/hooks.json` | `SessionStart`, `PreToolUse`, `PostToolUse` | `--platform codex` |
+
+All configurations invoke
+`.agents/skills/codebase-wiki/scripts/hooks/{hook-name}.py`.
 
 ## Matched Edit Tools
 
@@ -54,6 +57,13 @@ Path extraction checks `filePath`, `file_path`, `path`, `targetPath`,
 | --- | --- | --- |
 | GitHub Copilot | `.github/hooks/logs/` | `.github-hook-logs/` |
 | OpenAI Codex | `.codex/hooks/logs/` | `.codex-hook-logs/` |
+
+## Session Context Budget
+
+SessionStart emits at most 30 lines and 4 KiB of UTF-8. It includes page type
+and status counts, up to five stale/placeholder paths, up to three recent
+operation headings, and an index navigation pointer. It does not inject page
+bodies, frontmatter blocks, index contents, or raw log entries.
 
 ## Write Guard Modes
 

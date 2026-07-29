@@ -40,3 +40,9 @@ Every DB-derived answer must include:
   evidence block with the metadata above.
 - If no SQL Server / MSSQL tool is available, state that clearly and ask before
   using GitHub Copilot, MCP, CLI, or another fallback path.
+
+## Completion Criterion
+
+Live evidence is complete when the query is bounded and read-only, all required
+metadata fields are present, freshness limitations are stated, credentials are
+absent, and any persisted evidence appears only in a Wiki page body.
