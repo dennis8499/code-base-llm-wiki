@@ -70,6 +70,16 @@ class SampleContractTests(unittest.TestCase):
                     self.assertTrue((target / "wiki/index.md").is_file())
                     self.assertTrue((target / "wiki/log.md").is_file())
                     self.assertTrue((target / "wiki/overview.md").is_file())
+                    self.assertEqual(
+                        (
+                            target
+                            / ".agents"
+                            / "skills"
+                            / "codebase-wiki"
+                            / "VERSION"
+                        ).read_text(encoding="utf-8"),
+                        "0.1.0\n",
+                    )
                     self.assertIn(
                         "status: placeholder",
                         (target / "wiki/overview.md").read_text(encoding="utf-8"),

@@ -6,6 +6,7 @@
 [![OpenAI Codex](https://img.shields.io/badge/OpenAI%20Codex-Supported-111827?logo=openai)](https://openai.com/codex/)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python)](https://www.python.org/)
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-7C3AED?logo=obsidian)](https://obsidian.md/)
+[![Latest Release](https://img.shields.io/github/v/release/dennis8499/code-base-llm-wiki?display_name=tag&sort=semver)](https://github.com/dennis8499/code-base-llm-wiki/releases/latest)
 
 Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`，後續查詢先讀 Wiki，內容不足、過時或矛盾時才回溯 raw sources。
 
@@ -19,6 +20,7 @@ Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent
 - [核心組成](#核心組成)
 - [主要特色](#主要特色)
 - [快速開始](#快速開始)
+- [版本與下載](#版本與下載)
 - [操作方式](#操作方式)
 - [E2E 驗證樣例](#e2e-驗證樣例)
 - [文件索引](#文件索引)
@@ -39,6 +41,8 @@ code-base-llm-wiki/
 ├── wiki/                           # 持久 Markdown 知識庫與活動紀錄
 ├── AGENTS.md                       # Codex 專案規則與安全邊界
 ├── Codex.md                        # 可隨 Codex surface 安裝的獨立操作手冊
+├── VERSION                         # 唯一產品版號來源
+├── tools/release.py                # Release asset 與更新 manifest builder
 ├── ChangeLog.md                    # 版本變更紀錄
 └── README.md                       # 本頁：專案導覽與快速開始
 ```
@@ -140,6 +144,28 @@ Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的�
 
 ---
 
+## 版本與下載
+
+產品版號唯一來源是根目錄的 `VERSION`，使用穩定 `X.Y.Z`；例如 `0.1.0` 對應
+Git tag `v0.1.0`。Installer 會把目前版本保存到目標 Repo 的
+`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 2` 維持為獨立的
+installer contract 版本。
+
+最新版本與下載：
+
+- [查看所有 GitHub Releases](https://github.com/dennis8499/code-base-llm-wiki/releases)
+- [下載 ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/codebase-llm-wiki.zip)
+- [下載 TAR.GZ](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/codebase-llm-wiki.tar.gz)
+- [下載更新 manifest](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/update-manifest.json)
+
+壓縮包包含完整框架 Repo；解壓後可依需求使用 `--surface copilot` 或
+`--surface codex` 執行既有 installer。未來 Extension 可讀取 update manifest、
+比較本地版本、驗證 SHA-256，再呼叫 `upgrade`；本 Repo 目前不包含 updater。
+
+完整發佈流程請參閱 [版本、發佈與更新契約](docs/releases/README.md)。
+
+---
+
 ## 操作方式
 
 ### GitHub Copilot
@@ -178,6 +204,7 @@ Codex 的 hooks、recipes、delegation 與排錯方式保留在可獨立安裝�
 | [安裝與升級](docs/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
 | [工作流手冊](docs/workflows/README.md) | 九類意圖、11 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/validation/README.md) | 自動檢查、E2E 驗收與發佈前清單 |
+| [版本、發佈與更新契約](docs/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
 | [ChangeLog.md](ChangeLog.md) | 框架重要變更 |
 | [歷史方法論](docs/history/llm-wiki.md) | 早期 LLM Wiki 概念，僅供設計脈絡參考 |

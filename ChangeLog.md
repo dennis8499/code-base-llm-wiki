@@ -8,6 +8,9 @@
 
 ### 新增
 
+- **版本化發佈契約**：新增 `VERSION`、穩定 SemVer tag 驗證、GitHub Release
+  workflow、ZIP/TAR.GZ 下載資產、SHA-256 checksums 與供未來 Extension 使用的
+  `update-manifest.json`；installer 同步保存 `framework_version`。
 - **Predictability contract**：contract v2 新增九個 intent groups、十個
   machine operations、authorization policy 與完整 entrypoint mapping
 - **唯讀 Wiki lint**：新增 `lint-wiki.py` 與 `rebuild-index.py --check`，

@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate version and tag
+        run: python tools/release.py validate --tag "${GITHUB_REF_NAME}"
+
+      - name: Run framework tests
+        run: |
+          python -m unittest discover -s tests -v
+          python .agents/skills/codebase-wiki/scripts/parity-check.py
+          python .agents/skills/codebase-wiki/scripts/validate-frontmatter.py wiki
+          python .agents/skills/codebase-wiki/scripts/check-stale.py wiki
+          python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki
+          python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
+
+      - name: Build release assets
+        run: python tools/release.py build --output dist --repository "${GITHUB_REPOSITORY}"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+            --verify-tag \
+            --title "Codebase LLM Wiki ${GITHUB_REF_NAME}" \
+            --generate-notes

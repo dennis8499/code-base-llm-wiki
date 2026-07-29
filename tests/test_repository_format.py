@@ -35,6 +35,7 @@ class RepositoryFormatTests(unittest.TestCase):
             "docs/setup/README.md",
             "docs/workflows/README.md",
             "docs/validation/README.md",
+            "docs/releases/README.md",
             "docs/history/llm-wiki.md",
             "docs/history/original-prompt.txt",
             "samples/README.md",
@@ -88,8 +89,9 @@ class RepositoryFormatTests(unittest.TestCase):
                     self.assertIn("wiki/index.md", plan["files"])
                     self.assertIn("wiki/log.md", plan["files"])
                     self.assertIn("wiki/overview.md", plan["files"])
+                    self.assertIn(".agents/skills/codebase-wiki/VERSION", plan["files"])
+                    self.assertNotIn(".github/workflows/release.yml", plan["files"])
 
 
 if __name__ == "__main__":
     unittest.main()
-

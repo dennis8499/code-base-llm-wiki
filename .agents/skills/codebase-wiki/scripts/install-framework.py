@@ -26,6 +26,9 @@ WIKI_STARTER_PATH = ".agents/skills/codebase-wiki/assets/wiki-starter"
 EXCLUDED_PARTS = {"__pycache__", "logs", ".venv", "cache"}
 TARGET_MODE_CONFIGS = {".codex/config.toml", ".github/hooks/config.toml"}
 LEGACY_RUNTIME_PATH = ".codebase-wiki/"
+VERSION_SOURCE_PATH = "VERSION"
+INSTALLED_VERSION_PATH = ".agents/skills/codebase-wiki/VERSION"
+FRAMEWORK_ONLY_PATHS = {".github/workflows/release.yml"}
 
 
 def _files(root: Path, relative_root: str) -> list[tuple[Path, str]]:
@@ -50,10 +53,23 @@ def _target_bytes(source: Path, relative: str) -> bytes:
     return data
 
 
+def _framework_version(root: Path) -> str | None:
+    version_path = root / VERSION_SOURCE_PATH
+    if not version_path.is_file():
+        return None
+    return version_path.read_text(encoding="utf-8").strip()
+
+
 def _surface_files(root: Path, surface: str, action: str = "install") -> list[tuple[Path, str]]:
     files: list[tuple[Path, str]] = []
     for relative_root in (*COMMON_SURFACE_PATHS, *SURFACE_PATHS[surface]):
-        files.extend(_files(root, relative_root))
+        files.extend(
+            (source, relative)
+            for source, relative in _files(root, relative_root)
+            if relative not in FRAMEWORK_ONLY_PATHS
+        )
+    if (root / VERSION_SOURCE_PATH).is_file():
+        files.append((root / VERSION_SOURCE_PATH, INSTALLED_VERSION_PATH))
     if action == "install":
         for source, relative in _files(root, WIKI_STARTER_PATH):
             starter_relative = Path(relative).relative_to(WIKI_STARTER_PATH)
@@ -88,6 +104,7 @@ def plan_install(
             conflicts.append(relative)
     return {
         "surface": surface,
+        "framework_version": _framework_version(source_root),
         "files": sorted(set(files)),
         "conflicts": sorted(set(conflicts)),
         "obsolete_paths": _obsolete_paths(target_root),
@@ -133,6 +150,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     payload = {
         "contract_version": CONTRACT_VERSION,
+        "framework_version": plan.get("framework_version"),
         "ok": not bool(plan["conflicts"]),
         "action": args.action,
         **plan,

@@ -91,3 +91,10 @@ status: active
 - Copilot/Codex agents 對齊 explicit delegation；Query 移除自動 Hand-Off
 - 兩平台 hooks 改用 canonical implementation，新增 bounded SessionStart、唯讀 Wiki lint、index check 與 predictability regressions
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-07-29] update | 版本化發佈與 Extension 更新契約
+
+- 新增 `VERSION`、SemVer tag 驗證、GitHub Release workflow、下載資產、SHA-256 checksums 與 `update-manifest.json`
+- Installer 回報 `framework_version`，並在目標 Repo 保存 `.agents/skills/codebase-wiki/VERSION`；release workflow 不會被安裝到目標 surface
+- 更新 README、release 文件與版本 Wiki，補上未來 Extension 的 manifest 與 conflict-safe upgrade 契約
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[release-and-update]]

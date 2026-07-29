@@ -10,6 +10,10 @@ sources:
   - .agents/skills/codebase-wiki/references/hooks-specification.md
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
+  - VERSION
+  - tools/release.py
+  - .github/workflows/release.yml
+  - docs/releases/README.md
 last_updated: 2026-07-29
 tags: [framework, llm, wiki, copilot, codex]
 status: active
@@ -55,16 +59,29 @@ code-base-llm-wiki/
 ├── .github/                        — Copilot agents、prompts、hooks、instructions
 ├── .codex/                         — Codex hooks、設定與 optional agents
 ├── docs/                           — 架構、安裝、工作流、驗證與歷史文件
+├── tools/release.py                — 版號驗證、Release assets 與更新 manifest
 ├── samples/task-tracker/           — 無第三方依賴的 E2E 驗證 codebase
 ├── tests/                          — Deterministic regression tests
 ├── wiki/                           — 本 Repo 的持久知識庫
 ├── AGENTS.md                       — Codex 專案規則
 ├── Codex.md                        — 可隨 Codex surface 安裝的操作手冊
+├── VERSION                         — 唯一產品版號來源
 ├── ChangeLog.md                    — 重要變更
 └── README.md                       — 公開導覽與快速開始
 ```
 
 `docs/`、`samples/`、`tests/` 是框架 Repo 的產品文件與驗證資產，不會被 installer 複製到目標專案。框架自己的 `wiki/` 也不會外洩到目標；installer 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 建立乾淨 Wiki 骨架。原始方法論與早期 prompt 保留於 `docs/history/`。
+
+## 版本與發佈
+
+根目錄 `VERSION` 是唯一產品版號來源，採穩定 `X.Y.Z`，並以 `vX.Y.Z` 作為
+Git tag。GitHub Release workflow 會先驗證 tag 與版號，再產生 ZIP/TAR.GZ、
+`SHA256SUMS` 與 `update-manifest.json`。Installer 將相同版號保存至目標 Repo
+的 `.agents/skills/codebase-wiki/VERSION`；`contract_version: 2` 則維持獨立，
+代表 installer contract 而非產品版號。
+
+未來 Extension 可讀取最新 manifest，依本地版本做 SemVer 比較，驗證下載資產
+後呼叫既有 conflict-safe `upgrade`；目前不包含 Extension updater。
 
 ## 雙平台入口
 
@@ -84,7 +101,8 @@ Hook configuration 共同呼叫 `.agents/skills/codebase-wiki/scripts/hooks/`
 ## 核心工作流
 
 - **Install / setup**：Installer 只發佈 `codebase-wiki` Skill；install 建立
-  starter，upgrade 保留既有 Wiki；`--apply` 且無 conflicts 才寫入。
+  starter，upgrade 保留既有 Wiki；`--apply` 且無 conflicts 才寫入，並保存
+  framework version marker。
 - **Ingest**：讀 source evidence，建立或更新 module、entity、pattern 等頁面。
 - **Query**：先讀 `wiki/index.md` 與 1–5 個相關頁面，預設唯讀。
 - **Lint**：唯讀聚合 frontmatter、stale、orphan、broken link、index 與
@@ -111,3 +129,4 @@ stale-source、唯讀 lint、index check 與 Wiki stats scripts。
 ## 相關頁面
 
 - [[framework-introduction]] — 安裝、操作、驗收與常見陷阱指南
+- [[release-and-update]] — 版本、GitHub Release、下載與 Extension manifest

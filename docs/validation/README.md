@@ -16,6 +16,16 @@ python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 ```
 
+版本發佈前另外執行：
+
+```powershell
+python tools\release.py validate --tag v0.1.0
+python tools\release.py build --output dist --repository dennis8499/code-base-llm-wiki
+```
+
+確認 `dist/` 包含兩種壓縮格式、`update-manifest.json` 與 `SHA256SUMS`，且
+manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
+
 | 檢查 | 驗證內容 |
 | --- | --- |
 | Unit tests | Installer、conflict、surface isolation、guard、Repo links 與 sample contract |
@@ -68,6 +78,8 @@ Copilot 與 Codex 各自重複三次以下情境，驗收 process invariants：
 - [ ] ChangeLog 已追加本次 durable behavior change。
 - [ ] 所有自動化檢查成功，或已明確記錄不可執行原因。
 - [ ] SessionStart context 不超過 30 行與 4 KiB UTF-8，且平台設定只引用 canonical hooks。
+- [ ] `VERSION` 使用穩定 `X.Y.Z`，且發佈 tag 嚴格符合 `vX.Y.Z`。
+- [ ] Release assets 已通過 manifest 與 SHA-256 驗證，沒有把 logs/cache 打包。
 
 ## 手動檢查重點
 

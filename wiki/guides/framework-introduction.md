@@ -7,6 +7,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
+  - docs/releases/README.md
+  - VERSION
+  - tools/release.py
   - samples/README.md
 last_updated: 2026-07-29
 tags: [guide, onboarding, framework, copilot, codex]
@@ -53,6 +56,17 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py install --targe
 `codebase-wiki` Skill。`install` 建立乾淨 starter；`upgrade` 保留既有
 Wiki。只有沒有 `conflicts` 時才 apply，且不會自動刪除 legacy
 `.codebase-wiki/`。
+
+## 版本與下載
+
+框架版號由根目錄 `VERSION` 唯一管理，使用穩定 `X.Y.Z`，Git tag 使用
+`vX.Y.Z`。安裝或升級後，可在目標 Repo 的
+`.agents/skills/codebase-wiki/VERSION` 查看已安裝版本。
+
+GitHub Release 提供 ZIP、TAR.GZ、`SHA256SUMS` 與 `update-manifest.json`。未來
+Extension 可比較本地版本與 manifest 版本，驗證 checksum 後呼叫 `upgrade`；
+目前 Extension updater 尚未包含在框架內。完整 tag、發佈與 manifest 契約請看
+`docs/releases/README.md`。
 
 ## 3. 第一次 Ingest
 

@@ -44,6 +44,7 @@ class FrameworkInstallerTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(payload["contract_version"], 2)
+            self.assertEqual(payload["framework_version"], "0.1.0")
             self.assertEqual(payload["action"], "install")
             self.assertEqual(payload["surface"], "codex")
             self.assertTrue(payload["ok"])
@@ -76,6 +77,12 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue((target / "AGENTS.md").exists())
             self.assertTrue((target / "Codex.md").exists())
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
+            self.assertEqual(
+                (target / ".agents" / "skills" / "codebase-wiki" / "VERSION").read_text(
+                    encoding="utf-8"
+                ),
+                "0.1.0\n",
+            )
             self.assertTrue((target / ".codex" / "hooks.json").exists())
             self.assertTrue((target / "wiki" / "index.md").exists())
             self.assertFalse((target / ".github").exists())
@@ -128,6 +135,7 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
             self.assertFalse((target / ".codex").exists())
             self.assertFalse((target / "Codex.md").exists())
+            self.assertFalse((target / ".github" / "workflows" / "release.yml").exists())
 
     def test_conflicting_target_file_blocks_apply(self) -> None:
         installer = load_installer()
