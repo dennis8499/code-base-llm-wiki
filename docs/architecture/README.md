@@ -24,13 +24,14 @@ flowchart TB
     Enough -->|否| Sources[唯讀檢查 raw sources]
     Sources --> Result
     Result -->|持久化工作流| Wiki[更新頁面 / index / append-only log]
+    Result -->|NotebookLM export| Pack[.notebooklm source pack]
 ```
 
 ## 雙入口與共用契約
 
-`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 2、九個使用者意圖群組、十個 machine operations 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
+`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 2、十個使用者意圖群組、十一個 machine operations 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
 
-- intent routing、frontmatter、log operations 與工作流 references；
+- intent routing、frontmatter、log operations 與工作流 references；NotebookLM export 另有離線 source-pack reference；
 - Wiki page templates；
 - installer、parity、frontmatter、stale-source、唯讀 lint 與統計 scripts；
 - Raw Sources 唯讀、Wiki-first、append-only log 與 evidence-backed 的核心規則。
@@ -41,7 +42,7 @@ flowchart TB
 
 | Agent | 主要責任 | 預設寫入 |
 | --- | --- | --- |
-| `wiki-keeper` | 意圖路由、ADR、Guide、Synthesis、SA 與跨流程協調 | 視工作流 |
+| `wiki-keeper` | 意圖路由、ADR、Guide、Synthesis、SA、NotebookLM export 與跨流程協調 | 視工作流 |
 | `wiki-ingest` | 讀取 source evidence 並建立或更新 Wiki | 是 |
 | `wiki-query` | 先查 Wiki，必要時回溯 sources 或唯讀 DB evidence | 否 |
 | `wiki-lint` | 檢查 stale、frontmatter、連結、index 與 coverage | 先報告 |
@@ -90,4 +91,6 @@ Hooks 是 deterministic guardrail，不取代平台 sandbox，也不授權 Agent
 - Query 不因讀取而自動持久化結果。
 - SQL Server live evidence 只允許 bounded read-only evidence，且不能放入 frontmatter sources。
 - 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
+- NotebookLM export 只產生可審查的本機 `.notebooklm/` source pack、`manifest.json` 與 `upload-plan.md`；不呼叫 NotebookLM API，也不自動上傳。
+- Export 以 Wiki 為主，只有 Wiki frontmatter 宣告的 evidence 才會按需納入；敏感檔案、generated/cache 目錄與超出設定上限的來源不會被打包。
 - 不允許 delegation 隱性改變寫入或安全邊界。

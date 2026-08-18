@@ -3,4 +3,5 @@
 .codex/hooks/logs/
 .codex-hook-logs/
 dist/
+.notebooklm/
 __pycache__/

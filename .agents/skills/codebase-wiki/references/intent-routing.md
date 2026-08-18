@@ -1,8 +1,9 @@
 # Intent Routing
 
-Use this table as the source of truth for the nine user-facing intent groups.
-`capabilities.json` maps them to ten machine operations because Guide and
-Synthesis have distinct output contracts.
+Use this table as the source of truth for the ten user-facing intent groups.
+`capabilities.json` maps them to eleven machine operations because Guide and
+Synthesis have distinct output contracts and NotebookLM export has a separate
+artifact and authorization contract.
 
 | Intent | User signals | Default action |
 | --- | --- | --- |
@@ -13,6 +14,7 @@ Synthesis have distinct output contracts.
 | ADR | decision, ADR, architecture choice | Create or update a record under `wiki/decisions/` with ADR frontmatter. |
 | Synthesis / Guide | save analysis, onboarding, guide, synthesis | Persist durable analysis under `wiki/synthesis/` or durable operational guidance under `wiki/guides/`. |
 | System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a Markdown SA document under `wiki/synthesis/` from wiki-first evidence. |
+| NotebookLM export | NotebookLM, export, source pack, upload plan, 匯出 | Read Wiki first, preview any required Ingest, then generate an offline incremental `.notebooklm/` source pack. |
 | Archaeology | why, history, legacy, git, 考古 | Trace concrete entrypoints, call paths, and non-destructive git history; separate evidence from inference. |
 | Delegation | subagents, parallel, delegation, swarm | Use platform-native custom agents only when the user or parent agent explicitly asks for delegation. |
 

@@ -23,8 +23,12 @@ class ContractTests(unittest.TestCase):
         self.assertFalse(manifest["intents"]["query"]["writes_by_default"])
         self.assertEqual(manifest["intents"]["query"]["authorization_policy"], "read_only")
         self.assertEqual(manifest["intents"]["delegation"]["authorization_policy"], "explicit_delegation")
-        self.assertEqual(len(manifest["intents"]), 10)
-        self.assertEqual(len(manifest["intent_groups"]), 9)
+        self.assertEqual(
+            manifest["intents"]["notebooklm_export"]["authorization_policy"],
+            "preview_then_confirm",
+        )
+        self.assertEqual(len(manifest["intents"]), 11)
+        self.assertEqual(len(manifest["intent_groups"]), 10)
         grouped = [
             operation
             for operations in manifest["intent_groups"].values()
@@ -69,6 +73,7 @@ class ContractTests(unittest.TestCase):
             "synthesis-workflow.md",
             "system-analysis-workflow.md",
             "code-archaeology-workflow.md",
+            "notebooklm-export-workflow.md",
         ):
             with self.subTest(workflow=filename):
                 text = (reference_root / filename).read_text(encoding="utf-8")

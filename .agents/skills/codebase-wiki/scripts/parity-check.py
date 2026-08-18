@@ -18,6 +18,7 @@ EXPECTED_OPERATIONS = {
     "guide",
     "synthesis",
     "system_analysis",
+    "notebooklm_export",
     "delegation",
 }
 EXPECTED_INTENT_CONTRACT = {
@@ -30,6 +31,7 @@ EXPECTED_INTENT_CONTRACT = {
     "guide": (True, False, "explicit_request"),
     "synthesis": (True, False, "explicit_request"),
     "system_analysis": (True, False, "explicit_request"),
+    "notebooklm_export": (False, True, "preview_then_confirm"),
     "delegation": (False, False, "explicit_delegation"),
 }
 EXPECTED_GROUPS = {
@@ -40,6 +42,7 @@ EXPECTED_GROUPS = {
     "adr": ["adr"],
     "synthesis_guide": ["synthesis", "guide"],
     "system_analysis": ["system_analysis"],
+    "notebooklm_export": ["notebooklm_export"],
     "archaeology": ["archaeology"],
     "delegation": ["delegation"],
 }
@@ -63,7 +66,7 @@ def main() -> int:
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
-        issues.append("manifest intents must define the ten canonical operations")
+        issues.append("manifest intents must define the eleven canonical operations")
         intents = {}
     for operation, expected in EXPECTED_INTENT_CONTRACT.items():
         contract = intents.get(operation, {})
@@ -77,7 +80,7 @@ def main() -> int:
 
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
-        issues.append("manifest must define the exact nine user-facing intent groups")
+        issues.append("manifest must define the exact ten user-facing intent groups")
         groups = {}
     grouped = [operation for values in groups.values() if isinstance(values, list) for operation in values]
     if len(grouped) != len(set(grouped)) or set(grouped) != EXPECTED_OPERATIONS:

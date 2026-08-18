@@ -117,6 +117,42 @@ class SampleContractTests(unittest.TestCase):
                             f"{surface} {script}:\n{result.stdout}{result.stderr}",
                         )
 
+                    exporter = (
+                        target
+                        / ".agents"
+                        / "skills"
+                        / "codebase-wiki"
+                        / "scripts"
+                        / "export-notebooklm.py"
+                    )
+                    export_result = subprocess.run(
+                        [
+                            sys.executable,
+                            str(exporter),
+                            "--root",
+                            ".",
+                            "--output",
+                            ".notebooklm",
+                            "--format",
+                            "json",
+                        ],
+                        cwd=target,
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                    )
+                    self.assertEqual(
+                        export_result.returncode,
+                        0,
+                        export_result.stdout + export_result.stderr,
+                    )
+                    export_payload = json.loads(export_result.stdout)
+                    self.assertGreaterEqual(export_payload["source_count"], 2)
+                    self.assertTrue((target / ".notebooklm/manifest.json").is_file())
+                    self.assertTrue((target / ".notebooklm/upload-plan.md").is_file())
+
                     if surface == "codex":
                         self.assertTrue((target / ".codex/hooks.json").is_file())
                         self.assertFalse((target / ".github").exists())

@@ -7,7 +7,7 @@ sources:
   - .github/workflows/release.yml
   - docs/releases/README.md
   - README.md
-last_updated: 2026-07-29
+last_updated: 2026-08-17
 tags: [guide, release, version, extension]
 status: active
 ---
@@ -32,9 +32,10 @@ status: active
 4. GitHub workflow 執行測試與 Wiki checks。
 5. workflow 上傳 ZIP/TAR.GZ、`SHA256SUMS` 與 `update-manifest.json`。
 
-Release builder 會排除 `.git`、`logs`、`cache`、`.venv`、`__pycache__` 與
-`dist` 等產生物；下載資產包含完整 framework Repo，安裝時仍由 installer
-選擇 Copilot 或 Codex surface。
+Release builder 會排除 `.git`、`logs`、`cache`、`.venv`、`__pycache__`、
+`.notebooklm` 與 `dist` 等產生物；NotebookLM source pack 是每個使用者本機
+產生的交付物，不會混入 framework release。下載資產包含完整 framework Repo，
+安裝時仍由 installer 選擇 Copilot 或 Codex surface。
 
 ## Extension 更新契約
 

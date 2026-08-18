@@ -24,7 +24,8 @@ knowledge over time.
 ## Routing
 
 Use `$codebase-wiki` for install, ingest, query, lint, ADR, guide, synthesis,
-system analysis, archaeology, Wiki maintenance, or framework maintenance.
+system analysis, NotebookLM export, archaeology, Wiki maintenance, or framework
+maintenance.
 Classify the branch with
 `.agents/skills/codebase-wiki/references/intent-routing.md` and load its exact
 reference before acting.

@@ -8,6 +8,7 @@
 
 ### 新增
 
+- **NotebookLM Enterprise 離線匯出**：新增 Wiki-first `notebooklm_export` operation、共用 `export-notebooklm.py`、穩定 source IDs、manifest、增量 upload plan、容量/字數上限與敏感/生成檔排除；Copilot/Codex 只產生本機 `.notebooklm/`，不自動呼叫或上傳 NotebookLM
 - **版本化發佈契約**：新增 `VERSION`、穩定 SemVer tag 驗證、GitHub Release
   workflow、ZIP/TAR.GZ 下載資產、SHA-256 checksums 與供未來 Extension 使用的
   `update-manifest.json`；installer 同步保存 `framework_version`。

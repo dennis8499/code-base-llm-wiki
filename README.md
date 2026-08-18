@@ -39,6 +39,7 @@ code-base-llm-wiki/
 ├── samples/task-tracker/           # 可操作的無第三方依賴 E2E 樣例
 ├── tests/                          # Installer、contract、guard 與 Repo 格式測試
 ├── wiki/                           # 持久 Markdown 知識庫與活動紀錄
+├── .notebooklm/                    # 本地產生的 NotebookLM source pack（預設忽略）
 ├── AGENTS.md                       # Codex 專案規則與安全邊界
 ├── Codex.md                        # 可隨 Codex surface 安裝的獨立操作手冊
 ├── VERSION                         # 唯一產品版號來源
@@ -66,6 +67,7 @@ flowchart LR
     Source[Raw Sources\n唯讀] -->|必要時查證| Agent[Copilot / Codex\nWiki workflows]
     Wiki[wiki/\n持久 Markdown] -->|Wiki-first| Agent
     Agent -->|Ingest / ADR / Guide / SA| Wiki
+    Agent -->|NotebookLM export| Pack[.notebooklm/\nlocal source pack]
     Schema[Schema\nRules + Skills + Hooks] --> Agent
 ```
 
@@ -80,7 +82,7 @@ flowchart LR
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 | 輸出 | `wiki/` | `wiki/` |
 
-兩個入口維持九個使用者意圖群組、十個 machine operations 與相同安全邊界。日常任務由目前 Agent 處理；只有使用者明確要求 subagents、parallel 或 delegation 時才使用自訂代理。
+兩個入口維持十個使用者意圖群組、十一個 machine operations 與相同安全邊界。日常任務由目前 Agent 處理；只有使用者明確要求 subagents、parallel 或 delegation 時才使用自訂代理。
 
 ### Wiki 工作流
 
@@ -94,6 +96,7 @@ flowchart LR
 | ADR | 保存架構決策 | 是 |
 | Synthesis / Guide | 保存長期分析或操作指南 | 是 |
 | System Analysis / SA | 產生標示 coverage gaps 的 SA 文件 | 是 |
+| NotebookLM export | 產生 Wiki-first、本地、可增量更新的 Markdown source pack | 預覽後寫入 `.notebooklm/` |
 | Delegation | 明確要求時分派專業代理 | 視任務而定 |
 
 完整的提示詞與驗收條件請參閱 [工作流手冊](docs/workflows/README.md)。
@@ -109,6 +112,7 @@ flowchart LR
 - **安全邊界**：target mode 只允許 Wiki 寫入；framework mode 才允許維護框架檔案。
 - **零第三方依賴 installer**：Python 標準函式庫即可 dry-run、安裝與升級。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
+- **NotebookLM 增量匯出**：以穩定 logical source IDs、hash manifest 與 upload plan 只更新變更來源。
 - **可驗證**：提供 parity、唯讀 Wiki lint、frontmatter、stale-source、統計與單元測試。
 
 ---
@@ -186,6 +190,15 @@ Codex 直接讀取 `AGENTS.md` 與 `$codebase-wiki`。例如：
 
 Codex 的 hooks、recipes、delegation 與排錯方式保留在可獨立安裝的 [Codex.md](Codex.md)。
 
+NotebookLM Enterprise 匯出：
+
+```text
+請使用 $codebase-wiki 執行 NotebookLM export：先檢查 wiki 的 stale、placeholder、缺口與矛盾；
+若需重新萃取，先列出 Ingest 範圍並等待確認。確認後產生 .notebooklm source pack 與 upload-plan。
+```
+
+Exporter 不會呼叫雲端 API 或自動上傳；使用者依 upload plan 將變更來源更新到 NotebookLM。
+
 ---
 
 ## E2E 驗證樣例
@@ -202,7 +215,7 @@ Codex 的 hooks、recipes、delegation 與排錯方式保留在可獨立安裝�
 | --- | --- |
 | [架構與資料流](docs/architecture/README.md) | 三層模型、雙入口、Agents、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/workflows/README.md) | 九類意圖、11 個操作情境、平台對照與輸出契約 |
+| [工作流手冊](docs/workflows/README.md) | 十類意圖、12 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/validation/README.md) | 自動檢查、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
@@ -220,7 +233,8 @@ Codex 的 hooks、recipes、delegation 與排錯方式保留在可獨立安裝�
 | GitHub Copilot Chat | 支援 | Agents、prompts、hooks 與共用 skill |
 | OpenAI Codex | 支援 | AGENTS、repo-local skill、hooks 與 optional agents |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
+| NotebookLM Enterprise | 支援離線匯出 | `.md` sources、manifest、hash-based upload plan；不含雲端 API |
 
-本框架不提供 RAG、向量資料庫、本機 source index、MCP 搜尋服務或自動修改 raw sources。SQL Server live evidence 僅是 Query 的唯讀子模式，且資料庫證據不得放進 frontmatter `sources`。
+本框架不提供 RAG、向量資料庫、本機 source index、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。NotebookLM export 只產生本地 `.notebooklm/`；SQL Server live evidence 僅是 Query 的唯讀子模式，且資料庫證據不得放進 frontmatter `sources`。
 
 本 Repo 尚未宣告軟體授權；請勿從參考專案的授權狀態推定本專案授權。

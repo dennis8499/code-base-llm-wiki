@@ -10,11 +10,17 @@ sources:
   - .agents/skills/codebase-wiki/references/hooks-specification.md
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
+  - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
+  - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
+  - .agents/skills/codebase-wiki/assets/notebooklm.toml
+  - docs/workflows/README.md
+  - .github/prompts/export-notebooklm.prompt.md
+  - Codex.md
   - VERSION
   - tools/release.py
   - .github/workflows/release.yml
   - docs/releases/README.md
-last_updated: 2026-07-29
+last_updated: 2026-08-17
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 ---
@@ -36,6 +42,10 @@ Codebase LLM Wiki 是面向 coding agents 的持久知識框架。Agent 將已�
 | Raw Sources | 目標專案的原始碼、設定與既有文件 | Wiki 任務中唯讀 |
 | Wiki | `wiki/` | 持久知識、主索引、活動紀錄 |
 | Schema | `AGENTS.md`、`.agents/`、`.github/`、`.codex/` | 意圖、工作流、模板、scripts、hooks 與平台入口 |
+
+NotebookLM delivery pack 是由 Schema/Workflow 產生的可審查交付物，不是第四個
+知識層：`.notebooklm/` 只保存可手動上傳的 Markdown sources、manifest 與增量
+upload plan，預設不進 Git，也不會自動連線 NotebookLM。
 
 ```text
 Schema instructions + Skill
@@ -63,6 +73,7 @@ code-base-llm-wiki/
 ├── samples/task-tracker/           — 無第三方依賴的 E2E 驗證 codebase
 ├── tests/                          — Deterministic regression tests
 ├── wiki/                           — 本 Repo 的持久知識庫
+├── .notebooklm/                    — 本機產生、預設忽略的 NotebookLM source pack
 ├── AGENTS.md                       — Codex 專案規則
 ├── Codex.md                        — 可隨 Codex surface 安裝的操作手冊
 ├── VERSION                         — 唯一產品版號來源
@@ -93,7 +104,7 @@ Git tag。GitHub Release workflow 會先驗證 tag 與版號，再產生 ZIP/TAR
 | 使用者入口 | `.github/prompts/*.prompt.md` | `Codex.md` recipes |
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 
-兩個入口共用 contract version 2、九個使用者意圖群組、十個 machine
+兩個入口共用 contract version 2、十個使用者意圖群組、十一個 machine
 operations、authorization policy、Wiki page schema、安全邊界與驗收標準。
 Hook configuration 共同呼叫 `.agents/skills/codebase-wiki/scripts/hooks/`
 的 canonical implementation。Delegation 只有使用者明確要求時啟用。
@@ -109,6 +120,7 @@ Hook configuration 共同呼叫 `.agents/skills/codebase-wiki/scripts/hooks/`
   stats；語意 coverage/contradiction 標為 `agent_review_required`。
 - **Archaeology**：追蹤 call path 與非破壞性 Git history。
 - **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
+- **NotebookLM export**：先做 Wiki preflight，再依 Wiki 與其 declared evidence 產生穩定 source IDs、manifest 與 added/changed/deleted/unchanged upload plan；不自動上傳。
 - **Delegation**：明確要求時才路由給專業代理。
 
 ## 安全與品質
@@ -117,6 +129,7 @@ Hook configuration 共同呼叫 `.agents/skills/codebase-wiki/scripts/hooks/`
 - Wiki pages 透過 `[[wikilink]]` 互相引用。
 - `wiki/log.md` 只能追加，不能刪除或改寫既有條目。
 - Target guard mode 只允許 Wiki 寫入；framework mode 才允許維護 schema、docs、samples 與 tests。
+- NotebookLM export 預設使用 300 sources、每 source 500 MB / 500,000 words 的 Enterprise hard limits，實際 pack 以 450 MB / 450,000 words safety limits 先行切分或失敗；Workspace tier 可在 `notebooklm.toml` 再下調。
 - SQL Server live evidence 只允許 bounded read-only 查詢，且不得放入 frontmatter sources。
 
 ## 驗證方式
@@ -129,4 +142,5 @@ stale-source、唯讀 lint、index check 與 Wiki stats scripts。
 ## 相關頁面
 
 - [[framework-introduction]] — 安裝、操作、驗收與常見陷阱指南
+- [[notebooklm-export]] — Wiki-first NotebookLM Enterprise source pack、限制與增量上傳計畫
 - [[release-and-update]] — 版本、GitHub Release、下載與 Extension manifest

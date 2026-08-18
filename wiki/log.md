@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-07-29
+last_updated: 2026-08-17
 tags: [log]
 status: active
 ---
@@ -98,3 +98,10 @@ status: active
 - Installer 回報 `framework_version`，並在目標 Repo 保存 `.agents/skills/codebase-wiki/VERSION`；release workflow 不會被安裝到目標 surface
 - 更新 README、release 文件與版本 Wiki，補上未來 Extension 的 manifest 與 conflict-safe upgrade 契約
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[release-and-update]]
+
+## [2026-08-17] update | NotebookLM Enterprise 離線 source pack 與增量更新契約
+
+- 新增 Wiki-first `notebooklm_export` operation、共用 exporter、NotebookLM workflow reference、設定模板與 Copilot/Codex 入口
+- Exporter 依 Wiki pages 與 declared evidence 建立 stable source IDs、hash manifest、檔案切分、敏感/生成檔排除與 added/changed/deleted/unchanged upload plan
+- NotebookLM 流程只寫本機 `.notebooklm/` 產物，不呼叫 API、不修改 raw sources，並把 Enterprise hard limits 與較低 safety limits 納入 deterministic checks
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]

@@ -1,6 +1,6 @@
 # Wiki 工作流手冊
 
-本文件把九個使用者意圖群組（十個 machine operations）展開成 11 個常用操作情境。所有工作流都遵守 Wiki-first、raw sources 唯讀、evidence-backed 與 append-only log 規則。
+本文件把十個使用者意圖群組（十一個 machine operations）展開成 12 個常用操作情境。所有工作流都遵守 Wiki-first、raw sources 唯讀、evidence-backed 與 append-only log 規則。
 
 ## 共通流程
 
@@ -31,7 +31,8 @@ flowchart LR
 | 8. Synthesis | `/save-synthesis {topic}` | `保存 {topic} 的跨模組分析` | `wiki/synthesis/` page |
 | 9. Guide | `/save-guide {topic}` | `建立 {topic} 操作指南` | `wiki/guides/` page |
 | 10. System Analysis / SA | `/system-analysis-doc {scope}` | `產出 {scope} SA 文件` | synthesis + coverage gaps |
-| 11. Delegation | 明確選擇或要求 agents | `請使用 subagents/parallel...` | 受限範圍的代理協作 |
+| 11. NotebookLM export | `/export-notebooklm` | `先檢查 Wiki，確認後產生 NotebookLM source pack` | `.notebooklm/` + manifest + upload plan |
+| 12. Delegation | 明確選擇或要求 agents | `請使用 subagents/parallel...` | 受限範圍的代理協作 |
 
 ## Authorization
 
@@ -40,6 +41,7 @@ flowchart LR
 - Query 與預設 Archaeology：唯讀。
 - Lint：先報告，再確認 repairs。
 - ADR、Guide、Synthesis、SA：明確建立要求即授權輸出。
+- NotebookLM export：先做 Wiki preflight；若需 Ingest，預覽並等待確認後才寫 Wiki 與 `.notebooklm/`。
 - Delegation：只有使用者明確要求才啟用。
 
 ## 1. Interactive Ingest
@@ -89,7 +91,26 @@ Query 預設唯讀。先讀 index 和 1–5 個相關 Wiki pages；只有 Wiki �
 
 先建立 Wiki coverage map，再補查不足的 raw sources。輸出存於 `wiki/synthesis/`，使用 `type: synthesis` 與 `tags: [synthesis, system-analysis]`。缺少 deployment、data flow、NFR 或 stakeholder evidence 時列為 coverage gap，不虛構內容。
 
-## 11. Delegation
+## 11. NotebookLM Enterprise export
+
+這是離線 source-pack workflow，不會連線或上傳 NotebookLM。先讀取整個 Wiki
+（排除 `wiki/log.md`），再根據 Wiki `frontmatter.sources` 讀取必要 evidence。
+遇到 stale、placeholder、缺口或矛盾時，先列出 bounded Ingest 範圍並等待確認。
+
+確認後執行：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
+  --root . --output .notebooklm --format json
+```
+
+輸出包含 `sources/*.md`、`manifest.json`、`upload-plan.md` 與 README。NotebookLM
+只需處理 `sources/*.md`；依 upload plan 對 `added`、`changed`、`deleted` 執行
+手動更新，`unchanged` 不需重傳。若要調整 Workspace tier、保留 source slots
+或 evidence scope，將 `assets/notebooklm.toml` 複製成 repo root 的
+`notebooklm.toml` 後修改。
+
+## 12. Delegation
 
 Delegation 只有在使用者明確要求時啟用。委派內容必須包含目標、範圍、Wiki 現況、使用者偏好與交付格式；subagent 不會因此獲得更寬的寫入權限，也不能跳過 index/log/frontmatter 規則。
 

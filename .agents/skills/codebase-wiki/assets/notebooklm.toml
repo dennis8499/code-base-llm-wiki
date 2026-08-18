@@ -1,0 +1,22 @@
+# Optional repository-local configuration for export-notebooklm.py.
+# Copy this file to the repository root as notebooklm.toml before editing.
+
+profile = "gemini-notebook-enterprise"
+output_directory = ".notebooklm"
+
+# Lower source_limit when the organization's Workspace tier has fewer slots.
+source_limit = 300
+reserved_source_slots = 0
+
+# Conservative local safety limits; neither may exceed the Enterprise hard cap.
+max_source_bytes = 450000000
+max_source_words = 450000
+
+# Wiki frontmatter.sources are included by default. Add narrowly scoped paths
+# only when the project map needs evidence not yet referenced by the Wiki.
+include_evidence = true
+extra_paths = []
+
+# Paths below are in addition to the built-in generated/dependency/credential
+# exclusions. All values must remain relative to the repository root.
+exclude_paths = []

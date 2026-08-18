@@ -25,6 +25,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Install or upgrade | `references/install-workflow.md` |
 | Framework maintenance | `references/framework-maintenance.md` |
 | Intent routing and delegation boundaries | `references/intent-routing.md` |
+| NotebookLM Enterprise export | `references/notebooklm-export-workflow.md` |
 | Ingest sequence, page creation rules, dependency ordering | `references/ingest-workflow.md` |
 | Wiki-first query and citations | `references/query-workflow.md` |
 | Wiki health checks, severities, report format | `references/lint-checklist.md` |

@@ -23,6 +23,7 @@ workflow、schema、template 與 hook logic 的共同來源。
 - 保留人工內容，`wiki/log.md` 維持 append-only。
 - page add/delete/rename/major update 同步 `wiki/index.md`。
 - Lint 先報告 findings，再確認 repairs。
+- NotebookLM export 先做 Wiki preflight；確認後才產生被 Git 忽略的 `.notebooklm/` pack，且不自動連線或上傳。
 - Custom agents 是 explicit-delegation only；一般任務由目前 agent 完成。
 
 ## Copilot Adapter

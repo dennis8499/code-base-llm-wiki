@@ -58,6 +58,7 @@ or source-code structure index.
 | `/save-synthesis {topic}`      | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。`                                        |
 | `/code-archaeology {target}`   | `請依 code archaeology 流程追蹤 {target} 的目前行為與 git history，清楚區分證據、推測與不確定性。`                     |
 | `/system-analysis-doc {scope}` | `請基於目前 wiki 內容產出 {scope} 的 SA 系統分析文件，寫入 wiki/synthesis/，標示 coverage gaps，並更新 index 與 log。` |
+| `/export-notebooklm`          | `請使用 NotebookLM export 流程，先檢查 wiki 缺口並在確認後產生 .notebooklm source pack 與 upload plan。`              |
 | `/update-index`                | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。`                                   |
 
 Codex CLI and IDE slash commands are platform controls. Do not add project-level
@@ -105,6 +106,15 @@ System analysis document:
 
 ```text
 請使用 $codebase-wiki，基於目前 wiki 內容產出整體系統的 SA 系統分析文件，寫入 wiki/synthesis/system-analysis.md，標示 coverage gaps，並更新 index 與 log。
+```
+
+NotebookLM Enterprise export:
+
+```text
+請使用 $codebase-wiki 執行 NotebookLM export：先讀取 wiki/index.md 與相關 Wiki，
+檢查 stale、placeholder、缺口與矛盾；若需重新萃取，先列出 Ingest 範圍並等待確認。
+確認後更新 Wiki，再執行 exporter 產生 .notebooklm/source pack、manifest 與 upload-plan，
+遵守 Enterprise source 數量與單檔容量限制，不呼叫雲端 API。
 ```
 
 Explicit delegation:
@@ -180,6 +190,7 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 python .agents\skills\codebase-wiki\scripts\parity-check.py
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
 ```
 
 Ask Codex to confirm setup:

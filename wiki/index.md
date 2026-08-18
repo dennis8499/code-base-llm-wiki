@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-07-29
+last_updated: 2026-08-17
 tags: [index]
 status: active
 ---
@@ -54,6 +54,7 @@ _（尚無頁面。執行 Ingest 後將自動產生。）_
 | 頁面 | 摘要 |
 |------|------|
 | [[framework-introduction]] | 使用指南：安全 install/upgrade、工作流 authorization、唯讀 lint 與重複 E2E 驗收 |
+| [[notebooklm-export]] | NotebookLM Enterprise：Wiki-first source pack、檔案限制、stable IDs 與增量 upload plan |
 | [[release-and-update]] | 版本、GitHub Release、下載資產、checksum 與未來 Extension manifest |
 
 ## Synthesis

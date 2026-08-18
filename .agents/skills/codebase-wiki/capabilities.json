@@ -47,6 +47,11 @@
       "requires_confirmation": false,
       "authorization_policy": "explicit_request"
     },
+    "notebooklm_export": {
+      "writes_by_default": false,
+      "requires_confirmation": true,
+      "authorization_policy": "preview_then_confirm"
+    },
     "delegation": {
       "writes_by_default": false,
       "requires_confirmation": false,
@@ -61,6 +66,7 @@
     "adr": ["adr"],
     "synthesis_guide": ["synthesis", "guide"],
     "system_analysis": ["system_analysis"],
+    "notebooklm_export": ["notebooklm_export"],
     "archaeology": ["archaeology"],
     "delegation": ["delegation"]
   },
@@ -75,6 +81,7 @@
       "guide": ["save-guide.prompt.md", "onboarding-guide.prompt.md"],
       "synthesis": ["save-synthesis.prompt.md"],
       "system_analysis": ["system-analysis-doc.prompt.md"],
+      "notebooklm_export": ["export-notebooklm.prompt.md"],
       "delegation": []
     },
     "codex": {

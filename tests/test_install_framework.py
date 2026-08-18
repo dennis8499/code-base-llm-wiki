@@ -77,6 +77,26 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue((target / "AGENTS.md").exists())
             self.assertTrue((target / "Codex.md").exists())
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
+            self.assertTrue(
+                (
+                    target
+                    / ".agents"
+                    / "skills"
+                    / "codebase-wiki"
+                    / "scripts"
+                    / "export-notebooklm.py"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents"
+                    / "skills"
+                    / "codebase-wiki"
+                    / "references"
+                    / "notebooklm-export-workflow.md"
+                ).exists()
+            )
             self.assertEqual(
                 (target / ".agents" / "skills" / "codebase-wiki" / "VERSION").read_text(
                     encoding="utf-8"

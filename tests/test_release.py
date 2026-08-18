@@ -104,6 +104,22 @@ class ReleaseTests(unittest.TestCase):
                 self.assertFalse(any("/__pycache__/" in name for name in names))
                 self.assertFalse(any("/logs/" in name for name in names))
 
+    def test_release_files_exclude_local_notebooklm_exports(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "VERSION").write_text("0.1.0\n", encoding="utf-8")
+            (root / ".notebooklm/sources").mkdir(parents=True)
+            (root / ".notebooklm/sources/private.md").write_text(
+                "private\n", encoding="utf-8"
+            )
+            (root / "README.md").write_text("readme\n", encoding="utf-8")
+            files = release.release_files(root)
+            self.assertEqual(
+                [path.relative_to(root).as_posix() for path in files],
+                ["README.md", "VERSION"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

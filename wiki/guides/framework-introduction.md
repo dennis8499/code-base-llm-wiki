@@ -7,11 +7,15 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
+  - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
+  - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
+  - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - docs/releases/README.md
+  - .github/prompts/export-notebooklm.prompt.md
   - VERSION
   - tools/release.py
   - samples/README.md
-last_updated: 2026-07-29
+last_updated: 2026-08-17
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 ---
@@ -25,6 +29,7 @@ status: active
 - 想把 Codebase LLM Wiki 安裝到既有 Repo 的維護者；
 - 使用 GitHub Copilot 或 OpenAI Codex 維護 codebase 知識的人；
 - 需要驗證雙入口能力、安全邊界或 Wiki 品質的框架貢獻者。
+- 想把本地 Wiki 以可追蹤、可增量更新的方式交付給 NotebookLM Enterprise 使用者的人。
 
 ## 前置需求
 
@@ -105,9 +110,29 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | Synthesis | 保存跨模組分析 | synthesis + index + log |
 | Guide | 保存 setup/runbook/onboarding | guide + index + log |
 | System Analysis / SA | 系統級文件與 gaps | synthesis + index + log |
+| NotebookLM export | 將 Wiki 與 declared evidence 組成可手動上傳的 source pack | `.notebooklm/`、manifest、upload plan；不自動上傳 |
 | Delegation | 使用者明確要求專業代理 | 不擴張原任務權限 |
 
 完整提示詞與輸出契約位於 `docs/workflows/README.md`。
+
+## NotebookLM Enterprise export
+
+使用 `/export-notebooklm` 或 Codex 的自然語言 recipe。Agent 先讀完整 Wiki
+（排除 `wiki/log.md`），執行 frontmatter、stale 與 lint preflight；若發現
+placeholder、stale、缺口或矛盾，先預覽 bounded Ingest 並等待確認。確認後才執行
+exporter，讀取 Wiki `frontmatter.sources` 指向的必要 evidence。
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
+  --root . --output .notebooklm --format json
+```
+
+只手動上傳 `.notebooklm/sources/*.md`。`manifest.json` 記錄 input/output hash
+與 stable `logical_source_id`；`upload-plan.md` 將每次結果分成 `added`、
+`changed`、`deleted`、`unchanged`。變更來源需先移除 NotebookLM 中的舊 static
+source 再上傳新檔，未變更來源不需重傳。預設 pack 使用 450 MB / 450,000 words
+的 safety limits，且不超過 Enterprise 的 300 sources、500 MB / 500,000 words
+hard limits；不同 Workspace tier 請在 `notebooklm.toml` 下調 source limit。
 
 ## 6. Guard modes
 
@@ -126,6 +151,7 @@ python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
 ```
 
 Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不要以虛構 sources 或刪除 log 歷史規避檢查。
@@ -149,13 +175,14 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 - **把 DB evidence 放入 sources**：frontmatter sources 只接受 Repo paths。
 - **遇到 conflicts 使用覆寫**：Installer 沒有 force；應人工合併。
 - **未要求就啟用 delegation**：日常任務應由目前 Agent 完成。
+- **把 NotebookLM 當成自動同步服務**：本流程只產生本機 pack 與 diff plan，必須由使用者手動更新 NotebookLM。
 - **修正 log 時重寫歷史**：`wiki/log.md` 永遠只能追加。
 
 ## 進一步閱讀
 
 - 架構與資料流：`docs/architecture/README.md`
 - 安裝、升級與排錯：`docs/setup/README.md`
-- 11 個操作情境：`docs/workflows/README.md`
+- 12 個操作情境：`docs/workflows/README.md`
 - 自動與手動驗證：`docs/validation/README.md`
 - Codex 獨立手冊：`Codex.md`
 

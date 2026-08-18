@@ -95,6 +95,24 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 3. 在 `/hooks` 或產品對應介面信任 project-local hooks。
 4. 需要完整 recipes 時閱讀根目錄 `Codex.md`。
 
+## NotebookLM Enterprise source pack
+
+NotebookLM export 是獨立的離線產出流程，不需要 API credentials，也不會由
+installer 自動啟用或上傳檔案。先完成 Wiki preflight；確認後從 Repo root 執行：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
+  --root . --output .notebooklm --format json
+```
+
+Exporter 會以 `wiki/` 為主要來源，依頁面 frontmatter 的 `sources` 補入必要
+evidence，產生穩定命名的 `sources/*.md`、`manifest.json`、`upload-plan.md` 與
+README。只把 `sources/*.md` 手動加入企業版 Notebook；再次執行時依 upload plan
+處理新增、變更與刪除，`unchanged` 不需重新上傳。`.notebooklm/` 預設被 Git
+忽略；若需調整 Workspace tier、保留 source slots 或 evidence scope，可將
+`.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製為 Repo root 的
+`notebooklm.toml` 後修改。
+
 ## 常見問題
 
 ### 回報 conflicts
@@ -129,6 +147,7 @@ python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
 ```
 
 完整的框架 Repo 發佈檢查請看 [驗證手冊](../validation/README.md)。
