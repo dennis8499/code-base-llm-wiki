@@ -8,16 +8,19 @@ sources:
   - docs/workflows/README.md
   - docs/validation/README.md
   - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
+  - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
+  - .agents/skills/codebase-wiki/assets/project-function-catalog-template.md
   - docs/releases/README.md
   - .github/prompts/export-notebooklm.prompt.md
   - VERSION
   - tools/release.py
   - samples/README.md
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
+notebooklm_group: project-guides
 ---
 
 # Codebase LLM Wiki — 使用指南
@@ -110,29 +113,46 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | Synthesis | 保存跨模組分析 | synthesis + index + log |
 | Guide | 保存 setup/runbook/onboarding | guide + index + log |
 | System Analysis / SA | 系統級文件與 gaps | synthesis + index + log |
-| NotebookLM export | 將 Wiki 與 declared evidence 組成可手動上傳的 source pack | `.notebooklm/`、manifest、upload plan；不自動上傳 |
+| NotebookLM export | 全專案掃描並依功能補齊 Wiki，組成可手動上傳的 source pack | 功能文件、`.notebooklm/`、manifest、upload plan；不自動上傳 |
 | Delegation | 使用者明確要求專業代理 | 不擴張原任務權限 |
 
 完整提示詞與輸出契約位於 `docs/workflows/README.md`。
 
 ## NotebookLM Enterprise export
 
-使用 `/export-notebooklm` 或 Codex 的自然語言 recipe。Agent 先讀完整 Wiki
-（排除 `wiki/log.md`），執行 frontmatter、stale 與 lint preflight；若發現
-placeholder、stale、缺口或矛盾，先預覽 bounded Ingest 並等待確認。確認後才執行
-exporter，讀取 Wiki `frontmatter.sources` 指向的必要 evidence。
+使用 `/export-notebooklm` 或 Codex 的自然語言 recipe。每次執行都重新掃描 Git
+tracked 與 non-ignored untracked files，納入可分享的 runtime source、必要
+config/manifests、schema/migrations 與既有文件；tests、CI/CD、IaC、build/dev
+tooling、dependencies、generated、binary、secrets、framework adapters 與輸出目錄
+預設排除。既有 Wiki 是增量知識基線，不是掃描邊界。
+
+先執行唯讀 preflight，取得納入/排除 inventory、Wiki coverage、缺失文件、容量與
+來源數估計、warnings 和未驗證事項：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
+  --root . --output .notebooklm --preflight --format json
+```
+
+Agent 依功能批次閱讀所有 included files，預覽預計建立或重大更新的頁面。即使沒有
+stale、placeholder 或容量警告，也要等待使用者確認。確認後以繁體中文補齊專案總覽、
+功能目錄、系統架構、各功能 module/entity pages 與系統分析，填入真實
+`frontmatter.sources`、`notebooklm_group`、wikilinks，並同步 index、只追加一筆
+`ingest` log，最後才執行 exporter：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --output .notebooklm --format json
 ```
 
-只手動上傳 `.notebooklm/sources/*.md`。`manifest.json` 記錄 input/output hash
-與 stable `logical_source_id`；`upload-plan.md` 將每次結果分成 `added`、
-`changed`、`deleted`、`unchanged`。變更來源需先移除 NotebookLM 中的舊 static
-source 再上傳新檔，未變更來源不需重傳。預設 pack 使用 450 MB / 450,000 words
-的 safety limits，且不超過 Enterprise 的 300 sources、500 MB / 500,000 words
-hard limits；不同 Workspace tier 請在 `notebooklm.toml` 下調 source limit。
+只手動上傳 `.notebooklm/sources/*.md`。Schema v2 `manifest.json` 記錄 scan
+inventory、coverage、omissions、input/output hash 與 stable `logical_source_id`；
+`upload-plan.md` 將每次結果分成 `added`、`changed`、`deleted`、`unchanged`。變更
+來源需先移除 NotebookLM 中的舊 static source 再上傳新檔，未變更來源不需重傳。
+打包採 documents-first：先保留完整功能文件，再以剩餘 source/byte budget 加入
+關鍵 evidence；`source_budget` 省略項目必須交付。預設 pack 使用 180 MB /
+450,000 words safety limits，且不超過 Enterprise 的 300 sources、200 MB /
+500,000 words hard limits；不同 Workspace tier 請在 `notebooklm.toml` 下調。
 
 ## 6. Guard modes
 
@@ -151,6 +171,7 @@ python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --preflight --format json
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
 ```
 
@@ -175,6 +196,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 - **把 DB evidence 放入 sources**：frontmatter sources 只接受 Repo paths。
 - **遇到 conflicts 使用覆寫**：Installer 沒有 force；應人工合併。
 - **未要求就啟用 delegation**：日常任務應由目前 Agent 完成。
+- **把既有 Wiki 當成 NotebookLM 掃描邊界**：export 每次都要重掃安全的全專案範圍，才能發現新增、刪除與未被 Wiki 覆蓋的功能。
 - **把 NotebookLM 當成自動同步服務**：本流程只產生本機 pack 與 diff plan，必須由使用者手動更新 NotebookLM。
 - **修正 log 時重寫歷史**：`wiki/log.md` 永遠只能追加。
 

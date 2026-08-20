@@ -1,6 +1,7 @@
 ---
 title: System Analysis Document
 type: synthesis
+notebooklm_group: system-analysis
 sources:
   - wiki/overview.md
 last_updated: YYYY-MM-DD

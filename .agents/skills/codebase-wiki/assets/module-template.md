@@ -1,6 +1,7 @@
 ---
 title: "{模組名稱}"
 type: module
+notebooklm_group: "function-{functional-area-slug}"
 sources:
   - "{path/to/module/directory/}"
 last_updated: YYYY-MM-DD

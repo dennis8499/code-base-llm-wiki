@@ -14,6 +14,7 @@ field validity lives in `frontmatter-spec.md`.
 | `dependency` | A significant external package | `assets/dependency-template.md` | `package_name`, `version` |
 | `guide` | Actionable onboarding, setup, debugging, or operations | `assets/guide-template.md` | — |
 | `synthesis` | Durable cross-cutting analysis | `assets/synthesis-template.md` | — |
+| `synthesis` (function catalog) | Whole-project functional coverage for NotebookLM preparation | `assets/project-function-catalog-template.md` | tags include `function-catalog` |
 | `synthesis` (SA) | System Analysis document | `assets/system-analysis-template.md` | tags include `system-analysis` |
 | `index` | Wiki navigation root | `assets/index-template.md` | `sources: []`, `tags: [index]` |
 | `log` | Append-only activity history | `assets/log-template.md` | `sources: []`, `tags: [log]` |

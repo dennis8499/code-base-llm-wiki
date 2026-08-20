@@ -98,18 +98,30 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 ## NotebookLM Enterprise source pack
 
 NotebookLM export 是獨立的離線產出流程，不需要 API credentials，也不會由
-installer 自動啟用或上傳檔案。先完成 Wiki preflight；確認後從 Repo root 執行：
+installer 自動啟用或上傳檔案。從 Repo root 先執行唯讀全專案 preflight：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
+  --root . --output .notebooklm --preflight --format json
+```
+
+Agent 會掃描可分享的 runtime source、必要設定與 manifests、schema/migrations、
+既有文件，並排除 tests、CI/CD、IaC、build/dev tooling、dependencies、generated、
+binary、secrets 與 framework adapters。預覽必須列出納入/排除 inventory、Wiki
+coverage、預計建立或更新的功能文件、容量預估與未驗證項目；即使沒有警告也要等待
+確認。確認後，Agent 以繁體中文依功能補齊 Wiki，再執行：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --output .notebooklm --format json
 ```
 
-Exporter 會以 `wiki/` 為主要來源，依頁面 frontmatter 的 `sources` 補入必要
-evidence，產生穩定命名的 `sources/*.md`、`manifest.json`、`upload-plan.md` 與
-README。只把 `sources/*.md` 手動加入企業版 Notebook；再次執行時依 upload plan
-處理新增、變更與刪除，`unchanged` 不需重新上傳。`.notebooklm/` 預設被 Git
-忽略；若需調整 Workspace tier、保留 source slots 或 evidence scope，可將
+Exporter 將功能導向 Wiki 文件與精選原始 evidence 打包成穩定命名的
+`sources/*.md`、`manifest.json`、`upload-plan.md` 與 README。文件優先於原始
+evidence；容量不足時會保留完整文件並在 manifest 記錄被省略的低優先 evidence。
+只把 `sources/*.md` 手動加入企業版 Notebook；再次執行時仍會全量重掃專案與增量
+更新 Wiki，再依 upload plan 處理新增、變更與刪除，`unchanged` 不需重新上傳。
+`.notebooklm/` 預設被 Git 忽略；若需調整 Workspace tier、保留 source slots 或 evidence scope，可將
 `.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製為 Repo root 的
 `notebooklm.toml` 後修改。
 
@@ -147,6 +159,7 @@ python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --preflight --format json
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
 ```
 

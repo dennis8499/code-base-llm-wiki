@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a Wiki-first, incremental source pack for NotebookLM Enterprise.
+"""Compatibility entrypoint for the NotebookLM Enterprise exporter.
 
 The exporter is intentionally offline and dependency-free.  It reads the Wiki
 and the raw paths referenced by Wiki frontmatter, writes only a generated
@@ -858,6 +858,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         for warning in result["warnings"]:
             print(f"Warning: {warning}")
     return 0
+
+
+from notebooklm_exporter import main as main
 
 
 if __name__ == "__main__":

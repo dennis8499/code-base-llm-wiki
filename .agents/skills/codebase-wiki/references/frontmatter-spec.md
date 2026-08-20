@@ -15,6 +15,16 @@
 | `tags`         | string[] | ✅    | 分類標籤                           | `["auth", "security"]`          |
 | `status`       | enum     | ✅    | 頁面狀態                           | `active`                        |
 
+### NotebookLM 功能分組（選填）
+
+| 欄位 | 型別 | 必填 | 說明 | 範例 |
+| --- | --- | --- | --- | --- |
+| `notebooklm_group` | string | NotebookLM preparation 建立或更新的頁面必填；其他頁面選填 | 穩定的功能文件群組，使用 kebab-case | `function-order-checkout` |
+
+允許值必須符合 `^[a-z0-9]+(?:-[a-z0-9]+)*$`。同一功能域重跑時沿用既有值；
+共用高階頁面使用 `project`、`architecture` 或 `system-analysis`。舊頁面沒有此欄位時，
+exporter 會依 type/path 使用相容 fallback。
+
 ### `type` 允許值
 
 | 值             | 對應目錄             | 說明                         |
@@ -136,3 +146,4 @@ page-shape source of truth.
 9. `type: decision` 必須有有效 `decision_date` 與 `decision_status`。
 10. `type: dependency` 必須有非空 `package_name` 與 `version`。
 11. `type: index` / `type: log` 必須位於指定 root 檔名。
+12. `notebooklm_group` 若存在，必須是非空 kebab-case 字串。

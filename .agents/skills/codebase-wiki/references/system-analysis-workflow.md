@@ -81,6 +81,10 @@ Mark each row as:
 6. Append `wiki/log.md` with operation `synthesis`.
 7. Report coverage gaps and verification commands.
 
+When System Analysis is produced inside a confirmed NotebookLM full-project
+preparation, the composite workflow records all affected pages in its single
+`ingest` log entry. Standalone SA requests continue to use `synthesis`.
+
 ## Completion Criterion
 
 The SA document is complete when every coverage-map row and every standard

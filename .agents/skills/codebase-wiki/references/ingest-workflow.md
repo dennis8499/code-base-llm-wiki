@@ -48,6 +48,8 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
    - 列出目標路徑下的所有子目錄和檔案
    - 建立初步的模組清單
    - 分析 import/export 關係，建立依賴圖
+   - 若由 NotebookLM preparation 觸發，依其 safe-scope contract 掃描全部
+     runtime/config/schema/docs，並以 entrypoint、use case、資料邊界與公開介面建立功能域
 2. **排序階段**：
    - 按依賴關係排序：先處理被依賴最多的底層模組
    - 若無明確依賴關係，按目錄結構由外而內
@@ -60,6 +62,14 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
    - 更新 `wiki/index.md`
    - 追加 `wiki/log.md` 條目
    - 輸出最終摘要報告
+
+### NotebookLM 全專案模式
+
+NotebookLM export 的 Batch Ingest 不以目錄為最終文件邊界。先完成唯讀
+全專案 preflight 與使用者確認，再建立 overview、project function catalog、
+system architecture、每個功能域的 module/entity pages 與 system analysis。
+此模式建立或更新的頁面必須使用穩定 `notebooklm_group`，敘述固定為繁體中文，
+並保留原始識別字。一次確認後的整批更新只追加一筆 `ingest` log。
 
 ---
 

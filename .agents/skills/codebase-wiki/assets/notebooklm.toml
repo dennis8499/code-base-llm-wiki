@@ -8,12 +8,14 @@ output_directory = ".notebooklm"
 source_limit = 300
 reserved_source_slots = 0
 
-# Conservative local safety limits; neither may exceed the Enterprise hard cap.
-max_source_bytes = 450000000
+# Conservative local safety limits; Enterprise currently allows at most
+# 200 MB or 500,000 words per source.
+max_source_bytes = 180000000
 max_source_words = 450000
 
-# Wiki frontmatter.sources are included by default. Add narrowly scoped paths
-# only when the project map needs evidence not yet referenced by the Wiki.
+# Documents are packed first. Wiki frontmatter.sources provide ranked evidence;
+# lower-priority evidence is explicitly reported if the remaining source budget
+# cannot hold it. Add narrowly scoped paths only for exceptional evidence.
 include_evidence = true
 extra_paths = []
 

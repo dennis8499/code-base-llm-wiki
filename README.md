@@ -96,7 +96,7 @@ flowchart LR
 | ADR | 保存架構決策 | 是 |
 | Synthesis / Guide | 保存長期分析或操作指南 | 是 |
 | System Analysis / SA | 產生標示 coverage gaps 的 SA 文件 | 是 |
-| NotebookLM export | 產生 Wiki-first、本地、可增量更新的 Markdown source pack | 預覽後寫入 `.notebooklm/` |
+| NotebookLM export | 全專案安全掃描、功能導向補齊文件，再產生本地 Markdown source pack | 預覽後更新 `wiki/` 與 `.notebooklm/` |
 | Delegation | 明確要求時分派專業代理 | 視任務而定 |
 
 完整的提示詞與驗收條件請參閱 [工作流手冊](docs/workflows/README.md)。
@@ -112,7 +112,7 @@ flowchart LR
 - **安全邊界**：target mode 只允許 Wiki 寫入；framework mode 才允許維護框架檔案。
 - **零第三方依賴 installer**：Python 標準函式庫即可 dry-run、安裝與升級。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
-- **NotebookLM 增量匯出**：以穩定 logical source IDs、hash manifest 與 upload plan 只更新變更來源。
+- **NotebookLM 全專案文件化**：每次重掃可分享的 runtime source、必要設定、schema/migrations 與既有文件，依功能補齊分層 Wiki；source pack 採 documents-first、穩定 logical source IDs 與增量 upload plan。
 - **可驗證**：提供 parity、唯讀 Wiki lint、frontmatter、stale-source、統計與單元測試。
 
 ---
@@ -193,11 +193,12 @@ Codex 的 hooks、recipes、delegation 與排錯方式保留在可獨立安裝�
 NotebookLM Enterprise 匯出：
 
 ```text
-請使用 $codebase-wiki 執行 NotebookLM export：先檢查 wiki 的 stale、placeholder、缺口與矛盾；
-若需重新萃取，先列出 Ingest 範圍並等待確認。確認後產生 .notebooklm source pack 與 upload-plan。
+請使用 $codebase-wiki 執行 NotebookLM export：先唯讀掃描整個專案的可分享 runtime source、
+必要設定、schema/migrations 與既有文件，依功能列出納入/排除、Wiki coverage、預計新增或更新
+的文件與容量預估，等待我確認。確認後以繁體中文補齊分層 Wiki，並產生 .notebooklm source pack。
 ```
 
-Exporter 不會呼叫雲端 API 或自動上傳；使用者依 upload plan 將變更來源更新到 NotebookLM。
+預覽可用 `export-notebooklm.py --preflight` 產生，不會寫入 Wiki 或 pack。確認後的文件至少涵蓋專案總覽、功能目錄、系統架構、功能/實體頁與系統分析；容量不足時優先保留這些文件，低優先原始 evidence 會在 manifest 中透明列為省略。Exporter 不會呼叫雲端 API 或自動上傳；使用者依 upload plan 將變更來源更新到 NotebookLM。
 
 ---
 
@@ -233,7 +234,7 @@ Exporter 不會呼叫雲端 API 或自動上傳；使用者依 upload plan 將�
 | GitHub Copilot Chat | 支援 | Agents、prompts、hooks 與共用 skill |
 | OpenAI Codex | 支援 | AGENTS、repo-local skill、hooks 與 optional agents |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
-| NotebookLM Enterprise | 支援離線匯出 | `.md` sources、manifest、hash-based upload plan；不含雲端 API |
+| NotebookLM Enterprise | 支援全專案文件化與離線匯出 | 功能導向 `.md` 文件、必要 evidence、manifest、hash-based upload plan；不含雲端 API |
 
 本框架不提供 RAG、向量資料庫、本機 source index、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。NotebookLM export 只產生本地 `.notebooklm/`；SQL Server live evidence 僅是 Query 的唯讀子模式，且資料庫證據不得放進 frontmatter `sources`。
 

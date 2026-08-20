@@ -95,6 +95,27 @@ class ContractTests(unittest.TestCase):
                     ).is_file()
                 )
 
+    def test_notebooklm_contract_requires_full_scan_and_preflight(self) -> None:
+        skill_root = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"
+        workflow = (skill_root / "references" / "notebooklm-export-workflow.md").read_text(
+            encoding="utf-8"
+        )
+        prompt = (REPO_ROOT / ".github" / "prompts" / "export-notebooklm.prompt.md").read_text(
+            encoding="utf-8"
+        )
+
+        for text in (workflow, prompt):
+            self.assertIn("--preflight", text)
+            self.assertIn("notebooklm_group", text)
+        self.assertIn("full safe project", workflow.lower())
+        self.assertRegex(prompt, r"全專案|整個專案")
+        self.assertIn("Documentation is mandatory", workflow)
+        self.assertIn("before evidence", workflow)
+        self.assertTrue((skill_root / "scripts" / "notebooklm_exporter.py").is_file())
+        self.assertTrue(
+            (skill_root / "assets" / "project-function-catalog-template.md").is_file()
+        )
+
     def test_agents_are_explicit_delegation_only_and_compact(self) -> None:
         for directory, pattern in (
             (REPO_ROOT / ".codex" / "agents", "*.toml"),

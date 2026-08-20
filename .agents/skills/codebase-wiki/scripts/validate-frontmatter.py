@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import pathlib
+import re
 import sys
 from typing import Any
 
@@ -34,6 +35,7 @@ ALLOWED_TYPES = {
 }
 ALLOWED_STATUS = {"active", "stale", "placeholder"}
 ALLOWED_DECISION_STATUS = {"proposed", "accepted", "deprecated", "superseded"}
+NOTEBOOKLM_GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 TYPE_PATHS = {
     "module": pathlib.PurePosixPath("modules"),
@@ -113,6 +115,13 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
         errors.append(
             f"{rel}: status must be one of {', '.join(sorted(ALLOWED_STATUS))}; got {status!r}"
         )
+
+    notebooklm_group = fm.get("notebooklm_group")
+    if notebooklm_group is not None and (
+        not isinstance(notebooklm_group, str)
+        or not NOTEBOOKLM_GROUP_PATTERN.fullmatch(notebooklm_group)
+    ):
+        errors.append(f"{rel}: notebooklm_group must be a non-empty kebab-case string")
 
     if page_type == "decision":
         if not is_valid_date(fm.get("decision_date")):

@@ -14,7 +14,7 @@ artifact and authorization contract.
 | ADR | decision, ADR, architecture choice | Create or update a record under `wiki/decisions/` with ADR frontmatter. |
 | Synthesis / Guide | save analysis, onboarding, guide, synthesis | Persist durable analysis under `wiki/synthesis/` or durable operational guidance under `wiki/guides/`. |
 | System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a Markdown SA document under `wiki/synthesis/` from wiki-first evidence. |
-| NotebookLM export | NotebookLM, export, source pack, upload plan, 匯出 | Read Wiki first, preview any required Ingest, then generate an offline incremental `.notebooklm/` source pack. |
+| NotebookLM export | NotebookLM, export, source pack, upload plan, 匯出 | Read Wiki as baseline, always scan the full safe project scope, preview functional Ingest, then generate an offline incremental `.notebooklm/` source pack after confirmation. |
 | Archaeology | why, history, legacy, git, 考古 | Trace concrete entrypoints, call paths, and non-destructive git history; separate evidence from inference. |
 | Delegation | subagents, parallel, delegation, swarm | Use platform-native custom agents only when the user or parent agent explicitly asks for delegation. |
 

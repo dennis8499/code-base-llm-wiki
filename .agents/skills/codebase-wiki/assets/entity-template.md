@@ -3,6 +3,7 @@ title: "{實體名稱}"
 type: entity
 entity_type: class | service | api-endpoint | database-table
 parent_module: "{parent-module-page-name}"
+notebooklm_group: "function-{functional-area-slug}"
 sources:
   - "{path/to/source/file}"
 last_updated: YYYY-MM-DD

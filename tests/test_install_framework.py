@@ -93,6 +93,26 @@ class FrameworkInstallerTests(unittest.TestCase):
                     / ".agents"
                     / "skills"
                     / "codebase-wiki"
+                    / "scripts"
+                    / "notebooklm_exporter.py"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents"
+                    / "skills"
+                    / "codebase-wiki"
+                    / "assets"
+                    / "project-function-catalog-template.md"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents"
+                    / "skills"
+                    / "codebase-wiki"
                     / "references"
                     / "notebooklm-export-workflow.md"
                 ).exists()

@@ -14,6 +14,7 @@ python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --preflight --format json
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
 ```
 
@@ -29,14 +30,14 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 
 | 檢查 | 驗證內容 |
 | --- | --- |
-| Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract 與 NotebookLM incremental export |
+| Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract 與 NotebookLM full-scan/docs-first incremental export |
 | Parity | Copilot/Codex contract v2、必要入口、移除舊 runtime references |
 | Frontmatter | 必填欄位、type、日期、status 與 type-specific contract |
 | Stale source | source path 是否存在、tracked source 是否比 Wiki 更新 |
 | Wiki stats | Page types、statuses、links 與 Wiki 規模 |
 | Wiki lint | Frontmatter、sources、broken links、orphans、index completeness；語意檢查標成 `agent_review_required` |
 | Index check | 唯讀比較預期 page/type entries、缺漏、錯區與重複項目 |
-| NotebookLM export | Wiki-first source selection、stable IDs、hash/diff plan、size/word limits、sensitive/generated exclusions 與 previous-manifest preservation |
+| NotebookLM preflight/export | 全專案分類、零寫入 preflight、功能群組、schema v1→v2、documents-first 預算、stable IDs、hash/diff plan、200/180 MB 限制、敏感/生成檔排除與 previous-manifest preservation |
 
 ## Task Tracker E2E
 
@@ -50,7 +51,7 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 4. Lint 產生無 Critical 的報告；
 5. 確認 raw source hashes 未改變；
 6. 確認新增頁面可由 index 導覽且 log 已追加。
-7. 確認 NotebookLM export 只讀 Wiki/evidence、只輸出本機 pack，且第二次執行能產生可操作的 diff plan。
+7. 確認 NotebookLM preflight 掃描所有可分享 runtime/docs/schema/config 且零寫入；確認後建立完整功能文件與本機 pack，第二次仍全量重掃並產生可操作的 diff plan。
 
 Agent 產出的自然語言不做 byte-for-byte golden comparison；驗收的是 evidence、結構、安全邊界與必要 artifact。
 
@@ -64,7 +65,7 @@ Copilot 與 Codex 各自重複三次以下情境，驗收 process invariants：
 | Interactive Ingest | 探索與摘要完成後才確認寫入；index/log coupling 完整 |
 | Lint | deterministic findings 先報告；repairs 等待確認 |
 | Delegation | 一般請求留在目前 agent；明確 delegation 才使用 custom agent |
-| NotebookLM export | Wiki preflight → bounded Ingest confirmation → deterministic pack；只手動上傳 changed sources |
+| NotebookLM export | full safe scan → inventory/coverage/docs plan confirmation → functional Ingest → documents-first pack；只手動上傳 changed sources |
 
 三次輸出可使用不同措辭，但流程不變量必須全部通過。
 

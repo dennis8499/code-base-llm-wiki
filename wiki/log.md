@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 tags: [log]
 status: active
 ---
@@ -104,4 +104,11 @@ status: active
 - 新增 Wiki-first `notebooklm_export` operation、共用 exporter、NotebookLM workflow reference、設定模板與 Copilot/Codex 入口
 - Exporter 依 Wiki pages 與 declared evidence 建立 stable source IDs、hash manifest、檔案切分、敏感/生成檔排除與 added/changed/deleted/unchanged upload plan
 - NotebookLM 流程只寫本機 `.notebooklm/` 產物，不呼叫 API、不修改 raw sources，並把 Enterprise hard limits 與較低 safety limits 納入 deterministic checks
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]
+
+## [2026-08-20] update | NotebookLM 全專案功能文件化與 documents-first source pack
+
+- NotebookLM workflow 改為每次唯讀重掃安全的全專案範圍，先預覽納入/排除 inventory、Wiki coverage、功能文件計畫、容量與未驗證項目，確認後才更新 Wiki 與本機 pack
+- 新增繁體中文功能目錄模板、`notebooklm_group`、schema v2 功能群組 stable IDs、舊 manifest 遷移與 documents-first 預算；完整文件優先，低優先 evidence 省略會透明記錄
+- Enterprise hard/safety limits 對齊每 source 200/180 MB 與 500,000/450,000 words；仍維持單一 notebook、手動上傳、raw sources 唯讀與 atomic output preservation
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]

@@ -24,7 +24,9 @@ flowchart TB
     Enough -->|否| Sources[唯讀檢查 raw sources]
     Sources --> Result
     Result -->|持久化工作流| Wiki[更新頁面 / index / append-only log]
-    Result -->|NotebookLM export| Pack[.notebooklm source pack]
+    Project[Full safe project scan] -->|NotebookLM export| Docs[Functional Wiki documents]
+    Docs --> Wiki
+    Docs --> Pack[.notebooklm documents-first pack]
 ```
 
 ## 雙入口與共用契約
@@ -91,6 +93,7 @@ Hooks 是 deterministic guardrail，不取代平台 sandbox，也不授權 Agent
 - Query 不因讀取而自動持久化結果。
 - SQL Server live evidence 只允許 bounded read-only evidence，且不能放入 frontmatter sources。
 - 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
-- NotebookLM export 只產生可審查的本機 `.notebooklm/` source pack、`manifest.json` 與 `upload-plan.md`；不呼叫 NotebookLM API，也不自動上傳。
-- Export 以 Wiki 為主，只有 Wiki frontmatter 宣告的 evidence 才會按需納入；敏感檔案、generated/cache 目錄與超出設定上限的來源不會被打包。
+- NotebookLM export 每次唯讀全量掃描可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件；既有 Wiki 是增量知識基線，不是掃描邊界。
+- 確認 inventory、coverage、文件計畫與容量後，Agent 依功能更新 Wiki；本機 `.notebooklm/` 採 documents-first 打包，低優先 evidence 可因 source budget 省略但必須透明記錄。
+- Export 不呼叫 NotebookLM API，也不自動上傳；敏感檔案、tests、CI/IaC、build/dev tooling、dependencies、generated/binary 與 framework adapters 不會被打包。
 - 不允許 delegation 隱性改變寫入或安全邊界。

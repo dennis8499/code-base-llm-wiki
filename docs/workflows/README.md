@@ -31,7 +31,7 @@ flowchart LR
 | 8. Synthesis | `/save-synthesis {topic}` | `保存 {topic} 的跨模組分析` | `wiki/synthesis/` page |
 | 9. Guide | `/save-guide {topic}` | `建立 {topic} 操作指南` | `wiki/guides/` page |
 | 10. System Analysis / SA | `/system-analysis-doc {scope}` | `產出 {scope} SA 文件` | synthesis + coverage gaps |
-| 11. NotebookLM export | `/export-notebooklm` | `先檢查 Wiki，確認後產生 NotebookLM source pack` | `.notebooklm/` + manifest + upload plan |
+| 11. NotebookLM export | `/export-notebooklm` | `全專案掃描並依功能補齊文件，確認後產生 NotebookLM source pack` | Wiki 文件 + `.notebooklm/` + manifest + upload plan |
 | 12. Delegation | 明確選擇或要求 agents | `請使用 subagents/parallel...` | 受限範圍的代理協作 |
 
 ## Authorization
@@ -41,7 +41,7 @@ flowchart LR
 - Query 與預設 Archaeology：唯讀。
 - Lint：先報告，再確認 repairs。
 - ADR、Guide、Synthesis、SA：明確建立要求即授權輸出。
-- NotebookLM export：先做 Wiki preflight；若需 Ingest，預覽並等待確認後才寫 Wiki 與 `.notebooklm/`。
+- NotebookLM export：每次先做全專案唯讀 preflight；預覽 inventory、coverage、文件計畫與容量後等待確認，才寫 Wiki 與 `.notebooklm/`。
 - Delegation：只有使用者明確要求才啟用。
 
 ## 1. Interactive Ingest
@@ -93,22 +93,49 @@ Query 預設唯讀。先讀 index 和 1–5 個相關 Wiki pages；只有 Wiki �
 
 ## 11. NotebookLM Enterprise export
 
-這是離線 source-pack workflow，不會連線或上傳 NotebookLM。先讀取整個 Wiki
-（排除 `wiki/log.md`），再根據 Wiki `frontmatter.sources` 讀取必要 evidence。
-遇到 stale、placeholder、缺口或矛盾時，先列出 bounded Ingest 範圍並等待確認。
+這是「全專案功能文件化 + 離線 source pack」workflow，不會連線或上傳
+NotebookLM。每次執行都唯讀掃描整個專案的可分享 runtime source、必要
+config/manifests、schema/migrations 與既有文件；tests、CI/CD、IaC、build/dev
+tooling、dependencies、generated、binary、secrets、framework adapters 與輸出目錄
+預設排除。既有 Wiki 是可增量更新的知識基線，不是掃描邊界。
 
-確認後執行：
+先執行不寫檔的 preflight：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
+  --root . --output .notebooklm --preflight --format json
+```
+
+Agent 依功能批次閱讀所有 included files，建立 source-to-function coverage map，並
+預覽 included/excluded inventory、缺失或 stale Wiki、預計新增/重大更新頁面、
+容量/來源數估計、warnings 與未驗證事項。即使預覽乾淨，也必須等待確認。
+
+確認後以繁體中文建立或更新至少下列 durable 文件，為每頁填入真實
+`frontmatter.sources` 與 `notebooklm_group`，同步 `wiki/index.md`，最後只追加一筆
+`ingest` log：
+
+- `wiki/overview.md`：專案定位、邊界與入口；
+- `wiki/synthesis/project-function-catalog.md`：功能目錄與 source coverage；
+- `wiki/architecture/system-architecture.md`：元件、依賴與資料流；
+- 各功能的 module/entity pages：公開介面、流程、例外與設定；
+- `wiki/synthesis/system-analysis.md`：跨功能分析、風險與 gaps。
+
+文件完成後執行：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --output .notebooklm --format json
 ```
 
-輸出包含 `sources/*.md`、`manifest.json`、`upload-plan.md` 與 README。NotebookLM
-只需處理 `sources/*.md`；依 upload plan 對 `added`、`changed`、`deleted` 執行
-手動更新，`unchanged` 不需重傳。若要調整 Workspace tier、保留 source slots
-或 evidence scope，將 `assets/notebooklm.toml` 複製成 repo root 的
-`notebooklm.toml` 後修改。
+輸出包含 `sources/*.md`、schema v2 `manifest.json`、`upload-plan.md` 與 README。
+Source IDs 以功能群組為單位（例如 `docs:<group>`、`evidence:<group>`），舊 schema
+v1 manifest 可遷移。打包採 documents-first：完整功能文件先保留，再以剩餘來源數與
+容量加入關鍵 evidence；被 `source_budget` 省略的 evidence 會列在 manifest 與交付
+報告。NotebookLM 只需處理 `sources/*.md`；依 upload plan 對 `added`、`changed`、
+`deleted` 手動更新，`unchanged` 不需重傳。預設以 300 sources、每 source 200 MB /
+500,000 words 為 Enterprise hard limits，並用 180 MB / 450,000 words safety
+limits。若要調整 Workspace tier、保留 source slots 或 evidence scope，將
+`assets/notebooklm.toml` 複製成 repo root 的 `notebooklm.toml` 後修改。
 
 ## 12. Delegation
 

@@ -1,6 +1,7 @@
 ---
 title: {Architecture Topic}
 type: architecture
+notebooklm_group: architecture
 sources: []
 last_updated: YYYY-MM-DD
 tags: [architecture]

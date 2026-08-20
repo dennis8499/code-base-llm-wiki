@@ -28,6 +28,7 @@ def load_script(name: str, filename: str):
 
 LINT = load_script("wiki_lint_under_test", "lint-wiki.py")
 REBUILD = load_script("rebuild_index_under_test", "rebuild-index.py")
+VALIDATE = load_script("validate_frontmatter_under_test", "validate-frontmatter.py")
 
 
 def page(title: str, page_type: str, body: str = "") -> str:
@@ -45,6 +46,31 @@ def page(title: str, page_type: str, body: str = "") -> str:
 
 
 class WikiLintTests(unittest.TestCase):
+    def test_notebooklm_group_requires_kebab_case(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            (wiki / "modules").mkdir(parents=True)
+            valid = wiki / "modules/valid.md"
+            invalid = wiki / "modules/invalid.md"
+            valid.write_text(
+                page("Valid", "module").replace(
+                    "sources: []", "notebooklm_group: function-orders\nsources: []"
+                ),
+                encoding="utf-8",
+            )
+            invalid.write_text(
+                page("Invalid", "module").replace(
+                    "sources: []", "notebooklm_group: Function Orders\nsources: []"
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertEqual(VALIDATE.validate_page(valid, wiki), [])
+            self.assertIn(
+                "notebooklm_group must be a non-empty kebab-case string",
+                "\n".join(VALIDATE.validate_page(invalid, wiki)),
+            )
+
     def test_cli_exit_code_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             wiki = Path(directory)

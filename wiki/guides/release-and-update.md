@@ -7,9 +7,10 @@ sources:
   - .github/workflows/release.yml
   - docs/releases/README.md
   - README.md
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 tags: [guide, release, version, extension]
 status: active
+notebooklm_group: project-guides
 ---
 
 # Codebase LLM Wiki — 版本、發佈與更新
