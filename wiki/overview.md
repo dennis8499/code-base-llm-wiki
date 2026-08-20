@@ -13,6 +13,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
+  - .agents/skills/codebase-wiki/references/follow-up-actions.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .agents/skills/codebase-wiki/assets/project-function-catalog-template.md
   - docs/workflows/README.md
@@ -122,6 +123,7 @@ Hook configuration 共同呼叫 `.agents/skills/codebase-wiki/scripts/hooks/`
 - **Query**：先讀 `wiki/index.md` 與 1–5 個相關頁面，預設唯讀。
 - **Lint**：唯讀聚合 frontmatter、stale、orphan、broken link、index 與
   stats；語意 coverage/contradiction 標為 `agent_review_required`。
+- **Follow-up actions**：高價值 Query 與 Lint findings 可提供有界的 Synthesis、Guide、重新 Ingest 或 Lint 選項；選項不會自動寫入或 Hand-Off。
 - **Archaeology**：追蹤 call path 與非破壞性 Git history。
 - **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
 - **NotebookLM export**：每次全量掃描可分享的 runtime source、必要設定、schema/migrations 與既有文件，預覽 inventory、coverage、文件計畫與容量；確認後依功能增量更新 Wiki，再產生 documents-first source pack 與 added/changed/deleted/unchanged upload plan。

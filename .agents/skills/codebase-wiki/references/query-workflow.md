@@ -13,11 +13,15 @@ Query is read-only.
 5. Answer with `[[wiki-page]]` references, backticked source paths, and labeled
    inference or gaps.
 
-Suggest a durable synthesis when useful; persistence is a separate explicit
-operation.
+6. When the result meets the eligibility rules, append the bounded
+   recommendation block from `follow-up-actions.md`.
+
+The recommendation block suggests a separate operation; it does not write,
+delegate, or hand off automatically. Persistence remains an explicit operation.
 
 ## Completion Criterion
 
 The query is complete when every material conclusion is supported by a Wiki
 page, source path, or labeled live-evidence block; contradictions and gaps are
-visible; and no file or database state was changed.
+visible; eligible durable or corrective follow-ups are clearly offered; and no
+file or database state was changed.

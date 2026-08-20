@@ -52,6 +52,9 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
 Preflight 不建立或修改 `wiki/`、`.notebooklm/`。它只提供 deterministic inventory；
 功能語意、文件規劃與 coverage 判斷由 Agent 根據 included files 完成。
 
+若前置 Query 或 Lint 已提出 follow-up action，NotebookLM export 仍須依本流程
+單獨完成全專案 preflight 與使用者確認；Query/Lint 的文字選項不會自動觸發匯出。
+
 ## 確認後的文件化
 
 Agent 以固定繁體中文敘事更新 Wiki，事實必須可由真實 repo-relative source paths

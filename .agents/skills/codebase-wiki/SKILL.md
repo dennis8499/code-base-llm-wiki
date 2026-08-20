@@ -28,6 +28,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | NotebookLM Enterprise export | `references/notebooklm-export-workflow.md` |
 | Ingest sequence, page creation rules, dependency ordering | `references/ingest-workflow.md` |
 | Wiki-first query and citations | `references/query-workflow.md` |
+| Query/Lint follow-up action choices | `references/follow-up-actions.md` |
 | Wiki health checks, severities, report format | `references/lint-checklist.md` |
 | Required frontmatter fields and allowed values | `references/frontmatter-spec.md` |
 | Allowed `wiki/log.md` operations and append format | `references/log-operations.md` |

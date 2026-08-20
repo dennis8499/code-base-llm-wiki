@@ -90,8 +90,8 @@ flowchart LR
 | --- | --- | --- |
 | Install / setup | 安裝或升級框架入口 | dry-run；`--apply` 才寫入 |
 | Ingest | 把 source evidence 整理成 Wiki | 需確認 |
-| Query | Wiki-first 回答問題 | 否 |
-| Lint | 檢查 stale、連結、frontmatter、coverage | 先報告 |
+| Query | Wiki-first 回答問題；符合條件時提供保存、更新或 Lint 選項 | 否 |
+| Lint | 檢查 stale、連結、frontmatter、coverage；報告後提供修復選項 | 先報告 |
 | Archaeology | 追蹤程式路徑與 Git 歷史 | 否 |
 | ADR | 保存架構決策 | 是 |
 | Synthesis / Guide | 保存長期分析或操作指南 | 是 |
@@ -109,6 +109,7 @@ flowchart LR
 - **來源可追溯**：每頁 frontmatter 列出真實 repo-relative source paths。
 - **增量維護**：透過 `wiki/index.md`、wikilinks 與 append-only `wiki/log.md` 累積知識。
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
+- **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、Guide、重新 Ingest 或 Lint；不會自動寫入或 Hand-Off。
 - **安全邊界**：target mode 只允許 Wiki 寫入；framework mode 才允許維護框架檔案。
 - **零第三方依賴 installer**：Python 標準函式庫即可 dry-run、安裝與升級。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。

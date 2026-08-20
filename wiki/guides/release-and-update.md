@@ -24,6 +24,9 @@ notebooklm_group: project-guides
 - Git tag 必須是 `vX.Y.Z`，且必須與 `VERSION` 完全一致。
 - `contract_version: 2` 是 installer contract，不是產品版號。
 - Installer 將版號保存至 `.agents/skills/codebase-wiki/VERSION`。
+- Framework workflow changes, including the shared Query/Lint follow-up action
+  contract, must be reflected in the release documentation, ChangeLog, Wiki
+  index, and append-only update log before publishing.
 
 ## 發佈流程
 

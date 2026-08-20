@@ -112,3 +112,9 @@ status: active
 - 新增繁體中文功能目錄模板、`notebooklm_group`、schema v2 功能群組 stable IDs、舊 manifest 遷移與 documents-first 預算；完整文件優先，低優先 evidence 省略會透明記錄
 - Enterprise hard/safety limits 對齊每 source 200/180 MB 與 500,000/450,000 words；仍維持單一 notebook、手動上傳、raw sources 唯讀與 atomic output preservation
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]
+
+## [2026-08-20] update | Query／Lint 後續行動選項
+
+- 新增共用 `follow-up-actions.md` 契約，讓高價值 Query 與 Lint findings 提供有界的保存、更新、重新 Ingest、Lint 或暫不處理選項
+- Copilot/Codex 入口同步維持 Query 唯讀、Lint 先報告，以及更新／修復的既有確認邊界
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]

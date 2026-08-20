@@ -59,7 +59,7 @@ flowchart LR
 
 ## 3. Query
 
-Query 預設唯讀。先讀 index 和 1–5 個相關 Wiki pages；只有 Wiki 不足、stale 或矛盾時才回溯 frontmatter sources。回答同時指出使用的 Wiki 頁面、source paths、推論與未驗證 gaps。
+Query 預設唯讀。先讀 index 和 1–5 個相關 Wiki pages；只有 Wiki 不足、stale 或矛盾時才回溯 frontmatter sources。回答同時指出使用的 Wiki 頁面、source paths、推論與未驗證 gaps。若結果具長期價值、暴露 stale/gap，或發現品質風險，依 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 顯示最多三個後續選項；不自動寫入或 Hand-Off。
 
 ## 4. Query + SQL Server Live Evidence
 
@@ -69,7 +69,7 @@ Query 預設唯讀。先讀 index 和 1–5 個相關 Wiki pages；只有 Wiki �
 
 ## 5. Lint
 
-檢查 stale sources、orphan pages、broken wikilinks、missing pages、frontmatter、contradictions、index completeness 與 coverage。先依 Critical、Warning、Info 報告，只有使用者接受後才做廣泛修復；持久化修復使用 `lint` 追加 log。
+檢查 stale sources、orphan pages、broken wikilinks、missing pages、frontmatter、contradictions、index completeness 與 coverage。先依 Critical、Warning、Info 報告，再依 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 提供 findings 支持的修復、重新 Ingest 或再次 Lint 選項；只有使用者接受後才做廣泛修復，持久化修復使用 `lint` 追加 log。
 
 ## 6. Archaeology
 

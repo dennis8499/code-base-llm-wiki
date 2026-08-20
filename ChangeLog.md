@@ -8,6 +8,7 @@
 
 ### 新增
 
+- **Query／Lint follow-up actions**：高價值 Query 與 Lint findings 會依共用契約提供有界的 Synthesis、Guide、重新 Ingest、Lint 或暫不處理選項；Query 維持唯讀，更新與修復仍遵守既有 preview/confirmation 與 index/log 規則。
 - **NotebookLM 全專案功能文件化**：`--preflight` 每次唯讀掃描可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件，回報完整納入/排除 inventory、Wiki coverage、文件計畫、容量與未驗證項目；確認後由 Agent 依功能產生繁體中文分層 Wiki。
 - **Documents-first source pack schema v2**：新增功能群組 `notebooklm_group`、project function catalog 模板、`docs:<group>` / `evidence:<group>` stable IDs、舊 manifest v1 遷移與透明 `source_budget` omission；Enterprise hard/safety limits 對齊 200/180 MB 與 500,000/450,000 words。
 - **NotebookLM Enterprise 離線匯出**：新增 Wiki-first `notebooklm_export` operation、共用 `export-notebooklm.py`、穩定 source IDs、manifest、增量 upload plan、容量/字數上限與敏感/生成檔排除；Copilot/Codex 只產生本機 `.notebooklm/`，不自動呼叫或上傳 NotebookLM

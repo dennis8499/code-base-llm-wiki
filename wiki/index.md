@@ -23,7 +23,7 @@ status: active
 
 | 頁面 | 摘要 |
 |------|------|
-| [[overview]] | 框架總覽：Wiki-first 三層模型、authorization contract、canonical hooks 與安全邊界 |
+| [[overview]] | 框架總覽：Wiki-first 三層模型、authorization contract、follow-up actions、canonical hooks 與安全邊界 |
 
 ## Architecture
 
@@ -53,7 +53,7 @@ _（尚無頁面。執行 Ingest 後將自動產生。）_
 
 | 頁面 | 摘要 |
 |------|------|
-| [[framework-introduction]] | 使用指南：安全 install/upgrade、工作流 authorization、唯讀 lint 與重複 E2E 驗收 |
+| [[framework-introduction]] | 使用指南：安全 install/upgrade、Query/Lint follow-up actions、工作流 authorization 與重複 E2E 驗收 |
 | [[notebooklm-export]] | NotebookLM Enterprise：全專案安全掃描、功能文件化、documents-first source pack 與增量 upload plan |
 | [[release-and-update]] | 版本、GitHub Release、下載資產、checksum 與未來 Extension manifest |
 

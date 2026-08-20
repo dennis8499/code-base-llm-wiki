@@ -49,9 +49,16 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py install --targe
 TaskTrackerService.complete_task 遇到不存在與已完成的任務各會怎麼處理？逾期任務如何判定？
 ```
 
+對跨頁面或可重複的分析，確認 Query 會在證據與 gaps 後提供最多三個
+後續選項（保存 Synthesis/Guide、更新 Wiki／重新 Ingest、執行 Lint，或
+暫不處理）；簡單的一次性查詢不應強制顯示選項。
+
 ```text
 請依 lint 流程檢查 wiki 的 frontmatter、source paths、wikilinks、index completeness 與 stale 狀態，先列出 findings，不要直接做廣泛修復。
 ```
+
+確認 Lint 報告後只提供 findings 支持的修復、重新 Ingest 或再次 Lint
+選項；選擇修復前仍須確認，選擇暫不處理時不變更 Wiki。
 
 ## 驗證 Codex surface
 
@@ -71,6 +78,7 @@ Agent 產出的頁面名稱可以不同，但必須滿足以下行為契約：
 - `wiki/index.md` 能導覽到 Task Tracker module 與關鍵 entity/service pages。
 - Wiki 說明 `TaskItem`、`TaskStatus`、`TaskRepository`、`InMemoryTaskRepository`、`TaskTrackerSettings` 與 `TaskTrackerService` 的關係。
 - Query 正確指出 not-found、duplicate completion、open-task limit 與 overdue 判斷，並引用對應 Wiki/source evidence。
+- 高價值 Query 顯示有界 follow-up options，簡單 Query 不產生不必要的後續操作。
 - 每個新增 Wiki page 的 frontmatter.sources 指向真實的 `src/task_tracker/` 或 `config/` 路徑。
 - Ingest 後 `wiki/log.md` 只追加新條目。
 - Lint 沒有 Critical；若有 coverage gaps，必須明確列出而不是虛構內容。

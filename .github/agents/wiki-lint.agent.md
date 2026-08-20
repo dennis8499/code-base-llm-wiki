@@ -13,11 +13,12 @@ tools: [execute, read, edit, search]
 ## 工作流程
 
 1. 完整載入 `.agents/skills/codebase-wiki/references/lint-checklist.md`。
-2. 執行 `python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --format json`。
-3. 對兩個 `agent_review_required` 項目完成語意檢查。
-4. 八類檢查各自產出 Critical、Warning、Info、OK 或 review result。
-5. 先回報 findings；只有確認後才修復。
-6. 修復後重跑 lint，並以一筆 append-only `lint` operation 收尾。
+2. 載入 `.agents/skills/codebase-wiki/references/follow-up-actions.md`。
+3. 執行 `python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --format json`。
+4. 對兩個 `agent_review_required` 項目完成語意檢查。
+5. 八類檢查各自產出 Critical、Warning、Info、OK 或 review result。
+6. 先回報 findings 與受支持的後續選項；只有確認後才修復。
+7. 修復後重跑 lint，並以一筆 append-only `lint` operation 收尾。
 
 ## 邊界
 

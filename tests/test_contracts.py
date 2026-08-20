@@ -67,6 +67,7 @@ class ContractTests(unittest.TestCase):
         for filename in (
             "ingest-workflow.md",
             "query-workflow.md",
+            "follow-up-actions.md",
             "lint-checklist.md",
             "adr-workflow.md",
             "guide-workflow.md",
@@ -94,6 +95,35 @@ class ContractTests(unittest.TestCase):
                         / filename
                     ).is_file()
                 )
+
+    def test_follow_up_action_contract_is_shared_by_both_surfaces(self) -> None:
+        skill_root = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"
+        contract = (skill_root / "references" / "follow-up-actions.md").read_text(
+            encoding="utf-8"
+        )
+        for token in (
+            "save-synthesis",
+            "save-guide",
+            "reingest",
+            "lint",
+            "暫不處理",
+            "Completion Criterion",
+        ):
+            self.assertIn(token, contract)
+
+        adapters = (
+            REPO_ROOT / ".github" / "prompts" / "query-wiki.prompt.md",
+            REPO_ROOT / ".github" / "prompts" / "lint-wiki.prompt.md",
+            REPO_ROOT / ".github" / "agents" / "wiki-query.agent.md",
+            REPO_ROOT / ".github" / "agents" / "wiki-lint.agent.md",
+            REPO_ROOT / ".codex" / "agents" / "wiki-query.toml",
+            REPO_ROOT / ".codex" / "agents" / "wiki-lint.toml",
+            REPO_ROOT / "Codex.md",
+        )
+        for path in adapters:
+            with self.subTest(adapter=path.relative_to(REPO_ROOT).as_posix()):
+                text = path.read_text(encoding="utf-8")
+                self.assertIn("follow-up-actions.md", text)
 
     def test_notebooklm_contract_requires_full_scan_and_preflight(self) -> None:
         skill_root = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"

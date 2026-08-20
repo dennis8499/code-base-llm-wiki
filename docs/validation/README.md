@@ -52,6 +52,8 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 5. 確認 raw source hashes 未改變；
 6. 確認新增頁面可由 index 導覽且 log 已追加。
 7. 確認 NotebookLM preflight 掃描所有可分享 runtime/docs/schema/config 且零寫入；確認後建立完整功能文件與本機 pack，第二次仍全量重掃並產生可操作的 diff plan。
+8. Query 對高價值結果顯示有界 follow-up 選項；簡單 Query 不顯示不必要選項。
+9. 選擇更新或修復後仍遵守 preview/confirmation；選擇暫不處理時不修改檔案。
 
 Agent 產出的自然語言不做 byte-for-byte golden comparison；驗收的是 evidence、結構、安全邊界與必要 artifact。
 
@@ -61,9 +63,9 @@ Copilot 與 Codex 各自重複三次以下情境，驗收 process invariants：
 
 | 情境 | 每次都必須成立 |
 | --- | --- |
-| Query | index → 1–5 pages → gap sources；零寫入、零自動委派 |
+| Query | index → 1–5 pages → gap sources；符合條件時提供 follow-up options；零寫入、零自動委派 |
 | Interactive Ingest | 探索與摘要完成後才確認寫入；index/log coupling 完整 |
-| Lint | deterministic findings 先報告；repairs 等待確認 |
+| Lint | deterministic findings 先報告；提供受 findings 支持的 options；repairs 等待確認 |
 | Delegation | 一般請求留在目前 agent；明確 delegation 才使用 custom agent |
 | NotebookLM export | full safe scan → inventory/coverage/docs plan confirmation → functional Ingest → documents-first pack；只手動上傳 changed sources |
 

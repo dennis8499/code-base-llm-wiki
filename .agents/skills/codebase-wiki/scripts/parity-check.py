@@ -47,6 +47,16 @@ EXPECTED_GROUPS = {
     "delegation": ["delegation"],
 }
 CANONICAL_HOOK_ROOT = ".agents/skills/codebase-wiki/scripts/hooks/"
+FOLLOW_UP_REFERENCE = ".agents/skills/codebase-wiki/references/follow-up-actions.md"
+FOLLOW_UP_ADAPTERS = (
+    ".github/prompts/query-wiki.prompt.md",
+    ".github/prompts/lint-wiki.prompt.md",
+    ".github/agents/wiki-query.agent.md",
+    ".github/agents/wiki-lint.agent.md",
+    ".codex/agents/wiki-query.toml",
+    ".codex/agents/wiki-lint.toml",
+    "Codex.md",
+)
 
 
 def main() -> int:
@@ -121,6 +131,15 @@ def main() -> int:
     ):
         if not path.exists():
             issues.append(f"missing required surface: {path.relative_to(root).as_posix()}")
+
+    follow_up_reference = root / FOLLOW_UP_REFERENCE
+    if not follow_up_reference.is_file():
+        issues.append(f"missing shared follow-up contract: {FOLLOW_UP_REFERENCE}")
+    for relative in FOLLOW_UP_ADAPTERS:
+        path = root / relative
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if FOLLOW_UP_REFERENCE not in text.replace("\\", "/"):
+            issues.append(f"surface missing follow-up contract: {relative}")
 
     for hook_name in ("wiki-session-init.py", "wiki-write-guard.py", "wiki-log-reminder.py"):
         if not (root / CANONICAL_HOOK_ROOT / hook_name).is_file():

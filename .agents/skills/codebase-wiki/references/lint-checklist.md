@@ -5,6 +5,10 @@
 Lint 操作對 wiki 進行全面健康檢查，找出品質問題並提供修復建議。
 建議每次大規模 Ingest 後、以及每週定期執行一次。
 
+完成八類檢查並回報 findings 後，依
+`references/follow-up-actions.md` 提供受 findings 支持的後續選項。初始
+Lint 與報告保持唯讀；任何 repair 或 re-Ingest 都要等待使用者確認。
+
 ---
 
 ## 檢查項目
@@ -149,4 +153,5 @@ Lint is complete when all eight checks have a Critical, Warning, Info, OK, or
 `agent_review_required` result. Deterministic checks cover frontmatter, sources,
 wikilinks, orphans, index completeness, and statistics. Missing-module coverage
 and semantic contradictions remain explicit agent-review items when they cannot
-be proven deterministically. Repairs begin only after confirmation.
+be proven deterministically. Eligible repair, re-Ingest, or follow-up Lint
+choices are clearly offered, and repairs begin only after confirmation.

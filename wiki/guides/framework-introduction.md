@@ -10,6 +10,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
+  - .agents/skills/codebase-wiki/references/follow-up-actions.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .agents/skills/codebase-wiki/assets/project-function-catalog-template.md
   - docs/releases/README.md
@@ -99,15 +100,15 @@ Extension 可比較本地版本與 manifest 版本，驗證 checksum 後呼叫 `
 請先查 wiki，再必要時回溯 sources，說明訂單取消流程與失敗條件。
 ```
 
-Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、stale 或矛盾時才讀 raw sources；Query 預設不寫檔。需要保存長期價值的結果時，再明確要求 Synthesis 或 Guide。
+Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、stale 或矛盾時才讀 raw sources；Query 預設不寫檔。若結果具有長期價值、暴露 Wiki gap 或發現品質問題，會依 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 提供最多三個後續選項與「暫不處理」；選項不會自動執行。
 
 ## 5. 常用工作流
 
 | 工作流 | 使用時機 | 必要維護 |
 | --- | --- | --- |
 | Interactive / Batch Ingest | 新模組、第一次初始化 | pages + index + `ingest` log |
-| Query | 找行為、位置、原因 | 預設唯讀 |
-| Lint | Wiki 品質與 coverage | 先報告；修復後 `lint` log |
+| Query | 找行為、位置、原因；必要時提供保存、更新或 Lint 選項 | 預設唯讀 |
+| Lint | Wiki 品質與 coverage；報告後提供受 findings 支持的選項 | 先報告；修復後 `lint` log |
 | Archaeology | Legacy、異常分支、歷史原因 | 預設唯讀 |
 | ADR | 保存架構選擇 | decision + index + `adr` log |
 | Synthesis | 保存跨模組分析 | synthesis + index + log |

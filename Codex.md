@@ -84,11 +84,19 @@ Wiki-first query:
 請先查 wiki，再必要時回溯 sources，解釋 PaymentService 如何處理退款。
 ```
 
+Query 若發現長期有價值的分析、Wiki stale/gap 或品質問題，會依
+`.agents/skills/codebase-wiki/references/follow-up-actions.md` 顯示最多三個
+有原因的後續選項與「暫不處理」。選項只是建議；Query 不會自動寫入或
+Hand-Off。
+
 Lint:
 
 ```text
 請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。
 ```
+
+Lint 先回報 findings，再依相同 follow-up contract 提供安全修復、重新
+Ingest 或再次 Lint 選項；任何 repair 都要等待確認。
 
 Code archaeology:
 

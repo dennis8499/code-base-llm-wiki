@@ -17,7 +17,7 @@ Workflow:
 3. If needed, inspect paths listed in page `sources`.
 4. If database evidence is needed and an MSSQL tool is available, use only schema discovery, metadata lookup, or bounded `SELECT` queries.
 5. Answer with explicit citations to `[[wiki-page]]`, source paths, and any database evidence block used.
-6. If the result has long-term value, suggest saving it to `wiki/synthesis/`; do not write it yourself.
+6. Apply `.agents/skills/codebase-wiki/references/follow-up-actions.md`: when eligible, show at most three reasoned choices for synthesis, guide, re-ingest, or lint plus no action; do not write or hand off automatically.
 
 SQL Server live evidence:
 - Use `.agents/skills/codebase-wiki/references/mssql-evidence-rules.md` as the source of truth.
