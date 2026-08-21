@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -10,14 +12,16 @@ REPO_ROOT = Path(__file__).parents[1]
 
 
 class ContractTests(unittest.TestCase):
-    def test_capability_manifest_declares_installer_contract_v2(self) -> None:
+    def test_capability_manifest_declares_installer_contract_v3(self) -> None:
         manifest = json.loads(
             (REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "capabilities.json").read_text(
                 encoding="utf-8"
             )
         )
 
-        self.assertEqual(manifest["contract_version"], 2)
+        self.assertEqual(manifest["contract_version"], 3)
+        self.assertEqual(manifest["guard_modes"]["default"], "wiki-only")
+        self.assertEqual(manifest["guard_modes"]["installed"], ["wiki-only", "coexist"])
         self.assertEqual(manifest["surfaces"], ["copilot", "codex"])
         self.assertIn("query", manifest["intents"])
         self.assertFalse(manifest["intents"]["query"]["writes_by_default"])
@@ -144,6 +148,35 @@ class ContractTests(unittest.TestCase):
         self.assertTrue((skill_root / "scripts" / "notebooklm_exporter.py").is_file())
         self.assertTrue(
             (skill_root / "assets" / "project-function-catalog-template.md").is_file()
+        )
+
+    def test_framework_notebooklm_preflight_is_ready(self) -> None:
+        script = (
+            REPO_ROOT
+            / ".agents/skills/codebase-wiki/scripts/export-notebooklm.py"
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--root",
+                str(REPO_ROOT),
+                "--preflight",
+                "--format",
+                "json",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["ready_to_export"], payload)
+        self.assertEqual(payload["scan_profile"], "framework")
+        included = {item["path"] for item in payload["inventory"]["included"]}
+        self.assertIn(
+            ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py", included
         )
 
     def test_agents_are_explicit_delegation_only_and_compact(self) -> None:

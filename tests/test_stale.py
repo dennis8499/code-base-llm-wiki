@@ -58,6 +58,29 @@ class StaleTests(unittest.TestCase):
             self.assertTrue(result["critical"])
             self.assertEqual(result["critical"][0]["invalid_sources"], ["../outside.py"])
 
+    def test_source_digest_detects_same_day_change_and_exact_revert(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "wiki").mkdir()
+            source = root / "service.py"
+            source.write_text("return 1\n", encoding="utf-8")
+            digest = check_stale_module.compute_source_digest(root, ["service.py"])
+            page = root / "wiki/service.md"
+            page.write_text(
+                "---\ntitle: Service\ntype: module\nsources:\n  - service.py\n"
+                f"source_digest: {digest}\n"
+                "last_updated: 2026-07-01\ntags: [module]\nstatus: active\n---\n",
+                encoding="utf-8",
+            )
+
+            self.assertFalse(check_stale(root / "wiki", root)["warning"])
+            source.write_text("return 2\n", encoding="utf-8")
+            changed = check_stale(root / "wiki", root)
+            self.assertIn("digest_mismatch", changed["warning"][0])
+
+            source.write_text("return 1\n", encoding="utf-8")
+            self.assertFalse(check_stale(root / "wiki", root)["warning"])
+
 
 if __name__ == "__main__":
     unittest.main()

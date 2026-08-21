@@ -1,9 +1,12 @@
 ---
 title: "{模組名稱}"
 type: module
+summary: "{模組核心職責的一句話摘要}"
 notebooklm_group: "function-{functional-area-slug}"
 sources:
   - "{path/to/module/directory/}"
+derived_from: []
+source_digest: "sha256:{64-lowercase-hex}"
 last_updated: YYYY-MM-DD
 tags: []
 status: active

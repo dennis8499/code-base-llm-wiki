@@ -1,10 +1,13 @@
 ---
 title: "ADR-{NNN}: {決策標題}"
 type: decision
+summary: "{決策結論的一句話摘要}"
 decision_date: YYYY-MM-DD
 decision_status: proposed
 sources:
   - "{path/to/related/code}"
+derived_from: []
+source_digest: "sha256:{64-lowercase-hex}"
 last_updated: YYYY-MM-DD
 tags: [adr]
 status: active

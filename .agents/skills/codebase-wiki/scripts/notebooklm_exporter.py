@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import fnmatch
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -33,6 +34,7 @@ except ModuleNotFoundError:  # pragma: no cover - useful when loaded by a caller
 
 EXPORT_SCHEMA_VERSION = 2
 SUPPORTED_MANIFEST_SCHEMAS = {1, EXPORT_SCHEMA_VERSION}
+PREFLIGHT_SCHEMA_VERSION = 1
 PROFILE_NAME = "gemini-notebook-enterprise"
 ENTERPRISE_MAX_SOURCES = 300
 ENTERPRISE_MAX_BYTES = 200_000_000
@@ -174,6 +176,7 @@ class ExportError(ValueError):
 @dataclass(frozen=True)
 class Settings:
     profile: str
+    scan_profile: str
     output_directory: str
     source_limit: int
     reserved_source_slots: int
@@ -296,6 +299,9 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     profile = raw.get("profile", PROFILE_NAME)
     if not isinstance(profile, str) or not profile.strip():
         raise ExportError("profile must be a non-empty string")
+    scan_profile = raw.get("scan_profile", "target")
+    if scan_profile not in {"target", "framework"}:
+        raise ExportError("scan_profile must be 'target' or 'framework'")
     output_directory = raw.get("output_directory", ".notebooklm")
     if not isinstance(output_directory, str):
         raise ExportError("output_directory must be a string")
@@ -336,6 +342,7 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     )
     return Settings(
         profile=profile,
+        scan_profile=scan_profile,
         output_directory=output_directory,
         source_limit=source_limit,
         reserved_source_slots=reserved,
@@ -413,9 +420,12 @@ def exclusion_reason(path: Path, root: Path, settings: Settings) -> str | None:
         return "scan_scope_tests"
     if _is_ci_or_iac(lower):
         return "scan_scope_ci_or_iac"
-    if _has_prefix(lower, DEFAULT_FRAMEWORK_PREFIXES):
+    if settings.scan_profile == "target" and _has_prefix(lower, DEFAULT_FRAMEWORK_PREFIXES):
         return "framework_adapter"
-    if _is_dev_tool(lower):
+    if _is_dev_tool(lower) and not (
+        settings.scan_profile == "framework"
+        and _has_prefix(lower, (*DEFAULT_FRAMEWORK_PREFIXES, "tools"))
+    ):
         return "scan_scope_dev_tooling"
     if _has_prefix(relative, settings.exclude_paths):
         return "configured_exclude"
@@ -1290,14 +1300,87 @@ def limits_payload(settings: Settings) -> dict[str, int]:
     }
 
 
+def _load_wiki_lint():
+    path = Path(__file__).with_name("lint-wiki.py")
+    spec = importlib.util.spec_from_file_location("codebase_wiki_notebooklm_lint", path)
+    if spec is None or spec.loader is None:
+        raise ExportError(f"unable to load Wiki lint implementation: {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _settings_fingerprint(settings: Settings, root: Path) -> dict[str, Any]:
+    return {
+        "profile": settings.profile,
+        "scan_profile": settings.scan_profile,
+        "output_directory": settings.output_directory,
+        "source_limit": settings.source_limit,
+        "reserved_source_slots": settings.reserved_source_slots,
+        "max_source_bytes": settings.max_source_bytes,
+        "max_source_words": settings.max_source_words,
+        "include_evidence": settings.include_evidence,
+        "extra_paths": list(settings.extra_paths),
+        "exclude_paths": list(settings.exclude_paths),
+        "config": repo_relative(settings.config_path, root) if settings.config_path else None,
+    }
+
+
+def _preflight_identity(
+    root: Path,
+    settings: Settings,
+    pages: Sequence[InputFile],
+    scan: dict[str, Any],
+    lint_result: dict[str, Any],
+) -> tuple[str, str]:
+    material = {
+        "schema_version": PREFLIGHT_SCHEMA_VERSION,
+        "settings": _settings_fingerprint(settings, root),
+        "wiki": [{"path": page.path, "sha256": page.digest} for page in pages],
+        "inventory": [
+            {"path": item["path"], "sha256": item["sha256"]}
+            for item in scan["included"]
+        ],
+        "required_documents": scan["required_documents"],
+        "deterministic_findings": lint_result.get("findings", []),
+    }
+    inventory_hash = sha256_bytes(
+        json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
+    )
+    return inventory_hash, f"sha256:{inventory_hash}"
+
+
 def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     pages, skipped, warnings = collect_wiki_pages(root)
     scan = scan_project(root, settings, pages)
+    lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root)
     missing = [path for path, status in scan["required_documents"].items() if status != "active"]
     warnings.extend(f"必要文件尚未完成：{path} ({scan['required_documents'][path]})" for path in missing)
+    required_relatives = {
+        PurePosixPath(path).relative_to("wiki").as_posix() for path in REQUIRED_WIKI_DOCUMENTS
+    }
+    required_document_issues = [
+        item
+        for item in lint_result.get("findings", [])
+        if item.get("page") in required_relatives
+        and item.get("code")
+        in {"frontmatter", "invalid_source", "missing_source", "stale_source"}
+    ]
+    critical_count = int(lint_result.get("summary", {}).get("critical", 0))
+    ready = not missing and not required_document_issues and critical_count == 0
+    inventory_hash, preflight_id = _preflight_identity(
+        root, settings, pages, scan, lint_result
+    )
     return {
         "ok": True,
         "mode": "preflight",
+        "preflight_schema_version": PREFLIGHT_SCHEMA_VERSION,
+        "preflight_id": preflight_id,
+        "inventory_hash": inventory_hash,
+        "ready_to_export": ready,
+        "scan_profile": settings.scan_profile,
         "scope": {
             "included": ["runtime_source", "runtime_config", "data_schema", "documentation"],
             "excluded": [
@@ -1309,12 +1392,20 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
                 "generated",
                 "binary",
                 "credentials",
-                "framework_adapters",
-            ],
+            ]
+            + (["framework_adapters"] if settings.scan_profile == "target" else []),
         },
         "inventory": scan,
         "limits": limits_payload(settings),
         "wiki_pages": len(pages),
+        "lint": {
+            "deterministic_status": lint_result.get("deterministic_status"),
+            "semantic_status": lint_result.get("semantic_status"),
+            "overall_status": lint_result.get("overall_status"),
+            "summary": lint_result.get("summary", {}),
+            "findings": lint_result.get("findings", []),
+        },
+        "required_document_issues": required_document_issues,
         "skipped": skipped,
         "warnings": warnings,
     }
@@ -1324,6 +1415,10 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
     pages, initial_skipped, warnings = collect_wiki_pages(root)
     scan = scan_project(root, settings, pages)
     coverage = scan["required_documents"]
+    incomplete = [path for path, status in coverage.items() if status != "active"]
+    if incomplete:
+        details = ", ".join(f"{path} ({coverage[path]})" for path in incomplete)
+        raise ExportError(f"mandatory Wiki documentation is not active: {details}")
     for path, status in coverage.items():
         if status != "active":
             warnings.append(f"必要文件尚未完成：{path} ({status})")
@@ -1453,7 +1548,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--output", type=Path)
     parser.add_argument("--config", type=Path)
-    parser.add_argument("--preflight", action="store_true")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--preflight", action="store_true")
+    action.add_argument("--apply", action="store_true")
+    parser.add_argument("--preflight-id")
     parser.add_argument("--format", choices=("json", "text"), default="text")
     return parser
 
@@ -1466,10 +1564,34 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps({"ok": False, "error": f"root is not a directory: {root}"}, ensure_ascii=False))
         return 2
     try:
-        settings = load_settings(root, args.config.resolve() if args.config else None)
+        config_path = None
+        if args.config:
+            config_path = args.config if args.config.is_absolute() else root / args.config
+            config_path = config_path.resolve()
+        settings = load_settings(root, config_path)
         if args.preflight:
+            if args.preflight_id:
+                raise ExportError("--preflight-id is valid only with --apply")
             result = build_preflight(root, settings)
         else:
+            if not args.apply:
+                raise ExportError(
+                    "direct export is disabled; run --preflight, then use "
+                    "--apply --preflight-id <id>"
+                )
+            if not args.preflight_id:
+                raise ExportError("--apply requires --preflight-id from the latest preflight")
+            preflight = build_preflight(root, settings)
+            if args.preflight_id != preflight["preflight_id"]:
+                raise ExportError(
+                    "preflight_id no longer matches the current Wiki, inventory, or configuration; "
+                    "run --preflight again"
+                )
+            if not preflight["ready_to_export"]:
+                raise ExportError(
+                    "preflight is not ready to export; complete mandatory documents and resolve "
+                    "deterministic Critical findings"
+                )
             output = (root / args.output) if args.output else (root / settings.output_directory)
             output = output.resolve()
             output_relative = repo_relative(output, root)
@@ -1478,6 +1600,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = build_pack(root, output, settings)
             commit_output(output, result.pop("files"), load_previous_manifest(output))
             result["ok"] = True
+            result["mode"] = "apply"
+            result["preflight_id"] = preflight["preflight_id"]
     except (ExportError, OSError) as exc:
         result = {"ok": False, "error": str(exc)}
         if args.format == "json":
@@ -1494,8 +1618,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "NotebookLM preflight: "
             f"included={inventory['included_count']}, "
             f"excluded={inventory['excluded_count']}, "
-            f"uncovered={len(inventory['uncovered_paths'])}"
+            f"uncovered={len(inventory['uncovered_paths'])}, "
+            f"ready={str(result['ready_to_export']).lower()}"
         )
+        print(f"Preflight ID: {result['preflight_id']}")
         for warning in result["warnings"]:
             print(f"Warning: {warning}")
     else:
@@ -1509,3 +1635,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         for warning in result["warnings"]:
             print(f"Warning: {warning}")
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

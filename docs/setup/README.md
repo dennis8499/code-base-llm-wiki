@@ -17,22 +17,24 @@ Installer allowlist 只包含 `.agents/skills/codebase-wiki/`，不會複製同�
 
 ## Dry-run 優先
 
-所有安裝與升級都先執行 dry-run。JSON 回應包含 `files`、`conflicts`、`obsolete_paths` 與 `applied`；只有 `--apply` 且 `conflicts` 為空時才寫入。
+所有安裝與升級都先執行 dry-run。Contract v3 JSON 回應包含 `managed`、
+`changes`、`preserved`、`conflicts`、`obsolete_paths` 與 `applied`；只有
+`--apply` 且 `conflicts` 為空時才以 staged atomic write 套用。
 
 ### GitHub Copilot surface
 
 PowerShell：
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface copilot --format json
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface copilot --apply --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface copilot --guard-mode wiki-only --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface copilot --guard-mode wiki-only --apply --format json
 ```
 
 macOS / Linux：
 
 ```bash
-python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface copilot --format json
-python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface copilot --apply --format json
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface copilot --guard-mode wiki-only --format json
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface copilot --guard-mode wiki-only --apply --format json
 ```
 
 Copilot surface 安裝 `AGENTS.md`、`.agents/`、`.github/` 與 `wiki/`，不安裝 `.codex/` 或 `Codex.md`。
@@ -42,15 +44,15 @@ Copilot surface 安裝 `AGENTS.md`、`.agents/`、`.github/` 與 `wiki/`，不�
 PowerShell：
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --format json
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --apply --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --guard-mode wiki-only --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --guard-mode wiki-only --apply --format json
 ```
 
 macOS / Linux：
 
 ```bash
-python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface codex --format json
-python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface codex --apply --format json
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface codex --guard-mode wiki-only --format json
+python3 .agents/skills/codebase-wiki/scripts/install-framework.py install --target /path/to/target --surface codex --guard-mode wiki-only --apply --format json
 ```
 
 Codex surface 安裝 `AGENTS.md`、`Codex.md`、`.agents/`、`.codex/` 與 `wiki/`，不安裝 `.github/`。
@@ -59,24 +61,29 @@ Codex surface 安裝 `AGENTS.md`、`Codex.md`、`.agents/`、`.codex/` 與 `wiki
 
 | Mode | 使用位置 | 允許的 Wiki 任務寫入 |
 | --- | --- | --- |
-| `target` | 安裝框架的應用程式 Repo | 僅 `wiki/` |
-| `framework` | Codebase LLM Wiki 框架 Repo 本身 | Wiki、schema、docs、samples、tests 與核准的根入口文件 |
+| `wiki-only` | 安裝框架的安全預設 | 僅 `wiki/` |
+| `coexist` | 一般 coding 與 Wiki 共存 | Repo 內明確 edit；非 Wiki path 回傳 audit context |
+| `framework` | Codebase LLM Wiki 框架 Repo 本身 | Wiki、schema、adapters、docs、samples、tests、tools 與核准 root files |
 
-Installer 會把安裝來源的 framework mode 設定轉成 target mode。不要為了繞過 raw-source 唯讀規則而切換 mode；一般程式碼修改應作為獨立 coding task 執行。
+Installer 預設把 framework 設定轉成 `wiki-only`；舊 `target` 值會相容映射至
+`wiki-only`。需要同一工作階段進行正常 coding 時，安裝時明確選擇
+`--guard-mode coexist`。任何 mode 都不會改變 Wiki task 的 raw-source 唯讀規則。
 
 ## 升級
 
 將 `install` 改成 `upgrade`，仍先 dry-run：
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --target C:\path\to\target --surface codex --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --target C:\path\to\target --surface codex --guard-mode wiki-only --format json
 ```
 
-- 目標檔案不存在或內容完全相同時可安全規劃。
-- 內容不同時列入 `conflicts`，整次 apply 不會執行。
+- `.agents/skills/codebase-wiki/install-state.json` 保存 upstream fingerprints。
+- Upstream-only 變更自動更新；user-only 變更列為 `preserved`。
+- Local 與 upstream 同時變更才列入 `conflicts`，整次 apply 不執行。
+- `AGENTS.md` 與 Copilot instructions 只更新 managed marker block，保留其餘內容。
 - `upgrade` 只規劃 framework surface，既有 `wiki/` 不參與 conflict
   判斷且保持 byte-for-byte 不變。
-- Installer 不做三方 merge，也沒有 `--force`。
+- Installer 不做語意三方 merge，也沒有 `--force`；套用失敗會 rollback。
 - `.codebase-wiki/` 只會出現在 `obsolete_paths`；確認沒有人工內容後由維護者另行處理。
 
 ## 平台啟用
@@ -102,7 +109,7 @@ installer 自動啟用或上傳檔案。從 Repo root 先執行唯讀全專案 p
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --output .notebooklm --preflight --format json
+  --root . --preflight --format json
 ```
 
 Agent 會掃描可分享的 runtime source、必要設定與 manifests、schema/migrations、
@@ -113,7 +120,7 @@ coverage、預計建立或更新的功能文件、容量預估與未驗證項目
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --output .notebooklm --format json
+  --root . --apply --preflight-id <id> --output .notebooklm --format json
 ```
 
 Exporter 將功能導向 Wiki 文件與精選原始 evidence 打包成穩定命名的
@@ -129,7 +136,8 @@ evidence；容量不足時會保留完整文件並在 manifest 記錄被省略�
 
 ### 回報 conflicts
 
-先閱讀 JSON 中的精確路徑，比對目標專案是否已有人工設定。Installer 不會覆蓋；請人工合併後讓內容與來源一致，再重新 dry-run。
+先閱讀 JSON 中的精確路徑。`preserved` 是安全保留的 user-only 變更；只有
+`conflicts` 需要人工合併，完成後重新 dry-run。
 
 ### Hooks 沒有執行
 
@@ -141,7 +149,8 @@ evidence；容量不足時會保留完整文件並在 manifest 記錄被省略�
 
 ### Write guard 阻擋變更
 
-- 目標 Repo 的 Wiki 任務只能寫 `wiki/`，這通常是正確行為。
+- `wiki-only` 的 Wiki 任務只能寫 `wiki/`，這通常是正確行為。
+- 若一般 coding 與 Wiki 必須共存，重新安裝／升級並明確選擇 `coexist`。
 - 框架 Repo 維護才使用 `framework` mode。
 - 若需求是修改應用程式原始碼，請結束 Wiki 任務並改成一般 coding task。
 
@@ -157,10 +166,12 @@ evidence；容量不足時會保留完整文件並在 manifest 記錄被省略�
 ```powershell
 python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
+python .agents\skills\codebase-wiki\scripts\check-stale.py wiki .
+python .agents\skills\codebase-wiki\scripts\validate-log.py wiki\log.md --repo-root .
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --preflight --format json
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
 ```
 
 完整的框架 Repo 發佈檢查請看 [驗證手冊](../validation/README.md)。

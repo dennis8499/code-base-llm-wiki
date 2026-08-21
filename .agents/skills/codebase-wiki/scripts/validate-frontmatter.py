@@ -36,6 +36,8 @@ ALLOWED_TYPES = {
 ALLOWED_STATUS = {"active", "stale", "placeholder"}
 ALLOWED_DECISION_STATUS = {"proposed", "accepted", "deprecated", "superseded"}
 NOTEBOOKLM_GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+SOURCE_DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+DERIVED_FROM_PATTERN = re.compile(r"^\[\[[^\[\]]+\]\]$")
 
 TYPE_PATHS = {
     "module": pathlib.PurePosixPath("modules"),
@@ -103,6 +105,11 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
             source_path = pathlib.PurePosixPath(source.replace("\\", "/"))
             if source_path.is_absolute() or ".." in source_path.parts:
                 errors.append(f"{rel}: source must stay inside the repository: {source!r}")
+            elif source_path.parts and source_path.parts[0].lower() == "wiki":
+                errors.append(
+                    f"{rel}: sources must reference raw repository evidence; "
+                    "use derived_from for Wiki pages"
+                )
 
     if "last_updated" in fm and not is_valid_date(fm.get("last_updated")):
         errors.append(f"{rel}: last_updated must be a valid YYYY-MM-DD date")
@@ -122,6 +129,28 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
         or not NOTEBOOKLM_GROUP_PATTERN.fullmatch(notebooklm_group)
     ):
         errors.append(f"{rel}: notebooklm_group must be a non-empty kebab-case string")
+
+    summary = fm.get("summary")
+    if summary is not None and not is_non_empty_string(summary):
+        errors.append(f"{rel}: summary must be a non-empty string when present")
+
+    source_digest = fm.get("source_digest")
+    if source_digest is not None and (
+        not isinstance(source_digest, str)
+        or not SOURCE_DIGEST_PATTERN.fullmatch(source_digest)
+    ):
+        errors.append(f"{rel}: source_digest must use sha256:<64 lowercase hex>")
+
+    derived_from = fm.get("derived_from")
+    if derived_from is not None:
+        if not is_list(derived_from):
+            errors.append(f"{rel}: derived_from must be an array")
+        else:
+            for value in derived_from:
+                if not isinstance(value, str) or not DERIVED_FROM_PATTERN.fullmatch(value):
+                    errors.append(
+                        f"{rel}: every derived_from entry must be a [[wiki-page]] wikilink"
+                    )
 
     if page_type == "decision":
         if not is_valid_date(fm.get("decision_date")):

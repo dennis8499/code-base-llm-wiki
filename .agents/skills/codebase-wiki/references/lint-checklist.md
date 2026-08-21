@@ -32,6 +32,8 @@ Lint 與報告保持唯讀；任何 repair 或 re-Ingest 都要等待使用者�
 **檢查方式：** 掃描所有 wiki 頁面，建立 inbound link 圖。找出沒有任何其他頁面連結到的頁面。
 
 **排除：** `index.md`、`log.md`、`overview.md` 不計入（它們是入口頁面）。
+`index.md`、`log.md` 與頁面自我連結也不算 inbound link；只有其他內容頁的
+語意連結可以解除 orphan。
 
 | 嚴重度    | 狀況                   | 處理方式                      |
 | --------- | ---------------------- | ----------------------------- |
@@ -155,3 +157,8 @@ wikilinks, orphans, index completeness, and statistics. Missing-module coverage
 and semantic contradictions remain explicit agent-review items when they cannot
 be proven deterministically. Eligible repair, re-Ingest, or follow-up Lint
 choices are clearly offered, and repairs begin only after confirmation.
+
+Machine output exposes `deterministic_status`, `semantic_status`, and
+`overall_status`. The legacy `ok` field means only that deterministic Critical
+and Warning findings are absent; it must not be presented as completed semantic
+review.

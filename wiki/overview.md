@@ -1,29 +1,16 @@
 ---
 title: Codebase LLM Wiki — 專案總覽
 type: overview
+summary: 以 Wiki-first、唯讀原始證據與共享雙平台規格持續累積可追溯 codebase 知識
 sources:
   - README.md
   - AGENTS.md
-  - docs/architecture/README.md
-  - .agents/skills/codebase-wiki/SKILL.md
   - .agents/skills/codebase-wiki/capabilities.json
-  - .agents/skills/codebase-wiki/references/hooks-specification.md
   - .agents/skills/codebase-wiki/scripts/install-framework.py
-  - .agents/skills/codebase-wiki/scripts/lint-wiki.py
-  - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-  - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-  - .agents/skills/codebase-wiki/references/follow-up-actions.md
-  - .agents/skills/codebase-wiki/assets/notebooklm.toml
-  - .agents/skills/codebase-wiki/assets/project-function-catalog-template.md
-  - docs/workflows/README.md
-  - .github/prompts/export-notebooklm.prompt.md
-  - Codex.md
-  - VERSION
-  - tools/release.py
-  - .github/workflows/release.yml
-  - docs/releases/README.md
-last_updated: 2026-08-20
+source_digest: sha256:77869566f3397e2998d68f717cccf4a2881af3643c1ea4d27a21377bb95a5b5f
+derived_from: []
+last_updated: 2026-08-21
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 notebooklm_group: project
@@ -93,8 +80,11 @@ code-base-llm-wiki/
 根目錄 `VERSION` 是唯一產品版號來源，採穩定 `X.Y.Z`，並以 `vX.Y.Z` 作為
 Git tag。GitHub Release workflow 會先驗證 tag 與版號，再產生 ZIP/TAR.GZ、
 `SHA256SUMS` 與 `update-manifest.json`。Installer 將相同版號保存至目標 Repo
-的 `.agents/skills/codebase-wiki/VERSION`；`contract_version: 2` 則維持獨立，
+的 `.agents/skills/codebase-wiki/VERSION`；`contract_version: 3` 則維持獨立，
 代表 installer contract 而非產品版號。
+
+公開 Release 另有 LICENSE readiness gate；目前版號已進入 0.2.0，但在專案
+擁有者選定授權前不會產生公開資產。
 
 未來 Extension 可讀取最新 manifest，依本地版本做 SemVer 比較，驗證下載資產
 後呼叫既有 conflict-safe `upgrade`；目前不包含 Extension updater。
@@ -109,39 +99,44 @@ Git tag。GitHub Release workflow 會先驗證 tag 與版號，再產生 ZIP/TAR
 | 使用者入口 | `.github/prompts/*.prompt.md` | `Codex.md` recipes |
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 
-兩個入口共用 contract version 2、十個使用者意圖群組、十一個 machine
+兩個入口共用 contract version 3、十個使用者意圖群組、十一個 machine
 operations、authorization policy、Wiki page schema、安全邊界與驗收標準。
 Hook configuration 共同呼叫 `.agents/skills/codebase-wiki/scripts/hooks/`
-的 canonical implementation。Delegation 只有使用者明確要求時啟用。
+的 canonical implementation。Codex 使用 workspace-relative command；Windows
+`commandWindows` 遵循 `cmd.exe` 語法，不使用 PowerShell `$()` substitution 或
+nested quoted paths。Delegation 只有使用者明確要求時啟用。
 
 ## 核心工作流
 
 - **Install / setup**：Installer 只發佈 `codebase-wiki` Skill；install 建立
-  starter，upgrade 保留既有 Wiki；`--apply` 且無 conflicts 才寫入，並保存
-  framework version marker。
+  starter，upgrade 保留既有 Wiki；`--apply` 且無 conflicts 才以 staging/rollback
+  寫入，並保存 framework version 與 fingerprint manifest。
 - **Ingest**：讀 source evidence，建立或更新 module、entity、pattern 等頁面。
 - **Query**：先讀 `wiki/index.md` 與 1–5 個相關頁面，預設唯讀。
-- **Lint**：唯讀聚合 frontmatter、stale、orphan、broken link、index 與
-  stats；語意 coverage/contradiction 標為 `agent_review_required`。
+- **Lint**：唯讀聚合 frontmatter、digest freshness、orphan、broken link、index、
+  append-only log 與 stats，並分開回報 deterministic/semantic status。
 - **Follow-up actions**：高價值 Query 與 Lint findings 可提供有界的 Synthesis、Guide、重新 Ingest 或 Lint 選項；選項不會自動寫入或 Hand-Off。
 - **Archaeology**：追蹤 call path 與非破壞性 Git history。
 - **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
-- **NotebookLM export**：每次全量掃描可分享的 runtime source、必要設定、schema/migrations 與既有文件，預覽 inventory、coverage、文件計畫與容量；確認後依功能增量更新 Wiki，再產生 documents-first source pack 與 added/changed/deleted/unchanged upload plan。
+- **NotebookLM export**：每次全量掃描安全範圍，完成必要功能文件後取得
+  `preflight_id`；apply 重新驗證相同輸入，才產生 documents-first source pack。
 - **Delegation**：明確要求時才路由給專業代理。
 
 ## 安全與品質
 
-- `frontmatter.sources` 只能列出真實 Repo-relative paths。
+- `frontmatter.sources` 只能列出真實 raw Repo-relative paths；Wiki 衍生證據使用
+  `derived_from`，內容 freshness 使用 `source_digest`。
 - Wiki pages 透過 `[[wikilink]]` 互相引用。
 - `wiki/log.md` 只能追加，不能刪除或改寫既有條目。
-- Target guard mode 只允許 Wiki 寫入；framework mode 才允許維護 schema、docs、samples 與 tests。
+- `wiki-only` 只允許 Wiki；`coexist` 支援正常 coding session；`framework` 才允許
+  維護 schema、adapters、docs、samples、tests 與 release tooling。
 - NotebookLM export 預設使用 300 sources、每 source 200 MB / 500,000 words 的 Enterprise hard limits，實際 pack 以 180 MB / 450,000 words safety limits 先行切分或失敗；文件優先保留，低優先 evidence 的省略會透明記錄，Workspace tier 可在 `notebooklm.toml` 再下調。
 - SQL Server live evidence 只允許 bounded read-only 查詢，且不得放入 frontmatter sources。
 
 ## 驗證方式
 
 框架提供 installer/contract/guard/format tests，以及 parity、frontmatter、
-stale-source、唯讀 lint、index check 與 Wiki stats scripts。
+stale-source、唯讀 lint、index、append-only log check 與 Wiki stats scripts。
 `samples/task-tracker/` 以三次重複情境驗證兩平台的 process invariants，
 同時確認 raw source hashes 未變更。
 
@@ -150,3 +145,6 @@ stale-source、唯讀 lint、index check 與 Wiki stats scripts。
 - [[framework-introduction]] — 安裝、操作、驗收與常見陷阱指南
 - [[notebooklm-export]] — 全專案功能文件化、documents-first NotebookLM Enterprise source pack 與增量上傳計畫
 - [[release-and-update]] — 版本、GitHub Release、下載與 Extension manifest
+- [[system-architecture]] — 元件、資料流、部署與已知 gap
+- [[project-function-catalog]] — 五個產品功能域及 coverage
+- [[system-analysis]] — 系統級介面、安全、失敗模式與風險

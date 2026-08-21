@@ -9,10 +9,36 @@
 
 import pathlib
 import datetime as _datetime
+import hashlib
 import subprocess
 import sys
 
 from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+
+
+DIGEST_EXCLUDED_PARTS = {
+    ".bundle",
+    ".git",
+    ".gradle",
+    ".m2",
+    ".notebooklm",
+    ".nuget",
+    ".pnpm-store",
+    ".venv",
+    ".yarn",
+    "__pycache__",
+    "bin",
+    "build",
+    "cache",
+    "coverage",
+    "dist",
+    "logs",
+    "node_modules",
+    "obj",
+    "target",
+    "vendor",
+    "wiki",
+}
 
 
 def parse_frontmatter(filepath: pathlib.Path) -> dict:
@@ -57,6 +83,74 @@ def latest_source_date(repo_root: pathlib.Path, source: str) -> _datetime.date |
         return None
 
 
+def _source_files(repo_root: pathlib.Path, source: str) -> list[pathlib.Path]:
+    source_path = (repo_root / source.rstrip("/")).resolve()
+    try:
+        source_path.relative_to(repo_root.resolve())
+    except ValueError:
+        return []
+    if source_path.is_file():
+        return [source_path]
+    if not source_path.is_dir():
+        return []
+
+    relative_source = source_path.relative_to(repo_root.resolve()).as_posix()
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo_root),
+                "ls-files",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+                "-z",
+                "--",
+                relative_source,
+            ],
+            check=True,
+            capture_output=True,
+        )
+        candidates = [
+            repo_root / value.decode("utf-8", errors="surrogateescape")
+            for value in result.stdout.split(b"\0")
+            if value
+        ]
+    except (OSError, subprocess.CalledProcessError):
+        candidates = list(source_path.rglob("*"))
+
+    files: list[pathlib.Path] = []
+    for path in candidates:
+        if not path.is_file():
+            continue
+        try:
+            relative = path.resolve().relative_to(repo_root.resolve())
+        except ValueError:
+            continue
+        if set(relative.parts) & DIGEST_EXCLUDED_PARTS:
+            continue
+        files.append(path)
+    return sorted(set(files), key=lambda item: item.resolve().as_posix())
+
+
+def compute_source_digest(repo_root: pathlib.Path, sources: list[str]) -> str:
+    """Return the stable aggregate digest for existing raw source files."""
+
+    records: dict[str, str] = {}
+    for source in sources:
+        for path in _source_files(repo_root, source):
+            relative = path.resolve().relative_to(repo_root.resolve()).as_posix()
+            records[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    aggregate = hashlib.sha256()
+    for relative, digest in sorted(records.items()):
+        aggregate.update(relative.encode("utf-8"))
+        aggregate.update(b"\0")
+        aggregate.update(digest.encode("ascii"))
+        aggregate.update(b"\n")
+    return f"sha256:{aggregate.hexdigest()}"
+
+
 def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
     """檢查每個 wiki 頁面的 sources 是否仍存在。"""
     md_files = sorted(wiki_dir.rglob("*.md"))
@@ -80,6 +174,7 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
         existing = []
         stale = []
         invalid = []
+        digest_mismatch = None
 
         if not isinstance(sources, list):
             results["critical"].append({"page": str(rel_path), "title": title, "invalid_sources": "sources must be a list"})
@@ -121,6 +216,19 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
             if dirty or changed_after_page:
                 stale.append(src)
 
+        declared_digest = fm.get("source_digest")
+        if isinstance(declared_digest, str) and existing and not missing and not invalid:
+            current_digest = compute_source_digest(repo_root, existing)
+            if declared_digest != current_digest:
+                digest_mismatch = {
+                    "declared": declared_digest,
+                    "current": current_digest,
+                }
+            else:
+                # A matching content fingerprint is stronger evidence than Git
+                # commit dates or dirty-path heuristics.
+                stale = []
+
         if invalid:
             results["critical"].append({"page": str(rel_path), "title": title, "invalid_sources": invalid})
         elif missing and not existing:
@@ -129,14 +237,17 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
                 "title": title,
                 "all_missing": missing,
             })
-        elif missing or stale:
-            results["warning"].append({
+        elif missing or stale or digest_mismatch:
+            warning = {
                 "page": str(rel_path),
                 "title": title,
                 "missing": missing,
                 "existing": existing,
                 "stale": stale,
-            })
+            }
+            if digest_mismatch:
+                warning["digest_mismatch"] = digest_mismatch
+            results["warning"].append(warning)
         else:
             results["ok"].append(str(rel_path))
 
@@ -178,6 +289,9 @@ def main():
                 print(f"    missing: {', '.join(item['missing'])}")
             if item.get("stale"):
                 print(f"    stale: {', '.join(item['stale'])}")
+            if item.get("digest_mismatch"):
+                mismatch = item["digest_mismatch"]
+                print(f"    source_digest: {mismatch['declared']} -> {mismatch['current']}")
             for src in item["missing"]:
                 print(f"    ✗ {src}")
 

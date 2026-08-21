@@ -37,6 +37,7 @@ class RepositoryFormatTests(unittest.TestCase):
             "docs/validation/README.md",
             "docs/releases/README.md",
             "docs/history/llm-wiki.md",
+            "docs/history/README.md",
             "docs/history/original-prompt.txt",
             "samples/README.md",
             "samples/task-tracker/README.md",
@@ -47,7 +48,10 @@ class RepositoryFormatTests(unittest.TestCase):
 
         self.assertFalse((REPO_ROOT / "llm-wiki.md").exists())
         self.assertFalse((REPO_ROOT / "prompt.txt").exists())
-        self.assertGreater((REPO_ROOT / "docs/history/llm-wiki.md").stat().st_size, 10_000)
+        history = (REPO_ROOT / "docs/history/llm-wiki.md").read_text(encoding="utf-8")
+        self.assertIn("gist.github.com/karpathy/442a6bf555914893e9891c11519de94f", history)
+        self.assertIn("does not declare a redistribution license", history)
+        self.assertLess(len(history), 5_000)
 
     def test_local_markdown_links_resolve(self) -> None:
         documents = [

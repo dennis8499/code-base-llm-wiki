@@ -9,9 +9,11 @@ status: active
 
 # Codebase Wiki — 索引
 
-> 此索引由 LLM 自動維護。每次 Ingest / Query / Lint 操作後自動更新。
+> 標記內索引由 Wiki 寫入流程維護；純 Query 與唯讀 Lint 不修改本頁。
 
 ---
+
+<!-- codebase-wiki:index:start -->
 
 ## Overview
 
@@ -55,6 +57,8 @@ status: active
 | ---- | ---- |
 
 ## Synthesis
+
+<!-- codebase-wiki:index:end -->
 
 | 頁面 | 摘要 |
 | ---- | ---- |

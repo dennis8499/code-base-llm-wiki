@@ -14,6 +14,8 @@ status: active
 
 ---
 
+<!-- codebase-wiki:log-contract-v1 -->
+
 ## [YYYY-MM-DD] init | Wiki 初始化
 
 - 建立 Wiki 目錄骨架

@@ -121,6 +121,35 @@ class WikiLintTests(unittest.TestCase):
                 {item["status"] for item in result["agent_review_required"]},
                 {"agent_review_required"},
             )
+            self.assertEqual(result["deterministic_status"], "critical")
+            self.assertEqual(result["semantic_status"], "review_required")
+            self.assertEqual(result["overall_status"], "critical")
+
+    def test_index_and_self_links_do_not_hide_orphans(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wiki = root / "wiki"
+            (wiki / "modules").mkdir(parents=True)
+            (wiki / "guides").mkdir()
+            (wiki / "index.md").write_text(
+                page("Index", "index", "## Modules\n\n[[orders]]\n\n## Guides\n\n[[usage]]"),
+                encoding="utf-8",
+            )
+            (wiki / "log.md").write_text(page("Log", "log"), encoding="utf-8")
+            (wiki / "modules/orders.md").write_text(
+                page("Orders", "module", "[[orders]]"), encoding="utf-8"
+            )
+            (wiki / "guides/usage.md").write_text(
+                page("Usage", "guide", "See [[orders]]."), encoding="utf-8"
+            )
+
+            result = LINT.lint_wiki(wiki, root)
+            orphan_pages = {
+                item["page"] for item in result["findings"] if item["code"] == "orphan"
+            }
+
+            self.assertIn("guides/usage.md", orphan_pages)
+            self.assertNotIn("modules/orders.md", orphan_pages)
 
     def test_invalid_source_has_stable_json_details(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -201,6 +230,32 @@ class WikiLintTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 0, output.getvalue())
             self.assertEqual(index.read_bytes(), before)
+
+    def test_rebuild_index_preserves_content_outside_managed_region(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            (wiki / "modules").mkdir(parents=True)
+            (wiki / "modules/orders.md").write_text(
+                page("Orders", "module"), encoding="utf-8"
+            )
+            index = wiki / "index.md"
+            index.write_text(
+                page(
+                    "Index",
+                    "index",
+                    "Manual introduction.\n\n"
+                    f"{REBUILD.MANAGED_START}\n\n## Modules\n\n_old_\n\n"
+                    f"{REBUILD.MANAGED_END}\n\n## Team notes\n\nKeep me.",
+                ),
+                encoding="utf-8",
+            )
+
+            rebuilt = REBUILD.rebuild_index(wiki)
+
+            self.assertIn("Manual introduction.", rebuilt)
+            self.assertIn("## Team notes\n\nKeep me.", rebuilt)
+            self.assertIn("[[orders]]", rebuilt)
+            self.assertNotIn("_old_", rebuilt)
 
     def test_rebuild_index_check_detects_wrong_type_section_without_writing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

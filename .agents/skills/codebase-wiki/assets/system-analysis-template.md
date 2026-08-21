@@ -1,9 +1,10 @@
 ---
 title: System Analysis Document
 type: synthesis
+summary: 系統目的、架構、流程、介面、風險與證據缺口的整體分析
 notebooklm_group: system-analysis
-sources:
-  - wiki/overview.md
+sources: []
+derived_from: ["[[overview]]"]
 last_updated: YYYY-MM-DD
 tags: [synthesis, system-analysis]
 status: active

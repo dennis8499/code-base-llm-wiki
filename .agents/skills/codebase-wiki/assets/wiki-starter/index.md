@@ -11,6 +11,8 @@ status: active
 
 > This index is maintained by the Wiki workflows. Query reads it before inspecting individual pages or raw sources.
 
+<!-- codebase-wiki:index:start -->
+
 ## Overview
 
 | Page | Summary |
@@ -49,3 +51,4 @@ _No pages yet._
 
 _No pages yet._
 
+<!-- codebase-wiki:index:end -->

@@ -1,20 +1,16 @@
 ---
 title: NotebookLM Enterprise — 全專案功能文件化與離線匯出
 type: guide
+summary: 先完成功能文件與安全 preflight，再以相符 ID 原子產生增量 NotebookLM source pack
 sources:
-  - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
-  - .agents/skills/codebase-wiki/assets/project-function-catalog-template.md
   - .github/prompts/export-notebooklm.prompt.md
-  - Codex.md
   - docs/workflows/README.md
-  - docs/setup/README.md
-  - README.md
-  - .gitignore
-  - tools/release.py
-last_updated: 2026-08-20
+source_digest: sha256:dbc71e051e28d555cddc287ff9228dbd835d101a4e458772ddf25928aba070d6
+derived_from: ["[[overview]]", "[[notebooklm-exporter]]", "[[project-function-catalog]]"]
+last_updated: 2026-08-21
 tags: [guide, notebooklm, export, incremental, enterprise]
 status: active
 notebooklm_group: project-guides
@@ -37,7 +33,7 @@ Wiki 是可複用的知識基線，但每次執行仍會重掃安全的全專案
 
 1. 執行 `--preflight`，列出 Git tracked 與 non-ignored untracked files 的分類結果。
 2. 納入可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件。
-3. 排除 tests、CI/CD、IaC、build/dev tooling、dependencies、generated/build/cache、binary、secrets、framework adapters、Wiki/output 與明確設定的 exclusions。
+3. 排除 tests、CI/CD、IaC、build/dev tooling、dependencies、generated/build/cache、binary、secrets、Wiki/output 與明確設定的 exclusions；預設 `target` profile 另排除 framework adapters。
 4. 讀取全部 included files，依專案功能建立 source-to-function coverage map；讀 Wiki index/pages 判斷已覆蓋、stale、placeholder、矛盾與缺失文件。
 5. 預覽 included/excluded inventory、功能群組、預計新增或重大更新頁面、來源數/容量估計、warnings 與未驗證事項；即使沒有問題也等待確認。
 6. 人工確認預覽沒有不應分享的商業機密、個資、憑證或租戶政策衝突。
@@ -46,11 +42,12 @@ Wiki 是可複用的知識基線，但每次執行仍會重掃安全的全專案
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --output .notebooklm --preflight --format json
+  --root . --preflight --format json
 ```
 
-Preflight 不建立或修改 `wiki/`、`.notebooklm/`。它只提供 deterministic inventory；
-功能語意、文件規劃與 coverage 判斷由 Agent 根據 included files 完成。
+Preflight 不建立或修改 `wiki/`、`.notebooklm/`。它回傳 `preflight_id`、
+`inventory_hash`、必要文件與 lint 狀態；只有 `ready_to_export=true` 才可 apply。
+功能語意、文件規劃與 coverage 判斷仍由 Agent 根據 included files 完成。
 
 若前置 Query 或 Lint 已提出 follow-up action，NotebookLM export 仍須依本流程
 單獨完成全專案 preflight 與使用者確認；Query/Lint 的文字選項不會自動觸發匯出。
@@ -66,8 +63,9 @@ Agent 以固定繁體中文敘事更新 Wiki，事實必須可由真實 repo-rel
 - 各功能的 module/entity pages：介面、主要流程、分支、資料、設定與錯誤行為；
 - `wiki/synthesis/system-analysis.md`：跨功能分析、部署/NFR 證據、風險與 gaps。
 
-每個 NotebookLM 文件頁使用穩定的 `notebooklm_group`，填入實際
-`frontmatter.sources` 與 `[[wikilinks]]`。頁面新增、刪除、改名或重大更新時同步
+每個 NotebookLM 文件頁使用穩定的 `notebooklm_group`，以 `sources` 保存 raw
+evidence、`derived_from` 保存 Wiki 關係，並對非空 sources 寫入 `source_digest`。
+頁面新增、刪除、改名或重大更新時同步
 `wiki/index.md`；整個 composite workflow 在 `wiki/log.md` 尾端只追加一筆
 `ingest` operation。再次匯出仍全量重掃，但只更新有證據變化的 Wiki 內容。
 
@@ -75,13 +73,14 @@ Agent 以固定繁體中文敘事更新 Wiki，事實必須可由真實 repo-rel
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --output .notebooklm --format json
+  --root . --apply --preflight-id <id> --output .notebooklm --format json
 ```
 
 可把 `.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製成 Repo root 的
 `notebooklm.toml` 以調整 `source_limit`、`reserved_source_slots`、
 `max_source_bytes`、`max_source_words`、`include_evidence`、`extra_paths` 或
-`exclude_paths`。設定只能降低 hard limits，路徑必須是 Repo-relative。
+`exclude_paths` 與 `scan_profile`。設定只能降低 hard limits，路徑必須是
+Repo-relative；一般目標使用 `target`，本框架 Repo 使用 `framework`。
 
 輸出目錄包含：
 
@@ -128,6 +127,9 @@ skipped、omitted、warning 或 unresolved item
 - [[overview]] — 框架三層模型與離線 delivery pack 邊界
 - [[framework-introduction]] — 安裝、Wiki-first 工作流與 deterministic checks
 - [[release-and-update]] — release 排除本機 pack
+- [[notebooklm-exporter]] — preflight identity 與 atomic apply 實作
+- [[project-function-catalog]] — 本框架功能 coverage
+- [[system-analysis]] — 必要 SA 與明確 gap
 - Enterprise 上限與產品行為請以 [Google Cloud Gemini Notebook Enterprise 文件](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview?authuser=2) 為準；Workspace tier 的 source 限制可能不同，參考 [NotebookLM 說明](https://support.google.com/notebooklm/answer/16337734?hl=zh-Hant)。
 - 靜態檔案、Google Drive 與同步行為請參考 [NotebookLM source types and sync](https://support.google.com/notebooklm/answer/16215270?co=GENIE.Platform%3DDesktop&hl=en)；本框架選擇離線 static Markdown replacement。
 

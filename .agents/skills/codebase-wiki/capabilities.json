@@ -1,6 +1,12 @@
 {
-  "contract_version": 2,
+  "contract_version": 3,
   "surfaces": ["copilot", "codex"],
+  "guard_modes": {
+    "default": "wiki-only",
+    "installed": ["wiki-only", "coexist"],
+    "legacy_alias": {"target": "wiki-only"},
+    "framework": "framework"
+  },
   "intents": {
     "install": {
       "writes_by_default": false,
@@ -89,7 +95,7 @@
     }
   },
   "cli": {
-    "install": "python .agents/skills/codebase-wiki/scripts/install-framework.py install --target TARGET --surface SURFACE",
-    "upgrade": "python .agents/skills/codebase-wiki/scripts/install-framework.py upgrade --target TARGET --surface SURFACE"
+    "install": "python .agents/skills/codebase-wiki/scripts/install-framework.py install --target TARGET --surface SURFACE --guard-mode wiki-only",
+    "upgrade": "python .agents/skills/codebase-wiki/scripts/install-framework.py upgrade --target TARGET --surface SURFACE --guard-mode wiki-only"
   }
 }

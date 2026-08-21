@@ -45,6 +45,10 @@ tracked plus non-ignored untracked files; use a filesystem fallback outside Git.
      --root . --preflight --format json
    ```
 
+   Record the returned `preflight_id`. `ready_to_export` is true only when all
+   mandatory documents are active, required-document evidence is fresh, and
+   deterministic lint has no Critical findings.
+
 4. Read every included file in functional batches. Identify functions from
    runtime entrypoints, use cases, data boundaries, public interfaces, and
    external integrations rather than directory shape alone.
@@ -65,8 +69,12 @@ tracked plus non-ignored untracked files; use a filesystem fallback outside Git.
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-     --root . --output .notebooklm --format json
+     --root . --apply --preflight-id <id> --output .notebooklm --format json
    ```
+
+   Apply rescans the Wiki, safe inventory, and configuration. Any change makes
+   the ID invalid and requires a new preflight. Direct export without
+   `--preflight` followed by `--apply` is rejected.
 
 ## Output contract
 
@@ -113,6 +121,12 @@ project map, upload plan, and final report. Never silently truncate evidence.
 If mandatory documentation cannot fit after deterministic compaction/splitting,
 or any source remains oversized, the exporter fails before committing a new
 pack and preserves the previous pack.
+
+`notebooklm.toml` may set `scan_profile = "target" | "framework"`. `target` is
+the default and excludes installed framework adapters. The framework repository
+uses `framework`, which treats its `.agents`, `.codex`, non-CI `.github`, and
+release tooling as product evidence while retaining secret/generated/test/CI
+exclusions.
 
 For tenant-specific behavior, verify the current [Google Cloud Gemini Notebook
 Enterprise limits](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview?authuser=2)

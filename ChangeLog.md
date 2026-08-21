@@ -4,9 +4,28 @@
 
 ---
 
-## [Unreleased] — 2026-08-20
+## [Unreleased]
+
+_尚無未發佈變更。_
+
+## [0.2.0] — 2026-08-21
 
 ### 新增
+
+- **強制 NotebookLM preflight/apply 契約**：preflight 回傳 inventory hash、
+  `preflight_id`、必要文件與 lint readiness；apply 重新掃描並拒絕 stale ID、
+  不完整文件或 Critical findings
+- **Installer contract v3**：新增 managed instruction blocks、upstream fingerprint
+  manifest、user-only preservation、two-sided conflicts、動態 starter 日期與
+  staged atomic rollback
+- **Wiki provenance v2**：新增 `summary`、`derived_from`、`source_digest`，並加入
+  aggregate content freshness、append-only log validator 與 managed index region
+- **三種 guard mode**：新增 `wiki-only`、`coexist`、`framework`，保留 `target`
+  作為 `wiki-only` alias，並擴充 framework 的 `VERSION` / `tools/` 維護邊界
+- **框架自我攝取與 CI**：新增 system architecture、五個功能 module、function
+  catalog、System Analysis，以及 Linux Python 3.11/3.14 與 Windows smoke workflow
+- **公開發布治理**：`VERSION` 升至 0.2.0；在擁有者選擇 LICENSE 前 release
+  validate/build fail closed；上游方法論改為 attribution、原創摘要與來源連結
 
 - **Query／Lint follow-up actions**：高價值 Query 與 Lint findings 會依共用契約提供有界的 Synthesis、Guide、重新 Ingest、Lint 或暫不處理選項；Query 維持唯讀，更新與修復仍遵守既有 preview/confirmation 與 index/log 規則。
 - **NotebookLM 全專案功能文件化**：`--preflight` 每次唯讀掃描可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件，回報完整納入/排除 inventory、Wiki coverage、文件計畫、容量與未驗證項目；確認後由 Agent 依功能產生繁體中文分層 Wiki。
@@ -112,6 +131,7 @@
 - **`wiki-write-guard.py` 改為真正可執行的寫入保護**：直接輸出 `permissionDecision` / `permissionDecisionReason`，並解析 `toolArgs`，現在會實際拒絕對 `wiki/`、`.github/` 以外路徑的寫入
 - **三個輔助腳本移除 `PyYAML` 硬依賴**：`check-stale.py`、`rebuild-index.py`、`wiki-stats.py` 已改用內建 frontmatter parser
 - **Windows 終端輸出相容性修正**：三個輔助腳本在執行前會切換為 UTF-8 stdio，避免 CP950 主控台因 emoji 或非 ASCII 字元輸出失敗
+- **Codex Windows Hook 啟動修正**：三個 Codex Hook 改用 workspace-relative、`cmd.exe` 相容的命令，移除造成 `PostToolUse hook (failed)` 的 PowerShell `$()` 與巢狀引號
 - **`rebuild-index.py` 產出的 `index.md` frontmatter 與規格同步**：自動補上 `sources: []` 與 `tags: [index]`
 
 ### 受影響的檔案

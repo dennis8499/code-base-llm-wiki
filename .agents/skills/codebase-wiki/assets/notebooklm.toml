@@ -2,6 +2,7 @@
 # Copy this file to the repository root as notebooklm.toml before editing.
 
 profile = "gemini-notebook-enterprise"
+scan_profile = "target"
 output_directory = ".notebooklm"
 
 # Lower source_limit when the organization's Workspace tier has fewer slots.

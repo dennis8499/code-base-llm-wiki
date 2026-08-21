@@ -26,6 +26,9 @@ field validity lives in `frontmatter-spec.md`.
 - Create Pattern and Dependency pages only when source evidence supports
   project-specific behavior or risk.
 - Use Guide for procedures and Synthesis for analysis.
+- New or major evidence-backed pages populate `summary`; pages with raw
+  `sources` also populate `source_digest`. Wiki-only derivation uses
+  `derived_from`, not `sources`.
 - Reuse an existing page when its identity matches; preserve authored notes.
 
 ## Completion Criterion

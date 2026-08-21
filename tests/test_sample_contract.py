@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -78,7 +79,7 @@ class SampleContractTests(unittest.TestCase):
                             / "codebase-wiki"
                             / "VERSION"
                         ).read_text(encoding="utf-8"),
-                        "0.1.0\n",
+                        "0.2.0\n",
                     )
                     self.assertIn(
                         "status: placeholder",
@@ -90,7 +91,11 @@ class SampleContractTests(unittest.TestCase):
                     self.assertFalse((target / "docs").exists())
                     self.assertFalse((target / "samples").exists())
 
-                    for script in ("validate-frontmatter.py", "check-stale.py"):
+                    for script, argument in (
+                        ("validate-frontmatter.py", "wiki"),
+                        ("check-stale.py", "wiki"),
+                        ("validate-log.py", "wiki/log.md"),
+                    ):
                         result = subprocess.run(
                             [
                                 sys.executable,
@@ -102,7 +107,7 @@ class SampleContractTests(unittest.TestCase):
                                     / "scripts"
                                     / script
                                 ),
-                                "wiki",
+                                argument,
                             ],
                             cwd=target,
                             check=False,
@@ -125,7 +130,33 @@ class SampleContractTests(unittest.TestCase):
                         / "scripts"
                         / "export-notebooklm.py"
                     )
-                    export_result = subprocess.run(
+                    preflight_result = subprocess.run(
+                        [
+                            sys.executable,
+                            str(exporter),
+                            "--root",
+                            ".",
+                            "--preflight",
+                            "--format",
+                            "json",
+                        ],
+                        cwd=target,
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                    )
+                    self.assertEqual(
+                        preflight_result.returncode,
+                        0,
+                        preflight_result.stdout + preflight_result.stderr,
+                    )
+                    preflight_payload = json.loads(preflight_result.stdout)
+                    self.assertFalse(preflight_payload["ready_to_export"])
+                    self.assertFalse((target / ".notebooklm").exists())
+
+                    direct_result = subprocess.run(
                         [
                             sys.executable,
                             str(exporter),
@@ -143,28 +174,60 @@ class SampleContractTests(unittest.TestCase):
                         encoding="utf-8",
                         errors="replace",
                     )
-                    self.assertEqual(
-                        export_result.returncode,
-                        0,
-                        export_result.stdout + export_result.stderr,
-                    )
-                    export_payload = json.loads(export_result.stdout)
-                    self.assertGreaterEqual(export_payload["source_count"], 2)
-                    self.assertTrue((target / ".notebooklm/manifest.json").is_file())
-                    self.assertTrue((target / ".notebooklm/upload-plan.md").is_file())
+                    self.assertEqual(direct_result.returncode, 2)
+                    self.assertIn("direct export is disabled", direct_result.stdout)
 
                     if surface == "codex":
                         self.assertTrue((target / ".codex/hooks.json").is_file())
                         self.assertFalse((target / ".github").exists())
                         config = (target / ".codex/config.toml").read_text(encoding="utf-8")
+                        hooks_config = json.loads(
+                            (target / ".codex/hooks.json").read_text(encoding="utf-8")
+                        )
                     else:
                         self.assertTrue((target / ".github/copilot-instructions.md").is_file())
                         self.assertFalse((target / ".codex").exists())
                         config = (target / ".github/hooks/config.toml").read_text(
                             encoding="utf-8"
                         )
-                    self.assertIn('mode = "target"', config)
+                    self.assertIn('mode = "wiki-only"', config)
                     self.assertNotIn('mode = "framework"', config)
+
+                    if surface == "codex":
+                        hook_payloads = {
+                            "SessionStart": "{}",
+                            "PreToolUse": json.dumps({"tool_name": "read", "tool_input": {}}),
+                            "PostToolUse": json.dumps({"tool_name": "read", "tool_input": {}}),
+                        }
+                        for event_name, payload in hook_payloads.items():
+                            handler = hooks_config["hooks"][event_name][0]["hooks"][0]
+                            command = handler["command"]
+                            command_windows = handler["commandWindows"]
+                            self.assertNotIn("$(", command)
+                            self.assertNotIn("git rev-parse", command)
+                            self.assertNotIn("$(", command_windows)
+                            self.assertNotIn("git rev-parse", command_windows)
+                            self.assertNotIn('"', command_windows)
+                            if os.name == "nt":
+                                command = ["cmd.exe", "/d", "/s", "/c", command_windows]
+                            else:
+                                command = ["/bin/sh", "-lc", handler["command"]]
+                            command_result = subprocess.run(
+                                command,
+                                cwd=target,
+                                input=payload,
+                                check=False,
+                                capture_output=True,
+                                text=True,
+                                encoding="utf-8",
+                                errors="replace",
+                            )
+                            self.assertEqual(
+                                command_result.returncode,
+                                0,
+                                f"{surface} {event_name}:\n"
+                                f"{command_result.stdout}{command_result.stderr}",
+                            )
 
                     platform = "codex" if surface == "codex" else "copilot"
                     hook = (

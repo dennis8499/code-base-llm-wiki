@@ -11,17 +11,18 @@ python -m unittest discover -s tests -v
 python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
+python .agents\skills\codebase-wiki\scripts\validate-log.py wiki\log.md --repo-root .
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --preflight --format json
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
 ```
 
 版本發佈前另外執行：
 
 ```powershell
-python tools\release.py validate --tag v0.1.0
+python tools\release.py validate --tag v0.2.0
 python tools\release.py build --output dist --repository dennis8499/code-base-llm-wiki
 ```
 
@@ -31,13 +32,14 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 | 檢查 | 驗證內容 |
 | --- | --- |
 | Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract 與 NotebookLM full-scan/docs-first incremental export |
-| Parity | Copilot/Codex contract v2、必要入口、移除舊 runtime references |
-| Frontmatter | 必填欄位、type、日期、status 與 type-specific contract |
-| Stale source | source path 是否存在、tracked source 是否比 Wiki 更新 |
+| Parity | Copilot/Codex contract v3、guard modes、必要入口、移除舊 runtime references |
+| Frontmatter | 必填欄位、type、日期、status、raw/derived provenance 與 digest 格式 |
+| Stale source | source path、Git freshness 與 aggregate content digest |
+| Log integrity | operation、日期、affected pages、frontmatter 與 Git baseline append-only |
 | Wiki stats | Page types、statuses、links 與 Wiki 規模 |
-| Wiki lint | Frontmatter、sources、broken links、orphans、index completeness；語意檢查標成 `agent_review_required` |
-| Index check | 唯讀比較預期 page/type entries、缺漏、錯區與重複項目 |
-| NotebookLM preflight/export | 全專案分類、零寫入 preflight、功能群組、schema v1→v2、documents-first 預算、stable IDs、hash/diff plan、200/180 MB 限制、敏感/生成檔排除與 previous-manifest preservation |
+| Wiki lint | Deterministic/semantic/overall 狀態、真正 orphan、links、index/log；語意檢查維持 `agent_review_required` |
+| Index check | 唯讀比較 managed region 的 page/type entries，並保留 marker 外人工內容 |
+| NotebookLM preflight/export | 強制 preflight ID、必要文件/critical gate、framework profile、schema v1→v2、documents-first 預算、stable IDs、hash/diff plan 與 previous-pack preservation |
 
 ## Task Tracker E2E
 
@@ -78,15 +80,16 @@ Copilot 與 Codex 各自重複三次以下情境，驗收 process invariants：
 - [ ] README、docs、samples 與 Codex.md 的本機連結有效。
 - [ ] Copilot 與 Codex installer surface 都能在暫存目錄 apply。
 - [ ] Installer plan 不包含 `codebase-wiki` 以外的 Skills；upgrade 不包含 `wiki/`。
-- [ ] Installer contract 仍是 version 2，CLI 仍只有 `install` 與 `upgrade`。
-- [ ] Target config 被轉為 `wiki_guard.mode = "target"`。
-- [ ] Framework guard 允許框架文件/樣例/測試，target guard 只允許 `wiki/`。
+- [ ] Installer contract 是 version 3，plan 列出 managed/changes/preserved/conflicts。
+- [ ] Target config 明確使用 `wiki-only` 或 `coexist`；舊 `target` 只作 alias。
+- [ ] Framework guard 允許核准 schema/docs/tests/tools；`wiki-only` 只允許 `wiki/`。
 - [ ] `wiki/index.md` 已同步，`wiki/log.md` 只追加。
 - [ ] `.notebooklm/` 未被納入 release assets；export manifest、stable source IDs、size/word limits 與 upload plan 已檢查。
 - [ ] ChangeLog 已追加本次 durable behavior change。
 - [ ] 所有自動化檢查成功，或已明確記錄不可執行原因。
 - [ ] SessionStart context 不超過 30 行與 4 KiB UTF-8，且平台設定只引用 canonical hooks。
 - [ ] `VERSION` 使用穩定 `X.Y.Z`，且發佈 tag 嚴格符合 `vX.Y.Z`。
+- [ ] 專案擁有者已加入明確 LICENSE；未完成時 release readiness gate 必須阻擋。
 - [ ] Release assets 已通過 manifest 與 SHA-256 驗證，沒有把 logs/cache 打包。
 
 ## 手動檢查重點

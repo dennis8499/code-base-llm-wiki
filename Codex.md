@@ -18,12 +18,13 @@ The recommended installation is an idempotent dry-run followed by explicit
 apply:
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --format json
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --apply --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --guard-mode wiki-only --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --guard-mode wiki-only --apply --format json
 ```
 
-The installer uses target mode for application repositories. Use framework mode
-only when maintaining this framework repository.
+The installer defaults to `wiki-only`. Select `coexist` when normal coding and
+Wiki work must share a repository session. Use `framework` only when maintaining
+this framework repository; legacy `target` maps to `wiki-only`.
 
 When upgrading an older target, replace `install` with `upgrade`. The installer
 reports a legacy `.codebase-wiki/` directory through `obsolete_paths` but never
@@ -143,7 +144,7 @@ Explicit delegation:
 hooks = true
 
 [wiki_guard]
-mode = "framework" # change to "target" after installing into an application repo
+mode = "framework" # installer chooses "wiki-only" or explicit "coexist"
 
 [agents]
 max_threads = 6
@@ -155,12 +156,19 @@ max_depth = 1
 | Event          | Script                                      | Purpose                                                                          |
 | -------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
 | `SessionStart` | shared `wiki-session-init.py` | Adds a ≤30-line / ≤4 KB Wiki state summary |
-| `PreToolUse`   | shared `wiki-write-guard.py` | Enforces the configured `target` or `framework` boundary |
+| `PreToolUse`   | shared `wiki-write-guard.py` | Enforces `wiki-only`, `coexist`, or `framework` boundary |
 | `PostToolUse`  | shared `wiki-log-reminder.py` | Reminds Codex to append `wiki/log.md` after durable edits |
 
 All three implementations live under
 `.agents/skills/codebase-wiki/scripts/hooks/`; `.codex/hooks.json` supplies
 `--platform codex`.
+
+Hook commands are workspace-relative so the same configuration works when
+Codex starts a hook from the active project directory. On Windows,
+`commandWindows` is executed by `cmd.exe`; keep it as a plain relative Python
+command and do not use PowerShell `$()` expressions. If Codex reports
+`PostToolUse hook (failed)`, inspect `.codex/hooks.json` for this rule before
+changing the hook matcher or disabling the audit reminder.
 
 Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
@@ -197,12 +205,13 @@ python -m py_compile .agents\skills\codebase-wiki\scripts\hooks\common.py .agent
 python -m py_compile .agents\skills\codebase-wiki\scripts\install-framework.py .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\validate-frontmatter.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
+python .agents\skills\codebase-wiki\scripts\validate-log.py wiki\log.md --repo-root .
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
 ```
 
 Ask Codex to confirm setup:
@@ -220,11 +229,23 @@ Hooks do not run:
 - Confirm Python is available.
 - Restart Codex after changing config or hooks.
 
+PostToolUse reports `hook exited with code 1`:
+
+- Confirm the Windows command uses `.agents\\skills\\codebase-wiki\\scripts\\hooks\\...`
+  as a relative path.
+- Remove `$(git rev-parse --show-toplevel)` and PowerShell-only syntax from
+  `commandWindows`; Codex supplies the active workspace as the hook working
+  directory.
+- Restart Codex and review `/hooks` so the updated project-local definition is
+  trusted.
+
 Write guard blocks a change:
 
 - Normal wiki work should write only `wiki/`.
-- In installed target repos, keep `.codex/config.toml` `[wiki_guard] mode = "target"`.
-- Framework maintenance may set `[wiki_guard] mode = "framework"` to update the approved root entrypoints plus `docs/`, `samples/`, `tests/`, `wiki/`, `.github/`, `.codex/`, and `.agents/`.
+- In installed repos, keep `wiki-only` for dedicated Wiki work or explicitly
+  install `coexist` for normal coding sessions.
+- Framework maintenance uses `framework` for approved root entrypoints plus
+  `docs/`, `samples/`, `tests/`, `tools/`, `wiki/`, `.github/`, `.codex/`, and `.agents/`.
 - If a raw source change is desired, ask Codex for a normal coding task rather than a wiki task.
 
 Skill does not trigger:

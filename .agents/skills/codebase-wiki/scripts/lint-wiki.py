@@ -63,6 +63,7 @@ def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     validate = load_script("validate_frontmatter_for_lint", "validate-frontmatter.py")
     stale = load_script("check_stale_for_lint", "check-stale.py")
+    log_validator = load_script("validate_log_for_lint", "validate-log.py")
 
     for path in pages:
         relative = path.relative_to(wiki_dir).as_posix()
@@ -106,16 +107,25 @@ def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
                     {"sources": item["missing"]},
                 )
             )
-        if item.get("stale"):
+        if item.get("stale") or item.get("digest_mismatch"):
+            details: dict[str, Any] = {"sources": item.get("stale", [])}
+            if item.get("digest_mismatch"):
+                details["source_digest"] = item["digest_mismatch"]
             findings.append(
                 finding(
                     "warning",
                     "stale_source",
-                    "One or more source paths changed after the Wiki page",
+                    "One or more source paths changed after the Wiki page or source digest",
                     page,
-                    {"sources": item["stale"]},
+                    details,
                 )
             )
+
+    log_result = log_validator.validate_log(wiki_dir / "log.md", repo_root)
+    for message in log_result["errors"]:
+        findings.append(finding("critical", "log_integrity", message, "log.md"))
+    for message in log_result["warnings"]:
+        findings.append(finding("info", "log_legacy", message, "log.md"))
 
     stems: dict[str, list[Path]] = {}
     for path in pages:
@@ -149,7 +159,8 @@ def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
                     )
                 )
                 continue
-            inbound[stem] += 1
+            if path.name not in {"index.md", "log.md"} and path.stem != stem:
+                inbound[stem] += 1
             if path.name == "index.md":
                 index_targets.add(stem)
 
@@ -181,6 +192,31 @@ def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
         fm = parse_frontmatter_text(path.read_text(encoding="utf-8"))
         type_counts[str(fm.get("type", "unknown"))] += 1
         status_counts[str(fm.get("status", "unknown"))] += 1
+        sources = fm.get("sources", [])
+        if fm.get("status") == "active" and isinstance(sources, list) and sources:
+            missing_metadata = [
+                key for key in ("summary", "source_digest") if not fm.get(key)
+            ]
+            if missing_metadata:
+                findings.append(
+                    finding(
+                        "info",
+                        "evidence_metadata",
+                        "Active evidence page is missing recommended provenance metadata",
+                        path.relative_to(wiki_dir).as_posix(),
+                        {"missing": missing_metadata},
+                    )
+                )
+            if len(sources) > 5:
+                findings.append(
+                    finding(
+                        "info",
+                        "broad_source_scope",
+                        "Page lists more than five core sources; consider splitting its evidence scope",
+                        path.relative_to(wiki_dir).as_posix(),
+                        {"source_count": len(sources)},
+                    )
+                )
 
     review_required = [
         {
@@ -195,13 +231,34 @@ def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
         },
     ]
     severities = Counter(item["severity"] for item in findings)
+    deterministic_status = (
+        "critical"
+        if severities["critical"]
+        else "warning"
+        if severities["warning"]
+        else "pass"
+    )
+    semantic_status = "review_required" if review_required else "complete"
+    overall_status = (
+        deterministic_status
+        if deterministic_status != "pass"
+        else semantic_status
+        if semantic_status != "complete"
+        else "pass"
+    )
     return {
-        "ok": not findings,
+        # Deprecated compatibility field: this covers deterministic Critical and
+        # Warning findings only. Consumers should use the explicit status fields.
+        "ok": deterministic_status == "pass",
+        "deterministic_status": deterministic_status,
+        "semantic_status": semantic_status,
+        "overall_status": overall_status,
         "wiki_dir": wiki_dir.as_posix(),
         "summary": {
             "pages": len(pages),
             "critical": severities["critical"],
             "warning": severities["warning"],
+            "info": severities["info"],
             "types": dict(sorted(type_counts.items())),
             "statuses": dict(sorted(status_counts.items())),
         },
@@ -238,7 +295,8 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "Wiki lint: "
             f"{summary['critical']} critical, {summary['warning']} warning, "
-            f"{summary['pages']} pages"
+            f"{summary.get('info', 0)} info, {summary['pages']} pages; "
+            f"semantic={result['semantic_status']}"
         )
         for item in result["findings"]:
             page = f" [{item['page']}]" if "page" in item else ""

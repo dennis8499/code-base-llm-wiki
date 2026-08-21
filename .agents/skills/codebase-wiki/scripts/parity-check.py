@@ -71,8 +71,14 @@ def main() -> int:
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
             issues.append(f"manifest missing surface: {surface}")
-    if manifest.get("contract_version") != 2:
-        issues.append("manifest contract_version must be 2")
+    if manifest.get("contract_version") != 3:
+        issues.append("manifest contract_version must be 3")
+    guard_modes = manifest.get("guard_modes", {})
+    if guard_modes.get("default") != "wiki-only" or guard_modes.get("installed") != [
+        "wiki-only",
+        "coexist",
+    ]:
+        issues.append("manifest guard mode contract is incomplete")
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
@@ -160,6 +166,36 @@ def main() -> int:
         text = path.read_text(encoding="utf-8") if path.is_file() else ""
         if CANONICAL_HOOK_ROOT not in text.replace("\\", "/") or platform_argument not in text:
             issues.append(f"hook config does not use canonical implementation: {path.relative_to(root)}")
+
+    codex_hooks_path = root / ".codex" / "hooks.json"
+    if codex_hooks_path.is_file():
+        try:
+            codex_hooks = json.loads(codex_hooks_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            issues.append(f"invalid Codex hooks JSON: {exc}")
+            codex_hooks = {}
+        for event_name in ("SessionStart", "PreToolUse", "PostToolUse"):
+            groups = codex_hooks.get("hooks", {}).get(event_name, [])
+            for group in groups:
+                for handler in group.get("hooks", []):
+                    command = handler.get("command", "")
+                    if not command.startswith("python .agents/skills/codebase-wiki/scripts/hooks/"):
+                        issues.append(
+                            f"Codex {event_name} command must use a workspace-relative hook path"
+                        )
+                    command_windows = handler.get("commandWindows", "")
+                    if "$(" in command_windows or "git rev-parse" in command_windows:
+                        issues.append(
+                            f"Codex {event_name} commandWindows must not use shell substitution"
+                        )
+                    if '"' in command_windows:
+                        issues.append(
+                            f"Codex {event_name} commandWindows must avoid nested quoted paths"
+                        )
+                    if not command_windows.startswith("python .agents\\skills\\codebase-wiki\\scripts\\hooks\\"):
+                        issues.append(
+                            f"Codex {event_name} commandWindows must use a workspace-relative hook path"
+                        )
 
     for directory in (root / ".codex" / "agents", root / ".github" / "agents"):
         for path in directory.iterdir() if directory.is_dir() else ():

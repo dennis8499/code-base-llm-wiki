@@ -52,6 +52,8 @@ TYPE_SECTIONS = {
 }
 
 SKIP_FILES = {"index.md", "log.md"}
+MANAGED_START = "<!-- codebase-wiki:index:start -->"
+MANAGED_END = "<!-- codebase-wiki:index:end -->"
 
 
 def expected_index_entries(wiki_dir: pathlib.Path) -> dict[str, str]:
@@ -66,6 +68,8 @@ def expected_index_entries(wiki_dir: pathlib.Path) -> dict[str, str]:
 
 
 def actual_index_entries(text: str) -> dict[str, list[str]]:
+    if MANAGED_START in text and MANAGED_END in text:
+        text = text.split(MANAGED_START, 1)[1].split(MANAGED_END, 1)[0]
     visible = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
     visible = re.sub(r"`[^`\n]*`", "", visible)
     entries: dict[str, list[str]] = defaultdict(list)
@@ -109,7 +113,7 @@ def check_index(wiki_dir: pathlib.Path) -> dict[str, object]:
 
 
 def rebuild_index(wiki_dir: pathlib.Path) -> str:
-    """掃描 wiki 目錄，產出 index.md 內容。"""
+    """更新受管索引區段，保留 frontmatter、前言與人工區段。"""
     sections: dict[str, list[str]] = {s: [] for s in TYPE_SECTIONS.values()}
 
     # 收集所有 .md 檔案
@@ -125,14 +129,44 @@ def rebuild_index(wiki_dir: pathlib.Path) -> str:
         status = fm.get("status", "active")
         page_name = fp.stem  # 用於 wikilink
 
-        summary = extract_first_sentence(fp) or f"({status})"
+        summary = fm.get("summary") or extract_first_sentence(fp) or f"({status})"
         section_name = TYPE_SECTIONS.get(page_type)
         if not section_name:
             continue
 
         sections[section_name].append(f"| [[{page_name}]] | {summary} |")
 
-    # 組裝 index
+    managed_lines = [MANAGED_START, ""]
+
+    for section_name in TYPE_SECTIONS.values():
+        managed_lines.append(f"## {section_name}")
+        managed_lines.append("")
+        entries = sections[section_name]
+        if entries:
+            managed_lines.append("| 頁面 | 摘要 |")
+            managed_lines.append("|------|------|")
+            managed_lines.extend(entries)
+        else:
+            managed_lines.append("_（尚無頁面）_")
+        managed_lines.append("")
+    managed_lines.append(MANAGED_END)
+    managed = "\n".join(managed_lines)
+
+    index_path = wiki_dir / "index.md"
+    if index_path.is_file():
+        current = index_path.read_text(encoding="utf-8")
+        current = re.sub(
+            r"(?m)^last_updated:\s*\d{4}-\d{2}-\d{2}\s*$",
+            f"last_updated: {__import__('datetime').date.today().isoformat()}",
+            current,
+            count=1,
+        )
+        if MANAGED_START in current and MANAGED_END in current:
+            before, remainder = current.split(MANAGED_START, 1)
+            _, after = remainder.split(MANAGED_END, 1)
+            return before.rstrip() + "\n\n" + managed + after
+        return current.rstrip() + "\n\n" + managed + "\n"
+
     lines = [
         "---",
         "title: Wiki Index",
@@ -145,24 +179,11 @@ def rebuild_index(wiki_dir: pathlib.Path) -> str:
         "",
         "# Codebase Wiki — 索引",
         "",
-        "> 此索引由 `rebuild-index.py` 自動產生。",
+        "> 此索引的受管區段由 `rebuild-index.py` 維護；標記外內容會保留。",
         "",
-        "---",
+        managed,
         "",
     ]
-
-    for section_name in TYPE_SECTIONS.values():
-        lines.append(f"## {section_name}")
-        lines.append("")
-        entries = sections[section_name]
-        if entries:
-            lines.append("| 頁面 | 摘要 |")
-            lines.append("|------|------|")
-            lines.extend(entries)
-        else:
-            lines.append("_（尚無頁面）_")
-        lines.append("")
-
     return "\n".join(lines)
 
 

@@ -29,7 +29,8 @@ defined only in `frontmatter-spec.md`.
 - Include background, considered options, decision, rationale, consequences,
   risks, and follow-up.
 - Separate evidence-backed facts from inference.
-- Use `sources: []` only when no source or wiki evidence directly supports the
+- Put raw repository evidence in `sources` and Wiki evidence in
+  `derived_from`; use `sources: []` when no raw source directly supports the
   decision.
 - Update `wiki/index.md` and append `wiki/log.md`.
 

@@ -1,4 +1,4 @@
 [wiki_guard]
-# Use "target" after installing this framework into an application repo.
-# Use "framework" only when maintaining the Codebase LLM Wiki framework itself.
+# Installed repos use "wiki-only" by default or explicit "coexist" for normal
+# coding sessions. Use "framework" only in this framework repository.
 mode = "framework"

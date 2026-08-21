@@ -20,6 +20,9 @@ artifact and authorization contract.
 
 ## Notes
 
+- Framework maintenance is a scope overlay on the selected intent, not an
+  additional machine operation. Load `framework-maintenance.md` whenever the
+  target is this framework repository.
 - SQL Server live evidence is a query sub-mode, not a separate intent.
 - Interactive Ingest and Batch Ingest are ingest modes, not separate intents.
 - Onboarding guides are a specialized guide workflow; keep them distinct from

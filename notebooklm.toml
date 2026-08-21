@@ -1,0 +1,11 @@
+[notebooklm]
+profile = "gemini-notebook-enterprise"
+scan_profile = "framework"
+output_directory = ".notebooklm"
+source_limit = 300
+reserved_source_slots = 0
+max_source_bytes = 180000000
+max_source_words = 450000
+include_evidence = true
+extra_paths = []
+exclude_paths = []

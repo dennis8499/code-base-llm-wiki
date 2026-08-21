@@ -22,6 +22,13 @@ the required `--platform codex|copilot` argument.
 All configurations invoke
 `.agents/skills/codebase-wiki/scripts/hooks/{hook-name}.py`.
 
+Codex hook commands use paths relative to the active workspace. The Codex
+runtime starts the command with the hook event's workspace as its working
+directory, so the configuration must not resolve the repository with a
+shell-specific `git rev-parse` substitution. In particular, `commandWindows`
+is executed by the Windows command shell: use `cmd.exe`-compatible syntax and
+do not use PowerShell `$()` expressions or nested quoted paths.
+
 ## Matched Edit Tools
 
 Both platforms should route these edit tools to write guard and log reminder
@@ -74,11 +81,13 @@ bodies, frontmatter blocks, index contents, or raw log entries.
 
 Allowed values:
 
-- `target`: allow wiki writes only. This is the safe mode for installed target
-  codebases.
+- `wiki-only`: allow Wiki writes only. This is the fail-closed default for
+  installed target codebases. Legacy `target` is accepted as this mode.
+- `coexist`: allow any explicit in-repository edit and emit audit context for
+  non-Wiki paths. This does not broaden task authorization; raw sources remain
+  read-only during Wiki tasks.
 - `framework`: allow `wiki/`, `.codex/`, `.agents/`, `.github/`, `docs/`,
-  `samples/`, `tests/`, and approved root entrypoints (`AGENTS.md`, `README.md`,
-  `ChangeLog.md`, `Codex.md`). Use this only when maintaining the Codebase LLM
-  Wiki framework repository itself.
+  `samples/`, `tests/`, `tools/`, and approved root governance/release files.
+  Use this only when maintaining the Codebase LLM Wiki framework repository.
 
-If the config is missing or invalid, the guard fails closed to `target`.
+If the config is missing or invalid, the guard fails closed to `wiki-only`.

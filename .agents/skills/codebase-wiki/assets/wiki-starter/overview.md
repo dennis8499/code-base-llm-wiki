@@ -1,7 +1,9 @@
 ---
 title: Codebase Overview
 type: overview
+summary: Placeholder for an evidence-backed target codebase overview
 sources: []
+derived_from: []
 last_updated: 2026-07-22
 tags: [overview]
 status: placeholder
@@ -27,4 +29,3 @@ _Not yet documented._
 
 - Raw source entrypoints have not been inspected.
 - Runtime, dependency, deployment, and operational behavior remain unverified.
-

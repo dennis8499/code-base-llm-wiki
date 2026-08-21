@@ -18,7 +18,10 @@ description: "Applies when editing any markdown file under the wiki/ directory. 
 
 - Every page has `title`, `type`, `sources`, `last_updated`, `tags`, and
   `status`.
-- `frontmatter.sources` contains real repo-relative paths or `sources: []`.
+- `frontmatter.sources` contains raw repo-relative evidence or `sources: []`;
+  Wiki dependencies use `derived_from` wikilinks.
+- New or major evidence-page updates include `summary` and refresh
+  `source_digest`.
 - Page location matches its `type`.
 - Wiki cross-references use `[[page-name]]`; source paths use backticks.
 - Facts remain evidence-backed; inference, speculation, and gaps are labeled.

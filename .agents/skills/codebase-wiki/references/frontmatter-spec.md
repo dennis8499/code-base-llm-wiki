@@ -15,6 +15,19 @@
 | `tags`         | string[] | ✅    | 分類標籤                           | `["auth", "security"]`          |
 | `status`       | enum     | ✅    | 頁面狀態                           | `active`                        |
 
+### 證據與衍生欄位（選填、增量採用）
+
+| 欄位 | 型別 | 規則 |
+| --- | --- | --- |
+| `summary` | string | 一句話結論；新增或重大更新的 evidence-backed 頁面必填。 |
+| `derived_from` | string[] | Wiki 衍生證據，使用 `[[page-name]]`；不得放入 `sources`。 |
+| `source_digest` | string | `sha256:<64 lowercase hex>`；新增或重大更新且 `sources` 非空的頁面必填。 |
+
+`source_digest` 對排序後的 `repo-relative-path + NUL + file-sha256` records
+再做 SHA-256。目錄來源展開 Git tracked 與 non-ignored untracked files，並排除
+Wiki、dependency、generated、cache 與 export output。舊頁面缺少這些欄位時
+Lint 先回報 Info，不作為 schema failure。
+
 ### NotebookLM 功能分組（選填）
 
 | 欄位 | 型別 | 必填 | 說明 | 範例 |
@@ -122,12 +135,12 @@ page-shape source of truth.
 
 ## sources 填寫規範
 
-1. 路徑相對於 repo root
+1. 路徑相對於 repo root，且只引用 raw repository evidence；Wiki 頁面改用 `derived_from`
 2. 指向目錄時以 `/` 結尾：`src/modules/auth/`
 3. 指向檔案時不加 `/`：`src/modules/auth/service.ts`
 4. 只列出最核心的 1-5 個 source，不需窮舉
 5. **禁止填入不存在的路徑**——Lint 會檢查
-6. sources 可為空陣列 `[]`（如 guide、synthesis 可能無直接 source）
+6. sources 可為空陣列 `[]`（如 guide、synthesis 可能無直接 raw source）
 
 ---
 
@@ -147,3 +160,6 @@ page-shape source of truth.
 10. `type: dependency` 必須有非空 `package_name` 與 `version`。
 11. `type: index` / `type: log` 必須位於指定 root 檔名。
 12. `notebooklm_group` 若存在，必須是非空 kebab-case 字串。
+13. `summary` 若存在，必須是非空字串。
+14. `derived_from` 若存在，必須是由 `[[wikilink]]` 組成的陣列。
+15. `source_digest` 若存在，必須符合 `sha256:<64 lowercase hex>`。

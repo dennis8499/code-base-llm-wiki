@@ -5,6 +5,8 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -43,6 +45,9 @@ status: active
 # Wiki Index
 
 [[overview]]
+[[project-function-catalog]]
+[[system-architecture]]
+[[system-analysis]]
 """,
         encoding="utf-8",
     )
@@ -67,15 +72,94 @@ The service returns a greeting.
         "def greet(name: str) -> str:\n    return f\"hello {name}\"\n",
         encoding="utf-8",
     )
+    (root / "wiki/log.md").write_text(
+        """---
+title: Wiki Activity Log
+type: log
+sources: []
+last_updated: 2026-08-17
+tags: [log]
+status: active
+---
+
+# Activity Log
+""",
+        encoding="utf-8",
+    )
+    required = {
+        "synthesis/project-function-catalog.md": ("Function Catalog", "synthesis", "project"),
+        "architecture/system-architecture.md": ("System Architecture", "architecture", "architecture"),
+        "synthesis/system-analysis.md": ("System Analysis", "synthesis", "system-analysis"),
+    }
+    for relative, (title, page_type, group) in required.items():
+        path = root / "wiki" / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "---\n"
+            f"title: {title}\n"
+            f"type: {page_type}\n"
+            f"notebooklm_group: {group}\n"
+            "sources: []\n"
+            "derived_from: [\"[[overview]]\"]\n"
+            "last_updated: 2026-08-17\n"
+            f"tags: [{page_type}]\n"
+            "status: active\n"
+            "---\n\n"
+            f"# {title}\n\n[[overview]]\n",
+            encoding="utf-8",
+        )
+
+
+def add_index_links(root: Path, *stems: str) -> None:
+    index = root / "wiki/index.md"
+    index.write_text(
+        index.read_text(encoding="utf-8").rstrip()
+        + "\n"
+        + "\n".join(f"[[{stem}]]" for stem in stems)
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 class NotebookLMExporterTests(unittest.TestCase):
+    def test_compatibility_wrapper_matches_canonical_cli(self) -> None:
+        canonical = SCRIPT.with_name("notebooklm_exporter.py")
+        wrapper_result = subprocess.run(
+            [sys.executable, str(SCRIPT), "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        canonical_result = subprocess.run(
+            [sys.executable, str(canonical), "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(wrapper_result.returncode, canonical_result.returncode)
+        self.assertEqual(wrapper_result.stdout, canonical_result.stdout)
+
     def run_export(self, module, root: Path, output: Path) -> tuple[int, dict[str, object]]:
+        preflight_code, preflight = self.run_preflight(module, root)
+        if preflight_code != 0:
+            return preflight_code, preflight
         stdout = io.StringIO()
         relative_output = output.relative_to(root).as_posix()
         with contextlib.redirect_stdout(stdout):
             code = module.main(
-                ["--root", str(root), "--output", relative_output, "--format", "json"]
+                [
+                    "--root",
+                    str(root),
+                    "--apply",
+                    "--preflight-id",
+                    str(preflight["preflight_id"]),
+                    "--output",
+                    relative_output,
+                    "--format",
+                    "json",
+                ]
             )
         return code, json.loads(stdout.getvalue())
 
@@ -96,8 +180,8 @@ class NotebookLMExporterTests(unittest.TestCase):
 
             first_code, first = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
-            self.assertEqual(first["source_count"], 3)
-            self.assertEqual(len(first["actions"]["added"]), 3)
+            self.assertEqual(first["source_count"], 5)
+            self.assertEqual(len(first["actions"]["added"]), 5)
             self.assertTrue((output / "manifest.json").is_file())
             self.assertTrue((output / "sources/project-map.md").is_file())
 
@@ -106,7 +190,7 @@ class NotebookLMExporterTests(unittest.TestCase):
             self.assertEqual(len(second["actions"]["added"]), 0)
             self.assertEqual(len(second["actions"]["changed"]), 0)
             self.assertEqual(len(second["actions"]["deleted"]), 0)
-            self.assertEqual(len(second["actions"]["unchanged"]), 3)
+            self.assertEqual(len(second["actions"]["unchanged"]), 5)
 
             (root / "src/service.py").write_text(
                 "def greet(name: str) -> str:\n    return f\"welcome {name}\"\n",
@@ -118,7 +202,7 @@ class NotebookLMExporterTests(unittest.TestCase):
                 [item["logical_source_id"] for item in changed["actions"]["changed"]],
                 ["evidence:project"],
             )
-            self.assertEqual(len(changed["actions"]["unchanged"]), 2)
+            self.assertEqual(len(changed["actions"]["unchanged"]), 4)
 
     def test_add_and_delete_page_updates_project_map_and_source_plan(self) -> None:
         module = load_exporter()
@@ -146,6 +230,7 @@ Call the service.
 """,
                 encoding="utf-8",
             )
+            add_index_links(root, "usage")
             added_code, added = self.run_export(module, root, output)
             self.assertEqual(added_code, 0)
             added_ids = {item["logical_source_id"] for item in added["actions"]["added"]}
@@ -154,6 +239,11 @@ Call the service.
             self.assertIn("project-map", changed_ids)
 
             new_page.unlink()
+            index = root / "wiki/index.md"
+            index.write_text(
+                index.read_text(encoding="utf-8").replace("[[usage]]\n", ""),
+                encoding="utf-8",
+            )
             deleted_code, deleted = self.run_export(module, root, output)
             self.assertEqual(deleted_code, 0)
             deleted_ids = {item["logical_source_id"] for item in deleted["actions"]["deleted"]}
@@ -289,6 +379,83 @@ Call the service.
             self.assertEqual(excluded["logo.bin"], "binary_or_unsupported_encoding")
             self.assertEqual(result["limits"]["enterprise_max_bytes"], 200_000_000)
             self.assertEqual(result["limits"]["max_bytes"], 180_000_000)
+            self.assertTrue(result["ready_to_export"])
+            self.assertRegex(result["preflight_id"], r"^sha256:[0-9a-f]{64}$")
+
+    def test_direct_export_is_rejected_and_changed_input_invalidates_preflight(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                direct_code = module.main(
+                    ["--root", str(root), "--output", ".notebooklm", "--format", "json"]
+                )
+            self.assertEqual(direct_code, 2)
+            self.assertIn("direct export is disabled", json.loads(stdout.getvalue())["error"])
+
+            preflight_code, preflight = self.run_preflight(module, root)
+            self.assertEqual(preflight_code, 0)
+            (root / "src/service.py").write_text("VALUE = 2\n", encoding="utf-8")
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                apply_code = module.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--apply",
+                        "--preflight-id",
+                        str(preflight["preflight_id"]),
+                        "--format",
+                        "json",
+                    ]
+                )
+            self.assertEqual(apply_code, 2)
+            self.assertIn("no longer matches", json.loads(stdout.getvalue())["error"])
+            self.assertFalse((root / ".notebooklm").exists())
+
+    def test_missing_mandatory_document_keeps_preflight_not_ready(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            (root / "wiki/synthesis/system-analysis.md").unlink()
+            index = root / "wiki/index.md"
+            index.write_text(
+                index.read_text(encoding="utf-8").replace("[[system-analysis]]\n", ""),
+                encoding="utf-8",
+            )
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            self.assertFalse(result["ready_to_export"])
+            self.assertEqual(
+                result["inventory"]["required_documents"][
+                    "wiki/synthesis/system-analysis.md"
+                ],
+                "missing",
+            )
+
+    def test_framework_scan_profile_includes_framework_adapters(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            (root / ".agents/skills/codebase-wiki").mkdir(parents=True)
+            (root / ".agents/skills/codebase-wiki/SKILL.md").write_text(
+                "framework\n", encoding="utf-8"
+            )
+            (root / "notebooklm.toml").write_text(
+                'scan_profile = "framework"\n', encoding="utf-8"
+            )
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            included = {item["path"] for item in result["inventory"]["included"]}
+            self.assertIn(".agents/skills/codebase-wiki/SKILL.md", included)
 
     def test_documents_are_kept_when_evidence_exceeds_source_budget(self) -> None:
         module = load_exporter()
@@ -312,13 +479,14 @@ status: active
 """,
                 encoding="utf-8",
             )
-            (root / "notebooklm.toml").write_text("source_limit = 3\n", encoding="utf-8")
+            add_index_links(root, "usage")
+            (root / "notebooklm.toml").write_text("source_limit = 5\n", encoding="utf-8")
             output = root / ".notebooklm"
 
             code, result = self.run_export(module, root, output)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["source_count"], 3)
+            self.assertEqual(result["source_count"], 5)
             self.assertEqual(result["manifest"]["omitted_evidence"], [
                 {"path": "src/service.py", "reason": "source_budget"}
             ])
@@ -362,7 +530,7 @@ status: active
 
             self.assertEqual(code, 0)
             self.assertEqual(result["manifest"]["schema_version"], 2)
-            self.assertEqual(len(result["actions"]["unchanged"]), 3)
+            self.assertEqual(len(result["actions"]["unchanged"]), 5)
 
     def test_functional_pages_share_stable_document_group(self) -> None:
         module = load_exporter()
@@ -406,6 +574,7 @@ status: active
 """,
                 encoding="utf-8",
             )
+            add_index_links(root, "orders", "order-service")
             output = root / ".notebooklm"
             first_code, first = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
@@ -453,12 +622,19 @@ status: active
 """,
                 encoding="utf-8",
             )
+            add_index_links(root, "orders")
             output = root / ".notebooklm"
 
-            code, result = self.run_export(module, root, output)
+            code, result = self.run_preflight(module, root)
 
-            self.assertEqual(code, 2)
-            self.assertIn("notebooklm_group", result["error"])
+            self.assertEqual(code, 0)
+            self.assertFalse(result["ready_to_export"])
+            self.assertTrue(
+                any(
+                    "notebooklm_group" in item["message"]
+                    for item in result["lint"]["findings"]
+                )
+            )
             self.assertFalse(output.exists())
 
 

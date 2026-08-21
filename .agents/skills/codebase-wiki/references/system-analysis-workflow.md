@@ -74,9 +74,10 @@ Mark each row as:
 1. Choose the output path.
 2. Write or update the SA document under `wiki/synthesis/`.
 3. Start from `assets/system-analysis-template.md`.
-4. Replace `sources` with real repo-relative wiki/source paths used by the
-   document. Use `sources: []` only if no reliable source file or wiki page is
-   available.
+4. Put only real repo-relative raw evidence in `sources`. Record Wiki evidence
+   in `derived_from` using `[[wikilinks]]`; use `sources: []` when no raw source
+   was inspected. Populate `summary` and refresh `source_digest` when sources
+   are non-empty.
 5. Update `wiki/index.md`.
 6. Append `wiki/log.md` with operation `synthesis`.
 7. Report coverage gaps and verification commands.

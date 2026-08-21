@@ -3,29 +3,33 @@
 ## 版本來源
 
 產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer：
-`MAJOR.MINOR.PATCH`，目前初始版號為 `0.1.0`。Git tag 必須使用
-`vX.Y.Z`，例如 `VERSION=0.1.0` 對應 `v0.1.0`。
+`MAJOR.MINOR.PATCH`，目前版號為 `0.2.0`。Git tag 必須使用
+`vX.Y.Z`，例如 `VERSION=0.2.0` 對應 `v0.2.0`。
 
 `.agents/skills/codebase-wiki/VERSION` 是 installer 寫入目標 Repo 的本地版本
 標記。它由框架的 `VERSION` 產生，不應由使用者手動維護。
 
-`contract_version: 2` 是 installer/API contract 版本，與產品版號獨立，不能
+`contract_version: 3` 是 installer/API contract 版本，與產品版號獨立，不能
 用產品版號取代。
+
+公開 Release 必須先由專案擁有者選定並加入明確 `LICENSE`。目前尚未作出
+授權選擇，因此 `tools/release.py validate` 與 `build` 會刻意拒絕公開發佈；
+實作者不得自行代替擁有者選擇授權條款。
 
 ## 建立 Release
 
 發佈前先在目前分支更新 `VERSION` 與 `ChangeLog.md`，再執行：
 
 ```powershell
-python tools\release.py validate --tag v0.1.0
+python tools\release.py validate --tag v0.2.0
 python tools\release.py build --output dist --repository dennis8499/code-base-llm-wiki
 ```
 
 確認測試通過後，提交並推送版本 tag：
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 `.github/workflows/release.yml` 只接受與 `VERSION` 完全相符的 `vX.Y.Z` tag，
@@ -51,16 +55,16 @@ git push origin v0.1.0
 {
   "schema_version": 1,
   "product": "codebase-llm-wiki",
-  "version": "0.1.0",
-  "tag": "v0.1.0",
+  "version": "0.2.0",
+  "tag": "v0.2.0",
   "channel": "stable",
-  "installer_contract_version": 2,
-  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.1.0",
+  "installer_contract_version": 3,
+  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.2.0",
   "assets": [
     {
       "name": "codebase-llm-wiki.zip",
       "format": "zip",
-      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.1.0/codebase-llm-wiki.zip",
+      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.2.0/codebase-llm-wiki.zip",
       "sha256": "..."
     }
   ]

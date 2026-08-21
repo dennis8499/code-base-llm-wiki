@@ -22,7 +22,7 @@ from typing import Iterable, Sequence
 
 
 PRODUCT_ID = "codebase-llm-wiki"
-INSTALLER_CONTRACT_VERSION = 2
+INSTALLER_CONTRACT_VERSION = 3
 VERSION_FILE = "VERSION"
 VERSION_PATTERN = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 ARCHIVE_NAMES = ("codebase-llm-wiki.zip", "codebase-llm-wiki.tar.gz")
@@ -72,6 +72,21 @@ def validate_tag(tag: str, root: Path = REPO_ROOT) -> str:
     if tag != expected:
         raise ReleaseError(f"tag {tag!r} does not match {VERSION_FILE} ({expected})")
     return version
+
+
+def validate_release_readiness(root: Path = REPO_ROOT) -> None:
+    """Require an owner-selected license before public release artifacts exist."""
+
+    licenses = [root / name for name in ("LICENSE", "LICENSE.md", "LICENSE.txt")]
+    if not any(path.is_file() and path.stat().st_size > 0 for path in licenses):
+        raise ReleaseError(
+            "public release is blocked until the project owner adds an explicit LICENSE"
+        )
+    history = root / "docs/history/llm-wiki.md"
+    if history.is_file():
+        text = history.read_text(encoding="utf-8")
+        if "gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" not in text:
+            raise ReleaseError("upstream LLM Wiki attribution link is missing")
 
 
 def _repository_from_git(root: Path) -> str:
@@ -164,6 +179,7 @@ def build_release(
     root: Path = REPO_ROOT,
     repository: str | None = None,
 ) -> dict[str, object]:
+    validate_release_readiness(root)
     version = read_version(root)
     tag = expected_tag(version)
     repo = repository_name(root, repository)
@@ -236,6 +252,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.action == "validate":
             version = validate_tag(args.tag)
+            validate_release_readiness()
             payload = {"ok": True, "version": version, "tag": args.tag}
         else:
             payload = build_release(args.output.resolve(), repository=args.repository)

@@ -106,15 +106,20 @@ flowchart LR
 ## 主要特色
 
 - **Wiki-first**：先讀 `wiki/index.md` 與相關頁面，再按需回溯 sources。
-- **來源可追溯**：每頁 frontmatter 列出真實 repo-relative source paths。
+- **來源可追溯**：`sources` 保存 raw paths、`derived_from` 保存 Wiki 關係，
+  `source_digest` 偵測同日內容變更。
 - **增量維護**：透過 `wiki/index.md`、wikilinks 與 append-only `wiki/log.md` 累積知識。
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
 - **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、Guide、重新 Ingest 或 Lint；不會自動寫入或 Hand-Off。
-- **安全邊界**：target mode 只允許 Wiki 寫入；framework mode 才允許維護框架檔案。
-- **零第三方依賴 installer**：Python 標準函式庫即可 dry-run、安裝與升級。
+- **安全邊界**：`wiki-only` 安全專用、`coexist` 一般開發共存、`framework`
+  框架維護；舊 `target` 是 `wiki-only` alias。
+- **零第三方依賴 installer**：contract v3 提供 managed blocks、fingerprint
+  manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
-- **NotebookLM 全專案文件化**：每次重掃可分享的 runtime source、必要設定、schema/migrations 與既有文件，依功能補齊分層 Wiki；source pack 採 documents-first、穩定 logical source IDs 與增量 upload plan。
-- **可驗證**：提供 parity、唯讀 Wiki lint、frontmatter、stale-source、統計與單元測試。
+- **NotebookLM 全專案文件化**：強制 preflight ID 與必要文件 gate；source pack
+  採 documents-first、穩定 logical source IDs 與增量 upload plan。
+- **可驗證**：跨 Python/Linux CI、Windows smoke、parity、frontmatter、digest
+  freshness、log/index、唯讀 lint 與單元測試。
 
 ---
 
@@ -131,18 +136,20 @@ flowchart LR
 先預覽，再明確套用：
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface copilot --format json
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface copilot --apply --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface copilot --guard-mode wiki-only --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface copilot --guard-mode wiki-only --apply --format json
 ```
 
 ### 安裝 OpenAI Codex surface
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --format json
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --apply --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --guard-mode wiki-only --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\your-repo --surface codex --guard-mode wiki-only --apply --format json
 ```
 
-安裝器遇到既有且內容不同的檔案會回報 `conflicts` 並停止，不會覆寫。完整安裝、升級與排錯說明請看 [安裝手冊](docs/setup/README.md)。
+安裝器會把 user-only 變更列為 `preserved`，只在同一受管內容同時有 upstream 與
+local 變更時回報 `conflicts`。Root instructions 只更新 managed marker block。
+完整安裝、升級與排錯說明請看 [安裝手冊](docs/setup/README.md)。
 
 Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的其他 Skills
 不會外帶。`upgrade` 只同步 framework surface，既有 `wiki/` 保持不變。
@@ -151,10 +158,12 @@ Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的�
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，使用穩定 `X.Y.Z`；例如 `0.1.0` 對應
-Git tag `v0.1.0`。Installer 會把目前版本保存到目標 Repo 的
-`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 2` 維持為獨立的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.2.0`。Installer 會把目前版本保存到目標 Repo 的
+`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 3` 維持為獨立的
 installer contract 版本。
+
+本 Repo 尚未由擁有者選定 LICENSE，因此 release validate/build 會刻意阻擋新的
+公開資產；下列連結只代表既有或未來正式發布位置，不代表 v0.2.0 已公開授權。
 
 最新版本與下載：
 
@@ -199,7 +208,10 @@ NotebookLM Enterprise 匯出：
 的文件與容量預估，等待我確認。確認後以繁體中文補齊分層 Wiki，並產生 .notebooklm source pack。
 ```
 
-預覽可用 `export-notebooklm.py --preflight` 產生，不會寫入 Wiki 或 pack。確認後的文件至少涵蓋專案總覽、功能目錄、系統架構、功能/實體頁與系統分析；容量不足時優先保留這些文件，低優先原始 evidence 會在 manifest 中透明列為省略。Exporter 不會呼叫雲端 API 或自動上傳；使用者依 upload plan 將變更來源更新到 NotebookLM。
+預覽使用 `export-notebooklm.py --preflight`，不寫入 Wiki 或 pack，並回傳一次性的
+`preflight_id`。完成文件與確認後，使用
+`--apply --preflight-id <id>`；任何 inventory、Wiki 或設定變更都要求重新
+preflight。Exporter 不會呼叫雲端 API 或自動上傳。
 
 ---
 
@@ -222,7 +234,7 @@ NotebookLM Enterprise 匯出：
 | [版本、發佈與更新契約](docs/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
 | [ChangeLog.md](ChangeLog.md) | 框架重要變更 |
-| [歷史方法論](docs/history/llm-wiki.md) | 早期 LLM Wiki 概念，僅供設計脈絡參考 |
+| [歷史方法論](docs/history/llm-wiki.md) | 上游概念的 attribution、原創摘要與權威來源連結 |
 
 ---
 

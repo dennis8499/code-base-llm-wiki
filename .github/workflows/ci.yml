@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.11"
+            full: true
+          - os: ubuntu-latest
+            python: "3.14"
+            full: true
+          - os: windows-latest
+            python: "3.11"
+            full: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Compile dependency-free CLIs
+        run: >-
+          python -m py_compile
+          .agents/skills/codebase-wiki/scripts/install-framework.py
+          .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
+          .agents/skills/codebase-wiki/scripts/lint-wiki.py
+          .agents/skills/codebase-wiki/scripts/validate-log.py
+
+      - name: Windows contract smoke
+        if: runner.os == 'Windows'
+        run: >-
+          python -m unittest
+          tests.test_install_framework
+          tests.test_write_guard
+          tests.test_sample_contract
+          -v
+
+      - name: Full unit suite
+        if: matrix.full
+        run: python -m unittest discover -s tests -v
+
+      - name: Framework parity
+        if: matrix.full
+        run: python .agents/skills/codebase-wiki/scripts/parity-check.py
+
+      - name: Wiki deterministic checks
+        if: matrix.full
+        run: |
+          python .agents/skills/codebase-wiki/scripts/validate-frontmatter.py wiki
+          python .agents/skills/codebase-wiki/scripts/check-stale.py wiki .
+          python .agents/skills/codebase-wiki/scripts/validate-log.py wiki/log.md --repo-root .
+          python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
+          python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --repo-root .

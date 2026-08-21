@@ -1,24 +1,16 @@
 ---
 title: Codebase LLM Wiki — 使用指南
 type: guide
+summary: 從安裝、Wiki-first 操作到驗證與升級的框架使用路線
 sources:
   - README.md
   - Codex.md
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-  - .agents/skills/codebase-wiki/scripts/export-notebooklm.py
-  - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-  - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-  - .agents/skills/codebase-wiki/references/follow-up-actions.md
-  - .agents/skills/codebase-wiki/assets/notebooklm.toml
-  - .agents/skills/codebase-wiki/assets/project-function-catalog-template.md
-  - docs/releases/README.md
-  - .github/prompts/export-notebooklm.prompt.md
-  - VERSION
-  - tools/release.py
-  - samples/README.md
-last_updated: 2026-08-20
+source_digest: sha256:fdc82f82cde8b2e836c30e8034d3ff16e290e299fb5cd007089fb0dc2ea76086
+derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
+last_updated: 2026-08-21
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -57,8 +49,8 @@ notebooklm_group: project-guides
 ## 2. 先 Dry-run 再安裝
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --format json
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --apply --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --guard-mode wiki-only --format json
+python .agents\skills\codebase-wiki\scripts\install-framework.py install --target C:\path\to\target --surface codex --guard-mode wiki-only --apply --format json
 ```
 
 將 `codex` 換成 `copilot` 即可安裝另一入口。Installer allowlist 只包含
@@ -132,7 +124,7 @@ tooling、dependencies、generated、binary、secrets、framework adapters 與�
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --output .notebooklm --preflight --format json
+  --root . --preflight --format json
 ```
 
 Agent 依功能批次閱讀所有 included files，預覽預計建立或重大更新的頁面。即使沒有
@@ -143,7 +135,7 @@ stale、placeholder 或容量警告，也要等待使用者確認。確認後以
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --output .notebooklm --format json
+  --root . --apply --preflight-id <id> --output .notebooklm --format json
 ```
 
 只手動上傳 `.notebooklm/sources/*.md`。Schema v2 `manifest.json` 記錄 scan
@@ -157,10 +149,19 @@ inventory、coverage、omissions、input/output hash 與 stable `logical_source_
 
 ## 6. Guard modes
 
-- **Target mode**：安裝到應用程式 Repo 的預設，只允許 Wiki 任務寫入 `wiki/`。
-- **Framework mode**：只用於維護 Codebase LLM Wiki Repo 本身，可更新核准的入口、schema、docs、samples、tests 與 wiki。
+- **wiki-only**：安裝預設，只允許寫入 `wiki/`；舊 `target` 名稱映射至此模式。
+- **coexist**：一般 coding 與 Wiki 共存的工作階段，允許 Repo 內明確編輯並對非 Wiki
+  路徑提供 audit context；不會擴張任務授權。
+- **framework**：只用於本框架 Repo，可更新核准入口、schema、adapters、docs、
+  samples、tests、tools 與 Wiki。
 
 Guard 是 deterministic 防呆層，不取代 sandbox。若需求是修改目標專案程式碼，請改成一般 coding task，不要透過 Wiki 任務繞過限制。
+
+Codex 的 `SessionStart`、`PreToolUse` 與 `PostToolUse` 會以目前 workspace
+作為 Hook 工作目錄，因此 `.codex/hooks.json` 使用相對腳本路徑。Windows
+命令由 `cmd.exe` 執行，必須使用 `cmd.exe` 相容語法；若看到
+`PostToolUse hook (failed)` 或 `hook exited with code 1`，先檢查是否誤用了
+PowerShell `$()`、`git rev-parse` 或巢狀引號，不要先停用 audit reminder。
 
 ## 7. Deterministic checks
 
@@ -169,11 +170,12 @@ python -m unittest discover -s tests -v
 python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
+python .agents\skills\codebase-wiki\scripts\validate-log.py wiki\log.md --repo-root .
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --preflight --format json
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --output .notebooklm --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
 ```
 
 Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不要以虛構 sources 或刪除 log 歷史規避檢查。
@@ -212,3 +214,6 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 ## 相關頁面
 
 - [[overview]] — 框架定位、產品結構與核心設計
+- [[installer-and-upgrade]] — v3 managed blocks、manifest 與 atomic apply
+- [[platform-hooks-and-guards]] — 三種 guard mode 與跨平台 hook contract
+- [[system-analysis]] — 完整系統分析與 gap

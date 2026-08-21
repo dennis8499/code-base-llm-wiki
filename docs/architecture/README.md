@@ -31,7 +31,7 @@ flowchart TB
 
 ## 雙入口與共用契約
 
-`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 2、十個使用者意圖群組、十一個 machine operations 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
+`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 3、十個使用者意圖群組、十一個 machine operations、guard modes 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
 
 - intent routing、frontmatter、log operations 與工作流 references；NotebookLM export 另有離線 source-pack reference；
 - Wiki page templates；
@@ -54,7 +54,10 @@ flowchart TB
 
 ## Wiki 資料模型
 
-每頁必須有 `title`、`type`、`sources`、`last_updated`、`tags` 與 `status`。頁面之間使用 Obsidian-compatible `[[wikilink]]`；source paths 使用相對 Repo root 的實際路徑。
+每頁必須有 `title`、`type`、`sources`、`last_updated`、`tags` 與 `status`。
+Raw evidence 使用 `sources`，Wiki 衍生關係使用 `derived_from`，新增或重大更新的
+evidence page 以 `source_digest` 保存內容摘要。頁面之間使用 Obsidian-compatible
+`[[wikilink]]`。
 
 `wiki/index.md` 是導覽入口，`wiki/log.md` 是 append-only 時序紀錄。新增、刪除、改名或重大更新頁面時必須同步 index；Ingest、Lint、ADR、Guide、Synthesis、SA 與重大框架更新必須追加 log。
 
@@ -69,21 +72,29 @@ flowchart TB
 | `wiki-write-guard` | Edit tool 前 | 依 guard mode 拒絕超出範圍的寫入 |
 | `wiki-log-reminder` | Edit tool 後 | 記錄可能需要追加 log 的 Wiki 變更 |
 
-`target` mode 只允許 `wiki/`；`framework` mode 允許本 Repo 的 Wiki、schema、文件、樣例與測試。無效或缺失設定會 fail closed 到 `target`。
+`wiki-only` 只允許 `wiki/`；`coexist` 允許 Repo 內的一般 coding edit 並回報
+audit context；`framework` 允許本 Repo 的 Wiki、schema、adapters、文件、樣例、
+測試與 tools。舊 `target` 映射到 `wiki-only`，無效或缺失設定也 fail closed 至此。
 
 Hooks 是 deterministic guardrail，不取代平台 sandbox，也不授權 Agent 修改 raw sources。
+Codex hooks use workspace-relative script paths; Windows `commandWindows`
+entries must use `cmd.exe`-compatible syntax rather than PowerShell command
+substitution.
 
 ## Installer
 
 `.agents/skills/codebase-wiki/scripts/install-framework.py` 只使用 Python 標準函式庫：
 
-1. `install` 或 `upgrade` 預設只產生 file plan；
+1. `install` 或 `upgrade` 預設只產生 contract-v3 file plan；
 2. 指定 `--apply` 且沒有 conflicts 時才寫入；
 3. `--surface copilot|codex` 決定平台入口；
-4. framework config 在安裝到目標 Repo 時轉成 `target` mode；
+4. `--guard-mode wiki-only|coexist` 明確選擇目標工作階段；
 5. `install` 建立乾淨 Wiki starter；`upgrade` 永遠保留既有 `wiki/`；
 6. 只安裝 `codebase-wiki` Skill，不外帶同層其他 Skills；
-7. 舊 `.codebase-wiki/` 只透過 `obsolete_paths` 回報，不自動刪除。
+7. Managed blocks 保留 root instructions 的人工內容；fingerprint manifest 區分
+   upstream-only、user-only 與 two-sided changes；
+8. 全部輸出先 staging，套用失敗 rollback；starter 日期由 install date 產生；
+9. 舊 `.codebase-wiki/` 只透過 `obsolete_paths` 回報，不自動刪除。
 
 框架 Repo 根目錄的 `wiki/` 是框架自己的持久知識，不會複製到目標專案；目標 Wiki 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 的乾淨骨架建立。`docs/`、`samples/` 與 `tests/` 同樣不屬於 installer surface。
 
@@ -94,6 +105,7 @@ Hooks 是 deterministic guardrail，不取代平台 sandbox，也不授權 Agent
 - SQL Server live evidence 只允許 bounded read-only evidence，且不能放入 frontmatter sources。
 - 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
 - NotebookLM export 每次唯讀全量掃描可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件；既有 Wiki 是增量知識基線，不是掃描邊界。
-- 確認 inventory、coverage、文件計畫與容量後，Agent 依功能更新 Wiki；本機 `.notebooklm/` 採 documents-first 打包，低優先 evidence 可因 source budget 省略但必須透明記錄。
+- 確認 inventory、coverage、文件計畫與容量後，Agent 依功能更新 Wiki；exporter
+  必須以相符 `preflight_id` apply，本機 `.notebooklm/` 採 documents-first 與原子替換。
 - Export 不呼叫 NotebookLM API，也不自動上傳；敏感檔案、tests、CI/IaC、build/dev tooling、dependencies、generated/binary 與 framework adapters 不會被打包。
 - 不允許 delegation 隱性改變寫入或安全邊界。

@@ -11,7 +11,9 @@ status: active
 
 > Append-only chronological record. Do not delete or rewrite existing entries.
 
+<!-- codebase-wiki:log-contract-v1 -->
+
 ## [2026-07-22] init | Wiki skeleton installed
 
 - Created the target Wiki index, log, overview placeholder, and typed directories
-
+- Affected pages: [[index]], [[overview]], [[log]]

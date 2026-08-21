@@ -1,11 +1,14 @@
 ---
 title: "{實體名稱}"
 type: entity
+summary: "{實體職責的一句話摘要}"
 entity_type: class | service | api-endpoint | database-table
 parent_module: "{parent-module-page-name}"
 notebooklm_group: "function-{functional-area-slug}"
 sources:
   - "{path/to/source/file}"
+derived_from: []
+source_digest: "sha256:{64-lowercase-hex}"
 last_updated: YYYY-MM-DD
 tags: []
 status: active

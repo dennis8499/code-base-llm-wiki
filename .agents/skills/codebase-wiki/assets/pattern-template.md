@@ -1,8 +1,11 @@
 ---
 title: "{模式名稱}"
 type: pattern
+summary: "{模式用途的一句話摘要}"
 sources:
   - "{path/to/implementation}"
+derived_from: []
+source_digest: "sha256:{64-lowercase-hex}"
 last_updated: YYYY-MM-DD
 tags: [design-pattern]
 status: active

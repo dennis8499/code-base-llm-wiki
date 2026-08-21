@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$(git rev-parse --show-toplevel)/.agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py\" --platform codex",
-            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-session-init.py\" --platform codex",
+            "command": "python .agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py --platform codex",
+            "commandWindows": "python .agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-session-init.py --platform codex",
             "timeout": 10,
             "statusMessage": "Loading wiki state"
           }
@@ -20,8 +20,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$(git rev-parse --show-toplevel)/.agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py\" --platform codex",
-            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-write-guard.py\" --platform codex",
+            "command": "python .agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py --platform codex",
+            "commandWindows": "python .agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-write-guard.py --platform codex",
             "timeout": 10,
             "statusMessage": "Checking wiki write boundary"
           }
@@ -34,8 +34,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$(git rev-parse --show-toplevel)/.agents/skills/codebase-wiki/scripts/hooks/wiki-log-reminder.py\" --platform codex",
-            "commandWindows": "python \"$(git rev-parse --show-toplevel)\\.agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-log-reminder.py\" --platform codex",
+            "command": "python .agents/skills/codebase-wiki/scripts/hooks/wiki-log-reminder.py --platform codex",
+            "commandWindows": "python .agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-log-reminder.py --platform codex",
             "timeout": 10,
             "statusMessage": "Checking wiki log reminder"
           }

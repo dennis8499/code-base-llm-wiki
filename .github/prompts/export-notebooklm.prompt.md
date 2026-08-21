@@ -39,7 +39,7 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-     --root . --output .notebooklm --format json
+     --root . --apply --preflight-id <id> --output .notebooklm --format json
    ```
 
 7. 報告 `.notebooklm/upload-plan.md` 的 `added`、`changed`、`deleted`、

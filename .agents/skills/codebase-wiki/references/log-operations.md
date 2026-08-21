@@ -14,6 +14,13 @@ Use this file as the source of truth for the `{operation}` field in
 
 `wiki/log.md` is append-only. Do not delete or rewrite existing entries.
 
+Newly initialized logs include `<!-- codebase-wiki:log-contract-v1 -->`. Every
+entry after that marker must include `Affected pages:` or `受影響頁面：` with at
+least one resolvable `[[wikilink]]`. `last_updated` must not precede the newest
+entry, dates are nondecreasing, and `validate-log.py` compares existing body
+content with the Git baseline when available. Pre-marker legacy omissions are
+reported as warnings and are never rewritten.
+
 ## Allowed Operations
 
 | Operation | Use when |

@@ -49,6 +49,8 @@ class WriteGuardTests(unittest.TestCase):
             "docs/setup/README.md",
             "samples/task-tracker/README.md",
             "tests/test_write_guard.py",
+            "tools/release.py",
+            "VERSION",
             "wiki/index.md",
             ".agents/skills/codebase-wiki/SKILL.md",
             ".codex/config.toml",
@@ -71,6 +73,13 @@ class WriteGuardTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertFalse(guard.is_allowed_path(path, "target"))
+
+    def test_wiki_only_alias_and_coexist_mode(self) -> None:
+        guard = load_guard()
+        self.assertTrue(guard.is_allowed_path("wiki/modules/orders.md", "wiki-only"))
+        self.assertFalse(guard.is_allowed_path("src/orders/service.py", "wiki-only"))
+        self.assertTrue(guard.is_allowed_path("src/orders/service.py", "coexist"))
+        self.assertFalse(guard.is_allowed_path("../outside.py", "coexist"))
 
     def test_paths_outside_repository_are_denied(self) -> None:
         guard = load_guard()

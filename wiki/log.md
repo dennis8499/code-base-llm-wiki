@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 tags: [log]
 status: active
 ---
@@ -118,3 +118,24 @@ status: active
 - 新增共用 `follow-up-actions.md` 契約，讓高價值 Query 與 Lint findings 提供有界的保存、更新、重新 Ingest、Lint 或暫不處理選項
 - Copilot/Codex 入口同步維持 Query 唯讀、Lint 先報告，以及更新／修復的既有確認邊界
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-08-21] update | Codex Hook Windows shell 相容性修正
+
+- 三個 Codex Hook 改用 workspace-relative script path，Windows `commandWindows` 改為 `cmd.exe` 相容語法，移除會造成 `PostToolUse hook (failed)` 的 PowerShell `$()` 與巢狀引號
+- 新增 parity validation 與 sample contract smoke tests，直接驗證 `SessionStart`、`PreToolUse`、`PostToolUse` 可由 Windows command runner 成功啟動
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]
+
+## [2026-08-21] update | Codex 文件來源 freshness 同步
+
+- `Codex.md` 更新後同步 `[[notebooklm-export]]` 的 `last_updated`，維持 frontmatter source freshness check 通過
+- 受影響頁面：[[notebooklm-export]]
+
+<!-- codebase-wiki:log-contract-v1 -->
+
+## [2026-08-21] update | v0.2.0 可靠性、證據與安裝治理
+
+- NotebookLM 改為強制 preflight/apply identity gate，新增 framework scan profile，並移除重複 exporter 實作
+- Wiki 品質新增 source digest、raw/Wiki provenance 分離、真正 orphan、managed index、append-only log validation 與明確 deterministic/semantic lint 狀態
+- Installer contract 升至 v3，加入 managed instruction blocks、fingerprint manifest、wiki-only/coexist guard、動態 starter 日期與 atomic rollback
+- 補齊 framework architecture、五個功能 module、project function catalog、System Analysis、跨平台 CI、release licensing gate 與上游方法論 attribution
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[installer-and-upgrade]]、[[wiki-quality-and-provenance]]、[[notebooklm-exporter]]、[[platform-hooks-and-guards]]、[[platform-adapters-and-release]]、[[project-function-catalog]]、[[system-analysis]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]
