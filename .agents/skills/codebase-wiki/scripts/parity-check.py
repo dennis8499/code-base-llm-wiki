@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import sys
+import tomllib
 
 
 EXPECTED_OPERATIONS = {
@@ -47,6 +48,7 @@ EXPECTED_GROUPS = {
     "delegation": ["delegation"],
 }
 CANONICAL_HOOK_ROOT = ".agents/skills/codebase-wiki/scripts/hooks/"
+CODEX_SESSION_SOURCES = "startup|resume|clear|compact"
 FOLLOW_UP_REFERENCE = ".agents/skills/codebase-wiki/references/follow-up-actions.md"
 FOLLOW_UP_ADAPTERS = (
     ".github/prompts/query-wiki.prompt.md",
@@ -196,6 +198,38 @@ def main() -> int:
                         issues.append(
                             f"Codex {event_name} commandWindows must use a workspace-relative hook path"
                         )
+        session_groups = codex_hooks.get("hooks", {}).get("SessionStart", [])
+        session_matchers = {str(group.get("matcher", "")) for group in session_groups}
+        if CODEX_SESSION_SOURCES not in session_matchers:
+            issues.append(
+                "Codex SessionStart matcher must cover startup, resume, clear, and compact"
+            )
+
+    config_path = root / ".codex" / "config.toml"
+    try:
+        codex_config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        issues.append(f"invalid Codex config: {exc}")
+        codex_config = {}
+    agents_config = codex_config.get("agents", {})
+    if "max_concurrent_threads_per_session" not in agents_config:
+        issues.append("Codex config must use canonical max_concurrent_threads_per_session")
+    if "max_threads" in agents_config:
+        issues.append("Codex config must not use legacy max_threads")
+
+    for relative in (
+        ".codex/agents/wiki-query.toml",
+        ".codex/agents/wiki-lint.toml",
+        ".codex/agents/wiki-archaeologist.toml",
+    ):
+        path = root / relative
+        try:
+            agent_config = tomllib.loads(path.read_text(encoding="utf-8"))
+        except (OSError, tomllib.TOMLDecodeError) as exc:
+            issues.append(f"invalid Codex agent config: {relative}: {exc}")
+            continue
+        if agent_config.get("sandbox_mode") != "read-only":
+            issues.append(f"read-only Wiki agent must declare sandbox_mode=read-only: {relative}")
 
     for directory in (root / ".codex" / "agents", root / ".github" / "agents"):
         for path in directory.iterdir() if directory.is_dir() else ():

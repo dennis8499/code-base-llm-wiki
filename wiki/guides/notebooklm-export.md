@@ -8,7 +8,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:dbc71e051e28d555cddc287ff9228dbd835d101a4e458772ddf25928aba070d6
+source_digest: sha256:061c69a6a00b75711cad7a94c57f710f7ba68df948d1232d8fe619afd674da88
 derived_from: ["[[overview]]", "[[notebooklm-exporter]]", "[[project-function-catalog]]"]
 last_updated: 2026-08-21
 tags: [guide, notebooklm, export, incremental, enterprise]

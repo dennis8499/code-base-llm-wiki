@@ -147,7 +147,9 @@ hooks = true
 mode = "framework" # installer chooses "wiki-only" or explicit "coexist"
 
 [agents]
-max_threads = 6
+# Canonical setting; max_threads is a legacy alias.
+max_concurrent_threads_per_session = 6
+# Compatibility guard for Codex versions that expose V1 nesting limits.
 max_depth = 1
 ```
 
@@ -155,7 +157,7 @@ max_depth = 1
 
 | Event          | Script                                      | Purpose                                                                          |
 | -------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
-| `SessionStart` | shared `wiki-session-init.py` | Adds a ≤30-line / ≤4 KB Wiki state summary |
+| `SessionStart` | shared `wiki-session-init.py` | Adds a ≤30-line / ≤4 KB Wiki state summary on `startup`, `resume`, `clear`, and `compact` |
 | `PreToolUse`   | shared `wiki-write-guard.py` | Enforces `wiki-only`, `coexist`, or `framework` boundary |
 | `PostToolUse`  | shared `wiki-log-reminder.py` | Reminds Codex to append `wiki/log.md` after durable edits |
 
@@ -172,6 +174,10 @@ changing the hook matcher or disabling the audit reminder.
 
 Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
+
+Read-only delegated roles (`wiki-query`, `wiki-lint`, and
+`wiki-archaeologist`) explicitly use `sandbox_mode = "read-only"`. Hook guards
+remain a defense-in-depth layer and do not replace Codex sandbox permissions.
 
 Hook audit files are written to `.codex/hooks/logs/` when possible, with fallback
 to `.codex-hook-logs/`. Both paths should stay ignored by git. The complete hook

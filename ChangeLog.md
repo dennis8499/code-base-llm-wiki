@@ -6,7 +6,15 @@
 
 ## [Unreleased]
 
-_尚無未發佈變更。_
+### Fixed
+
+- **Codex lifecycle 與設定契約**：SessionStart now covers `clear`/`compact`，改用
+  `max_concurrent_threads_per_session`，parity check 驗證 canonical 設定與 compact context。
+- **唯讀 agent 邊界**：Codex query、lint、archaeology agents 明確設定
+  `sandbox_mode = "read-only"`，並將修復交回父 agent 或 write-capable workflow。
+- **Hook 與 exporter 回歸**：補上真實 apply-patch payload、nested hook output、symlink
+  path escape、200-page lint regression，以及 NotebookLM preflight coverage status。
+- **跨平台驗證**：CI 將 Windows Python 3.11 提升為完整 suite，並 compile 所有 Skill scripts/hooks。
 
 ## [0.2.0] — 2026-08-21
 

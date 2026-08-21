@@ -4,6 +4,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -380,7 +381,35 @@ Call the service.
             self.assertEqual(result["limits"]["enterprise_max_bytes"], 200_000_000)
             self.assertEqual(result["limits"]["max_bytes"], 180_000_000)
             self.assertTrue(result["ready_to_export"])
+            self.assertEqual(result["coverage"]["status"], "partial")
+            self.assertGreater(result["coverage"]["uncovered_count"], 0)
+            self.assertTrue(
+                any("未被 Wiki sources 覆蓋" in warning for warning in result["warnings"])
+            )
             self.assertRegex(result["preflight_id"], r"^sha256:[0-9a-f]{64}$")
+
+    def test_preflight_rejects_symlinked_files_that_escape_repository(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            root = base / "repo"
+            outside = base / "outside.md"
+            write_fixture(root)
+            outside.write_text("outside\n", encoding="utf-8")
+            link = root / "src/linked.md"
+            try:
+                os.symlink(outside, link)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlink creation is unavailable: {exc}")
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            excluded = {
+                item["path"]: item["reason"] for item in result["inventory"]["excluded"]
+            }
+            self.assertEqual(excluded["src/linked.md"], "path_escape")
+            self.assertNotIn("src/linked.md", {item["path"] for item in result["inventory"]["included"]})
 
     def test_direct_export_is_rejected_and_changed_input_invalidates_preflight(self) -> None:
         module = load_exporter()

@@ -118,7 +118,7 @@ flowchart LR
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
 - **NotebookLM 全專案文件化**：強制 preflight ID 與必要文件 gate；source pack
   採 documents-first、穩定 logical source IDs 與增量 upload plan。
-- **可驗證**：跨 Python/Linux CI、Windows smoke、parity、frontmatter、digest
+- **可驗證**：跨 Python/Linux/Windows CI、parity、frontmatter、digest
   freshness、log/index、唯讀 lint 與單元測試。
 
 ---

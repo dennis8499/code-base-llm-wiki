@@ -22,6 +22,10 @@ the required `--platform codex|copilot` argument.
 All configurations invoke
 `.agents/skills/codebase-wiki/scripts/hooks/{hook-name}.py`.
 
+For Codex, `SessionStart.matcher` filters the `source` value. The canonical
+configuration covers `startup`, `resume`, `clear`, and `compact`; after root
+session compaction, a matching `compact` hook runs before the continuation.
+
 Codex hook commands use paths relative to the active workspace. The Codex
 runtime starts the command with the hook event's workspace as its working
 directory, so the configuration must not resolve the repository with a
@@ -37,6 +41,10 @@ when the platform supports matcher filters:
 ```text
 apply_patch|Edit|Write|create|create_file|edit|editFiles|str_replace|str_replace_editor|multi_replace_string_in_file|replace_string_in_file|write
 ```
+
+Codex can also match `Bash`, but shell-command parsing is not a complete write
+policy. Read-only agents must use an explicit read-only sandbox; hooks are a
+defense-in-depth guardrail rather than a replacement for platform sandboxing.
 
 ## Input Contract
 
@@ -54,9 +62,10 @@ Path extraction checks `filePath`, `file_path`, `path`, `targetPath`,
 - Allow decisions may output `{}` or `{"permissionDecision": "allow"}`.
 - Deny decisions include top-level `permissionDecision` fields for Copilot and
   `hookSpecificOutput` for Codex.
-- Context messages include `hookSpecificOutput.additionalContext` when the
-  platform can consume it. Audit files are still written because not every
-  platform injects hook output into the agent context.
+- Codex context and deny decisions use `hookSpecificOutput`; Copilot-compatible
+  top-level fields remain emitted where its adapter requires them. Audit files
+  are still written because not every platform injects hook output into agent
+  context.
 
 ## Audit Paths
 

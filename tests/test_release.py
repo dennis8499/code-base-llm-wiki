@@ -23,7 +23,7 @@ def load_release():
 
 
 class ReleaseTests(unittest.TestCase):
-    def test_ci_covers_supported_linux_versions_and_windows_smoke(self) -> None:
+    def test_ci_covers_supported_linux_versions_and_windows_full_suite(self) -> None:
         workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(
             encoding="utf-8"
         )
@@ -42,6 +42,11 @@ class ReleaseTests(unittest.TestCase):
         ):
             with self.subTest(required=required):
                 self.assertIn(required, workflow)
+        self.assertRegex(
+            workflow,
+            r"os: windows-latest\s+python: \"3\.11\"\s+full: true",
+        )
+        self.assertIn("python -m compileall -q .agents/skills/codebase-wiki/scripts", workflow)
 
     def test_release_workflow_validates_and_publishes_tagged_assets(self) -> None:
         workflow = (REPO_ROOT / ".github" / "workflows" / "release.yml").read_text(

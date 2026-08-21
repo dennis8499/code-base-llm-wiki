@@ -24,7 +24,7 @@ jobs:
             full: true
           - os: windows-latest
             python: "3.11"
-            full: false
+            full: true
 
     steps:
       - uses: actions/checkout@v4
@@ -35,22 +35,9 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Compile dependency-free CLIs
+      - name: Compile dependency-free scripts and hooks
         run: >-
-          python -m py_compile
-          .agents/skills/codebase-wiki/scripts/install-framework.py
-          .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-          .agents/skills/codebase-wiki/scripts/lint-wiki.py
-          .agents/skills/codebase-wiki/scripts/validate-log.py
-
-      - name: Windows contract smoke
-        if: runner.os == 'Windows'
-        run: >-
-          python -m unittest
-          tests.test_install_framework
-          tests.test_write_guard
-          tests.test_sample_contract
-          -v
+          python -m compileall -q .agents/skills/codebase-wiki/scripts
 
       - name: Full unit suite
         if: matrix.full

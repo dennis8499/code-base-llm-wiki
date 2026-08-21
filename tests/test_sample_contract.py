@@ -195,9 +195,25 @@ class SampleContractTests(unittest.TestCase):
 
                     if surface == "codex":
                         hook_payloads = {
-                            "SessionStart": "{}",
-                            "PreToolUse": json.dumps({"tool_name": "read", "tool_input": {}}),
-                            "PostToolUse": json.dumps({"tool_name": "read", "tool_input": {}}),
+                            "SessionStart": json.dumps(
+                                {"hook_event_name": "SessionStart", "source": "compact"}
+                            ),
+                            "PreToolUse": json.dumps(
+                                {
+                                    "tool_name": "apply_patch",
+                                    "tool_input": {
+                                        "command": "*** Update File: wiki/overview.md\n"
+                                    },
+                                }
+                            ),
+                            "PostToolUse": json.dumps(
+                                {
+                                    "tool_name": "apply_patch",
+                                    "tool_input": {
+                                        "command": "*** Update File: wiki/overview.md\n"
+                                    },
+                                }
+                            ),
                         }
                         for event_name, payload in hook_payloads.items():
                             handler = hooks_config["hooks"][event_name][0]["hooks"][0]
@@ -254,7 +270,8 @@ class SampleContractTests(unittest.TestCase):
                         0,
                         hook_result.stdout + hook_result.stderr,
                     )
-                    context = json.loads(hook_result.stdout)["additionalContext"]
+                    hook_payload = json.loads(hook_result.stdout)
+                    context = hook_payload["hookSpecificOutput"]["additionalContext"]
                     self.assertLessEqual(len(context.encode("utf-8")), 4 * 1024)
                     self.assertLessEqual(len(context.splitlines()), 30)
                     for hook_name in ("wiki-write-guard.py", "wiki-log-reminder.py"):

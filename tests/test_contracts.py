@@ -4,6 +4,7 @@ import json
 import re
 import subprocess
 import sys
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -178,6 +179,21 @@ class ContractTests(unittest.TestCase):
         self.assertIn(
             ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py", included
         )
+        self.assertIn(payload["coverage"]["status"], {"complete", "partial"})
+        self.assertIn("uncovered_count", payload["coverage"])
+
+    def test_codex_config_and_read_only_agents_use_current_contract(self) -> None:
+        config = tomllib.loads(
+            (REPO_ROOT / ".codex/config.toml").read_text(encoding="utf-8")
+        )
+        agents = config["agents"]
+        self.assertEqual(agents["max_concurrent_threads_per_session"], 6)
+        self.assertNotIn("max_threads", agents)
+        for name in ("wiki-query", "wiki-lint", "wiki-archaeologist"):
+            agent = tomllib.loads(
+                (REPO_ROOT / ".codex/agents" / f"{name}.toml").read_text(encoding="utf-8")
+            )
+            self.assertEqual(agent["sandbox_mode"], "read-only")
 
     def test_agents_are_explicit_delegation_only_and_compact(self) -> None:
         for directory, pattern in (

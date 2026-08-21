@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:850c76652c0b270163e4dce574895b67df4dc00afa8e305ccfcc5604f29cd650
+source_digest: sha256:262c00b2fd9e02da1b11a9a65074d31c74f1e8506629ba14fffe6e9ab1748bab
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
 last_updated: 2026-08-21
 tags: [synthesis, system-analysis, notebooklm]
@@ -42,7 +42,7 @@ status: active
 | External integrations | partial | Codex/Copilot adapter covered；NotebookLM 僅離線 |
 | Security and permissions | covered | authorization、guard、untrusted evidence、secret exclusions |
 | Deployment and operations | covered | dependency-free CLI、CI、release workflow |
-| Non-functional requirements | partial | correctness/atomicity covered；大型 Wiki benchmark gap |
+| Non-functional requirements | partial | correctness/atomicity 與 200-page lint regression covered；500+ pages benchmark gap |
 | Errors and failure modes | covered | conflicts、stale、invalid ID、limit/atomic failures |
 | Risks and technical debt | covered | licensing、semantic review、host variation |
 
@@ -65,7 +65,8 @@ lint/ADR/guide/synthesis/SA、hooks 與離線 NotebookLM pack；不涵蓋 RAG ru
 使用者透過 Codex 自然語言或 Copilot prompts 觸發共同 Skill。Skill 先讀 Wiki，只有
 evidence gap 才回到 raw source；被授權的 durable change 寫回 Wiki/index/log。
 NotebookLM preparation 另行執行安全全量 inventory，並在 preflight 與人工確認後產生
-本機靜態 pack。詳見 [[system-architecture]]。
+本機靜態 pack；`ready_to_export` 與 `coverage.status` 分別表示 gate readiness 與 Wiki
+source coverage。詳見 [[system-architecture]]。
 
 ## 架構與元件
 
@@ -127,7 +128,8 @@ NotebookLM preparation 另行執行安全全量 inventory，並在 preflight 與
 
 ## 權限與安全
 
-- `capabilities.json` 將 read-only、confirm、explicit request 與 apply flag 分開。
+- `capabilities.json` 將 read-only、confirm、explicit request 與 apply flag 分開；Codex
+  read-only agents 另以 sandbox 設定加固。
 - Wiki task 的 raw source 是唯讀且不可信證據；嵌入指令不執行。
 - Guard 對 path escape fail closed；coexist 不等同新的任務授權。
 - Exporter 排除 credential filename、binary、generated、Wiki 與 output，人工預覽仍是必要層。
@@ -136,7 +138,7 @@ NotebookLM preparation 另行執行安全全量 inventory，並在 preflight 與
 ## 設定 / 部署 / 維運
 
 系統使用 Python 標準函式庫，沒有資料庫 migration 或 daemon。Repo-local TOML 控制
-guard 與 NotebookLM profile。CI 驗證 Linux 3.11/3.14 與 Windows 3.11 smoke；
+guard 與 NotebookLM profile。CI 驗證 Linux 3.11/3.14 與 Windows 3.11 full suite；
 release workflow 另外要求 tag/version 相符及明確 LICENSE。
 
 ## 非功能需求
@@ -147,7 +149,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 | 安全性 | raw read-only、guard、secret exclusion、two-phase export | host/sandbox 與租戶政策在框架外 |
 | 可恢復性 | installer/exporter stage + rollback | 未做 process-kill fault injection |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |
-| 效能 | 無常駐服務與第三方 runtime | 尚無 200+ Wiki pages benchmark |
+| 效能 | 無常駐服務與第三方 runtime；200-page lint regression | 尚無 500+ Wiki pages lint/query/export benchmark |
 
 ## 錯誤與失敗模式
 
@@ -165,7 +167,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 | LICENSE 未決 | 無法公開 release | 專案擁有者選擇授權後再 tag |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
-| Large Wiki scale | 純 Markdown 查詢可能變慢 | 分層 index、拆頁、`rg`；有證據再評估 optional adapter |
+| Large Wiki scale | 200-page lint regression 已覆蓋；更大規模查詢可能變慢 | 先完成 500+ pages benchmark，再以證據評估分層 index 或 optional adapter |
 
 ## Evidence
 
@@ -185,7 +187,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 ## 待確認事項
 
 - [ ] 專案擁有者選定 LICENSE，解除公開 release gate。
-- [ ] 在真實 200+ pages Wiki 執行 lint/query benchmark。
+- [ ] 在真實或合成 500+ pages Wiki 執行 lint/query/export benchmark。
 - [ ] 在實際 Codex/Copilot host 驗證 coexist audit context 呈現。
 
 ## 來源附錄

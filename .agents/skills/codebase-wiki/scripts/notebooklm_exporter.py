@@ -503,7 +503,11 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
         try:
             relative = repo_relative(path, root)
         except ExportError:
-            excluded.append({"path": str(path), "reason": "path_escape"})
+            try:
+                displayed = path.relative_to(root).as_posix()
+            except ValueError:
+                displayed = str(path)
+            excluded.append({"path": displayed, "reason": "path_escape"})
             continue
         reason = exclusion_reason(path, root, settings)
         if reason:
@@ -563,6 +567,16 @@ def scan_summary(scan: dict[str, Any]) -> dict[str, Any]:
         "excluded_by_reason": scan["excluded_by_reason"],
         "uncovered_paths": scan["uncovered_paths"],
         "required_documents": scan["required_documents"],
+    }
+
+
+def coverage_summary(scan: dict[str, Any]) -> dict[str, Any]:
+    """Distinguish export readiness from complete Wiki source coverage."""
+    uncovered = list(scan["uncovered_paths"])
+    return {
+        "status": "complete" if not uncovered else "partial",
+        "uncovered_count": len(uncovered),
+        "uncovered_paths": uncovered,
     }
 
 
@@ -1355,9 +1369,16 @@ def _preflight_identity(
 def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     pages, skipped, warnings = collect_wiki_pages(root)
     scan = scan_project(root, settings, pages)
+    coverage = coverage_summary(scan)
     lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root)
     missing = [path for path, status in scan["required_documents"].items() if status != "active"]
     warnings.extend(f"必要文件尚未完成：{path} ({scan['required_documents'][path]})" for path in missing)
+    if coverage["status"] == "partial":
+        warnings.append(
+            "安全掃描仍有 "
+            f"{coverage['uncovered_count']} 個路徑未被 Wiki sources 覆蓋；"
+            "ready_to_export 僅代表必要文件與 deterministic gate 通過"
+        )
     required_relatives = {
         PurePosixPath(path).relative_to("wiki").as_posix() for path in REQUIRED_WIKI_DOCUMENTS
     }
@@ -1396,6 +1417,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
             + (["framework_adapters"] if settings.scan_profile == "target" else []),
         },
         "inventory": scan,
+        "coverage": coverage,
         "limits": limits_payload(settings),
         "wiki_pages": len(pages),
         "lint": {
@@ -1513,6 +1535,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         "limits": limits_payload(settings),
         "scan": scan_summary(scan),
         "coverage": {
+            **coverage_summary(scan),
             "required_documents": coverage,
             "documentation_groups": sorted({unit.group for unit, _, _ in documents}),
         },

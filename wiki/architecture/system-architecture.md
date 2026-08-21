@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:8806ab5e6ab1213a1d0458f98cd1be2543cb77be63dd7f530529c639fe7b195a
+source_digest: sha256:44bca754ee93567830f4055376baa669ccda72765c91978cb65dd9c29be1dac7
 derived_from: ["[[overview]]"]
 last_updated: 2026-08-21
 tags: [architecture, framework, data-flow, safety]

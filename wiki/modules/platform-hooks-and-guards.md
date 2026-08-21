@@ -8,8 +8,8 @@ sources:
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
   - .agents/skills/codebase-wiki/references/hooks-specification.md
   - .codex/hooks.json
-  - tests/test_write_guard.py
-source_digest: sha256:e3dacb49b748fe0de3b22e7aee49007a93aee59881892c312e68c0f84b13f7ca
+  - .codex/agents/
+source_digest: sha256:f3725ecd6de23b030b08247b3283e516de20e3c7692562875b4de1df38f074a5
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-08-21
 tags: [module, hooks, guard, codex, copilot]
@@ -20,7 +20,7 @@ status: active
 
 ## 職責
 
-- SessionStart 產生不超過 30 行／4 KiB 的 Wiki 狀態摘要。
+- SessionStart 在 `startup`、`resume`、`clear`、`compact` 產生不超過 30 行／4 KiB 的 Wiki 狀態摘要。
 - PreToolUse 從多種 tool payload 擷取路徑並拒絕越界寫入。
 - PostToolUse 對 Wiki 變更產生 append-only log reminder audit。
 - 讓 Codex 與 Copilot 設定共同調用 `.agents/.../scripts/hooks/` 的唯一實作。
@@ -40,7 +40,8 @@ status: active
 
 - `common.py` 正規化 Codex/Copilot payload 與 apply-patch paths。
 - `wiki-write-guard.py` 對 coexist 只允許 repository-relative targets。
-- `.codex/hooks.json` 對三個事件使用共享腳本與明確 `--platform codex`。
+- `.codex/hooks.json` 對三個事件使用共享腳本與明確 `--platform codex`，並涵蓋 compact 後續上下文。
+- Codex 的 query、lint、archaeology custom agents 明確設定 `sandbox_mode = "read-only"`。
 
 ## Contradictions
 
@@ -55,6 +56,8 @@ status: active
 ## Gaps
 
 - 不同 host 對 allow response 的 UI 呈現可能不同，audit context 仍需平台支援。
+- Hook matcher 目前不把 Bash 當成完整 shell write policy；shell 寫入安全性仍由 sandbox
+  與任務授權共同負責。
 
 ## 相關頁面
 

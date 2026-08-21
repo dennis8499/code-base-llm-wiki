@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:9fea46c7e91827fdea7870b3956c246c342266697265c64775bf75e63e4c72d2
+source_digest: sha256:34b2d4fa817212e463aa82a9c7ee6ef2c934da9bd4880f799fd3ac61503a4f90
 derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
 last_updated: 2026-08-21
 tags: [module, notebooklm, exporter, preflight]
@@ -25,6 +25,8 @@ status: active
 - 強制必要 overview、function catalog、architecture 與 SA 都為 active 且可匯出。
 - 先配置文件 source slots，再依證據優先序加入 raw evidence。
 - 產生 schema-v2 manifest、upload plan、project map 與 stable logical source IDs。
+- Preflight 額外回報 `coverage.status`、未覆蓋路徑數量與明確 warning；`ready_to_export`
+  只代表必要文件與 deterministic gate 通過，不代表全專案已被 Wiki sources 覆蓋。
 - 在輸出限制或寫入失敗時保留上一份有效 pack。
 
 ## 對外介面
@@ -41,7 +43,7 @@ export-notebooklm.py --root . --apply --preflight-id sha256:... --output .notebo
 
 ## Evidence
 
-- `build_preflight()` 結合 lint、required-document status 與 inventory hashes。
+- `build_preflight()` 結合 lint、required-document status、inventory hashes 與 coverage summary。
 - `main()` 在 apply 前重建 preflight 並比較 ID。
 - `commit_output()` 使用 staging/backup 與 `os.replace()`。
 - 相容入口 `export-notebooklm.py` 只轉呼叫 canonical module，沒有第二套實作。

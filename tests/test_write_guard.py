@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+import io
 import importlib.util
+import json
 from pathlib import Path
+import subprocess
 import sys
 import unittest
 
@@ -41,6 +45,80 @@ class WriteGuardTests(unittest.TestCase):
         self.assertLessEqual(len(message.splitlines()), 30)
         oversized = module.bounded_message(["中" * 5_000])
         self.assertLessEqual(len(oversized.encode("utf-8")), 4 * 1024)
+
+    def test_codex_session_matcher_covers_compaction_sources(self) -> None:
+        hooks = json.loads((REPO_ROOT / ".codex/hooks.json").read_text(encoding="utf-8"))
+        matcher = hooks["hooks"]["SessionStart"][0]["matcher"]
+        self.assertEqual(matcher, "startup|resume|clear|compact")
+
+    def test_apply_patch_extraction_catches_mixed_targets(self) -> None:
+        guard = load_guard()
+        paths = guard.extract_paths(
+            "apply_patch",
+            {
+                "command": (
+                    "*** Update File: wiki/overview.md\n"
+                    "*** Update File: src/raw.py\n"
+                )
+            },
+        )
+        self.assertEqual(paths, ["wiki/overview.md", "src/raw.py"])
+        self.assertTrue(guard.is_allowed_path(paths[0], "wiki-only"))
+        self.assertFalse(guard.is_allowed_path(paths[1], "wiki-only"))
+
+    def test_codex_deny_output_uses_nested_hook_contract(self) -> None:
+        guard = load_guard()
+        output = io.StringIO()
+        with redirect_stdout(output):
+            guard.respond_deny("blocked for test")
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PreToolUse")
+        self.assertEqual(payload["hookSpecificOutput"]["permissionDecision"], "deny")
+        self.assertEqual(payload["permissionDecision"], "deny")
+
+    def test_session_and_log_hooks_emit_nested_context(self) -> None:
+        session = subprocess.run(
+            [sys.executable, str(SESSION_HOOK), "--platform", "codex"],
+            cwd=REPO_ROOT,
+            input=json.dumps({"hook_event_name": "SessionStart", "source": "compact"}),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        self.assertEqual(session.returncode, 0, session.stdout + session.stderr)
+        session_payload = json.loads(session.stdout)
+        self.assertEqual(
+            session_payload["hookSpecificOutput"]["hookEventName"], "SessionStart"
+        )
+        self.assertIn("Wiki state", session_payload["hookSpecificOutput"]["additionalContext"])
+
+        reminder = subprocess.run(
+            [
+                sys.executable,
+                str(SESSION_HOOK.with_name("wiki-log-reminder.py")),
+                "--platform",
+                "codex",
+            ],
+            cwd=REPO_ROOT,
+            input=json.dumps(
+                {
+                    "tool_name": "apply_patch",
+                    "tool_input": {"command": "*** Update File: wiki/overview.md\n"},
+                }
+            ),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        self.assertEqual(reminder.returncode, 0, reminder.stdout + reminder.stderr)
+        reminder_payload = json.loads(reminder.stdout)
+        self.assertEqual(
+            reminder_payload["hookSpecificOutput"]["hookEventName"], "PostToolUse"
+        )
 
     def test_framework_mode_allows_product_and_schema_paths(self) -> None:
         guard = load_guard()

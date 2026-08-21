@@ -139,3 +139,15 @@ status: active
 - Installer contract 升至 v3，加入 managed instruction blocks、fingerprint manifest、wiki-only/coexist guard、動態 starter 日期與 atomic rollback
 - 補齊 framework architecture、五個功能 module、project function catalog、System Analysis、跨平台 CI、release licensing gate 與上游方法論 attribution
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[installer-and-upgrade]]、[[wiki-quality-and-provenance]]、[[notebooklm-exporter]]、[[platform-hooks-and-guards]]、[[platform-adapters-and-release]]、[[project-function-catalog]]、[[system-analysis]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]
+
+## [2026-08-21] update | Codex hooks、sandbox、coverage 與跨平台驗證強化
+
+- Codex SessionStart 覆蓋 `startup`、`resume`、`clear`、`compact`，並改用 canonical agent thread 設定；read-only agents 明確採用 sandbox
+- 補上 apply-patch/nested hook output、symlink path escape、200-page lint 與 preflight coverage regression tests
+- Windows Python 3.11 改跑完整 CI suite，所有 Skill scripts/hooks 改用 compileall 驗證
+- 受影響頁面：[[index]]、[[overview]]、[[notebooklm-exporter]]、[[platform-hooks-and-guards]]、[[platform-adapters-and-release]]、[[system-analysis]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]
+
+## [2026-08-21] update | Release Wiki source digest refresh
+
+- `[[platform-adapters-and-release]]` 同步 CI 與 release regression source 變更後的 `source_digest`
+- 受影響頁面：[[platform-adapters-and-release]]
