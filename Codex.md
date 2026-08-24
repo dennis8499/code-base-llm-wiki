@@ -176,8 +176,13 @@ Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
 
 Read-only delegated roles (`wiki-query`, `wiki-lint`, and
-`wiki-archaeologist`) explicitly use `sandbox_mode = "read-only"`. Hook guards
-remain a defense-in-depth layer and do not replace Codex sandbox permissions.
+`wiki-archaeologist`) explicitly use `sandbox_mode = "read-only"`. The matching
+Copilot profiles do not expose direct `edit` or `agent` tools; lint and
+archaeology retain `execute` for read-only checks or Git history by instruction.
+Because Copilot `execute` is a shell capability, the instruction is not a
+technical write sandbox; host permissions must deny unapproved shell writes.
+Hook guards remain a defense-in-depth layer and do not replace platform sandbox
+or host permission controls.
 
 Hook audit files are written to `.codex/hooks/logs/` when possible, with fallback
 to `.codex-hook-logs/`. Both paths should stay ignored by git. The complete hook

@@ -8,9 +8,9 @@ sources:
   - .github/workflows/release.yml
   - docs/releases/README.md
   - README.md
-source_digest: sha256:6fb35a18857ed9fda9f36afb41fde2dcd77a087c5ad9c3efd81fe2f074d102a9
+source_digest: sha256:9737a988c16c03ccec18edf4c77f1735f19ab1880efd63510f3d1a9f2384cc2f
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -40,10 +40,17 @@ notebooklm_group: project-guides
 5. GitHub workflow 執行測試與 Wiki checks。
 6. workflow 上傳 ZIP/TAR.GZ、`SHA256SUMS` 與 `update-manifest.json`。
 
-Release builder 會排除 `.git`、`logs`、`cache`、`.venv`、`__pycache__`、
-`.notebooklm` 與 `dist` 等產生物；NotebookLM source pack 是每個使用者本機
-產生的交付物，不會混入 framework release。下載資產包含完整 framework Repo，
-安裝時仍由 installer 選擇 Copilot 或 Codex surface。
+Release builder 會排除 `.git`、`logs`、`.codex-hook-logs`、`.github-hook-logs`、
+`cache`、`.venv`、`__pycache__`、`.notebooklm` 與 `dist` 等產生物，也會排除
+`.env`、credentials/secrets、private-key path 等敏感檔案。若 `--output` 位於 repo
+內，該 output tree 也不會被封裝；installer/NotebookLM transaction journal、lock、
+stage、backup 與 temporary sibling files 也不會被封裝；非排除路徑若含 symlink 會 fail closed，避免把
+release root 外的內容讀入資產。NotebookLM source pack 是每個使用者本機產生的交付物，
+不會混入 framework release。下載資產包含完整 framework Repo，安裝時仍由 installer
+選擇 Copilot 或 Codex surface。
+
+`--repository OWNER/NAME` 與 `GITHUB_REPOSITORY` 只接受安全的 GitHub owner/name
+元件；不合法的 query、path traversal 或額外 path segment 會被拒絕。
 
 ## Extension 更新契約
 

@@ -10,10 +10,30 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).parents[1]
 SCRIPT = REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "scripts" / "export-notebooklm.py"
+
+
+def create_directory_reparse_point(link: Path, target: Path) -> None:
+    try:
+        os.symlink(target, link, target_is_directory=True)
+        return
+    except (OSError, NotImplementedError) as symlink_error:
+        if os.name != "nt":
+            raise symlink_error
+    result = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(link), str(target)],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if result.returncode != 0:
+        raise OSError(result.stderr or result.stdout or "unable to create directory junction")
 
 
 def load_exporter():
@@ -164,12 +184,15 @@ class NotebookLMExporterTests(unittest.TestCase):
             )
         return code, json.loads(stdout.getvalue())
 
-    def run_preflight(self, module, root: Path) -> tuple[int, dict[str, object]]:
+    def run_preflight(
+        self, module, root: Path, output: Path | None = None
+    ) -> tuple[int, dict[str, object]]:
+        arguments = ["--root", str(root), "--preflight", "--format", "json"]
+        if output is not None:
+            arguments[2:2] = ["--output", output.relative_to(root).as_posix()]
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
-            code = module.main(
-                ["--root", str(root), "--preflight", "--format", "json"]
-            )
+            code = module.main(arguments)
         return code, json.loads(stdout.getvalue())
 
     def test_first_and_second_runs_produce_incremental_actions(self) -> None:
@@ -281,6 +304,22 @@ Call the service.
             )
             self.assertNotIn("do-not-export", exported_text)
 
+    def test_sensitive_filter_ignores_repository_parent_directories(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "secrets" / "project"
+            root.mkdir(parents=True)
+            write_fixture(root)
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            included = {
+                item["path"]: item["category"]
+                for item in result["inventory"]["included"]
+            }
+            self.assertEqual(included["src/service.py"], "runtime_source")
+
     def test_limits_fail_before_replacing_existing_pack(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
@@ -318,6 +357,23 @@ Call the service.
                 self.assertLessEqual(source["estimated_words"], 100)
             self.assertTrue(any("#part-" in item["logical_source_id"] for item in manifest["sources"]))
 
+    def test_unsplittable_utf8_character_fails_before_output_commit(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            (root / "notebooklm.toml").write_text(
+                "max_source_bytes = 1\nmax_source_words = 10\n",
+                encoding="utf-8",
+            )
+            output = root / ".notebooklm"
+
+            code, result = self.run_export(module, root, output)
+
+            self.assertEqual(code, 2)
+            self.assertIn("unable to split", result["error"])
+            self.assertFalse(output.exists())
+
     def test_invalid_parent_source_is_rejected_without_output(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
@@ -335,6 +391,200 @@ Call the service.
             self.assertEqual(code, 2)
             self.assertIn("repo-relative", result["error"])
             self.assertFalse(output.exists())
+
+    def test_explicit_missing_config_is_rejected(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = module.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--config",
+                        "missing.toml",
+                        "--preflight",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertIn("config path does not exist", json.loads(stdout.getvalue())["error"])
+
+    def test_invalid_utf8_config_is_rejected_without_traceback(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            config = root / "invalid.toml"
+            config.write_bytes(b"\xff\xfe invalid utf-8")
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = module.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--config",
+                        str(config),
+                        "--preflight",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertIn("unable to read config", json.loads(stdout.getvalue())["error"])
+
+    def test_invalid_utf8_previous_manifest_is_rejected_without_traceback(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            output = root / ".notebooklm"
+            output.mkdir()
+            (output / "manifest.json").write_bytes(b"\xff\xfe invalid utf-8")
+
+            code, result = self.run_export(module, root, output)
+
+            self.assertEqual(code, 2)
+            self.assertIn("unable to read previous manifest", result["error"])
+
+    def test_invalid_utf8_transaction_journal_is_rejected_without_traceback(self) -> None:
+        load_exporter()
+        module = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "pack"
+            output.mkdir()
+            module._output_transaction_path(output).write_bytes(b"\xff\xfe invalid utf-8")
+
+            with self.assertRaisesRegex(
+                module.ExportError, "unable to read NotebookLM transaction journal"
+            ):
+                module._recover_pending_output(output)
+
+    def test_explicit_config_outside_repository_is_rejected_before_reading(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            root = base / "repo"
+            root.mkdir()
+            write_fixture(root)
+            outside = base / "outside.toml"
+            outside.write_text("this is not valid TOML =\n", encoding="utf-8")
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = module.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--config",
+                        str(outside),
+                        "--preflight",
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertIn(
+                "config path must stay inside the repository",
+                json.loads(stdout.getvalue())["error"],
+            )
+
+    def test_output_directory_must_be_a_child_directory(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            (root / "notebooklm.toml").write_text(
+                'output_directory = "."\n', encoding="utf-8"
+            )
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = module.main(
+                    ["--root", str(root), "--preflight", "--format", "json"]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertIn(
+                "output_directory must be a child directory",
+                json.loads(stdout.getvalue())["error"],
+            )
+
+    def test_output_root_symlink_is_rejected_before_export(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            real_output = root / "real-pack"
+            real_output.mkdir()
+            link = root / "pack"
+            try:
+                create_directory_reparse_point(link, real_output)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlink creation is unavailable: {exc}")
+
+            code, result = self.run_preflight(module, root, link)
+
+            self.assertEqual(code, 2)
+            self.assertIn("must not contain symlink", result["error"])
+            self.assertFalse((real_output / "manifest.json").exists())
+
+    def test_output_tree_junction_is_rejected_before_copy(self) -> None:
+        load_exporter()
+        canonical = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "pack"
+            outside = root / "outside"
+            output.mkdir()
+            outside.mkdir()
+            try:
+                create_directory_reparse_point(output / "linked", outside)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"directory reparse point unavailable: {exc}")
+
+            with self.assertRaisesRegex(canonical.ExportError, "reparse point"):
+                canonical.commit_output(output, {"manifest.json": b"{}\n"}, None)
+
+    def test_output_override_is_bound_to_preflight_identity(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            alternate = root / "alternate-pack"
+            default_code, default = self.run_preflight(module, root)
+            alternate_code, alternate_preflight = self.run_preflight(
+                module, root, alternate
+            )
+            self.assertEqual(default_code, 0)
+            self.assertEqual(alternate_code, 0)
+            self.assertNotEqual(
+                default["preflight_id"], alternate_preflight["preflight_id"]
+            )
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = module.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--output",
+                        "alternate-pack",
+                        "--apply",
+                        "--preflight-id",
+                        str(default["preflight_id"]),
+                        "--format",
+                        "json",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertIn("preflight_id", json.loads(stdout.getvalue())["error"])
+            self.assertFalse(alternate.exists())
 
     def test_preflight_scans_selected_project_evidence_without_writing(self) -> None:
         module = load_exporter()
@@ -355,6 +605,18 @@ Call the service.
             (root / "infra/main.tf").write_text("resource {}\n", encoding="utf-8")
             (root / "tools").mkdir()
             (root / "tools/build.py").write_text("print('build')\n", encoding="utf-8")
+            (root / "secrets").mkdir()
+            (root / "secrets/runtime.toml").write_text(
+                "token = 'do-not-export'\n", encoding="utf-8"
+            )
+            (root / ".codex-hook-logs").mkdir()
+            (root / ".codex-hook-logs/audit.jsonl").write_text(
+                "generated audit state\n", encoding="utf-8"
+            )
+            (root / ".github-hook-logs").mkdir()
+            (root / ".github-hook-logs/audit.jsonl").write_text(
+                "generated audit state\n", encoding="utf-8"
+            )
             (root / ".agents/skills/codebase-wiki").mkdir(parents=True)
             (root / ".agents/skills/codebase-wiki/SKILL.md").write_text("framework\n", encoding="utf-8")
             (root / ".env").write_text("TOKEN=hidden\n", encoding="utf-8")
@@ -375,8 +637,11 @@ Call the service.
             self.assertEqual(excluded[".github/workflows/ci.yml"], "scan_scope_ci_or_iac")
             self.assertEqual(excluded["infra/main.tf"], "scan_scope_ci_or_iac")
             self.assertEqual(excluded["tools/build.py"], "scan_scope_dev_tooling")
+            self.assertEqual(excluded[".codex-hook-logs/audit.jsonl"], "binary_or_generated")
+            self.assertEqual(excluded[".github-hook-logs/audit.jsonl"], "binary_or_generated")
             self.assertEqual(excluded[".agents/skills/codebase-wiki/SKILL.md"], "framework_adapter")
             self.assertEqual(excluded[".env"], "sensitive_filename")
+            self.assertEqual(excluded["secrets/runtime.toml"], "sensitive_filename")
             self.assertEqual(excluded["logo.bin"], "binary_or_unsupported_encoding")
             self.assertEqual(result["limits"]["enterprise_max_bytes"], 200_000_000)
             self.assertEqual(result["limits"]["max_bytes"], 180_000_000)
@@ -410,6 +675,47 @@ Call the service.
             }
             self.assertEqual(excluded["src/linked.md"], "path_escape")
             self.assertNotIn("src/linked.md", {item["path"] for item in result["inventory"]["included"]})
+
+    def test_preflight_rejects_unsafe_wiki_tree_before_reading(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            root = base / "repo"
+            outside = base / "outside"
+            write_fixture(root)
+            outside.mkdir()
+            (outside / "rogue.md").write_bytes(b"\xff\xfe external content")
+            link = root / "wiki/linked"
+            try:
+                create_directory_reparse_point(link, outside)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"directory reparse point unavailable: {exc}")
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 2)
+            self.assertIn("Wiki directory is unsafe to read", result["error"])
+            self.assertIn("symlink or reparse point", result["error"])
+            self.assertNotIn("unable to read Wiki page", result["error"])
+
+    def test_preflight_rejects_reparse_root_before_resolving(self) -> None:
+        load_exporter()
+        module = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            actual = base / "repo"
+            write_fixture(actual)
+            linked = base / "repo-link"
+            try:
+                create_directory_reparse_point(linked, actual)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"directory reparse point unavailable: {exc}")
+
+            with self.assertRaisesRegex(module.ExportError, "root must not be a symlink or reparse point"):
+                module.collect_wiki_pages(linked)
+            code, result = self.run_preflight(module, linked)
+            self.assertEqual(code, 2)
+            self.assertIn("root must not be a symlink or reparse point", result["error"])
 
     def test_direct_export_is_rejected_and_changed_input_invalidates_preflight(self) -> None:
         module = load_exporter()
@@ -561,6 +867,264 @@ status: active
             self.assertEqual(result["manifest"]["schema_version"], 2)
             self.assertEqual(len(result["actions"]["unchanged"]), 5)
 
+    def test_previous_manifest_path_traversal_is_rejected_without_deletion(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            output = root / ".notebooklm"
+            first_code, _ = self.run_export(module, root, output)
+            self.assertEqual(first_code, 0)
+
+            victim = root / "victim.txt"
+            victim.write_text("must survive\n", encoding="utf-8")
+            manifest_path = output / "manifest.json"
+            previous = json.loads(manifest_path.read_text(encoding="utf-8"))
+            previous["sources"][0]["file"] = "../victim.txt"
+            manifest_path.write_text(json.dumps(previous), encoding="utf-8")
+
+            code, result = self.run_export(module, root, output)
+
+            self.assertEqual(code, 2)
+            self.assertIn("output directory", result["error"])
+            self.assertTrue(victim.is_file())
+            self.assertEqual(victim.read_text(encoding="utf-8"), "must survive\n")
+
+    def test_commit_output_rejects_path_traversal_without_writing_outside(self) -> None:
+        load_exporter()
+        canonical = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "pack"
+            victim = root / "victim.txt"
+
+            with self.assertRaisesRegex(canonical.ExportError, "inside the output directory"):
+                canonical.commit_output(output, {"../victim.txt": b"must not write\n"}, None)
+
+            self.assertFalse(victim.exists())
+            self.assertFalse(output.exists())
+
+    def test_commit_output_rejects_symlinked_output_tree(self) -> None:
+        load_exporter()
+        canonical = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "pack"
+            outside = root / "outside"
+            outside.mkdir()
+            (outside / "private.txt").write_text("private\n", encoding="utf-8")
+            output.mkdir()
+            try:
+                os.symlink(outside / "private.txt", output / "managed.md")
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlink creation is unavailable: {exc}")
+
+            with self.assertRaisesRegex(canonical.ExportError, "must not contain symlink"):
+                canonical.commit_output(output, {"manifest.json": b"{}\n"}, None)
+
+            self.assertTrue((outside / "private.txt").is_file())
+            self.assertTrue((output / "managed.md").is_symlink())
+
+    def test_commit_output_restores_previous_pack_after_replacement_failure(self) -> None:
+        load_exporter()
+        canonical = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "pack"
+            output.mkdir()
+            (output / "manifest.json").write_text('{"version": 1}\n', encoding="utf-8")
+            (output / "old.md").write_text("old source\n", encoding="utf-8")
+            original_replace = canonical.os.replace
+            injected = False
+
+            def fail_stage_replacement(source, destination):
+                nonlocal injected
+                if not injected and ".staging-" in str(source) and destination == output:
+                    injected = True
+                    raise OSError("injected output replacement failure")
+                return original_replace(source, destination)
+
+            with mock.patch.object(
+                canonical.os, "replace", side_effect=fail_stage_replacement
+            ):
+                with self.assertRaisesRegex(
+                    canonical.ExportError, "unable to commit NotebookLM output"
+                ):
+                    canonical.commit_output(
+                        output,
+                        {
+                            "manifest.json": b'{"version": 2}\n',
+                            "new.md": b"new source\n",
+                        },
+                        {"sources": [{"file": "old.md"}]},
+                    )
+
+            self.assertTrue(injected)
+            self.assertEqual(
+                (output / "manifest.json").read_text(encoding="utf-8"),
+                '{"version": 1}\n',
+            )
+            self.assertEqual(
+                (output / "old.md").read_text(encoding="utf-8"), "old source\n"
+            )
+            self.assertFalse((output / "new.md").exists())
+            self.assertEqual(list(root.glob("pack.staging-*")), [])
+            self.assertEqual(list(root.glob("pack.backup-*")), [])
+
+    def test_commit_output_recovers_after_process_kill(self) -> None:
+        load_exporter()
+        canonical = sys.modules["notebooklm_exporter"]
+        canonical_path = SCRIPT.with_name("notebooklm_exporter.py")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "pack"
+            output.mkdir()
+            (output / "manifest.json").write_text('{"version": 1}\n', encoding="utf-8")
+            (output / "old.md").write_text("old source\n", encoding="utf-8")
+            canonical_path_literal = repr(str(canonical_path))
+            output_path_literal = repr(str(output))
+            child = f"""
+import importlib.util
+import os
+from pathlib import Path
+import sys
+
+spec = importlib.util.spec_from_file_location("notebooklm_exporter_child", {canonical_path_literal})
+assert spec and spec.loader
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+output = Path({output_path_literal})
+original_replace = module.os.replace
+
+def crash_after_new_pack_is_visible(source, destination):
+    result = original_replace(source, destination)
+    if ".staging-" in str(source) and Path(destination) == output:
+        os._exit(92)
+    return result
+
+module.os.replace = crash_after_new_pack_is_visible
+module.commit_output(
+    output,
+    {{"manifest.json": bytes('{{"version": 2}}\\n', "utf-8"), "new.md": b"new source\\n"}},
+    {{"sources": [{{"file": "old.md"}}]}},
+)
+"""
+            result = subprocess.run(
+                [sys.executable, "-c", child],
+                check=False,
+                capture_output=True,
+            )
+            child_stderr = result.stderr.decode("utf-8", errors="replace")
+            self.assertEqual(result.returncode, 92, child_stderr)
+            self.assertTrue(canonical._output_transaction_path(output).is_file())
+
+            self.assertTrue(canonical._recover_pending_output(output))
+            self.assertEqual(
+                (output / "manifest.json").read_text(encoding="utf-8"),
+                '{"version": 1}\n',
+            )
+            self.assertEqual(
+                (output / "old.md").read_text(encoding="utf-8"), "old source\n"
+            )
+            self.assertFalse((output / "new.md").exists())
+            self.assertFalse(canonical._output_transaction_path(output).exists())
+            self.assertEqual(list(root.glob("pack.staging-*")), [])
+            self.assertEqual(list(root.glob("pack.backup-*")), [])
+
+    def test_commit_output_rejects_concurrent_writer(self) -> None:
+        load_exporter()
+        canonical = sys.modules["notebooklm_exporter"]
+        canonical_path = SCRIPT.with_name("notebooklm_exporter.py")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "pack"
+            canonical_path_literal = repr(str(canonical_path))
+            lock_path_literal = repr(str(canonical._output_transaction_lock_path(output)))
+            child = f"""
+import importlib.util
+from pathlib import Path
+import sys
+
+spec = importlib.util.spec_from_file_location("notebooklm_exporter_lock_child", {canonical_path_literal})
+assert spec and spec.loader
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+with module._OutputTransactionLock(Path({lock_path_literal})):
+    print("ready", flush=True)
+    sys.stdin.buffer.read()
+"""
+            process = subprocess.Popen(
+                [sys.executable, "-c", child],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+            )
+            try:
+                self.assertEqual(process.stdout.readline().strip(), "ready")
+                with self.assertRaises(canonical.ExportError):
+                    canonical.commit_output(
+                        output, {"manifest.json": b"{}\n"}, None
+                    )
+            finally:
+                if process.stdin is not None:
+                    process.stdin.close()
+                process.wait(timeout=10)
+                stderr = process.stderr.read() if process.stderr is not None else ""
+                if process.stdout is not None:
+                    process.stdout.close()
+                if process.stderr is not None:
+                    process.stderr.close()
+                self.assertEqual(process.returncode, 0, stderr)
+
+    def test_output_transaction_journal_is_excluded_from_inventory(self) -> None:
+        load_exporter()
+        module = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            settings = module.load_settings(root)
+            journal = root / ".notebooklm.notebooklm-transaction.json"
+            lock = root / ".notebooklm.notebooklm-transaction.lock"
+            stage = root / "pack.staging-crashed"
+            backup = root / "pack.backup-crashed"
+            journal_temp = root / ".pack.notebooklm-transaction.json.tmp-crashed"
+            journal.write_text('{"phase": "active"}\n', encoding="utf-8")
+            lock.write_bytes(b"\0")
+            stage.mkdir()
+            backup.mkdir()
+            journal_temp.write_text("partial\n", encoding="utf-8")
+            try:
+                self.assertEqual(
+                    module.exclusion_reason(journal, root, settings),
+                    "binary_or_generated",
+                )
+                self.assertEqual(
+                    module.exclusion_reason(lock, root, settings),
+                    "binary_or_generated",
+                )
+                self.assertEqual(
+                    module.exclusion_reason(stage / "source.md", root, settings),
+                    "binary_or_generated",
+                )
+                self.assertEqual(
+                    module.exclusion_reason(backup / "source.md", root, settings),
+                    "binary_or_generated",
+                )
+                self.assertEqual(
+                    module.exclusion_reason(journal_temp, root, settings),
+                    "binary_or_generated",
+                )
+            finally:
+                journal.unlink()
+                lock.unlink()
+                journal_temp.unlink()
+                stage.rmdir()
+                backup.rmdir()
+
     def test_functional_pages_share_stable_document_group(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
@@ -628,6 +1192,43 @@ status: active
                 "docs:function-orders",
                 {item["logical_source_id"] for item in changed["actions"]["changed"]},
             )
+
+    def test_preflight_and_apply_handle_500_wiki_pages(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            modules = root / "wiki/modules"
+            modules.mkdir(parents=True)
+            stems = [f"scale-{index:03d}" for index in range(500)]
+            for index, stem in enumerate(stems):
+                next_stem = stems[(index + 1) % len(stems)]
+                (modules / f"{stem}.md").write_text(
+                    "---\n"
+                    f"title: Scale {index:03d}\n"
+                    "type: module\n"
+                    "sources: []\n"
+                    "last_updated: 2026-08-17\n"
+                    "tags: [module]\n"
+                    "status: active\n"
+                    "---\n\n"
+                    f"# Scale {index:03d}\n\n[[{next_stem}]]\n",
+                    encoding="utf-8",
+                )
+            add_index_links(root, *stems)
+            output = root / ".notebooklm"
+
+            preflight_code, preflight = self.run_preflight(module, root, output)
+            self.assertEqual(preflight_code, 0)
+            self.assertTrue(preflight["ready_to_export"])
+            self.assertEqual(preflight["required_document_issues"], [])
+            self.assertEqual(preflight["wiki_pages"], 505)
+
+            export_code, exported = self.run_export(module, root, output)
+            self.assertEqual(export_code, 0)
+            self.assertEqual(exported["manifest"]["schema_version"], 2)
+            self.assertLessEqual(exported["manifest"]["source_count"], 300)
+            self.assertTrue((output / "manifest.json").is_file())
 
     def test_invalid_notebooklm_group_is_rejected(self) -> None:
         module = load_exporter()

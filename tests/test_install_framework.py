@@ -5,6 +5,7 @@ import datetime as dt
 import importlib.util
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -138,6 +139,10 @@ class FrameworkInstallerTests(unittest.TestCase):
                 (target / ".codex" / "config.toml").read_text(encoding="utf-8"),
             )
 
+            repeat_plan = installer.plan_install(REPO_ROOT, target, "codex", "install")
+            self.assertEqual(repeat_plan["changes"], [])
+            self.assertEqual(repeat_plan["conflicts"], [])
+
             rerun_code, rerun_payload = self.run_main(
                 installer,
                 [
@@ -209,6 +214,126 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertFalse(payload["applied"])
             self.assertIn("Codex.md", payload["conflicts"])
             self.assertFalse((target / ".agents").exists())
+
+    def test_target_symlink_escape_blocks_apply_without_writing_outside(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            outside = root / "outside"
+            target.mkdir()
+            outside.mkdir()
+            protected = outside / "config.toml"
+            protected.write_text("keep me\n", encoding="utf-8")
+            link = target / ".codex"
+            try:
+                os.symlink(outside, link, target_is_directory=True)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlink creation unavailable: {exc}")
+
+            exit_code, payload = self.run_main(
+                installer,
+                [
+                    "install",
+                    "--target",
+                    str(target),
+                    "--surface",
+                    "codex",
+                    "--apply",
+                    "--format",
+                    "json",
+                ],
+            )
+
+            self.assertEqual(exit_code, 2)
+            self.assertFalse(payload["applied"])
+            self.assertTrue(any(path.startswith(".codex/") for path in payload["conflicts"]))
+            self.assertEqual(protected.read_text(encoding="utf-8"), "keep me\n")
+
+    def test_target_root_reparse_point_is_rejected_before_apply(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.mkdir()
+
+            def fake_reparse_point(path: Path) -> bool:
+                return path == target
+
+            with mock.patch.object(
+                installer, "_is_reparse_point", side_effect=fake_reparse_point
+            ):
+                exit_code, payload = self.run_main(
+                    installer,
+                    [
+                        "install",
+                        "--target",
+                        str(target),
+                        "--surface",
+                        "codex",
+                        "--apply",
+                        "--format",
+                        "json",
+                    ],
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertFalse(payload["applied"])
+            self.assertTrue(payload["conflicts"])
+            self.assertEqual(list(target.iterdir()), [])
+
+    def test_framework_source_symlink_is_rejected(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            target = root / "target"
+            outside = root / "outside.md"
+            (source / ".agents/skills/codebase-wiki").mkdir(parents=True)
+            target.mkdir()
+            outside.write_text("outside\n", encoding="utf-8")
+            try:
+                os.symlink(outside, source / ".agents/skills/codebase-wiki/SKILL.md")
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlink creation unavailable: {exc}")
+
+            with self.assertRaisesRegex(OSError, "must not contain symlink"):
+                installer.plan_install(source, target, "codex")
+
+    def test_target_path_rejects_windows_drive_paths(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+
+            self.assertFalse(installer._target_path_is_safe(target, "C:/outside.txt"))
+            self.assertFalse(installer._target_path_is_safe(target, r"C:\outside.txt"))
+            self.assertFalse(installer._target_path_is_safe(target, r"..\outside.txt"))
+
+    def test_target_directory_junction_is_rejected(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            outside = root / "outside"
+            target.mkdir()
+            outside.mkdir()
+            link = target / "linked"
+            try:
+                result = subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+                if result.returncode != 0:
+                    raise OSError(result.stderr or result.stdout or "unable to create directory junction")
+            except (OSError, FileNotFoundError) as exc:
+                self.skipTest(f"directory junction unavailable: {exc}")
+
+            self.assertFalse(installer._target_path_is_safe(target, "linked/file.txt"))
 
     def test_upgrade_reports_legacy_runtime_without_deleting_it(self) -> None:
         installer = load_installer()
@@ -319,6 +444,136 @@ class FrameworkInstallerTests(unittest.TestCase):
                 sorted(path.relative_to(target).as_posix() for path in target.rglob("*") if path.is_file()),
                 ["AGENTS.md"],
             )
+
+    def test_atomic_install_recovers_after_process_kill(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+            original = target / "a.txt"
+            original.write_text("old\n", encoding="utf-8")
+            installer_path = repr(str(INSTALLER_PATH))
+            target_path = repr(str(target))
+            child = f"""
+import importlib.util
+import os
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location("install_framework_child", {installer_path})
+assert spec and spec.loader
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+target = Path({target_path})
+original_replace = module.os.replace
+
+def crash_after_first_new_file(source, destination):
+    result = original_replace(source, destination)
+    if "codebase-wiki-stage-" in str(source) and Path(destination) == target / "a.txt":
+        os._exit(91)
+    return result
+
+module.os.replace = crash_after_first_new_file
+module._atomic_write(target, {{"a.txt": b"new\\n", "b.txt": b"second\\n"}})
+"""
+            result = subprocess.run(
+                [sys.executable, "-c", child],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(result.returncode, 91, result.stderr)
+            self.assertTrue(installer._transaction_path(target).is_file())
+
+            self.assertTrue(installer._recover_pending_transaction(target))
+            self.assertEqual(original.read_text(encoding="utf-8"), "old\n")
+            self.assertFalse((target / "b.txt").exists())
+            self.assertFalse(installer._transaction_path(target).exists())
+            self.assertEqual(list(target.parent.glob("codebase-wiki-stage-*")), [])
+            self.assertEqual(list(target.parent.glob("codebase-wiki-backup-*")), [])
+
+    def test_atomic_install_rejects_concurrent_writer(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+            installer_path = repr(str(INSTALLER_PATH))
+            lock_path = repr(str(installer._transaction_lock_path(target)))
+            child = f"""
+import importlib.util
+from pathlib import Path
+import sys
+
+spec = importlib.util.spec_from_file_location("install_framework_lock_child", {installer_path})
+assert spec and spec.loader
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+with module._TransactionLock(Path({lock_path})):
+    print("ready", flush=True)
+    sys.stdin.buffer.read()
+"""
+            process = subprocess.Popen(
+                [sys.executable, "-c", child],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+            )
+            try:
+                self.assertEqual(process.stdout.readline().strip(), "ready")
+                exit_code, payload = self.run_main(
+                    installer,
+                    [
+                        "install",
+                        "--target",
+                        str(target),
+                        "--surface",
+                        "codex",
+                        "--apply",
+                        "--format",
+                        "json",
+                    ],
+                )
+                self.assertEqual(exit_code, 2)
+                self.assertFalse(payload["applied"])
+                self.assertIn("transaction lock", payload["error"])
+            finally:
+                if process.stdin is not None:
+                    process.stdin.close()
+                process.wait(timeout=10)
+                stderr = process.stderr.read() if process.stderr is not None else ""
+                if process.stdout is not None:
+                    process.stdout.close()
+                if process.stderr is not None:
+                    process.stderr.close()
+                self.assertEqual(process.returncode, 0, stderr)
+
+    def test_invalid_utf8_transaction_journal_fails_closed(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+            installer._transaction_path(target).write_bytes(b"\xff\xfe invalid utf-8")
+
+            exit_code, payload = self.run_main(
+                installer,
+                [
+                    "install",
+                    "--target",
+                    str(target),
+                    "--surface",
+                    "codex",
+                    "--apply",
+                    "--format",
+                    "json",
+                ],
+            )
+
+            self.assertEqual(exit_code, 2)
+            self.assertFalse(payload["ok"])
+            self.assertFalse(payload["applied"])
+            self.assertIn("unable to read installer transaction journal", payload["error"])
 
     def test_existing_agent_instructions_are_preserved_around_managed_block(self) -> None:
         installer = load_installer()

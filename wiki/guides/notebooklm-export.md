@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:061c69a6a00b75711cad7a94c57f710f7ba68df948d1232d8fe619afd674da88
+source_digest: sha256:6ed3cab3860543d53aa182848346625eaa4e596ee8a697170abbcc831e528a62
 derived_from: ["[[overview]]", "[[notebooklm-exporter]]", "[[project-function-catalog]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [guide, notebooklm, export, incremental, enterprise]
 status: active
 notebooklm_group: project-guides
@@ -76,11 +76,18 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --apply --preflight-id <id> --output .notebooklm --format json
 ```
 
+`--output` 必須是 repo root 下的 child directory；CLI override 會納入
+`preflight_id`。更換輸出目錄、設定或任何輸入後，必須重新執行 preflight，不能沿用
+舊 ID。
+
 可把 `.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製成 Repo root 的
 `notebooklm.toml` 以調整 `source_limit`、`reserved_source_slots`、
 `max_source_bytes`、`max_source_words`、`include_evidence`、`extra_paths` 或
 `exclude_paths` 與 `scan_profile`。設定只能降低 hard limits，路徑必須是
-Repo-relative；一般目標使用 `target`，本框架 Repo 使用 `framework`。
+Repo-relative；一般目標使用 `target`，本框架 Repo 使用 `framework`。若透過
+`--config` 明確指定設定檔時，該檔案必須位於 Repo root 內、不是 symlink/reparse
+path，且存在並是一般檔案；不存在或無法解析時 preflight/apply 會拒絕執行，不會靜默
+套用預設值。
 
 輸出目錄包含：
 
@@ -105,7 +112,9 @@ exporter 後依 `upload-plan.md` 操作：
 
 不要把 `manifest.json`、`upload-plan.md` 或 README 當成專案 evidence 上傳。
 Exporter 會保留 output directory 中不由它管理的檔案；Git 預設忽略整個
-`.notebooklm/`，release builder 也不會把它打包。
+`.notebooklm/`，並以 `.*.notebooklm-transaction.json` 與
+`.*.notebooklm-transaction.lock` 忽略 output sibling recovery metadata；release builder
+也不會把它打包。
 
 ## 容量與安全
 
@@ -116,9 +125,23 @@ estimated words safety limits，並可預留 source slots。打包順序固定�
 `source_budget` 透明省略低優先 evidence，而不是刪減必要文件。若文件本身超限或
 無法安全切分，export 會在 atomic commit 前失敗並保留舊 pack。不同 Workspace tier
 請在 `notebooklm.toml` 下調，不要把 Enterprise 設定當成所有租戶通用。
+若 output replacement 在 commit 期間失敗，staging/backup rollback 也會保留上一份有效 pack；
+transaction journal 與子程序終止 regression 已驗證下一次 apply 可恢復上一份有效 pack；
+同一 output 的並行 commit 由 transaction lock 保護，已有 writer 時後來的程序會 fail closed；
+但突然斷電、檔案系統 metadata durability 與各 host 的所有終止窗口仍需另行演練。
+既有 `manifest.json` 與待寫入 pack file 的 path 都必須是 output directory 內的安全相對路徑；
+若 manifest、輸出 key 被竄改或包含 path traversal，exporter 會拒絕套用並保留既有 pack。
+既有 output tree 也不得含 symlink 或 Windows reparse point，避免複製或替換 pack 時
+讀取 output 外部內容。output root 與通往它的既有 parent components 也不得是 symlink
+或 reparse point；這項檢查在 path
+canonicalization 前執行。
+Wiki input tree 也會在讀取頁面前驗證為 regular tree；若 Wiki root 或其下層含 symlink
+或 Windows reparse point，preflight 會先 fail closed，不會先讀取連結指向的外部頁面。
+`--root` 本身若是 symlink 或 Windows reparse point，CLI 也會在 canonicalization 前
+拒絕，避免命令列輸入繞過 repository boundary。
 
 預設會回報並排除 secrets/credentials、binary、tests、CI/IaC、build/dev tooling、
-generated/build/cache、dependency、framework adapter 目錄與 export output。任何
+generated/build/cache、platform fallback audit logs、dependency、framework adapter 目錄與 export output。任何
 skipped、omitted、warning 或 unresolved item
 都必須在交付報告中列出；人工審查仍負責確認商業機密、個資與租戶政策。
 

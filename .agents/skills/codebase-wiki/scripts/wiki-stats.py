@@ -7,12 +7,13 @@
 預設 wiki_dir 為 wiki/。
 """
 
+import argparse
 import datetime
 import pathlib
 import re
 import sys
 
-from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+from frontmatter import configure_utf8_stdio, parse_frontmatter_text, validate_regular_tree
 
 
 def parse_frontmatter(filepath: pathlib.Path) -> dict:
@@ -28,6 +29,7 @@ def count_wikilinks(filepath: pathlib.Path) -> int:
 
 def wiki_stats(wiki_dir: pathlib.Path):
     """產出 wiki 統計報告。"""
+    validate_regular_tree(wiki_dir)
     md_files = sorted(wiki_dir.rglob("*.md"))
     today = datetime.date.today()
     thirty_days_ago = today - datetime.timedelta(days=30)
@@ -78,7 +80,7 @@ def wiki_stats(wiki_dir: pathlib.Path):
     print("=" * 60)
 
     print(f"\n📊 總頁面數: {total_pages}")
-    print(f"   (不含 index.md, log.md)")
+    print("   (不含 index.md, log.md)")
 
     print("\n📁 各類型頁面數:")
     for t, c in sorted(type_counts.items(), key=lambda x: -x[1]):
@@ -91,7 +93,7 @@ def wiki_stats(wiki_dir: pathlib.Path):
     print(f"\n🔗 Wikilink 總數: {total_wikilinks}")
     print(f"   平均每頁: {total_wikilinks / max(total_pages, 1):.1f}")
 
-    print(f"\n📎 Source 引用:")
+    print("\n📎 Source 引用:")
     print(f"   總引用數: {total_sources}")
     print(f"   有 source 的頁面: {pages_with_sources}/{total_pages}")
     print(f"   平均每頁: {avg_sources:.1f}")
@@ -101,13 +103,23 @@ def wiki_stats(wiki_dir: pathlib.Path):
     print()
 
 
-def main():
+def main(argv: list[str] | None = None):
     configure_utf8_stdio()
-    wiki_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path("wiki")
+    parser = argparse.ArgumentParser(
+        prog="wiki-stats.py",
+        description="Print page, source, link, and update statistics for a Wiki.",
+    )
+    parser.add_argument("wiki_dir", nargs="?", type=pathlib.Path, default=pathlib.Path("wiki"))
+    args = parser.parse_args(argv)
+    wiki_dir = args.wiki_dir
     if not wiki_dir.is_dir():
         print(f"Error: wiki directory not found: {wiki_dir}", file=sys.stderr)
         sys.exit(1)
-    wiki_stats(wiki_dir)
+    try:
+        wiki_stats(wiki_dir)
+    except (OSError, UnicodeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(2)
 
 
 if __name__ == "__main__":

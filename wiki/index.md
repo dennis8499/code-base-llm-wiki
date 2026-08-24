@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [index]
 status: active
 ---
@@ -36,41 +36,41 @@ status: active
 
 | 頁面 | 摘要 |
 |------|------|
-| [[installer-and-upgrade]] | Installer v3 的 managed blocks、fingerprint manifest 與 atomic apply |
-| [[wiki-quality-and-provenance]] | Frontmatter、digest、links、managed index 與 append-only log 品質模型 |
-| [[notebooklm-exporter]] | 強制 preflight identity 與 documents-first 離線 source pack |
-| [[platform-hooks-and-guards]] | Codex/Copilot canonical hooks 與三種 guard mode |
-| [[platform-adapters-and-release]] | Capability parity、跨平台 CI、版本與 release readiness |
+| [[installer-and-upgrade]] | Installer v3 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架 |
+| [[notebooklm-exporter]] | 以強制 preflight identity、必要文件閘門與原子輸出建立可審查的增量 NotebookLM source pack |
+| [[platform-adapters-and-release]] | 以 capability parity、跨平台 CI、單一版本來源與授權前置閘門維持可發布的雙平台框架 |
+| [[platform-hooks-and-guards]] | Codex 與 Copilot 共用 canonical hooks，並以 wiki-only、coexist、framework 三種模式明確控制寫入邊界 |
+| [[wiki-quality-and-provenance]] | 以 frontmatter、內容摘要、語意連結、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |
 
 ## Entities
 
-_（尚無需要獨立頁面的 externally exposed entity。）_
+_（尚無頁面）_
 
 ## Patterns
 
-_（跨模組模式目前記錄於 architecture 與 modules。）_
+_（尚無頁面）_
 
 ## Decisions
 
-_（尚無 ADR。）_
+_（尚無頁面）_
 
 ## Dependencies
 
-_（框架沒有執行期第三方套件依賴。）_
+_（尚無頁面）_
 
 ## Guides
 
 | 頁面 | 摘要 |
 |------|------|
 | [[framework-introduction]] | 從安裝、Wiki-first 操作到驗證與升級的框架使用路線 |
-| [[notebooklm-export]] | 功能文件化、安全 preflight 與增量 NotebookLM source pack 指南 |
-| [[release-and-update]] | VERSION、contract 3、CI、授權與發布資產治理 |
+| [[notebooklm-export]] | 先完成功能文件與安全 preflight，再以相符 ID 原子產生增量 NotebookLM source pack |
+| [[release-and-update]] | 以 VERSION、contract 3、CI 與授權 readiness gate 管理可驗證的框架發布 |
 
 ## Synthesis
 
 | 頁面 | 摘要 |
 |------|------|
-| [[project-function-catalog]] | 五個產品功能域、入口、資料與 coverage 狀態 |
-| [[system-analysis]] | 系統目的、流程、介面、安全、失敗模式、風險與 gap |
+| [[project-function-catalog]] | 將安裝、Wiki 品質、Hooks、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋 |
+| [[system-analysis]] | 對框架目的、元件、流程、介面、安全、維運、風險與證據缺口的整體可追溯分析 |
 
 <!-- codebase-wiki:index:end -->

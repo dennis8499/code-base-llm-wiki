@@ -151,6 +151,171 @@ class ContractTests(unittest.TestCase):
             (skill_root / "assets" / "project-function-catalog-template.md").is_file()
         )
 
+    def test_ci_and_release_workflows_bind_runtime_and_release_gates(self) -> None:
+        ci = (REPO_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self.assertRegex(ci, r"os:\s+ubuntu-latest\s+python:\s+\"3\.11\"")
+        self.assertRegex(ci, r"os:\s+ubuntu-latest\s+python:\s+\"3\.14\"")
+        self.assertRegex(ci, r"os:\s+windows-latest\s+python:\s+\"3\.11\"")
+        for token in (
+            "python -m unittest discover -s tests -v",
+            "parity-check.py",
+            "validate-frontmatter.py wiki",
+            "check-stale.py wiki .",
+            "validate-log.py wiki/log.md --repo-root .",
+            "rebuild-index.py wiki --check",
+            "lint-wiki.py wiki --repo-root .",
+        ):
+            with self.subTest(workflow="ci", token=token):
+                self.assertIn(token, ci)
+
+        release = (REPO_ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+        self.assertIn('python-version: "3.11"', release)
+        for token in (
+            "python tools/release.py validate --tag",
+            "python tools/release.py build --output dist",
+            "gh release create",
+        ):
+            with self.subTest(workflow="release", token=token):
+                self.assertIn(token, release)
+
+    def test_system_analysis_prompt_preserves_source_schema_boundary(self) -> None:
+        prompt = (
+            REPO_ROOT / ".github" / "prompts" / "system-analysis-doc.prompt.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("raw source 路徑", prompt)
+        self.assertIn("derived_from", prompt)
+        self.assertIn("sources: []", prompt)
+        self.assertNotIn("wiki/source 路徑", prompt)
+
+    def test_copilot_prompts_bind_authoritative_workflows_and_completion_coupling(self) -> None:
+        prompts = {
+            "ingest-module.prompt.md": (
+                "references/ingest-workflow.md",
+                "等待確認",
+                "index.md",
+                "log.md",
+            ),
+            "ingest-batch.prompt.md": (
+                "references/ingest-workflow.md",
+                "Batch Ingest",
+                "index.md",
+                "log.md",
+            ),
+            "query-wiki.prompt.md": (
+                "references/query-workflow.md",
+                "references/follow-up-actions.md",
+                "1-5",
+                "不寫檔",
+            ),
+            "lint-wiki.prompt.md": (
+                "references/lint-checklist.md",
+                "references/follow-up-actions.md",
+                "先回報 findings",
+                "確認後",
+            ),
+            "code-archaeology.prompt.md": (
+                "references/code-archaeology-workflow.md",
+                "git log",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
+            "new-adr.prompt.md": (
+                "references/adr-workflow.md",
+                "references/frontmatter-spec.md",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
+            "onboarding-guide.prompt.md": (
+                "references/guide-workflow.md",
+                "assets/guide-template.md",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
+            "save-guide.prompt.md": (
+                "references/guide-workflow.md",
+                "wiki/index.md",
+                "wiki/log.md",
+                "derived_from",
+            ),
+            "save-synthesis.prompt.md": (
+                "references/synthesis-workflow.md",
+                "references/frontmatter-spec.md",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
+            "system-analysis-doc.prompt.md": (
+                "references/system-analysis-workflow.md",
+                "assets/system-analysis-template.md",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
+            "export-notebooklm.prompt.md": (
+                "references/notebooklm-export-workflow.md",
+                "--preflight",
+                "--apply",
+                "等待使用者確認",
+            ),
+        }
+        for filename, required_tokens in prompts.items():
+            text = (REPO_ROOT / ".github" / "prompts" / filename).read_text(
+                encoding="utf-8"
+            )
+            for token in required_tokens:
+                with self.subTest(prompt=filename, token=token):
+                    self.assertIn(token, text)
+
+    def test_entrypoint_coverage_matrix_includes_codex_recipes(self) -> None:
+        manifest = json.loads(
+            (REPO_ROOT / ".agents/skills/codebase-wiki/capabilities.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        prompt_root = REPO_ROOT / ".github/prompts"
+        mapped_prompts: set[str] = set()
+        for operation, entry in manifest["entrypoints"]["copilot"].items():
+            with self.subTest(operation=operation):
+                for filename in entry:
+                    mapped_prompts.add(filename)
+                    self.assertTrue((prompt_root / filename).is_file())
+
+        self.assertEqual(
+            {
+                path.name
+                for path in prompt_root.glob("*.prompt.md")
+            } - mapped_prompts,
+            {"update-index.prompt.md"},
+        )
+        codex_recipe = (REPO_ROOT / "Codex.md").read_text(encoding="utf-8")
+        for filename in mapped_prompts:
+            with self.subTest(recipe=filename):
+                self.assertIn(f"/{filename.removesuffix('.prompt.md')}", codex_recipe)
+        self.assertIn("/update-index", codex_recipe)
+
+        update_index = (prompt_root / "update-index.prompt.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("rebuild-index.py", update_index)
+        self.assertIn("wiki/log.md", update_index)
+
+    def test_path_based_cli_scripts_expose_help(self) -> None:
+        scripts = (
+            "check-stale.py",
+            "validate-frontmatter.py",
+            "wiki-stats.py",
+        )
+        script_root = REPO_ROOT / ".agents/skills/codebase-wiki/scripts"
+        for filename in scripts:
+            with self.subTest(script=filename):
+                result = subprocess.run(
+                    [sys.executable, str(script_root / filename), "--help"],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("usage:", result.stdout.lower())
+
     def test_framework_notebooklm_preflight_is_ready(self) -> None:
         script = (
             REPO_ROOT
@@ -194,6 +359,28 @@ class ContractTests(unittest.TestCase):
                 (REPO_ROOT / ".codex/agents" / f"{name}.toml").read_text(encoding="utf-8")
             )
             self.assertEqual(agent["sandbox_mode"], "read-only")
+
+    def test_copilot_read_only_agents_restrict_direct_mutation_and_handoff(self) -> None:
+        expected = {
+            "wiki-query.agent.md": {"read", "search"},
+            "wiki-lint.agent.md": {"execute", "read", "search"},
+            "wiki-archaeologist.agent.md": {"execute", "read", "search"},
+        }
+        for filename, tools in expected.items():
+            with self.subTest(agent=filename):
+                text = (REPO_ROOT / ".github" / "agents" / filename).read_text(
+                    encoding="utf-8"
+                )
+                match = re.search(r"(?m)^tools:\s*\[([^]]*)\]\s*$", text)
+                self.assertIsNotNone(match)
+                actual = {
+                    item.strip().strip("\"'")
+                    for item in match.group(1).split(",")
+                    if item.strip()
+                }
+                self.assertEqual(actual, tools)
+                self.assertNotIn("edit", actual)
+                self.assertNotIn("agent", actual)
 
     def test_agents_are_explicit_delegation_only_and_compact(self) -> None:
         for directory, pattern in (

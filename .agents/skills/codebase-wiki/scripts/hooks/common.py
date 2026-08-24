@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import sys
 from typing import Any
 
@@ -28,6 +30,7 @@ PATCH_FILE_PATTERN = re.compile(
     r"^\*\*\* (?:Add|Update|Delete) File:\s*(.+)$",
     re.MULTILINE,
 )
+DRIVE_PATH_PATTERN = re.compile(r"^[A-Za-z]:")
 
 
 def configure_stdio() -> None:
@@ -64,12 +67,52 @@ def audit_candidates(platform: str, filename: str) -> tuple[Path, ...]:
     )
 
 
+def _is_reparse_point(path: Path) -> bool:
+    """Detect symlinks and Windows junction/reparse points without following them."""
+
+    if path.is_symlink():
+        return True
+    if os.name != "nt":
+        return False
+    try:
+        attributes = os.stat(path, follow_symlinks=False).st_file_attributes
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def audit_path_is_safe(path: Path) -> bool:
+    """Return whether an audit file stays inside the repository boundary."""
+
+    root = repo_root().resolve(strict=False)
+    lexical_root = Path(os.path.abspath(root))
+    lexical_path = Path(os.path.abspath(path))
+    try:
+        relative = lexical_path.relative_to(lexical_root)
+    except ValueError:
+        return False
+    current = lexical_root
+    for component in relative.parts:
+        current /= component
+        if _is_reparse_point(current):
+            return False
+    try:
+        lexical_path.resolve(strict=False).relative_to(root)
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return True
+
+
 def normalize_path(value: str) -> str:
     return value.replace("\\", "/").strip().strip("\"'")
 
 
 def repo_relative_path(value: str) -> str | None:
     normalized = normalize_path(value)
+    if DRIVE_PATH_PATTERN.match(normalized):
+        return None
     while normalized.startswith("./"):
         normalized = normalized[2:]
     try:

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 import fnmatch
 import hashlib
@@ -19,6 +19,7 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -26,15 +27,26 @@ import tomllib
 from typing import Any, Iterable, Sequence
 
 try:
-    from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+    from frontmatter import (
+        configure_utf8_stdio,
+        parse_frontmatter_text,
+        validate_regular_tree,
+    )
 except ModuleNotFoundError:  # pragma: no cover - useful when loaded by a caller
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+    from frontmatter import (
+        configure_utf8_stdio,
+        parse_frontmatter_text,
+        validate_regular_tree,
+    )
 
 
 EXPORT_SCHEMA_VERSION = 2
 SUPPORTED_MANIFEST_SCHEMAS = {1, EXPORT_SCHEMA_VERSION}
 PREFLIGHT_SCHEMA_VERSION = 1
+OUTPUT_TRANSACTION_VERSION = 1
+OUTPUT_TRANSACTION_SUFFIX = ".notebooklm-transaction.json"
+OUTPUT_TRANSACTION_LOCK_SUFFIX = ".notebooklm-transaction.lock"
 PROFILE_NAME = "gemini-notebook-enterprise"
 ENTERPRISE_MAX_SOURCES = 300
 ENTERPRISE_MAX_BYTES = 200_000_000
@@ -62,6 +74,8 @@ DEFAULT_GENERATED_PARTS = {
     "coverage",
     "dist",
     "logs",
+    ".codex-hook-logs",
+    ".github-hook-logs",
     "node_modules",
     "obj",
     "target",
@@ -253,11 +267,48 @@ def repo_relative(path: Path, root: Path) -> str:
 
 def validate_relative_config_path(value: str, root: Path, field: str) -> str:
     candidate = PurePosixPath(value.replace("\\", "/"))
-    if candidate.is_absolute() or ".." in candidate.parts:
+    if (
+        candidate.is_absolute()
+        or ".." in candidate.parts
+        or re.fullmatch(r"[A-Za-z]:.*", candidate.as_posix())
+    ):
         raise ExportError(f"{field} must be a repo-relative path: {value!r}")
     path = root / Path(*candidate.parts)
     repo_relative(path, root)
     return candidate.as_posix().rstrip("/") or "."
+
+
+def _reject_symlink_components(root: Path, candidate: Path, field: str) -> None:
+    """Reject a path that reaches its destination through a symlink."""
+
+    lexical_root = Path(os.path.abspath(root))
+    lexical_candidate = Path(os.path.abspath(candidate))
+    try:
+        relative = lexical_candidate.relative_to(lexical_root)
+    except ValueError as exc:
+        raise ExportError(f"{field} must stay inside the repository: {candidate}") from exc
+
+    current = lexical_root
+    for component in relative.parts:
+        current /= component
+        if _is_reparse_point(current):
+            raise ExportError(f"{field} must not contain symlink or reparse point: {candidate}")
+
+
+def _is_reparse_point(path: Path) -> bool:
+    """Detect symlinks and Windows junction/reparse points without following them."""
+
+    if path.is_symlink():
+        return True
+    if os.name != "nt":
+        return False
+    try:
+        attributes = os.stat(path, follow_symlinks=False).st_file_attributes
+    except FileNotFoundError:
+        return False
+    except OSError as exc:
+        raise ExportError(f"unable to inspect path boundary: {path}: {exc}") from exc
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
 
 
 def _config_values(raw: dict[str, Any]) -> dict[str, Any]:
@@ -286,14 +337,30 @@ def _str_tuple_config(values: dict[str, Any], key: str) -> tuple[str, ...]:
 
 
 def load_settings(root: Path, config_path: Path | None = None) -> Settings:
-    selected_config = config_path or (root / "notebooklm.toml")
+    if config_path is None:
+        selected_config = root / "notebooklm.toml"
+    elif config_path.is_absolute():
+        _reject_symlink_components(root, config_path, "config path")
+        try:
+            relative = repo_relative(config_path, root)
+        except ExportError as exc:
+            raise ExportError(
+                f"config path must stay inside the repository root: {config_path}"
+            ) from exc
+        selected_config = root / Path(*PurePosixPath(relative).parts)
+    else:
+        relative = validate_relative_config_path(config_path.as_posix(), root, "config path")
+        selected_config = root / Path(*PurePosixPath(relative).parts)
+    _reject_symlink_components(root, selected_config, "config path")
     raw: dict[str, Any] = {}
+    if config_path is not None and not selected_config.exists():
+        raise ExportError(f"config path does not exist: {selected_config}")
     if selected_config.exists():
         if not selected_config.is_file():
             raise ExportError(f"config path is not a file: {selected_config}")
         try:
             raw = _config_values(tomllib.loads(selected_config.read_text(encoding="utf-8")))
-        except (OSError, tomllib.TOMLDecodeError) as exc:
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
             raise ExportError(f"unable to read config: {selected_config}: {exc}") from exc
 
     profile = raw.get("profile", PROFILE_NAME)
@@ -306,6 +373,13 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     if not isinstance(output_directory, str):
         raise ExportError("output_directory must be a string")
     output_directory = validate_relative_config_path(output_directory, root, "output_directory")
+    if output_directory == ".":
+        raise ExportError("output_directory must be a child directory of repository root")
+    _reject_symlink_components(
+        root,
+        root / Path(*PurePosixPath(output_directory).parts),
+        "output_directory",
+    )
 
     source_limit = _int_config(raw, "source_limit", DEFAULT_MAX_SOURCES)
     reserved = _int_config(raw, "reserved_source_slots", 0)
@@ -364,10 +438,13 @@ def estimate_words(text: str) -> int:
 
 
 def is_sensitive(path: Path) -> bool:
-    name = path.name.lower()
-    if name in DEFAULT_SENSITIVE_NAMES or name.endswith(SENSITIVE_SUFFIXES):
-        return True
-    return any(fnmatch.fnmatch(name, pattern) for pattern in SENSITIVE_NAME_PATTERNS)
+    components = [part.lower() for part in path.parts]
+    for component in components:
+        if component in DEFAULT_SENSITIVE_NAMES or component.endswith(SENSITIVE_SUFFIXES):
+            return True
+        if any(fnmatch.fnmatch(component, pattern) for pattern in SENSITIVE_NAME_PATTERNS):
+            return True
+    return False
 
 
 def _has_prefix(relative: str, prefixes: Iterable[str]) -> bool:
@@ -405,11 +482,34 @@ def _is_dev_tool(relative: str) -> bool:
     )
 
 
+def _is_transaction_artifact(relative: str) -> bool:
+    """Recognize crash-recovery siblings before they can become evidence."""
+
+    markers = (
+        ".codebase-wiki-install-transaction.",
+        ".notebooklm-transaction.",
+    )
+    for component in PurePosixPath(relative.lower()).parts:
+        if component.startswith(("codebase-wiki-stage-", "codebase-wiki-backup-")):
+            return True
+        if ".staging-" in component or ".backup-" in component:
+            return True
+        if any(marker in component for marker in markers):
+            return True
+    return False
+
+
 def exclusion_reason(path: Path, root: Path, settings: Settings) -> str | None:
     relative = repo_relative(path, root)
     lower = relative.lower()
     parts = set(PurePosixPath(lower).parts)
     output = settings.output_directory.lower()
+    if _is_transaction_artifact(relative):
+        return "binary_or_generated"
+    if path.name.lower().endswith(
+        (OUTPUT_TRANSACTION_SUFFIX, OUTPUT_TRANSACTION_LOCK_SUFFIX)
+    ):
+        return "binary_or_generated"
     if lower == output or lower.startswith(output + "/"):
         return "export_output"
     if lower == "wiki" or lower.startswith("wiki/"):
@@ -429,7 +529,7 @@ def exclusion_reason(path: Path, root: Path, settings: Settings) -> str | None:
         return "scan_scope_dev_tooling"
     if _has_prefix(relative, settings.exclude_paths):
         return "configured_exclude"
-    if is_sensitive(path):
+    if is_sensitive(Path(*PurePosixPath(relative).parts)):
         return "sensitive_filename"
     if path.name == ".gitkeep":
         return "binary_or_generated"
@@ -627,9 +727,17 @@ def expand_path(
 
 
 def collect_wiki_pages(root: Path) -> tuple[list[InputFile], list[dict[str, str]], list[str]]:
+    if _is_reparse_point(root):
+        raise ExportError(f"root must not be a symlink or reparse point: {root}")
+    if not root.is_dir():
+        raise ExportError(f"root is not a directory: {root}")
     wiki = root / "wiki"
     if not wiki.is_dir():
         raise ExportError(f"Wiki directory not found: {wiki}")
+    try:
+        validate_regular_tree(wiki)
+    except (OSError, UnicodeError) as exc:
+        raise ExportError(f"Wiki directory is unsafe to read: {wiki}: {exc}") from exc
     pages: list[InputFile] = []
     skipped: list[dict[str, str]] = []
     warnings: list[str] = []
@@ -906,7 +1014,7 @@ def split_text(text: str, max_bytes: int, max_words: int) -> list[str]:
             flush()
             remaining = line
             while remaining:
-                low, high, best = 1, len(remaining), 1
+                low, high, best = 1, len(remaining), 0
                 while low <= high:
                     middle = (low + high) // 2
                     candidate = remaining[:middle]
@@ -915,6 +1023,10 @@ def split_text(text: str, max_bytes: int, max_words: int) -> list[str]:
                         low = middle + 1
                     else:
                         high = middle - 1
+                if best == 0:
+                    raise ExportError(
+                        "unable to split an oversized source within configured limits"
+                    )
                 piece = remaining[:best]
                 chunks.append(piece)
                 remaining = remaining[best:]
@@ -1122,12 +1234,13 @@ def source_manifest_entry(unit: Unit, filename: str, output_sha: str) -> dict[st
 
 
 def load_previous_manifest(output: Path) -> dict[str, Any] | None:
+    _validate_output_tree(output)
     path = output / "manifest.json"
     if not path.exists():
         return None
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ExportError(f"unable to read previous manifest: {path}: {exc}") from exc
     schema = value.get("schema_version") if isinstance(value, dict) else None
     if not isinstance(value, dict) or schema not in SUPPORTED_MANIFEST_SCHEMAS:
@@ -1137,7 +1250,230 @@ def load_previous_manifest(output: Path) -> dict[str, Any] | None:
         )
     if not isinstance(value.get("sources", []), list):
         raise ExportError(f"previous manifest sources must be an array: {path}")
+    for item in value["sources"]:
+        if isinstance(item, dict) and "file" in item:
+            _validate_pack_file_path(item["file"], output)
     return value
+
+
+def _validate_pack_file_path(value: Any, output: Path) -> str:
+    """Validate a pack file path before it can be read, written, or deleted."""
+
+    if not isinstance(value, str) or not value.strip() or "\x00" in value:
+        raise ExportError(
+            "pack file must be a non-empty relative path"
+        )
+    normalized = value.replace("\\", "/")
+    candidate = PurePosixPath(normalized)
+    if (
+        candidate.is_absolute()
+        or candidate == PurePosixPath(".")
+        or ".." in candidate.parts
+        or re.fullmatch(r"[A-Za-z]:.*", normalized)
+    ):
+        raise ExportError(
+            "pack file must stay inside the output directory: "
+            f"{value!r}"
+        )
+    output_root = output.resolve(strict=False)
+    candidate_path = (output / Path(*candidate.parts)).resolve(strict=False)
+    try:
+        candidate_path.relative_to(output_root)
+    except ValueError as exc:
+        raise ExportError(
+            "pack file must stay inside the output directory: "
+            f"{value!r}"
+        ) from exc
+    return candidate.as_posix()
+
+
+def _validate_output_tree(output: Path) -> None:
+    """Reject output trees containing symlinks before copying or replacing them."""
+
+    if _is_reparse_point(output):
+        raise ExportError(f"output path is not a regular directory: {output}")
+    if not output.exists():
+        return
+    if not output.is_dir():
+        raise ExportError(f"output path is not a regular directory: {output}")
+    for path in output.rglob("*"):
+        if _is_reparse_point(path):
+            raise ExportError(f"output directory must not contain symlink or reparse point: {path}")
+
+
+def _output_transaction_path(output: Path) -> Path:
+    absolute = output.absolute()
+    return absolute.parent / f".{absolute.name}{OUTPUT_TRANSACTION_SUFFIX}"
+
+
+def _output_transaction_lock_path(output: Path) -> Path:
+    absolute = output.absolute()
+    return absolute.parent / f".{absolute.name}{OUTPUT_TRANSACTION_LOCK_SUFFIX}"
+
+
+class _OutputTransactionLock:
+    """Hold an OS-level lock for one NotebookLM output transaction."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self._fd: int | None = None
+
+    def __enter__(self) -> "_OutputTransactionLock":
+        if _is_reparse_point(self.path):
+            raise ExportError(
+                f"NotebookLM transaction lock is a symlink or reparse point: {self.path}"
+            )
+        fd = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o600)
+        self._fd = fd
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                if os.fstat(fd).st_size == 0:
+                    os.write(fd, b"\0")
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)  # type: ignore[attr-defined]
+        except BaseException:
+            os.close(fd)
+            self._fd = None
+            raise
+        return self
+
+    def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> None:
+        fd = self._fd
+        self._fd = None
+        if fd is None:
+            return
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(fd, fcntl.LOCK_UN)  # type: ignore[attr-defined]
+        except OSError:
+            # Closing the descriptor still releases the process-owned lock.
+            pass
+        finally:
+            os.close(fd)
+
+
+def _write_output_transaction(path: Path, payload: dict[str, Any]) -> None:
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f"{path.name}.tmp-", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
+            json.dump(payload, stream, ensure_ascii=True, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def _output_transaction_sibling(
+    parent: Path, value: object, prefix: str, label: str
+) -> Path:
+    if not isinstance(value, str) or Path(value).name != value or not value.startswith(prefix):
+        raise ExportError(f"invalid NotebookLM transaction {label}")
+    candidate = parent / value
+    if candidate.parent != parent:
+        raise ExportError(f"NotebookLM transaction {label} escapes its parent")
+    return candidate
+
+
+def _remove_output_tree(path: Path, label: str) -> None:
+    if _is_reparse_point(path):
+        raise ExportError(f"NotebookLM transaction {label} is a symlink or reparse point")
+    if not path.exists():
+        return
+    if not path.is_dir():
+        raise ExportError(f"NotebookLM transaction {label} is not a directory")
+    _validate_output_tree(path)
+    shutil.rmtree(path)
+
+
+def _remove_output_transaction_tree(path: Path, label: str) -> None:
+    if _is_reparse_point(path):
+        raise ExportError(f"NotebookLM transaction {label} is a symlink or reparse point")
+    if not path.exists():
+        return
+    if not path.is_dir():
+        raise ExportError(f"NotebookLM transaction {label} is not a directory")
+    shutil.rmtree(path)
+
+
+def _recover_pending_output_unlocked(output: Path) -> bool:
+    """Recover or finish an output transaction left by a killed process."""
+
+    journal = _output_transaction_path(output)
+    if _is_reparse_point(journal):
+        raise ExportError(f"NotebookLM transaction journal is a symlink or reparse point: {journal}")
+    if not journal.exists():
+        return False
+    if _is_reparse_point(output):
+        raise ExportError(f"output path is a symlink or reparse point: {output}")
+    try:
+        payload = json.loads(journal.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ExportError(f"unable to read NotebookLM transaction journal: {journal}") from exc
+    if not isinstance(payload, dict) or payload.get("version") != OUTPUT_TRANSACTION_VERSION:
+        raise ExportError(f"unsupported NotebookLM transaction journal: {journal}")
+    absolute = output.absolute()
+    if payload.get("output_name") != absolute.name:
+        raise ExportError(f"NotebookLM transaction output mismatch: {journal}")
+    parent = absolute.parent
+    stage = _output_transaction_sibling(
+        parent, payload.get("stage"), f"{absolute.name}.staging-", "stage"
+    )
+    backup = _output_transaction_sibling(
+        parent, payload.get("backup"), f"{absolute.name}.backup-", "backup"
+    )
+    phase = payload.get("phase")
+    if phase not in {"active", "committed"}:
+        raise ExportError(f"unsupported NotebookLM transaction phase: {phase!r}")
+    had_output = payload.get("had_output")
+    if not isinstance(had_output, bool):
+        raise ExportError(f"invalid NotebookLM transaction output state: {journal}")
+
+    if phase == "active":
+        if had_output and backup.exists():
+            _validate_output_tree(backup)
+            _remove_output_tree(output, "output")
+            os.replace(backup, output)
+        elif not had_output:
+            _remove_output_tree(output, "output")
+    elif not output.exists():
+        raise ExportError(
+            f"committed NotebookLM transaction has no output directory: {journal}"
+        )
+    else:
+        _validate_output_tree(output)
+
+    _remove_output_transaction_tree(stage, "stage")
+    _remove_output_transaction_tree(backup, "backup")
+    journal.unlink()
+    return True
+
+
+def _recover_pending_output(output: Path) -> bool:
+    output.absolute().parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with _OutputTransactionLock(_output_transaction_lock_path(output)):
+            return _recover_pending_output_unlocked(output)
+    except OSError as exc:
+        raise ExportError(f"unable to acquire NotebookLM transaction lock: {output}") from exc
 
 
 def previous_by_id(previous: dict[str, Any] | None, output: Path) -> dict[str, dict[str, Any]]:
@@ -1148,6 +1484,8 @@ def previous_by_id(previous: dict[str, Any] | None, output: Path) -> dict[str, d
         if not isinstance(item, dict) or not isinstance(item.get("logical_source_id"), str):
             continue
         entry = dict(item)
+        if "file" in entry:
+            entry["file"] = _validate_pack_file_path(entry["file"], output)
         if not entry.get("output_sha256") and isinstance(entry.get("file"), str):
             old_path = output / entry["file"]
             if old_path.is_file():
@@ -1159,7 +1497,9 @@ def previous_by_id(previous: dict[str, Any] | None, output: Path) -> dict[str, d
 def build_actions(
     current: list[dict[str, Any]], previous: dict[str, dict[str, Any]]
 ) -> dict[str, list[dict[str, Any]]]:
-    actions = {key: [] for key in ("added", "changed", "deleted", "unchanged")}
+    actions: dict[str, list[dict[str, Any]]] = {
+        key: [] for key in ("added", "changed", "deleted", "unchanged")
+    }
     current_ids = set()
     for item in current:
         source_id = item["logical_source_id"]
@@ -1249,56 +1589,103 @@ def _json_bytes(value: Any) -> bytes:
     )
 
 
-def commit_output(
+def _commit_output_unlocked(
     output: Path,
     files: dict[str, bytes],
     previous: dict[str, Any] | None,
 ) -> None:
-    if output.exists() and not output.is_dir():
-        raise ExportError(f"output path is not a directory: {output}")
+    _recover_pending_output_unlocked(output)
+    _validate_output_tree(output)
+    safe_files: dict[str, bytes] = {}
+    for relative, data in files.items():
+        safe_relative = _validate_pack_file_path(relative, output)
+        if safe_relative in safe_files:
+            raise ExportError(f"duplicate output file path after normalization: {relative!r}")
+        safe_files[safe_relative] = data
     parent = output.parent
     parent.mkdir(parents=True, exist_ok=True)
     stage: Path | None = Path(tempfile.mkdtemp(prefix=f"{output.name}.staging-", dir=parent))
-    backup: Path | None = None
+    backup = Path(tempfile.mkdtemp(prefix=f"{output.name}.backup-", dir=parent))
+    backup.rmdir()
+    journal = _output_transaction_path(output)
+    journal_created = False
+    had_output = output.exists()
+    assert stage is not None
+    stage_name = stage.name
+    backup_name = backup.name
     try:
         if output.is_dir():
             assert stage is not None
             shutil.copytree(output, stage, dirs_exist_ok=True)
         old_sources = {
-            item.get("file")
+            _validate_pack_file_path(item["file"], output)
             for item in (previous or {}).get("sources", [])
-            if isinstance(item, dict) and isinstance(item.get("file"), str)
+            if isinstance(item, dict) and "file" in item
         }
         for old_file in old_sources:
             assert stage is not None
             old_path = stage / old_file
             if old_path.is_file():
                 old_path.unlink()
-        for relative, data in files.items():
+        for relative, data in safe_files.items():
             assert stage is not None
             destination = stage / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
-        if output.exists():
-            backup = Path(tempfile.mkdtemp(prefix=f"{output.name}.backup-", dir=parent))
-            backup.rmdir()
+        _write_output_transaction(
+            journal,
+            {
+                "version": OUTPUT_TRANSACTION_VERSION,
+                "output_name": output.absolute().name,
+                "phase": "active",
+                "stage": stage_name,
+                "backup": backup_name,
+                "had_output": had_output,
+            },
+        )
+        journal_created = True
+        if had_output:
+            assert backup is not None
             os.replace(output, backup)
         assert stage is not None
         os.replace(stage, output)
         stage = None
-        if backup is not None and backup.exists():
-            shutil.rmtree(backup)
-            backup = None
+        _write_output_transaction(
+            journal,
+            {
+                "version": OUTPUT_TRANSACTION_VERSION,
+                "output_name": output.absolute().name,
+                "phase": "committed",
+                "stage": stage_name,
+                "backup": backup_name,
+                "had_output": had_output,
+            },
+        )
+        _recover_pending_output_unlocked(output)
+        journal_created = False
     except OSError as exc:
-        if not output.exists() and backup is not None and backup.exists():
-            os.replace(backup, output)
-            backup = None
+        if journal_created:
+            _recover_pending_output_unlocked(output)
+            journal_created = False
         raise ExportError(f"unable to commit NotebookLM output: {exc}") from exc
     finally:
-        if stage is not None and stage.exists():
+        if not journal_created and stage is not None and stage.exists():
             shutil.rmtree(stage, ignore_errors=True)
-        if backup is not None and backup.exists():
+        if not journal_created and backup is not None and backup.exists():
             shutil.rmtree(backup, ignore_errors=True)
+
+
+def commit_output(
+    output: Path,
+    files: dict[str, bytes],
+    previous: dict[str, Any] | None,
+) -> None:
+    output.absolute().parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with _OutputTransactionLock(_output_transaction_lock_path(output)):
+            _commit_output_unlocked(output, files, previous)
+    except OSError as exc:
+        raise ExportError(f"unable to acquire NotebookLM transaction lock: {output}") from exc
 
 
 def limits_payload(settings: Settings) -> dict[str, int]:
@@ -1434,6 +1821,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
 
 
 def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
+    _recover_pending_output(output)
     pages, initial_skipped, warnings = collect_wiki_pages(root)
     scan = scan_project(root, settings, pages)
     coverage = scan["required_documents"]
@@ -1579,19 +1967,39 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def apply_output_override(root: Path, settings: Settings, output: Path | None) -> Settings:
+    """Bind a CLI output override into the preflight configuration identity."""
+
+    if output is None:
+        return settings
+    if output.is_absolute():
+        candidate = output
+    else:
+        output_directory = validate_relative_config_path(output.as_posix(), root, "output")
+        candidate = root / Path(*PurePosixPath(output_directory).parts)
+    _reject_symlink_components(root, candidate, "output")
+    output_directory = repo_relative(candidate, root)
+    if output_directory == ".":
+        raise ExportError("output must be a child directory of repository root")
+    return replace(settings, output_directory=output_directory)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     configure_utf8_stdio()
     args = build_parser().parse_args(argv)
-    root = args.root.resolve()
-    if not root.is_dir():
-        print(json.dumps({"ok": False, "error": f"root is not a directory: {root}"}, ensure_ascii=False))
-        return 2
     try:
+        # Keep the caller-provided root lexical long enough to reject a root
+        # symlink/reparse point before resolve() can hide that boundary.
+        if _is_reparse_point(args.root):
+            raise ExportError(f"root must not be a symlink or reparse point: {args.root}")
+        root = args.root.resolve()
+        if not root.is_dir():
+            raise ExportError(f"root is not a directory: {root}")
         config_path = None
         if args.config:
             config_path = args.config if args.config.is_absolute() else root / args.config
-            config_path = config_path.resolve()
         settings = load_settings(root, config_path)
+        settings = apply_output_override(root, settings, args.output)
         if args.preflight:
             if args.preflight_id:
                 raise ExportError("--preflight-id is valid only with --apply")
@@ -1615,7 +2023,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "preflight is not ready to export; complete mandatory documents and resolve "
                     "deterministic Critical findings"
                 )
-            output = (root / args.output) if args.output else (root / settings.output_directory)
+            output = root / Path(*PurePosixPath(settings.output_directory).parts)
+            _reject_symlink_components(root, output, "output")
             output = output.resolve()
             output_relative = repo_relative(output, root)
             if output == root or output_relative == ".":

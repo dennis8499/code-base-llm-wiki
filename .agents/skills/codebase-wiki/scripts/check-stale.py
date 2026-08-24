@@ -7,13 +7,16 @@
 預設 wiki_dir 為 wiki/，repo_root 為當前目錄。
 """
 
+import argparse
 import pathlib
 import datetime as _datetime
 import hashlib
+import re
 import subprocess
 import sys
+from typing import Any
 
-from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+from frontmatter import configure_utf8_stdio, parse_frontmatter_text, validate_regular_tree
 
 
 DIGEST_EXCLUDED_PARTS = {
@@ -83,8 +86,16 @@ def latest_source_date(repo_root: pathlib.Path, source: str) -> _datetime.date |
         return None
 
 
+def _source_path(repo_root: pathlib.Path, source: str) -> pathlib.Path:
+    """Resolve a validated repo-relative source independent of host separators."""
+
+    normalized = source.replace("\\", "/").rstrip("/")
+    pure = pathlib.PurePosixPath(normalized)
+    return repo_root.joinpath(*pure.parts)
+
+
 def _source_files(repo_root: pathlib.Path, source: str) -> list[pathlib.Path]:
-    source_path = (repo_root / source.rstrip("/")).resolve()
+    source_path = _source_path(repo_root, source).resolve()
     try:
         source_path.relative_to(repo_root.resolve())
     except ValueError:
@@ -153,8 +164,9 @@ def compute_source_digest(repo_root: pathlib.Path, sources: list[str]) -> str:
 
 def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
     """檢查每個 wiki 頁面的 sources 是否仍存在。"""
+    validate_regular_tree(wiki_dir)
     md_files = sorted(wiki_dir.rglob("*.md"))
-    results = {"critical": [], "warning": [], "ok": []}
+    results: dict[str, list[Any]] = {"critical": [], "warning": [], "ok": []}
 
     dirty_paths = git_dirty_paths(repo_root)
     for fp in md_files:
@@ -186,23 +198,30 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
             pass
 
         for src in sources:
-            pure_source = pathlib.PurePath(src.replace("\\", "/")) if isinstance(src, str) else None
+            normalized_source = src.replace("\\", "/") if isinstance(src, str) else ""
+            pure_source = pathlib.PurePath(normalized_source) if isinstance(src, str) else None
             if (
                 not isinstance(src, str)
                 or not src.strip()
                 or pure_source is None
                 or pure_source.is_absolute()
                 or ".." in pure_source.parts
+                or re.fullmatch(r"[A-Za-z]:.*", normalized_source)
             ):
                 invalid.append(src)
                 continue
-            src_path = repo_root / src.rstrip("/")
+            src_path = _source_path(repo_root, src)
+            try:
+                src_path.resolve(strict=False).relative_to(repo_root.resolve())
+            except ValueError:
+                invalid.append(src)
+                continue
             # 檢查檔案或目錄是否存在
             if src_path.exists() or src_path.is_dir():
                 existing.append(src)
             else:
                 # 若路徑以 / 結尾，也嘗試不帶 / 的目錄
-                if (repo_root / src).exists():
+                if src_path.exists():
                     existing.append(src)
                 else:
                     missing.append(src)
@@ -254,16 +273,27 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
     return results
 
 
-def main():
+def main(argv: list[str] | None = None):
     configure_utf8_stdio()
-    wiki_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path("wiki")
-    repo_root = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else pathlib.Path(".")
+    parser = argparse.ArgumentParser(
+        prog="check-stale.py",
+        description="Check Wiki sources for missing or stale raw files.",
+    )
+    parser.add_argument("wiki_dir", nargs="?", type=pathlib.Path, default=pathlib.Path("wiki"))
+    parser.add_argument("repo_root", nargs="?", type=pathlib.Path, default=pathlib.Path("."))
+    args = parser.parse_args(argv)
+    wiki_dir = args.wiki_dir
+    repo_root = args.repo_root
 
     if not wiki_dir.is_dir():
         print(f"Error: wiki directory not found: {wiki_dir}", file=sys.stderr)
         sys.exit(1)
 
-    results = check_stale(wiki_dir, repo_root)
+    try:
+        results = check_stale(wiki_dir, repo_root)
+    except (OSError, UnicodeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(2)
 
     print("=" * 60)
     print("Wiki Stale Check Report")

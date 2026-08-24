@@ -3,7 +3,7 @@ name: wiki-query
 description: >
   Explicit delegation only. Answer codebase questions Wiki-first, verify
   evidence gaps from sources, and remain read-only.
-tools: [read, agent, search, execute]
+tools: [read, search]
 ---
 
 # Wiki Query — 知識查詢代理

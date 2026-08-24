@@ -10,7 +10,13 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from frontmatter import parse_frontmatter_text  # noqa: E402
-from common import audit_candidates, configure_stdio, parse_platform, repo_root  # noqa: E402
+from common import (  # noqa: E402
+    audit_candidates,
+    audit_path_is_safe,
+    configure_stdio,
+    parse_platform,
+    repo_root,
+)
 
 
 MAX_LINES = 30
@@ -22,11 +28,13 @@ GAP_PAGES = 5
 def recent_log_headings(log_path: Path) -> list[str]:
     if not log_path.is_file():
         return []
-    headings = [
-        line.strip()
-        for line in log_path.read_text(encoding="utf-8").splitlines()
-        if line.startswith("## [")
-    ]
+    if not audit_path_is_safe(log_path):
+        return []
+    try:
+        text = log_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return []
+    headings = [line.strip() for line in text.splitlines() if line.startswith("## [")]
     return headings[-RECENT_OPERATIONS:]
 
 
@@ -44,8 +52,19 @@ def build_message(root: Path) -> str:
     types: Counter[str] = Counter()
     statuses: Counter[str] = Counter()
     gaps: list[str] = []
+    readable_pages = 0
+    skipped_pages = 0
     for path in pages:
-        fm = parse_frontmatter_text(path.read_text(encoding="utf-8"))
+        if not audit_path_is_safe(path):
+            skipped_pages += 1
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            skipped_pages += 1
+            continue
+        readable_pages += 1
+        fm = parse_frontmatter_text(text)
         page_type = str(fm.get("type", "unknown"))
         status = str(fm.get("status", "unknown"))
         types[page_type] += 1
@@ -55,11 +74,13 @@ def build_message(root: Path) -> str:
 
     lines = [
         "## Wiki state",
-        f"- Pages: {len(pages)}",
+        f"- Pages: {readable_pages}",
         "- Types: " + (", ".join(f"{key}={value}" for key, value in sorted(types.items())) or "none"),
         "- Statuses: "
         + (", ".join(f"{key}={value}" for key, value in sorted(statuses.items())) or "none"),
     ]
+    if skipped_pages:
+        lines.append(f"- Skipped unsafe/unreadable pages: {skipped_pages}")
     if gaps:
         lines.append("- Stale/placeholders: " + ", ".join(gaps))
     recent = recent_log_headings(wiki / "log.md")
@@ -73,6 +94,9 @@ def build_message(root: Path) -> str:
 def write_audit(platform: str, message: str) -> str | None:
     errors: list[str] = []
     for target in audit_candidates(platform, "wiki-session-state.md"):
+        if not audit_path_is_safe(target):
+            errors.append(f"unsafe audit path: {target}")
+            continue
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(message, encoding="utf-8")

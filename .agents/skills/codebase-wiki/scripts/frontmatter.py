@@ -8,11 +8,46 @@ environment without requiring PyYAML.
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 import re
+import stat
 import sys
+from typing import Any
 
 
 FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
+
+
+def is_reparse_point(path: Path) -> bool:
+    """Detect symlinks and Windows reparse points without following them."""
+
+    try:
+        if path.is_symlink():
+            return True
+    except OSError:
+        return True
+    if os.name != "nt":
+        return False
+    try:
+        attributes = os.stat(path, follow_symlinks=False).st_file_attributes
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def validate_regular_tree(root: Path) -> None:
+    """Reject a directory tree containing links or Windows reparse points."""
+
+    if is_reparse_point(root):
+        raise OSError(f"directory must not be a symlink or reparse point: {root}")
+    if not root.is_dir():
+        raise OSError(f"directory is not a directory: {root}")
+    for path in root.rglob("*"):
+        if is_reparse_point(path):
+            raise OSError(f"directory tree must not contain symlink or reparse point: {path}")
 
 
 def _strip_quotes(value: str) -> str:
@@ -21,7 +56,7 @@ def _strip_quotes(value: str) -> str:
     return value
 
 
-def _parse_scalar(value: str):
+def _parse_scalar(value: str) -> Any:
     value = value.strip()
     if value == "[]":
         return []
@@ -33,12 +68,12 @@ def _parse_scalar(value: str):
     return _strip_quotes(value)
 
 
-def parse_frontmatter_text(text: str) -> dict:
+def parse_frontmatter_text(text: str) -> dict[str, Any]:
     match = FRONTMATTER_PATTERN.match(text)
     if not match:
         return {}
 
-    frontmatter: dict[str, object] = {}
+    frontmatter: dict[str, Any] = {}
     current_list_key: str | None = None
 
     for raw_line in match.group(1).splitlines():
@@ -73,7 +108,7 @@ def parse_frontmatter_text(text: str) -> dict:
     return frontmatter
 
 
-def configure_utf8_stdio():
+def configure_utf8_stdio() -> None:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")

@@ -244,6 +244,93 @@ class SampleContractTests(unittest.TestCase):
                                 f"{surface} {event_name}:\n"
                                 f"{command_result.stdout}{command_result.stderr}",
                             )
+                    else:
+                        copilot_hook_payloads = (
+                            (
+                                "wiki-session-init.json",
+                                "sessionStart",
+                                {},
+                                "sessionStart",
+                            ),
+                            (
+                                "wiki-write-guard.json",
+                                "preToolUse",
+                                {
+                                    "toolName": "Write",
+                                    "toolInput": {"filePath": "wiki/overview.md"},
+                                },
+                                "allow",
+                            ),
+                            (
+                                "wiki-write-guard.json",
+                                "preToolUse",
+                                {
+                                    "toolName": "Write",
+                                    "toolInput": {"filePath": "src/task_tracker/service.py"},
+                                },
+                                "deny",
+                            ),
+                            (
+                                "wiki-log-reminder.json",
+                                "postToolUse",
+                                {
+                                    "toolName": "Write",
+                                    "toolInput": {"filePath": "wiki/overview.md"},
+                                },
+                                "postToolUse",
+                            ),
+                        )
+                        for filename, event_name, payload, expectation in copilot_hook_payloads:
+                            hook_definition = json.loads(
+                                (
+                                    target
+                                    / ".github"
+                                    / "hooks"
+                                    / filename
+                                ).read_text(encoding="utf-8")
+                            )["hooks"][event_name][0]
+                            self.assertEqual(hook_definition["type"], "command")
+                            command = hook_definition["powershell"] if os.name == "nt" else hook_definition["bash"]
+                            self.assertNotIn("$(", command)
+                            self.assertNotIn("git rev-parse", command)
+                            if os.name == "nt":
+                                command = ["cmd.exe", "/d", "/s", "/c", command]
+                            else:
+                                command = ["/bin/sh", "-lc", command]
+                            command_result = subprocess.run(
+                                command,
+                                cwd=target,
+                                input=json.dumps(payload),
+                                check=False,
+                                capture_output=True,
+                                text=True,
+                                encoding="utf-8",
+                                errors="replace",
+                            )
+                            self.assertEqual(
+                                command_result.returncode,
+                                0,
+                                f"{surface} {filename} {event_name}:\n"
+                                f"{command_result.stdout}{command_result.stderr}",
+                            )
+                            hook_output = json.loads(command_result.stdout)
+                            if expectation == "allow":
+                                self.assertIn(
+                                    hook_output.get("permissionDecision", "allow"),
+                                    {"allow"},
+                                )
+                            elif expectation == "deny":
+                                self.assertEqual(hook_output["permissionDecision"], "deny")
+                            elif expectation == "sessionStart":
+                                self.assertEqual(
+                                    hook_output["hookSpecificOutput"]["hookEventName"],
+                                    "SessionStart",
+                                )
+                            else:
+                                self.assertEqual(
+                                    hook_output["hookSpecificOutput"]["hookEventName"],
+                                    "PostToolUse",
+                                )
 
                     platform = "codex" if surface == "codex" else "copilot"
                     hook = (

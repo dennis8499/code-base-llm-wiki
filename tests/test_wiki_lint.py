@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -15,6 +16,8 @@ from unittest import mock
 REPO_ROOT = Path(__file__).parents[1]
 SCRIPTS = REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+
+import frontmatter
 
 
 def load_script(name: str, filename: str):
@@ -45,7 +48,139 @@ def page(title: str, page_type: str, body: str = "") -> str:
     )
 
 
+def create_directory_reparse_point(link: Path, target: Path) -> None:
+    try:
+        os.symlink(target, link, target_is_directory=True)
+        return
+    except (OSError, NotImplementedError) as symlink_error:
+        if os.name != "nt":
+            raise symlink_error
+    result = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(link), str(target)],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if result.returncode != 0:
+        raise OSError(result.stderr or result.stdout or "unable to create directory junction")
+
+
 class WikiLintTests(unittest.TestCase):
+    def test_validate_frontmatter_cli_reports_success_failures_and_tree_errors(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wiki = root / "wiki"
+            wiki.mkdir()
+            (wiki / "index.md").write_text(page("Index", "index"), encoding="utf-8")
+
+            success_output = io.StringIO()
+            with redirect_stdout(success_output):
+                self.assertIsNone(VALIDATE.main([str(wiki)]))
+            self.assertIn("OK: validated 1 wiki page(s)", success_output.getvalue())
+
+            (wiki / "broken.md").write_text("not frontmatter\n", encoding="utf-8")
+            failure_output = io.StringIO()
+            with redirect_stdout(failure_output):
+                with self.assertRaises(SystemExit) as failed:
+                    VALIDATE.main([str(wiki)])
+            self.assertEqual(failed.exception.code, 1)
+            self.assertIn("FAILED: 1 issue(s)", failure_output.getvalue())
+
+            missing_error = io.StringIO()
+            with redirect_stderr(missing_error):
+                with self.assertRaises(SystemExit) as missing:
+                    VALIDATE.main([str(root / "missing")])
+            self.assertEqual(missing.exception.code, 1)
+            self.assertIn("wiki directory not found", missing_error.getvalue())
+
+            tree_error = io.StringIO()
+            with mock.patch.object(
+                VALIDATE,
+                "validate_regular_tree",
+                side_effect=OSError("unsafe tree"),
+            ), redirect_stderr(tree_error):
+                with self.assertRaises(SystemExit) as unsafe:
+                    VALIDATE.main([str(wiki)])
+            self.assertEqual(unsafe.exception.code, 2)
+            self.assertIn("unsafe tree", tree_error.getvalue())
+
+    def test_validate_frontmatter_rejects_invalid_utf8_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            wiki.mkdir()
+            (wiki / "index.md").write_bytes(b"\xff\xfe invalid utf-8")
+            error = io.StringIO()
+
+            with redirect_stderr(error):
+                with self.assertRaises(SystemExit) as failed:
+                    VALIDATE.main([str(wiki)])
+
+            self.assertEqual(failed.exception.code, 2)
+            self.assertIn("Error:", error.getvalue())
+            self.assertNotIn("Traceback", error.getvalue())
+
+    def test_rebuild_index_rejects_invalid_utf8_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            wiki.mkdir()
+            (wiki / "index.md").write_bytes(b"\xff\xfe invalid utf-8")
+            error = io.StringIO()
+
+            with redirect_stderr(error):
+                exit_code = REBUILD.main([str(wiki), "--check"])
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("Error:", error.getvalue())
+            self.assertNotIn("Traceback", error.getvalue())
+
+    def test_wiki_tools_reject_reparse_tree_before_reading_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            wiki.mkdir()
+            (wiki / "linked.md").write_text("outside\n", encoding="utf-8")
+
+            with mock.patch.object(
+                frontmatter,
+                "is_reparse_point",
+                side_effect=lambda path: path.name == "linked.md",
+            ):
+                with self.assertRaisesRegex(OSError, "symlink or reparse point"):
+                    frontmatter.validate_regular_tree(wiki)
+                with self.assertRaisesRegex(OSError, "symlink or reparse point"):
+                    LINT.lint_wiki(wiki, Path(directory))
+
+    def test_lint_cli_rejects_reparse_wiki_root_before_resolving(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            actual = root / "actual-wiki"
+            actual.mkdir()
+            linked = root / "wiki-link"
+            try:
+                create_directory_reparse_point(linked, actual)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"directory reparse point unavailable: {exc}")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPTS / "lint-wiki.py"),
+                    str(linked),
+                    "--repo-root",
+                    str(root),
+                    "--format",
+                    "json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("symlink or reparse point", result.stdout)
+
     def test_notebooklm_group_requires_kebab_case(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             wiki = Path(directory) / "wiki"
@@ -177,6 +312,31 @@ class WikiLintTests(unittest.TestCase):
             self.assertEqual(invalid["severity"], "critical")
             self.assertEqual(invalid["details"]["sources"], ["../outside.py"])
 
+    def test_windows_drive_source_is_rejected_by_frontmatter_and_lint(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wiki = root / "wiki"
+            wiki.mkdir()
+            drive_page = wiki / "drive.md"
+            drive_page.write_text(
+                page("Drive", "module").replace(
+                    "sources: []", "sources:\n  - C:/outside.py"
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertTrue(
+                any(
+                    "source must stay inside" in error
+                    for error in VALIDATE.validate_page(drive_page, wiki)
+                )
+            )
+            result = LINT.lint_wiki(wiki, root)
+            invalid = next(
+                item for item in result["findings"] if item["code"] == "invalid_source"
+            )
+            self.assertEqual(invalid["details"]["sources"], ["C:/outside.py"])
+
     def test_stale_source_has_stable_json_details(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -277,6 +437,26 @@ class WikiLintTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 1)
             self.assertIn("Wrong section for orders", output.getvalue())
+            self.assertEqual(index.read_bytes(), before)
+
+    def test_rebuild_index_rejects_reparse_tree_before_writing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            wiki.mkdir()
+            index = wiki / "index.md"
+            index.write_text(page("Index", "index"), encoding="utf-8")
+            before = index.read_bytes()
+            with mock.patch.object(
+                REBUILD,
+                "_is_reparse_point",
+                side_effect=lambda path: path == index,
+            ):
+                output = io.StringIO()
+                with redirect_stderr(output):
+                    exit_code = REBUILD.main([str(wiki)])
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("symlink or reparse point", output.getvalue())
             self.assertEqual(index.read_bytes(), before)
 
     def test_check_stale_cli_handles_invalid_sources(self) -> None:

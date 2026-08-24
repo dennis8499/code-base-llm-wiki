@@ -28,5 +28,7 @@ argument-hint: "指南主題，例如：本機開發環境設定、退款流程�
 
 - 寫清楚目標讀者、前置條件、步驟、常見問題與相關頁面。
 - 使用 `[[page-name]]` wikilink 與 source path 引用。
+- `frontmatter.sources` 只列真實 repo-relative raw source；Wiki 依賴放在
+  `derived_from`，沒有直接 raw evidence 時使用 `sources: []`。
 - 缺少可靠 evidence 時標示 gap，不得編造 setup commands、secrets、owners 或 runtime behavior。
 - 若使用 DB evidence，只能放正文 evidence block，不得放入 frontmatter `sources`。

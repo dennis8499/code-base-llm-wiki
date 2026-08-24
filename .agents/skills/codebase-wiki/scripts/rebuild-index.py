@@ -10,9 +10,12 @@
 
 import argparse
 from collections import defaultdict
+import os
 import pathlib
 import re
+import stat
 import sys
+from typing import TypedDict
 
 from frontmatter import configure_utf8_stdio, parse_frontmatter_text
 
@@ -56,7 +59,48 @@ MANAGED_START = "<!-- codebase-wiki:index:start -->"
 MANAGED_END = "<!-- codebase-wiki:index:end -->"
 
 
+def _is_reparse_point(path: pathlib.Path) -> bool:
+    """Detect symlinks and Windows junction/reparse points without following them."""
+
+    if path.is_symlink():
+        return True
+    if os.name != "nt":
+        return False
+    try:
+        attributes = os.stat(path, follow_symlinks=False).st_file_attributes
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def validate_wiki_tree(wiki_dir: pathlib.Path) -> None:
+    """Reject a Wiki tree that could make index reads or writes escape it."""
+
+    if _is_reparse_point(wiki_dir):
+        raise OSError(f"Wiki directory must not be a symlink or reparse point: {wiki_dir}")
+    if not wiki_dir.is_dir():
+        raise OSError(f"Wiki directory is not a directory: {wiki_dir}")
+    for path in wiki_dir.rglob("*"):
+        if _is_reparse_point(path):
+            raise OSError(f"Wiki tree must not contain symlink or reparse point: {path}")
+
+
+class WrongSection(TypedDict):
+    expected: str
+    actual: list[str]
+
+
+class IndexDifferences(TypedDict):
+    missing: set[str]
+    unknown: set[str]
+    wrong_section: dict[str, WrongSection]
+    duplicates: dict[str, list[str]]
+
+
 def expected_index_entries(wiki_dir: pathlib.Path) -> dict[str, str]:
+    validate_wiki_tree(wiki_dir)
     expected: dict[str, str] = {}
     for path in sorted(wiki_dir.rglob("*.md")):
         if path.name in SKIP_FILES:
@@ -88,7 +132,8 @@ def actual_index_entries(text: str) -> dict[str, list[str]]:
     return dict(entries)
 
 
-def check_index(wiki_dir: pathlib.Path) -> dict[str, object]:
+def check_index(wiki_dir: pathlib.Path) -> IndexDifferences:
+    validate_wiki_tree(wiki_dir)
     expected = expected_index_entries(wiki_dir)
     index_path = wiki_dir / "index.md"
     actual = (
@@ -96,8 +141,8 @@ def check_index(wiki_dir: pathlib.Path) -> dict[str, object]:
         if index_path.is_file()
         else {}
     )
-    wrong_section = {
-        target: {"expected": expected[target], "actual": sections}
+    wrong_section: dict[str, WrongSection] = {
+        target: {"expected": expected[target], "actual": list(sections)}
         for target, sections in actual.items()
         if target in expected and any(section != expected[target] for section in sections)
     }
@@ -114,6 +159,7 @@ def check_index(wiki_dir: pathlib.Path) -> dict[str, object]:
 
 def rebuild_index(wiki_dir: pathlib.Path) -> str:
     """更新受管索引區段，保留 frontmatter、前言與人工區段。"""
+    validate_wiki_tree(wiki_dir)
     sections: dict[str, list[str]] = {s: [] for s in TYPE_SECTIONS.values()}
 
     # 收集所有 .md 檔案
@@ -122,9 +168,7 @@ def rebuild_index(wiki_dir: pathlib.Path) -> str:
     for fp in md_files:
         if fp.name in SKIP_FILES:
             continue
-        rel = fp.relative_to(wiki_dir)
         fm = parse_frontmatter(fp)
-        title = fm.get("title", fp.stem)
         page_type = fm.get("type", "")
         status = fm.get("status", "active")
         page_name = fp.stem  # 用於 wikilink
@@ -198,33 +242,39 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: wiki directory not found: {wiki_dir}", file=sys.stderr)
         return 1
 
-    if args.check:
-        differences = check_index(wiki_dir)
-        if any(differences.values()):
-            missing = differences["missing"]
-            unknown = differences["unknown"]
-            wrong_section = differences["wrong_section"]
-            duplicates = differences["duplicates"]
-            if missing:
-                print("Missing from index: " + ", ".join(sorted(missing)))
-            if unknown:
-                print("Index targets without pages: " + ", ".join(sorted(unknown)))
-            for target, sections in sorted(wrong_section.items()):
-                print(
-                    f"Wrong section for {target}: expected {sections['expected']}; "
-                    f"found {', '.join(sections['actual'])}"
-                )
-            for target, sections in sorted(duplicates.items()):
-                print(f"Duplicate index entry for {target}: {', '.join(sections)}")
-            return 1
-        print(f"OK: {wiki_dir / 'index.md'} matches expected page/type entries")
-        return 0
+    try:
+        if args.check:
+            differences = check_index(wiki_dir)
+            if any(differences.values()):
+                missing = differences["missing"]
+                unknown = differences["unknown"]
+                wrong_section = differences["wrong_section"]
+                duplicates = differences["duplicates"]
+                if missing:
+                    print("Missing from index: " + ", ".join(sorted(missing)))
+                if unknown:
+                    print("Index targets without pages: " + ", ".join(sorted(unknown)))
+                for target, wrong in sorted(wrong_section.items()):
+                    print(
+                        f"Wrong section for {target}: expected {wrong['expected']}; "
+                        f"found {', '.join(wrong['actual'])}"
+                    )
+                for target, duplicate_sections in sorted(duplicates.items()):
+                    print(
+                        f"Duplicate index entry for {target}: {', '.join(duplicate_sections)}"
+                    )
+                return 1
+            print(f"OK: {wiki_dir / 'index.md'} matches expected page/type entries")
+            return 0
 
-    content = rebuild_index(wiki_dir)
-    index_path = wiki_dir / "index.md"
-    index_path.write_text(content, encoding="utf-8")
-    print(f"✅ index.md rebuilt at {index_path}")
-    return 0
+        content = rebuild_index(wiki_dir)
+        index_path = wiki_dir / "index.md"
+        index_path.write_text(content, encoding="utf-8")
+        print(f"✅ index.md rebuilt at {index_path}")
+        return 0
+    except (OSError, UnicodeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:4dfa7ce6abf7f58c6e1fbf4bed385306a1f9184da01449ebff9b1461849c6324
+source_digest: sha256:d47e9f30bf4378f7e4b8479beb76aa22a5ef414e05af3dc07a218f7ef61a14ec
 derived_from: []
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 notebooklm_group: project
@@ -38,6 +38,8 @@ NotebookLM delivery pack 是由 Schema/Workflow 產生的可審查交付物，�
 知識層：Agent 每次先安全掃描全專案，依功能補齊 Wiki，再將完整文件與精選 evidence
 寫入 `.notebooklm/`。Pack 只供手動上傳，包含 Markdown sources、manifest 與增量
 upload plan，預設不進 Git，也不會自動連線 NotebookLM。
+Exporter 在 canonicalize output path 前拒絕 output root 或其 parent components
+透過 symlink/reparse point 到達，避免 pack boundary 被繞過。
 
 ```text
 Schema instructions + Skill

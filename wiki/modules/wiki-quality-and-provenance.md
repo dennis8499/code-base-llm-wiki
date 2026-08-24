@@ -5,13 +5,18 @@ summary: 以 frontmatter、內容摘要、語意連結、受管索引與 append-
 notebooklm_group: function-wiki-quality
 sources:
   - .agents/skills/codebase-wiki/references/frontmatter-spec.md
+  - .agents/skills/codebase-wiki/scripts/frontmatter.py
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - .agents/skills/codebase-wiki/scripts/check-stale.py
+  - .agents/skills/codebase-wiki/scripts/wiki-stats.py
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/validate-log.py
-source_digest: sha256:7e9756993e5916ae1b5730a9523b70345aae713e304f85564504c0b5d87b564e
+  - .agents/skills/codebase-wiki/scripts/rebuild-index.py
+  - tests/test_wiki_lint.py
+  - tests/test_stale.py
+source_digest: sha256:d2629f680858749cb5471f89c358ddbdafb43199f3a9bb2e29686fcea9ec6188
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-23
 tags: [module, lint, provenance, frontmatter, freshness]
 status: active
 ---
@@ -23,6 +28,8 @@ status: active
 - 驗證頁面 type、路徑、日期、status 與型別特定 frontmatter。
 - 分離 raw `sources` 與 Wiki `derived_from`，並以 `source_digest` 偵測內容變更。
 - 檢查 missing/stale sources、broken/ambiguous wikilinks、真正 orphan 與 index completeness。
+- 檢查 `sources` 的實際解析路徑仍位於 repo root 內，拒絕 drive-qualified path 或逃逸到
+  repo 外的 symlink。
 - 維護 index 的 managed region，保留 marker 外的人工內容。
 - 驗證 log operation、日期、affected pages、Git baseline 與 append-only 契約。
 
@@ -41,7 +48,24 @@ Orphan inbound 不計 `index.md`、`log.md` 或自我連結。`source_digest` �
 
 - `validate-frontmatter.py` 驗證 `summary`、`derived_from` 與 digest 格式。
 - `check-stale.py` 對排序後 path/file hash records 建立 aggregate SHA-256。
+- `check-stale.py` 在 existence/digest 判定前驗證 source symlink containment。
+- `check-stale.py`、`validate-frontmatter.py` 與 `wiki-stats.py` 都提供標準
+  `--help` CLI；source directory 在沒有 Git metadata 時 fallback 到 filesystem scan。
+- `check-stale.py` 與 digest resolver 對 repo-relative source 正規化 `/` 與 `\\`
+  separators，讓同一 Wiki source 在 Windows/Linux host 維持一致。
 - `validate-log.py` 對新 contract marker 後的 entry 執行嚴格檢查，舊 entry 僅警告。
+- `validate-log.py` 也會在讀取前驗證 log parent tree 與 repo containment，直接 CLI
+  invocation 遇到 symlink/reparse 或 repo 外 path 會 fail closed。
+- CLI 會保留 lexical log path 到 validator 完成 regular-tree 檢查，避免 `resolve()`
+  先行隱藏 symlink/reparse parent。
+- `rebuild-index.py` 在讀取或寫入 managed index 前拒絕 Wiki tree 中的 symlink 或
+  Windows reparse point，避免 index write escape。
+- `frontmatter.py` 的 shared regular-tree guard 讓 stale、frontmatter、lint 與 stats
+  在讀取 Wiki pages 前拒絕 symlink/reparse tree，避免 health tools 跟隨外部頁面。
+- `lint-wiki.py` CLI 也在 `resolve()` 前驗證 caller-provided Wiki root，避免 CLI
+  canonicalization 繞過同一 regular-tree boundary。
+- `tests/test_stale.py` 與 `tests/test_wiki_lint.py` 也驗證 quality CLI 的成功、warning、
+  invalid input 與 unsafe-tree exit contracts，避免只測 library path 而漏掉使用者入口。
 
 ## Contradictions
 

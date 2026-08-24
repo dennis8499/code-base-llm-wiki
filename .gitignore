@@ -4,4 +4,14 @@
 .codex-hook-logs/
 dist/
 .notebooklm/
+.*.notebooklm-transaction.json
+.*.notebooklm-transaction.lock
+.*.notebooklm-transaction.*.tmp-*
+.*.codebase-wiki-install-transaction.json
+.*.codebase-wiki-install-transaction.lock
+.*.codebase-wiki-install-transaction.*.tmp-*
+*.staging-*/
+*.backup-*/
+codebase-wiki-stage-*/
+codebase-wiki-backup-*/
 __pycache__/

@@ -11,6 +11,7 @@ from typing import Any
 from common import (
     EDIT_TOOL_NAMES,
     audit_candidates,
+    audit_path_is_safe,
     configure_stdio,
     extract_paths,
     parse_platform,
@@ -28,6 +29,9 @@ def append_audit(platform: str, paths: list[str]) -> str | None:
     }
     errors: list[str] = []
     for target in audit_candidates(platform, "wiki-log-reminder.jsonl"):
+        if not audit_path_is_safe(target):
+            errors.append(f"unsafe audit path: {target}")
+            continue
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
             with target.open("a", encoding="utf-8") as handle:
@@ -42,10 +46,14 @@ def main() -> None:
     configure_stdio()
     platform = parse_platform()
     try:
-        payload: dict[str, Any] = json.load(sys.stdin)
+        loaded = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
         print("{}")
         return
+    if not isinstance(loaded, dict):
+        print("{}")
+        return
+    payload: dict[str, Any] = loaded
     tool_name = str(payload.get("tool_name") or payload.get("toolName") or "")
     if tool_name and tool_name not in EDIT_TOOL_NAMES:
         print("{}")

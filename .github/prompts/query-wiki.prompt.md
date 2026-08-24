@@ -17,11 +17,13 @@ argument-hint: "你想問的 codebase 問題，例如：登入流程在哪裡實
 
 ## 流程
 
-1. 讀取 `wiki/index.md` 定位相關頁面
-2. 讀取 1-5 個最相關的 wiki 頁面
-3. 若 wiki 內容不足，根據 `sources` 回溯原始碼
-4. 綜合回答，附上引用來源
-5. 依 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 判斷
+1. 載入 `.agents/skills/codebase-wiki/references/query-workflow.md` 與
+   `.agents/skills/codebase-wiki/references/follow-up-actions.md`。
+2. 讀取 `wiki/index.md` 定位相關頁面
+3. 讀取 1-5 個最相關的 wiki 頁面
+4. 若 wiki 內容不足，根據 `sources` 回溯原始碼
+5. 綜合回答，附上引用來源
+6. 依 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 判斷
    是否需要顯示有界的後續操作選項；本 Query 不寫檔、不委派、不自動
    Hand-Off
 

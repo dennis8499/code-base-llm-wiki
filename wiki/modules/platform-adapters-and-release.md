@@ -9,9 +9,10 @@ sources:
   - .github/workflows/ci.yml
   - tools/release.py
   - tests/test_release.py
-source_digest: sha256:7aaec254f70c82d158669d2580bde06ee0c8e0d25b33c20815a62b9d6d7241e4
+  - tests/test_contracts.py
+source_digest: sha256:a2020d6aab63860131f668f2488d7708145f56d7d0331a7959437eb97c7014b0
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [module, adapters, ci, release, parity]
 status: active
 ---
@@ -24,13 +25,28 @@ status: active
 - 以 `capabilities.json` contract version 3 描述十一個 operations 與 guard modes。
 - 在 Linux/Python 3.11、3.14 與 Windows/Python 3.11 執行完整回歸。
 - 以根 `VERSION` 作為產品版號唯一來源，產生可驗 hash 的 release assets。
+- release assets 排除 `.codex-hook-logs/`、`.github-hook-logs/` 等平台 fallback audit state、敏感 credentials/secrets/private-key path 與 repo 內自訂 output tree，並拒絕非排除路徑的 symlink/reparse-point source。
+- release builder 在建立或覆寫 artifact 前保留 lexical output boundary，拒絕 output
+  root、parent components 與既有 artifact entries 的 symlink/reparse point。
+- installer/NotebookLM 的 transaction journal、lock、stage、backup 與 temporary sibling
+  artifacts 也不會進 release archive。
+- Release manifest 的 repository owner/name 也採嚴格格式驗證，避免下載 URL 被輸入內容污染。
 - 在專案擁有者選定 LICENSE 前阻擋公開 release。
 
 ## Evidence
 
 - `parity-check.py` 驗證 operations、authorization、hooks、Codex 設定、明確 delegation 與 contract 3。
+- `tests/test_contracts.py` 固定 Copilot prompt 必須載入 authoritative workflow reference，並保留
+  index/log、confirmation、source schema 與 completion coupling。
+- `tests/test_contracts.py` 也固定 CI 的 Ubuntu 3.11/3.14、Windows 3.11 matrix，
+  以及 release validate/build/publish gate 宣告；這是 workflow contract evidence，不取代實際 runner。
 - `.github/workflows/ci.yml` 執行 unit、parity、frontmatter、stale、log、index 與 lint。
 - `tools/release.py` 在 validate/build 時呼叫 `validate_release_readiness()`。
+- `tools/release.py` 的 public CLI 先將 stdout/stderr 設為 UTF-8；
+  `tests/test_release.py` 以含中文 Windows 路徑的暫存 fixture 驗證 validate/build JSON
+  payload 不會因主控台編碼而失敗。
+- release CLI 對非 UTF-8 VERSION/history 或 filesystem failure 會回傳受控 validation
+  failure，不讓 UnicodeDecodeError/OSError 穿透成未格式化 traceback。
 - `docs/history/llm-wiki.md` 只保留原創摘要、作者與 upstream URL，不鏡像無授權全文。
 
 ## Contradictions

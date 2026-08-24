@@ -3,7 +3,7 @@ name: wiki-archaeologist
 description: >
   Explicit delegation only. Trace current code paths and non-destructive Git
   evidence for legacy behavior or design rationale.
-tools: [execute, read, edit, search]
+tools: [execute, read, search]
 ---
 
 # Wiki Archaeologist — 程式碼考古代理
@@ -23,4 +23,5 @@ tools: [execute, read, edit, search]
 ## 邊界
 
 - Raw sources 與 Git history 保持 read-only。
+- `execute` 只用於非破壞性 Git/history 或 read-only inspection 命令；Wiki persistence 交回父代理。
 - 設計意圖若無直接證據，標示為 inference 或 speculation。

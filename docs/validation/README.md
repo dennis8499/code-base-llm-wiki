@@ -31,7 +31,7 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 
 | 檢查 | 驗證內容 |
 | --- | --- |
-| Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract 與 NotebookLM full-scan/docs-first incremental export |
+| Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract、NotebookLM full-scan/docs-first incremental export、Wiki/CLI root、log regular-tree 與 malformed-state boundaries、process-kill recovery 與跨程序 transaction lock |
 | Parity | Copilot/Codex contract v3、guard modes、必要入口、移除舊 runtime references |
 | Frontmatter | 必填欄位、type、日期、status、raw/derived provenance 與 digest 格式 |
 | Stale source | source path、Git freshness 與 aggregate content digest |
@@ -56,6 +56,7 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 7. 確認 NotebookLM preflight 掃描所有可分享 runtime/docs/schema/config 且零寫入；確認後建立完整功能文件與本機 pack，第二次仍全量重掃並產生可操作的 diff plan。
 8. Query 對高價值結果顯示有界 follow-up 選項；簡單 Query 不顯示不必要選項。
 9. 選擇更新或修復後仍遵守 preview/confirmation；選擇暫不處理時不修改檔案。
+10. Installer 與 NotebookLM exporter 在受控 process-kill 後，下一次操作恢復舊內容並清理 transaction journal/stage/backup；另一個程序持鎖時，並行 writer fail closed。
 
 Agent 產出的自然語言不做 byte-for-byte golden comparison；驗收的是 evidence、結構、安全邊界與必要 artifact。
 
@@ -88,6 +89,7 @@ Copilot 與 Codex 各自重複三次以下情境，驗收 process invariants：
 - [ ] ChangeLog 已追加本次 durable behavior change。
 - [ ] 所有自動化檢查成功，或已明確記錄不可執行原因。
 - [ ] SessionStart context 不超過 30 行與 4 KiB UTF-8，且平台設定只引用 canonical hooks。
+- [ ] Copilot query/lint/archaeology profiles 不暴露直接 `edit`/`agent` tool；需要 shell 的 profile 僅依 instruction 執行 read-only checks/history，且 host permission/sandbox 已阻擋未核准 shell writes。
 - [ ] `VERSION` 使用穩定 `X.Y.Z`，且發佈 tag 嚴格符合 `vX.Y.Z`。
 - [ ] 專案擁有者已加入明確 LICENSE；未完成時 release readiness gate 必須阻擋。
 - [ ] Release assets 已通過 manifest 與 SHA-256 驗證，沒有把 logs/cache 打包。

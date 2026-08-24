@@ -12,7 +12,7 @@ import re
 import sys
 from typing import Any
 
-from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+from frontmatter import configure_utf8_stdio, parse_frontmatter_text, validate_regular_tree
 
 
 WIKILINK_PATTERN = re.compile(r"\[\[([^\]]+)\]\]")
@@ -59,6 +59,7 @@ def finding(
 
 
 def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
+    validate_regular_tree(wiki_dir)
     pages = sorted(wiki_dir.rglob("*.md"))
     findings: list[dict[str, Any]] = []
     validate = load_script("validate_frontmatter_for_lint", "validate-frontmatter.py")
@@ -278,12 +279,17 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     configure_utf8_stdio()
     args = build_parser().parse_args(argv)
-    wiki_dir = args.wiki_dir.resolve()
-    repo_root = args.repo_root.resolve()
-    if not wiki_dir.is_dir():
-        print(f"Wiki directory not found: {wiki_dir}", file=sys.stderr)
+    requested_wiki_dir = args.wiki_dir
+    if not requested_wiki_dir.is_dir():
+        print(f"Wiki directory not found: {requested_wiki_dir}", file=sys.stderr)
         return 2
     try:
+        # Validate the caller-provided lexical root before canonicalization;
+        # resolving first would let a symlink/reparse Wiki tree bypass the
+        # regular-tree boundary enforced by lint_wiki().
+        validate_regular_tree(requested_wiki_dir)
+        wiki_dir = requested_wiki_dir.resolve()
+        repo_root = args.repo_root.resolve()
         result = lint_wiki(wiki_dir, repo_root)
     except (OSError, RuntimeError, ValueError) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False))

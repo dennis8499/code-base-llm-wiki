@@ -29,6 +29,7 @@ argument-hint: "可選：補充範圍，例如：整體系統、src/auth/、結�
 ## 品質要求
 
 - frontmatter 使用 `type: synthesis` 與 `tags: [synthesis, system-analysis]`。
-- `sources` 只能列真實 repo-relative wiki/source 路徑。
+- `sources` 只能列真實 repo-relative raw source 路徑；Wiki 依賴請放在
+  `derived_from` 的 `[[wikilinks]]`，沒有直接 raw evidence 時使用 `sources: []`。
 - 不足章節要保留並標示 `待補` / `Gap`，不得編造。
 - 若使用 DB evidence，只能放正文 evidence block，不得放入 frontmatter `sources`。

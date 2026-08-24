@@ -13,6 +13,9 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
 是知識基線，不得作為 raw discovery 邊界；每次都必須重新建立完整安全範圍清單，
 但只增量更新真正改變或缺漏的 Wiki 知識。
 
+完整載入 `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md`，
+並以該 reference 作為 preflight、確認、文件優先與 pack completion criterion 的唯一來源。
+
 ## 流程
 
 1. 讀取 `wiki/index.md` 與全部 Wiki Markdown（`wiki/log.md` 只作歷史，不作

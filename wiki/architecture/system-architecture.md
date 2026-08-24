@@ -9,9 +9,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:44bca754ee93567830f4055376baa669ccda72765c91978cb65dd9c29be1dac7
+source_digest: sha256:fe78db4496eec3ea55e5582d4d724740f4ef0c1975f284b034711b74a074e1ef
 derived_from: ["[[overview]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -31,7 +31,7 @@ operations 與 authorization policy 由
 | 元件 | 職責 | 證據 |
 | --- | --- | --- |
 | Skill 與 references | 意圖路由、授權、不變量、完成條件 | `.agents/skills/codebase-wiki/SKILL.md` |
-| Installer v3 | dry-run、managed block、fingerprint manifest、原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
+| Installer v3 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
 | NotebookLM exporter | 全安全範圍盤點、preflight identity、文件優先 source pack | [[notebooklm-exporter]] |
@@ -50,8 +50,9 @@ User intent
 ```
 
 Installer 的資料流是 source framework → dry-run classification → staged writes →
-atomic replacement；遇到兩側同時變更時不寫入。NotebookLM 的資料流是 Wiki 與安全
-raw inventory → deterministic identity → apply 時重新掃描 → 原子替換本機 pack。
+transaction-journaled atomic replacement；遇到兩側同時變更時不寫入。NotebookLM 的資料流是先驗證
+Wiki regular tree，再讀取 Wiki 與安全 raw inventory → deterministic identity → apply 時重新掃描 → 檢查 output path 的
+symlink/reparse containment → 原子替換本機 pack。
 
 ## Deployment
 

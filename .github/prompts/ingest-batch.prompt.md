@@ -17,6 +17,8 @@ argument-hint: "目標路徑，例如：src/、services/ 或 packages/core"
 
 ## 流程
 
+0. 完整載入 `.agents/skills/codebase-wiki/references/ingest-workflow.md`；本入口代表
+   使用者已明確選擇 Batch Ingest，寫入只限於指定 scope。
 1. **掃描**目標路徑下所有子目錄和核心檔案
 2. **建立模組清單**並分析 import/export 依賴關係
 3. **排序**：被依賴最多的底層模組優先處理
@@ -28,7 +30,7 @@ argument-hint: "目標路徑，例如：src/、services/ 或 packages/core"
 5. **綜合階段**：
    - 建立/更新 `wiki/overview.md`
    - 建立 `wiki/architecture/` 頁面（若偵測到明確架構模式）
-6. **收尾**：更新 index.md、追加 log.md 條目、輸出最終摘要報告
+6. **收尾**：驗證 frontmatter/stale/lint，更新 index.md、追加一筆 log.md 條目、輸出最終摘要報告
 
 ## 輸出
 
@@ -51,3 +53,6 @@ argument-hint: "目標路徑，例如：src/、services/ 或 packages/core"
 
 - ...
 ```
+
+Raw sources 保持唯讀；所有 sources 必須是真實 repo-relative 路徑，Wiki 依賴使用
+`derived_from`。

@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:6561fb4f6b348b8d7bbe0a7b25bc96882fcbdc622570cc15bcc08801623887e2
+source_digest: sha256:a0b4932e546b5aabeef350613fe862dba5ccee5b13eed799dc77400ea2d36647
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -177,6 +177,9 @@ python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
 ```
+
+三個 path-based quality CLI 都接受標準 `--help`；`check-stale.py` 的 directory
+source 在沒有 Git metadata 時會 fallback 到 filesystem scan。
 
 Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不要以虛構 sources 或刪除 log 歷史規避檢查。
 

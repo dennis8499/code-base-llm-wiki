@@ -27,6 +27,9 @@ workflow、schema、template 與 hook logic 的共同來源。
 - Lint 先報告 findings，再確認 repairs。
 - NotebookLM export 每次以 Wiki 為基線做全專案安全 preflight；預覽功能 Ingest 並確認後才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。
 - Custom agents 是 explicit-delegation only；一般任務由目前 agent 完成。
+- `wiki-query` 只使用 `read/search`；`wiki-lint` 與 `wiki-archaeologist` 的
+  `execute` 只依 profile instruction 執行 read-only checks/history。由於 `execute`
+  對應 shell，host permission/sandbox 必須另外阻擋未核准的 shell writes。
 
 ## Copilot Adapter
 

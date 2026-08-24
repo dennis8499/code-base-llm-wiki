@@ -19,7 +19,10 @@ Installer allowlist 只包含 `.agents/skills/codebase-wiki/`，不會複製同�
 
 所有安裝與升級都先執行 dry-run。Contract v3 JSON 回應包含 `managed`、
 `changes`、`preserved`、`conflicts`、`obsolete_paths` 與 `applied`；只有
-`--apply` 且 `conflicts` 為空時才以 staged atomic write 套用。
+`--apply` 且 `conflicts` 為空時才以 staged atomic write 套用。Installer 會留下
+active/committed transaction journal；若程序在替換窗口終止，下一次 apply 會先恢復
+原檔並清理暫存 stage/backup。同一 target 的並行 apply 會由 sibling transaction lock
+序列化；若已有程序持鎖，後來的寫入會 fail closed，不會覆蓋前一個 journal。
 
 ### GitHub Copilot surface
 

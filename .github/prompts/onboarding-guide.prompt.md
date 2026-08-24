@@ -11,6 +11,9 @@ argument-hint: "可選：補充目標讀者，例如前端新人或維運工程�
 
 基於現有 wiki 內容，產出一份新人 Onboarding 指南。
 
+完整載入 `.agents/skills/codebase-wiki/references/guide-workflow.md`，並使用
+`.agents/skills/codebase-wiki/assets/guide-template.md` 作為頁面起點。
+
 ## 流程
 
 1. 讀取 `wiki/index.md` 了解目前 wiki 涵蓋的內容
@@ -38,3 +41,5 @@ argument-hint: "可選：補充目標讀者，例如前端新人或維運工程�
 - 大量使用 `[[wikilink]]` 連結到深入的 wiki 頁面
 - 步驟明確、可操作
 - 若 wiki 內容不足以產出某個段落，標註為 placeholder 並建議後續 ingest
+- Commands、runtime claims 與 frontmatter sources 必須有 evidence；Wiki 依賴使用
+  `derived_from`，完成後驗證 frontmatter、stale、lint、index 與一筆 `guide` log

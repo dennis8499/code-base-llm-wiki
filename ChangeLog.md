@@ -8,10 +8,111 @@
 
 ### Fixed
 
+- **Hook payload type safety**：PreToolUse 與 PostToolUse 對合法 JSON 但非 object
+  的 host payload 不再拋 `AttributeError`；write guard fail closed，log reminder
+  安全 no-op，並補上 regression coverage。
+- **Hook audit path safety**：SessionStart/PostToolUse audit writers 現在拒絕 repo
+  外、symlink 與 Windows reparse-point path，避免 audit state 跟隨連結寫出 framework root。
+- **Wiki read boundary and hook resilience**：Wiki stale/frontmatter/lint/stats tools
+  在讀取前拒絕 symlink/reparse tree，validate-log 也獨立驗證 log containment；
+  SessionStart 對 unsafe 或非 UTF-8 Wiki/log 檔案安全跳過並維持 bounded context，
+  補上 regression coverage。
+- **NotebookLM Wiki pre-read boundary**：exporter 在收集任何 Wiki page 前先驗證
+  regular tree，拒絕 symlink/reparse point，避免安全檢查前讀取外部內容；補上 invalid
+  external junction regression coverage。
+- **CLI root boundary parity**：lint 與 NotebookLM CLI 在 canonicalization 前拒絕使用者
+  提供的 symlink/reparse root，避免命令列入口繞過 regular-tree safety guard；補上兩個
+  root-level regression cases。
+- **Log CLI boundary parity**：validate-log CLI 保留 lexical log path 到 regular-tree
+  驗證完成，避免 symlink/reparse parent 在 canonicalization 後繞過 append-only guard；
+  補上直接 CLI regression。
+- **Exporter library root boundary**：NotebookLM page collection 也拒絕 symlink/reparse
+  project root，讓直接 library 呼叫與 CLI 的 repository boundary 保持一致。
+- **Malformed state fail-closed handling**：exporter、installer、Wiki validators 與 release
+  CLI 對非 UTF-8 config/manifest/journal/page state 回傳受控錯誤，不再讓 UnicodeDecodeError
+  穿透成 traceback；補上 exporter malformed-state regression。
+- **Framework license path parity**：framework guard allowlist 補上 `LICENSE.txt`，
+  與 release readiness 支援的三種 LICENSE 檔名一致。
+- **NotebookLM scale regression**：新增 500 個 synthetic module 的 full preflight/apply
+  regression，將大規模 Wiki 證據從一次性手動檢查提升為可重跑測試。
+- **Hook and quality CLI contract coverage**：補齊雙平台 hook payload/mode/error matrix
+  與 stale/frontmatter CLI exit-path regression，讓安全邊界與使用者入口都有直接測試。
+- **Release CLI encoding**：release validate/build CLI 強制 UTF-8 stdout/stderr，修正
+  Windows 非 ASCII workspace path 造成 JSON output decode failure 的跨平台問題。
+- **Atomic output recovery coverage**：補上 NotebookLM output replacement failure regression，
+  驗證舊 pack、manifest 與 source 在 commit 失敗後恢復，並清理暫存 stage/backup。
+- **Crash recovery journal**：installer 與 NotebookLM exporter 新增 active/committed
+  transaction journal，並以子程序終止測試驗證下一次操作能恢復未完成的 atomic replacement。
+- **Concurrent transaction protection**：installer 與 NotebookLM exporter 以 Windows
+  `msvcrt` / POSIX `fcntl` sibling lock 序列化同一 target/output 的 apply/commit；並行 writer
+  fail closed；release/export inventory、跨程序 regression 與 Git ignore 都排除 sibling recovery metadata。
+- **NotebookLM config boundary**：明確指定的 `--config` 現在在讀取前必須位於 Repo root
+  內，並拒絕 symlink/reparse path，避免設定檔讀取越過 exporter 的 repository boundary。
+- **Recovery artifact boundaries**：installer/exporter 的 stage、backup 與 journal temporary
+  artifacts 不再進入 NotebookLM evidence inventory 或 release archive，並加入 Git ignore
+  與 crash-window regression coverage。
+- **CI workflow contract coverage**：新增 regression 釘住 Linux/Windows Python matrix
+  與 release validate/build/publish gate，避免 workflow 宣告與產品契約漂移。
+- **Managed index write safety**：`rebuild-index.py` 在讀取或更新 index 前拒絕 Wiki
+  tree 的 symlink/reparse point，並以 structured error 結束，不跟隨連結寫出 Wiki root。
+- **Release output write safety**：release builder 保留 lexical output boundary，拒絕
+  output root、parent components 與既有 artifact symlink/reparse points，避免覆寫外部檔案。
+- **Installer managed-block idempotence**：修正空白 target 初次安裝後，`AGENTS.md`
+  managed block 因前後空白 canonicalization 不一致而在每次 plan 重複回報變更；補上
+  Codex/Copilot surface 的 zero-change regression coverage。
+- **NotebookLM sensitive-path scope**：敏感檔名判定改為只檢查 repo-relative components，
+  避免專案位於 `secrets` 或 `credentials` 父目錄時整體 evidence 被誤排除。
+- **Wiki severity documentation**：修正 System Analysis 對 stale source 嚴重度的描述，
+  與 check-stale/lint contract 一致區分全數缺失的 Critical 與部分缺失的 Warning。
+- **Installer target-root boundary**：CLI 在 canonicalization 前保留 lexical target root，
+  因此 target 本身是 symlink 或 Windows reparse point 時會 fail closed，不會繞過安全檢查。
+- **Static analysis cleanup**：移除 framework CLI/hook 的未使用 imports/locals 與
+  無效 f-string，保持 deterministic scripts 的 F-lint 為 clean。
+- **CLI contract hardening**：`check-stale.py`、`validate-frontmatter.py` 與
+  `wiki-stats.py` 現在支援標準 `--help`，並以 no-Git directory source fallback
+  regression test 固定離線/乾淨目錄行為。
+- **Release/export path safety**：release assets now exclude both platform hook
+  fallback audit directories; NotebookLM apply rejects previous-manifest file
+  paths that are absolute, traversal-based, or resolve outside the output pack.
+- **Security regression coverage**：新增 release audit-log exclusion 與 malicious
+  previous-manifest path 的回歸測試，確認失敗時不刪除輸出目錄外檔案。
+- **Symlink boundary hardening**：Installer、release builder 與 stale checker 對跨 root
+  的 symlink path fail closed，並加入對應的 regression coverage。
+- **Windows reparse boundary hardening**：Exporter output、Installer target/source 與
+  release source 也辨識 directory junction/reparse point，不讓 `Path.is_symlink()` 的
+  Windows 差異繞過 path boundary。
+- **Pack and release input validation**：NotebookLM commit output keys、既有 output tree
+  與 Installer framework source symlink 均 fail closed；release repository owner/name
+  只接受安全的 `OWNER/NAME` 元件。
+- **Explicit exporter configuration**：明確指定不存在的 `--config` 檔案會 fail closed，
+  不再靜默套用 exporter 預設值。
+- **Cross-platform path validation**：Wiki source、hook guard 與 installer target state
+  統一正規化 separator 並拒絕 Windows drive-qualified/traversal path，避免在 Linux host
+  被誤判為 repo-relative。
+- **Exporter identity binding**：CLI `--output` 會納入 NotebookLM preflight identity，
+  並提前拒絕 repo root 本身或外部輸出路徑。
+- **Exporter output symlink boundary**：在 canonicalize output path 前拒絕 output root
+  或其既有 parent components 的 symlink，避免繞過 pack boundary。
+- **Exporter limit enforcement**：無法在設定 byte/word limits 內安全切分的 UTF-8
+  內容會在 commit 前 fail closed，不再產生超限 chunk。
+- **Sensitive path exclusion**：NotebookLM scan 會檢查完整路徑元件，連同 `secrets/`、
+  `credentials/` 等敏感目錄下的檔案一併排除。
+- **Release artifact isolation**：release builder 排除 `.env`、credentials/secrets、private-key
+  paths 與 repo 內自訂 output tree，避免敏感資料或既有產物被重複封裝。
+- **Generated audit isolation**：NotebookLM scan 與 release builder 一致排除兩平台 fallback
+  hook audit directories，避免本機產生狀態進入 evidence 或 release assets。
 - **Codex lifecycle 與設定契約**：SessionStart now covers `clear`/`compact`，改用
   `max_concurrent_threads_per_session`，parity check 驗證 canonical 設定與 compact context。
 - **唯讀 agent 邊界**：Codex query、lint、archaeology agents 明確設定
   `sandbox_mode = "read-only"`，並將修復交回父 agent 或 write-capable workflow。
+- **Copilot delegated tool boundary**：query 不再暴露 shell/agent；lint 與 archaeology
+  不再暴露直接 edit，並由 parity 與 contract tests 固定 read-only tool surface。
+- **Copilot shell boundary documented**：明確記錄 `execute` 對應 shell，profile instruction
+  不是技術 sandbox；實際唯讀保證仍需 host permission/sandbox smoke。
+- **Prompt workflow binding**：Copilot ingest/query/lint/ADR/guide/synthesis/SA/export
+  entrypoints 明確載入 authoritative references，並由 contract test 固定授權與 index/log coupling。
+- **Cross-platform source paths**：stale checker 與 aggregate digest 會正規化 Windows-style
+  repo-relative separators，避免在 Linux CI 將合法 Wiki sources 誤判為 missing。
 - **Hook 與 exporter 回歸**：補上真實 apply-patch payload、nested hook output、symlink
   path escape、200-page lint regression，以及 NotebookLM preflight coverage status。
 - **跨平台驗證**：CI 將 Windows Python 3.11 提升為完整 suite，並 compile 所有 Skill scripts/hooks。

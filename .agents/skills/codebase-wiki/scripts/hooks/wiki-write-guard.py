@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
 from typing import Any
 
@@ -37,6 +36,7 @@ FRAMEWORK_ROOT_FILES = {
     "codex.md",
     "license",
     "license.md",
+    "license.txt",
     "readme.md",
     "version",
 }
@@ -129,10 +129,14 @@ def main() -> None:
     configure_stdio()
     platform = parse_platform()
     try:
-        payload: dict[str, Any] = json.load(sys.stdin)
+        loaded = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
         respond_deny("Write target could not be parsed; the Wiki guard failed closed.")
         return
+    if not isinstance(loaded, dict):
+        respond_deny("Write hook input must be a JSON object; the Wiki guard failed closed.")
+        return
+    payload: dict[str, Any] = loaded
     tool_name = str(payload.get("tool_name") or payload.get("toolName") or "")
     if tool_name and tool_name not in EDIT_TOOL_NAMES:
         print("{}")

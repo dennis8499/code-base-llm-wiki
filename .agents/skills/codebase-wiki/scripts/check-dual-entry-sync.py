@@ -11,7 +11,9 @@ semantic check.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import pathlib
+from typing import cast
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[4]
@@ -25,7 +27,7 @@ def main() -> None:
         "__name__": "__parity_check__",
     }
     exec(compile(parity_script.read_text(encoding="utf-8"), str(parity_script), "exec"), namespace)
-    result = namespace["main"]
+    result = cast(Callable[[], int], namespace["main"])
     raise SystemExit(result())
 
 

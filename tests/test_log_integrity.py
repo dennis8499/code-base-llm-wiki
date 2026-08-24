@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).parents[1]
@@ -39,7 +41,76 @@ def log_text(entry: str, last_updated: str = "2026-08-21") -> str:
     )
 
 
+def create_directory_reparse_point(link: Path, target: Path) -> None:
+    try:
+        os.symlink(target, link, target_is_directory=True)
+        return
+    except (OSError, NotImplementedError) as symlink_error:
+        if os.name != "nt":
+            raise symlink_error
+    result = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(link), str(target)],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if result.returncode != 0:
+        raise OSError(result.stderr or result.stdout or "unable to create directory junction")
+
+
 class LogIntegrityTests(unittest.TestCase):
+    def test_log_validator_rejects_unsafe_tree_before_reading(self) -> None:
+        validator = load_validator()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wiki = root / "wiki"
+            wiki.mkdir()
+            log = wiki / "log.md"
+            log.write_text(log_text(""), encoding="utf-8")
+            with mock.patch.object(
+                validator,
+                "validate_regular_tree",
+                side_effect=OSError("symlink or reparse point"),
+            ):
+                result = validator.validate_log(log, root)
+
+            self.assertFalse(result["ok"])
+            self.assertIn("unsafe Wiki log path", result["errors"][0])
+
+    def test_log_cli_rejects_reparse_parent_before_resolving(self) -> None:
+        load_validator()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            actual = root / "actual-wiki"
+            actual.mkdir()
+            (actual / "log.md").write_text(log_text(""), encoding="utf-8")
+            linked = root / "wiki-link"
+            try:
+                create_directory_reparse_point(linked, actual)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"directory reparse point unavailable: {exc}")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPTS / "validate-log.py"),
+                    str(linked / "log.md"),
+                    "--repo-root",
+                    str(root),
+                    "--format",
+                    "json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("unsafe Wiki log path", result.stdout)
+
     def test_strict_entry_requires_resolvable_affected_pages(self) -> None:
         validator = load_validator()
         with tempfile.TemporaryDirectory() as directory:

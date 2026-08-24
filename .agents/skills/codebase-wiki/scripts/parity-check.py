@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
-import sys
+import re
 import tomllib
+from typing import cast
 
 
 EXPECTED_OPERATIONS = {
@@ -59,6 +61,30 @@ FOLLOW_UP_ADAPTERS = (
     ".codex/agents/wiki-lint.toml",
     "Codex.md",
 )
+COPILOT_READ_ONLY_TOOL_POLICY = {
+    "wiki-query.agent.md": ({"read", "search"}, {"agent", "edit", "execute"}),
+    "wiki-lint.agent.md": ({"execute", "read", "search"}, {"agent", "edit"}),
+    "wiki-archaeologist.agent.md": (
+        {"execute", "read", "search"},
+        {"agent", "edit"},
+    ),
+}
+
+
+def copilot_agent_tools(text: str) -> set[str] | None:
+    """Parse the small tools list used by Copilot agent frontmatter."""
+
+    match = re.search(r"(?ms)^---\s*\n(.*?)\n---\s*\n", text)
+    if not match:
+        return None
+    tools_match = re.search(r"(?m)^tools:\s*\[([^]]*)\]\s*$", match.group(1))
+    if not tools_match:
+        return None
+    return {
+        item.strip().strip("\"'")
+        for item in tools_match.group(1).split(",")
+        if item.strip()
+    }
 
 
 def main() -> int:
@@ -238,13 +264,32 @@ def main() -> int:
             ):
                 issues.append(f"agent is missing explicit-delegation marker: {path.relative_to(root)}")
 
+    for filename, (required, forbidden) in COPILOT_READ_ONLY_TOOL_POLICY.items():
+        path = root / ".github" / "agents" / filename
+        tools = copilot_agent_tools(path.read_text(encoding="utf-8")) if path.is_file() else None
+        if tools is None:
+            issues.append(f"Copilot read-only agent has no parseable tools list: {path.relative_to(root)}")
+            continue
+        missing = sorted(required - tools)
+        exposed = sorted(forbidden & tools)
+        if missing:
+            issues.append(
+                f"Copilot read-only agent missing tools in {path.relative_to(root)}: {', '.join(missing)}"
+            )
+        if exposed:
+            issues.append(
+                f"Copilot read-only agent exposes forbidden tools in {path.relative_to(root)}: {', '.join(exposed)}"
+            )
+
     installer_namespace: dict[str, object] = {
         "__file__": str(root / ".agents/skills/codebase-wiki/scripts/install-framework.py"),
         "__name__": "__installer_parity__",
     }
     installer_path = root / ".agents/skills/codebase-wiki/scripts/install-framework.py"
     exec(compile(installer_path.read_text(encoding="utf-8"), str(installer_path), "exec"), installer_namespace)
-    surface_files = installer_namespace["_surface_files"]
+    surface_files = cast(
+        Callable[..., list[tuple[Path, str]]], installer_namespace["_surface_files"]
+    )
     for surface in ("copilot", "codex"):
         planned = [relative for _, relative in surface_files(root, surface, "install")]
         leaked = [

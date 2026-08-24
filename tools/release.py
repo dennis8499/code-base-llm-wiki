@@ -8,6 +8,7 @@ release workflow has no project-specific dependency installation step.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import io
 import json
@@ -15,6 +16,8 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import stat
+import sys
 import tarfile
 import zipfile
 import gzip
@@ -33,11 +36,36 @@ EXCLUDED_PARTS = {
     ".venv",
     "__pycache__",
     "cache",
+    ".codex-hook-logs",
+    ".github-hook-logs",
     "dist",
     "logs",
     ".notebooklm",
 }
+EXCLUDED_PARTS_LOWER = {value.lower() for value in EXCLUDED_PARTS}
+GENERATED_SUFFIXES = (
+    ".notebooklm-transaction.json",
+    ".notebooklm-transaction.lock",
+)
+GENERATED_TRANSACTION_MARKERS = (
+    ".codebase-wiki-install-transaction.",
+    ".notebooklm-transaction.",
+)
+SENSITIVE_NAMES = {
+    ".env",
+    ".npmrc",
+    "credentials.json",
+    "service-account.json",
+}
+SENSITIVE_SUFFIXES = (".pem", ".p12", ".pfx", ".key")
+SENSITIVE_PATTERNS = ("*.env", ".env.*", "*credential*", "*secret*", "id_rsa*")
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def configure_utf8_stdio() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
 
 
 class ReleaseError(ValueError):
@@ -114,7 +142,12 @@ def _repository_from_git(root: Path) -> str:
 
 def _normalize_repository(repository: str) -> str:
     normalized = repository.strip().strip("/").removesuffix(".git")
-    if not re.fullmatch(r"[^/]+/[^/]+", normalized):
+    parts = normalized.split("/")
+    component_pattern = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+    if (
+        len(parts) != 2
+        or any(part in {".", ".."} or not component_pattern.fullmatch(part) for part in parts)
+    ):
         raise ReleaseError(f"repository must be OWNER/NAME, got {repository!r}")
     return normalized
 
@@ -124,15 +157,113 @@ def repository_name(root: Path = REPO_ROOT, repository: str | None = None) -> st
     return _normalize_repository(value) if value else _repository_from_git(root)
 
 
-def release_files(root: Path = REPO_ROOT) -> list[Path]:
+def _is_sensitive_path(relative_parts: Sequence[str]) -> bool:
+    for part in relative_parts:
+        component = part.lower()
+        if component in SENSITIVE_NAMES or component.endswith(SENSITIVE_SUFFIXES):
+            return True
+        if any(fnmatch.fnmatch(component, pattern) for pattern in SENSITIVE_PATTERNS):
+            return True
+    return False
+
+
+def _is_generated_transaction_path(relative_parts: Sequence[str]) -> bool:
+    for part in relative_parts:
+        component = part.lower()
+        if component.startswith(("codebase-wiki-stage-", "codebase-wiki-backup-")):
+            return True
+        if ".staging-" in component or ".backup-" in component:
+            return True
+        if any(marker in component for marker in GENERATED_TRANSACTION_MARKERS):
+            return True
+    return False
+
+
+def _is_reparse_point(path: Path) -> bool:
+    """Detect symlinks and Windows junction/reparse points without following them."""
+
+    if path.is_symlink():
+        return True
+    if os.name != "nt":
+        return False
+    try:
+        attributes = os.stat(path, follow_symlinks=False).st_file_attributes
+    except FileNotFoundError:
+        return False
+    except OSError as exc:
+        raise ReleaseError(f"unable to inspect release path boundary: {path}: {exc}") from exc
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def _validate_output_path(output: Path) -> None:
+    """Reject output paths that reach their destination through a link."""
+
+    lexical = Path(os.path.abspath(output))
+    current = Path(lexical.anchor) if lexical.anchor else Path()
+    for component in lexical.parts:
+        if component == lexical.anchor:
+            continue
+        current /= component
+        if _is_reparse_point(current):
+            raise ReleaseError(
+                f"release output must not contain symlink or reparse point: {current}"
+            )
+
+
+def _validate_output_tree(output: Path) -> None:
+    """Reject existing output entries that could redirect artifact writes."""
+
+    if _is_reparse_point(output):
+        raise ReleaseError(f"release output must not be a symlink or reparse point: {output}")
+    if not output.exists():
+        return
+    if not output.is_dir():
+        raise ReleaseError(f"release output is not a directory: {output}")
+    for path in output.rglob("*"):
+        if _is_reparse_point(path):
+            raise ReleaseError(
+                f"release output must not contain symlink or reparse point: {path}"
+            )
+
+
+def release_files(root: Path = REPO_ROOT, output: Path | None = None) -> list[Path]:
     """Return deterministic release files while excluding generated state."""
+
+    root = root.resolve()
+    output_root: Path | None = None
+    if output is not None:
+        output_root = output.resolve(strict=False)
+        if output_root == root:
+            raise ReleaseError("release output must be outside the repository root")
+        try:
+            output_root.relative_to(root)
+        except ValueError:
+            output_root = None
 
     files: list[Path] = []
     for path in sorted(root.rglob("*")):
-        if not path.is_file():
-            continue
         relative_parts = path.relative_to(root).parts
-        if any(part in EXCLUDED_PARTS for part in relative_parts):
+        if output_root is not None:
+            try:
+                path.relative_to(output_root)
+            except ValueError:
+                pass
+            else:
+                continue
+        if any(part.lower() in EXCLUDED_PARTS_LOWER for part in relative_parts):
+            continue
+        if _is_generated_transaction_path(relative_parts):
+            continue
+        if path.name.lower().endswith(GENERATED_SUFFIXES):
+            continue
+        if _is_sensitive_path(relative_parts):
+            continue
+        if _is_reparse_point(path):
+            relative = path.relative_to(root).as_posix()
+            raise ReleaseError(
+                f"release source must not contain symlink or reparse point: {relative}"
+            )
+        if not path.is_file():
             continue
         files.append(path)
     return files
@@ -180,11 +311,18 @@ def build_release(
     repository: str | None = None,
 ) -> dict[str, object]:
     validate_release_readiness(root)
+    root = root.resolve()
+    _validate_output_path(output)
+    output = Path(os.path.abspath(output))
+    _validate_output_tree(output)
+    output = output.resolve(strict=False)
+    if output == root:
+        raise ReleaseError("release output must be outside the repository root")
     version = read_version(root)
     tag = expected_tag(version)
     repo = repository_name(root, repository)
     output.mkdir(parents=True, exist_ok=True)
-    files = release_files(root)
+    files = release_files(root, output)
 
     zip_path = output / ARCHIVE_NAMES[0]
     tar_path = output / ARCHIVE_NAMES[1]
@@ -248,6 +386,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    configure_utf8_stdio()
     args = build_parser().parse_args(argv)
     try:
         if args.action == "validate":
@@ -255,8 +394,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             validate_release_readiness()
             payload = {"ok": True, "version": version, "tag": args.tag}
         else:
-            payload = build_release(args.output.resolve(), repository=args.repository)
-    except ReleaseError as exc:
+            payload = build_release(args.output.absolute(), repository=args.repository)
+    except (ReleaseError, OSError, UnicodeError) as exc:
         print(f"release validation failed: {exc}")
         return 2
 

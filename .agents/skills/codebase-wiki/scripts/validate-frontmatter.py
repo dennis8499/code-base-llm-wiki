@@ -11,12 +11,13 @@ existence is covered by check-stale.py.
 from __future__ import annotations
 
 import datetime as _dt
+import argparse
 import pathlib
 import re
 import sys
 from typing import Any
 
-from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+from frontmatter import configure_utf8_stdio, parse_frontmatter_text, validate_regular_tree
 
 
 REQUIRED_FIELDS = {"title", "type", "sources", "last_updated", "tags", "status"}
@@ -103,7 +104,11 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
                 errors.append(f"{rel}: every sources entry must be a non-empty repo-relative string")
                 continue
             source_path = pathlib.PurePosixPath(source.replace("\\", "/"))
-            if source_path.is_absolute() or ".." in source_path.parts:
+            if (
+                source_path.is_absolute()
+                or ".." in source_path.parts
+                or re.fullmatch(r"[A-Za-z]:.*", source_path.as_posix())
+            ):
                 errors.append(f"{rel}: source must stay inside the repository: {source!r}")
             elif source_path.parts and source_path.parts[0].lower() == "wiki":
                 errors.append(
@@ -181,16 +186,32 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
     return errors
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     configure_utf8_stdio()
-    wiki_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path("wiki")
+    parser = argparse.ArgumentParser(
+        prog="validate-frontmatter.py",
+        description="Validate frontmatter and Wiki page placement.",
+    )
+    parser.add_argument("wiki_dir", nargs="?", type=pathlib.Path, default=pathlib.Path("wiki"))
+    args = parser.parse_args(argv)
+    wiki_dir = args.wiki_dir
     if not wiki_dir.is_dir():
         print(f"Error: wiki directory not found: {wiki_dir}", file=sys.stderr)
         sys.exit(1)
 
+    try:
+        validate_regular_tree(wiki_dir)
+    except (OSError, UnicodeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(2)
+
     all_errors: list[str] = []
-    for path in sorted(wiki_dir.rglob("*.md")):
-        all_errors.extend(validate_page(path, wiki_dir))
+    try:
+        for path in sorted(wiki_dir.rglob("*.md")):
+            all_errors.extend(validate_page(path, wiki_dir))
+    except (OSError, UnicodeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(2)
 
     if all_errors:
         print("Wiki Frontmatter Validation Report")

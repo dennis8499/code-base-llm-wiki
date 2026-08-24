@@ -11,7 +11,11 @@ import re
 import subprocess
 from typing import Any
 
-from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+from frontmatter import (
+    configure_utf8_stdio,
+    parse_frontmatter_text,
+    validate_regular_tree,
+)
 
 
 ALLOWED_OPERATIONS = {
@@ -56,10 +60,30 @@ def _baseline_body(log_path: Path, repo_root: Path) -> str | None:
 def validate_log(log_path: Path, repo_root: Path) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
+    try:
+        validate_regular_tree(log_path.parent)
+        log_path.resolve(strict=False).relative_to(repo_root.resolve(strict=False))
+    except (OSError, ValueError) as exc:
+        return {
+            "ok": False,
+            "errors": [f"unsafe Wiki log path: {exc}"],
+            "warnings": [],
+            "entries": 0,
+            "contract_marker": False,
+        }
     if not log_path.is_file():
         return {"ok": False, "errors": [f"missing Wiki log: {log_path}"], "warnings": [], "entries": 0}
 
-    text = log_path.read_text(encoding="utf-8")
+    try:
+        text = log_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return {
+            "ok": False,
+            "errors": [f"unable to read Wiki log: {exc}"],
+            "warnings": [],
+            "entries": 0,
+            "contract_marker": False,
+        }
     body = _body(text)
     marker_position = body.find(CONTRACT_MARKER)
     headings = list(HEADING_PATTERN.finditer(body))
@@ -137,7 +161,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
-    result = validate_log(args.log_path.resolve(), args.repo_root.resolve())
+    # Preserve the caller-provided lexical log path until validate_log() has
+    # checked its parent tree; resolving first would hide a symlink/reparse
+    # parent from the append-only boundary check.
+    result = validate_log(args.log_path, args.repo_root)
     if args.format == "json":
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:

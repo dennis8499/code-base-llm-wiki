@@ -11,6 +11,9 @@ argument-hint: "可選：補充分析主題名稱，例如：登入流程跨模�
 
 將當前對話中的重要分析結果存入 `wiki/synthesis/`，讓探索性查詢的洞察能複利累積。
 
+完整載入 `.agents/skills/codebase-wiki/references/synthesis-workflow.md` 與
+`.agents/skills/codebase-wiki/references/frontmatter-spec.md`。
+
 **分析主題**：${input:topicName:（若未提供，請從對話內容自動推導）}
 
 ## 流程

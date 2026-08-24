@@ -9,9 +9,11 @@ sources:
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:262c00b2fd9e02da1b11a9a65074d31c74f1e8506629ba14fffe6e9ab1748bab
+  - tests/test_export_notebooklm.py
+  - tests/test_wiki_scale.py
+source_digest: sha256:58c98c4dd8eb19a235472a874d39e0b32bf08edaafee380216f123a691d88f0c
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 tags: [synthesis, system-analysis, notebooklm]
 status: active
 ---
@@ -40,9 +42,9 @@ status: active
 | APIs and interfaces | covered | CLI 與 hook contracts |
 | Data model and data flow | covered | frontmatter、manifest、preflight、install state |
 | External integrations | partial | Codex/Copilot adapter covered；NotebookLM 僅離線 |
-| Security and permissions | covered | authorization、guard、untrusted evidence、secret exclusions |
+| Security and permissions | partial | authorization、guard、untrusted evidence、secret exclusions；Copilot shell permission 需 host 驗證 |
 | Deployment and operations | covered | dependency-free CLI、CI、release workflow |
-| Non-functional requirements | partial | correctness/atomicity 與 200-page lint regression covered；500+ pages benchmark gap |
+| Non-functional requirements | partial | correctness/atomicity、200-page lint 與 500 個 synthetic module 的 Wiki full preflight/apply regression covered；query benchmark gap |
 | Errors and failure modes | covered | conflicts、stale、invalid ID、limit/atomic failures |
 | Risks and technical debt | covered | licensing、semantic review、host variation |
 
@@ -130,9 +132,20 @@ source coverage。詳見 [[system-architecture]]。
 
 - `capabilities.json` 將 read-only、confirm、explicit request 與 apply flag 分開；Codex
   read-only agents 另以 sandbox 設定加固。
+- Wiki quality checks 對 repo-relative source path 正規化 Windows/Linux separators，
+  並以 symlink containment 與 aggregate digest 防止跨 host 的誤判。
+- Copilot read-only profiles 移除直接 `edit`/`agent`，但 lint/archaeology 的
+  `execute` 仍是 shell capability；未在實際 host 驗證 permission deny 時，不能視為
+  與 Codex sandbox 等價的技術唯讀保證。
 - Wiki task 的 raw source 是唯讀且不可信證據；嵌入指令不執行。
 - Guard 對 path escape fail closed；coexist 不等同新的任務授權。
 - Exporter 排除 credential filename、binary、generated、Wiki 與 output，人工預覽仍是必要層。
+- Exporter 在讀取 Wiki pages 前先驗證 Wiki regular tree，拒絕 symlink/reparse point，避免
+  preflight 的安全檢查前讀取外部頁面。
+- lint 與 exporter CLI 在 canonicalization 前拒絕 caller-provided symlink/reparse root，
+  使命令列入口與 library regular-tree boundary 一致。
+- Exporter 在 `resolve()` 前檢查 output root 與 parent symlink/reparse containment，避免輸出
+  boundary 被導向其他位置。
 - SQL Server live evidence 僅允許有界唯讀 SELECT，且不進 frontmatter sources。
 
 ## 設定 / 部署 / 維運
@@ -145,16 +158,17 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 
 | 類別 | 目前證據 | 缺口 |
 | --- | --- | --- |
-| 正確性 | deterministic checks、68 unit scenarios | 語意矛盾仍需 agent review |
+| 正確性 | deterministic checks、Python 3.13/3.14 雙版本完整回歸 suite；Windows symlink cases 受 privilege 限制跳過 | 語意矛盾仍需 agent review |
 | 安全性 | raw read-only、guard、secret exclusion、two-phase export | host/sandbox 與租戶政策在框架外 |
-| 可恢復性 | installer/exporter stage + rollback | 未做 process-kill fault injection |
+| 可恢復性 | installer/exporter stage + rollback；active/committed journal、同一 target/output 的 transaction lock 與子程序終止 regression 覆蓋未完成 replacement recovery | 突然斷電、metadata durability 與所有 host-specific termination windows 尚未完整驗證 |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |
-| 效能 | 無常駐服務與第三方 runtime；200-page lint regression | 尚無 500+ Wiki pages lint/query/export benchmark |
+| 效能 | 無常駐服務與第三方 runtime；`tests/test_wiki_scale.py` 覆蓋 200-page lint；`tests/test_export_notebooklm.py` 覆蓋 500 個 synthetic module 的 full preflight/apply | 尚無 query 的 500+ pages benchmark |
 
 ## 錯誤與失敗模式
 
 - 不合法 frontmatter/path/link/log → deterministic Critical。
-- source missing/digest mismatch/orphan → Warning；semantic review 狀態另列。
+- 所有 sources 都缺失 → deterministic Critical；部分 source 缺失、digest mismatch
+  或 orphan → Warning；semantic review 狀態另列。
 - installer local+upstream 同時變更 → conflict，目標不寫入。
 - stale preflight ID 或不完整文件 → export exit 2，不建立／替換 pack。
 - source slot/byte/word 超限 → export 失敗並保留舊 pack。
@@ -167,7 +181,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 | LICENSE 未決 | 無法公開 release | 專案擁有者選擇授權後再 tag |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
-| Large Wiki scale | 200-page lint regression 已覆蓋；更大規模查詢可能變慢 | 先完成 500+ pages benchmark，再以證據評估分層 index 或 optional adapter |
+| Large Wiki scale | 200-page lint 與 500 個 synthetic module 的 preflight/full pack apply 已覆蓋；更大規模查詢可能變慢 | 先完成 500+ pages query benchmark，再以證據評估分層 index 或 optional adapter |
 
 ## Evidence
 
@@ -187,10 +201,11 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 ## 待確認事項
 
 - [ ] 專案擁有者選定 LICENSE，解除公開 release gate。
-- [ ] 在真實或合成 500+ pages Wiki 執行 lint/query/export benchmark。
+- [ ] 在真實或合成 500+ pages Wiki 執行 query benchmark（lint/preflight/full pack apply 已有 synthetic evidence）。
 - [ ] 在實際 Codex/Copilot host 驗證 coexist audit context 呈現。
 
 ## 來源附錄
 
 - Wiki：[[overview]]、[[system-architecture]]、[[project-function-catalog]]
-- Source：`README.md`、`.agents/skills/codebase-wiki/capabilities.json`
+- Source：`README.md`、`.agents/skills/codebase-wiki/capabilities.json`、
+  `tests/test_export_notebooklm.py`、`tests/test_wiki_scale.py`

@@ -3,7 +3,7 @@ name: wiki-lint
 description: >
   Explicit delegation only. Audit Wiki frontmatter, sources, links, index,
   coverage, and contradictions; report before repairs.
-tools: [execute, read, edit, search]
+tools: [execute, read, search]
 ---
 
 # Wiki Lint — 健康檢查代理
@@ -23,5 +23,6 @@ tools: [execute, read, edit, search]
 ## 邊界
 
 - Raw sources 保持 read-only。
+- `execute` 只用於執行 read-only lint/check 命令；直接 Wiki edit 與修復交回父代理。
 - Wiki page deletion 只回報，不在 lint repair 中直接執行。
 - 既有 log entries 保持 append-only。
