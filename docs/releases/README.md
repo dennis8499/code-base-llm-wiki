@@ -43,7 +43,7 @@ git push origin v0.2.0
 套件包含完整框架 Repo；安裝時仍使用既有 installer 的 `--surface copilot` 或
 `--surface codex` 選擇平台入口。
 
-Release builder 會排除產生物、本機 NotebookLM/hook state、transaction journal/lock、
+Release builder 會排除產生物（包含 `.mypy_cache/` 與 `.ruff_cache/`）、本機 NotebookLM/hook state、transaction journal/lock、
 stage/backup/temp siblings、`.env`、credentials/secrets 與 private-key path。若輸出目錄位於
 repo 內，該目錄及既有產物也不會再次進入 archive；
 非排除路徑的 symlink 會直接讓建置失敗。

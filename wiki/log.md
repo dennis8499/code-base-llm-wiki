@@ -455,3 +455,9 @@ status: active
 
 - exporter、installer、Wiki validators 與 release CLI 對非 UTF-8 state 或 filesystem failure 回傳受控錯誤，並新增 exporter malformed-state regression
 - 受影響頁面：[[index]]、[[notebooklm-exporter]]、[[installer-and-upgrade]]、[[wiki-quality-and-provenance]]、[[platform-adapters-and-release]]、[[system-analysis]]
+
+## [2026-08-24] update | Generated cache and Windows path parity
+
+- `.mypy_cache/` 與 `.ruff_cache/` 現在由 Git、release builder 與 NotebookLM inventory 一致排除；exporter 同時接受 Windows Unicode 長短路徑別名並維持 symlink/reparse boundary guard
+- 新增 cache exclusion、canonical path 與 malformed config regression；清理現有可重建 cache/log artifacts，但保留 `.notebooklm/` source pack
+- 受影響頁面：[[index]]、[[notebooklm-exporter]]、[[platform-adapters-and-release]]、[[release-and-update]]

@@ -10,7 +10,7 @@ sources:
   - tools/release.py
   - tests/test_release.py
   - tests/test_contracts.py
-source_digest: sha256:a2020d6aab63860131f668f2488d7708145f56d7d0331a7959437eb97c7014b0
+source_digest: sha256:85c35f81eef45eb666cebc511b561b44fc5ba0ab16f9f11360ac9e50d159fc9e
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-08-24
 tags: [module, adapters, ci, release, parity]
@@ -25,7 +25,7 @@ status: active
 - 以 `capabilities.json` contract version 3 描述十一個 operations 與 guard modes。
 - 在 Linux/Python 3.11、3.14 與 Windows/Python 3.11 執行完整回歸。
 - 以根 `VERSION` 作為產品版號唯一來源，產生可驗 hash 的 release assets。
-- release assets 排除 `.codex-hook-logs/`、`.github-hook-logs/` 等平台 fallback audit state、敏感 credentials/secrets/private-key path 與 repo 內自訂 output tree，並拒絕非排除路徑的 symlink/reparse-point source。
+- release assets 排除 `.mypy_cache/`、`.ruff_cache/`、`.codex-hook-logs/`、`.github-hook-logs/` 等平台 fallback/generated state、敏感 credentials/secrets/private-key path 與 repo 內自訂 output tree，並拒絕非排除路徑的 symlink/reparse-point source。
 - release builder 在建立或覆寫 artifact 前保留 lexical output boundary，拒絕 output
   root、parent components 與既有 artifact entries 的 symlink/reparse point。
 - installer/NotebookLM 的 transaction journal、lock、stage、backup 與 temporary sibling

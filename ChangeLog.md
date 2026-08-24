@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- **Generated cache boundaries**：將 `.mypy_cache/` 與 `.ruff_cache/` 納入 Git ignore、release archive 與 NotebookLM evidence exclusion，並補上回歸測試。
+- **Windows path spelling parity**：NotebookLM exporter 接受同一 Repo 的 Unicode 長路徑與 8.3 短路徑表示，同時維持 symlink/reparse 與 repository boundary 的 fail-closed 檢查。
 - **Hook payload type safety**：PreToolUse 與 PostToolUse 對合法 JSON 但非 object
   的 host payload 不再拋 `AttributeError`；write guard fail closed，log reminder
   安全 no-op，並補上 regression coverage。

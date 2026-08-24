@@ -68,6 +68,8 @@ DEFAULT_GENERATED_PARTS = {
     ".notebooklm",
     ".venv",
     "__pycache__",
+    ".mypy_cache",
+    ".ruff_cache",
     "bin",
     "build",
     "cache",
@@ -283,16 +285,28 @@ def _reject_symlink_components(root: Path, candidate: Path, field: str) -> None:
 
     lexical_root = Path(os.path.abspath(root))
     lexical_candidate = Path(os.path.abspath(candidate))
+
+    # Windows can expose the same directory through an 8.3 short path or its
+    # Unicode long-path spelling.  Scan the caller-provided spellings first so
+    # symlink/reparse boundaries remain visible, then compare their resolved
+    # identities so equivalent spellings are accepted.
+    for path in (lexical_root, lexical_candidate):
+        current = Path(path.anchor) if path.anchor else Path()
+        for component in path.parts:
+            if component == path.anchor:
+                continue
+            current /= component
+            if _is_reparse_point(current):
+                raise ExportError(
+                    f"{field} must not contain symlink or reparse point: {candidate}"
+                )
+
     try:
-        relative = lexical_candidate.relative_to(lexical_root)
+        lexical_candidate.resolve(strict=False).relative_to(
+            lexical_root.resolve(strict=False)
+        )
     except ValueError as exc:
         raise ExportError(f"{field} must stay inside the repository: {candidate}") from exc
-
-    current = lexical_root
-    for component in relative.parts:
-        current /= component
-        if _is_reparse_point(current):
-            raise ExportError(f"{field} must not contain symlink or reparse point: {candidate}")
 
 
 def _is_reparse_point(path: Path) -> bool:

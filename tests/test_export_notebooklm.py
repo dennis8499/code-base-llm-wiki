@@ -282,6 +282,9 @@ Call the service.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_fixture(root)
+            for name in (".mypy_cache", ".ruff_cache"):
+                (root / name).mkdir()
+                (root / name / "cache.json").write_text("generated\n", encoding="utf-8")
             (root / ".env").write_text("TOKEN=do-not-export\n", encoding="utf-8")
             (root / ".github").mkdir()
             (root / ".github/private.md").write_text("internal\n", encoding="utf-8")
@@ -293,10 +296,18 @@ Call the service.
                 encoding="utf-8",
             )
             output = root / ".notebooklm"
+            preflight_code, preflight = self.run_preflight(module, root)
+            self.assertEqual(preflight_code, 0)
             code, result = self.run_export(module, root, output)
             self.assertEqual(code, 0)
             skipped = {(item["path"], item["reason"]) for item in result["manifest"]["skipped"]}
             self.assertIn((".env", "sensitive_filename"), skipped)
+            excluded = {
+                (item["path"], item["reason"])
+                for item in preflight["inventory"]["excluded"]
+            }
+            for name in (".mypy_cache", ".ruff_cache"):
+                self.assertIn((f"{name}/cache.json", "binary_or_generated"), excluded)
             self.assertTrue(any(path == ".github/private.md" for path, _ in skipped))
             exported_text = "\n".join(
                 path.read_text(encoding="utf-8")
@@ -417,9 +428,10 @@ Call the service.
     def test_invalid_utf8_config_is_rejected_without_traceback(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            lexical_root = Path(directory)
+            root = lexical_root.resolve()
             write_fixture(root)
-            config = root / "invalid.toml"
+            config = lexical_root / "invalid.toml"
             config.write_bytes(b"\xff\xfe invalid utf-8")
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):

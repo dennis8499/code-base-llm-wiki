@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:eb723faf63777559148d148de997bce98e2681990cd88d15f861ed9a680a7fe6
+source_digest: sha256:986d22ade8bf0be0909fe2a016ddfa989202ee42fd611964284a3e338f6318fe
 derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
 last_updated: 2026-08-24
 tags: [module, notebooklm, exporter, preflight]
@@ -31,7 +31,7 @@ status: active
 - 以 Wiki、inventory、設定與 deterministic findings 建立穩定 `preflight_id`。
 - 強制必要 overview、function catalog、architecture 與 SA 都為 active 且可匯出。
 - 先配置文件 source slots，再依證據優先序加入 raw evidence。
-- 排除平台 fallback hook audit logs 等 generated state，不把本機 audit output 當成 evidence；
+- 排除 `.mypy_cache/`、`.ruff_cache/`、平台 fallback hook audit logs 等 generated state，不把本機 audit output 當成 evidence；
   sensitive filename/path components 也會被排除。
 - 產生 schema-v2 manifest、upload plan、project map 與 stable logical source IDs。
 - 套用既有 pack 前驗證 manifest source file 必須是 output 內的安全相對路徑；

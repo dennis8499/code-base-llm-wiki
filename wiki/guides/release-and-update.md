@@ -8,7 +8,7 @@ sources:
   - .github/workflows/release.yml
   - docs/releases/README.md
   - README.md
-source_digest: sha256:9737a988c16c03ccec18edf4c77f1735f19ab1880efd63510f3d1a9f2384cc2f
+source_digest: sha256:75a439cb204e864861346581c2124e53de1a37eb167f90c52bfa19241ce8225e
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-08-24
 tags: [guide, release, version, extension]
@@ -41,7 +41,7 @@ notebooklm_group: project-guides
 6. workflow 上傳 ZIP/TAR.GZ、`SHA256SUMS` 與 `update-manifest.json`。
 
 Release builder 會排除 `.git`、`logs`、`.codex-hook-logs`、`.github-hook-logs`、
-`cache`、`.venv`、`__pycache__`、`.notebooklm` 與 `dist` 等產生物，也會排除
+`cache`、`.venv`、`__pycache__`、`.mypy_cache`、`.ruff_cache`、`.notebooklm` 與 `dist` 等產生物，也會排除
 `.env`、credentials/secrets、private-key path 等敏感檔案。若 `--output` 位於 repo
 內，該 output tree 也不會被封裝；installer/NotebookLM transaction journal、lock、
 stage、backup 與 temporary sibling files 也不會被封裝；非排除路徑若含 symlink 會 fail closed，避免把

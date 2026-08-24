@@ -11,7 +11,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:58c98c4dd8eb19a235472a874d39e0b32bf08edaafee380216f123a691d88f0c
+source_digest: sha256:62ec9603eb4c0dd3bed24bfbb5f4fa0b8cfc80bff0d19616ccc5352862dfb3d2
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
 last_updated: 2026-08-24
 tags: [synthesis, system-analysis, notebooklm]

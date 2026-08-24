@@ -35,6 +35,8 @@ EXCLUDED_PARTS = {
     ".git",
     ".venv",
     "__pycache__",
+    ".mypy_cache",
+    ".ruff_cache",
     "cache",
     ".codex-hook-logs",
     ".github-hook-logs",

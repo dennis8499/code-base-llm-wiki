@@ -311,10 +311,13 @@ class ReleaseTests(unittest.TestCase):
             ):
                 (root / name).mkdir()
                 (root / name / "private.md").write_text("private\n", encoding="utf-8")
+            for name in (".mypy_cache", ".ruff_cache"):
+                (root / name).mkdir()
+                (root / name / "cache.json").write_text("generated\n", encoding="utf-8")
             (root / "README.md").write_text("readme\n", encoding="utf-8")
             files = release.release_files(root)
             self.assertEqual(
-                [path.relative_to(root).as_posix() for path in files],
+                [path.relative_to(root.resolve()).as_posix() for path in files],
                 ["README.md", "VERSION"],
             )
 
