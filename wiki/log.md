@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-08-24
+last_updated: 2026-08-25
 tags: [log]
 status: active
 ---
@@ -461,3 +461,15 @@ status: active
 - `.mypy_cache/` 與 `.ruff_cache/` 現在由 Git、release builder 與 NotebookLM inventory 一致排除；exporter 同時接受 Windows Unicode 長短路徑別名並維持 symlink/reparse boundary guard
 - 新增 cache exclusion、canonical path 與 malformed config regression；清理現有可重建 cache/log artifacts，但保留 `.notebooklm/` source pack
 - 受影響頁面：[[index]]、[[notebooklm-exporter]]、[[platform-adapters-and-release]]、[[release-and-update]]
+
+## [2026-08-25] update | NotebookLM mixed-language word estimation
+
+- exporter 將 source 字數估算由 CJK/token 的 `max()` 改為 `han_characters_plus_non_han_tokens` 加總，並以 regression test 固定混合繁中與程式碼不再低估
+- preflight 與 manifest 的 `limits` 現在記錄 `word_count_model`；同步 NotebookLM workflow、設定模板與相關 Wiki provenance
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-analysis]]
+
+## [2026-08-25] update | NotebookLM local Basic DLP gate
+
+- exporter 新增離線 Basic DLP 檢核、精確 allowlist 與 safe findings；未 allowlist 命中會阻擋 apply 並保留既有 pack
+- manifest 升級至 schema v3，preflight contract 升級至 v2；同步 exporter workflow、設定、測試與使用文件
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[project-function-catalog]]、[[system-analysis]]、[[framework-introduction]]

@@ -32,7 +32,7 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
    dependencies/generated、binary、credentials、framework adapters、Wiki 與 output。
 4. 從 entrypoints、use cases、資料邊界、public interfaces 與 integrations 建立
    功能域，不要只照目錄切頁。回報掃描數量與排除原因、功能 coverage、預計新增/
-   更新/不變的 Wiki pages、evidence、容量估計與 gaps，然後等待使用者確認。
+   更新/不變的 Wiki pages、evidence、容量估計、DLP status 與 gaps，然後等待使用者確認。
    即使 Wiki clean 也必須預覽並確認；確認前不修改 Wiki 或產生 pack。
 5. 確認後保留人工內容並增量建立：overview、project function catalog、system
    architecture、每個功能域的 module/entity pages、system analysis。敘述固定繁體
@@ -46,11 +46,13 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
    ```
 
 7. 報告 `.notebooklm/upload-plan.md` 的 `added`、`changed`、`deleted`、
-   `unchanged`、skipped、`source_budget` omissions、warnings 與剩餘 slots。
+   `unchanged`、skipped、`source_budget` omissions、DLP status、warnings 與剩餘 slots。
 
 ## 限制與安全
 
 - 不呼叫 NotebookLM API、不自動上傳、不修改 raw sources。
+- Exporter 會在本機執行 `notebooklm-enterprise-basic` DLP 檢核；未 allowlist 的
+  finding 會阻擋 apply，報告不包含命中值。
 - 只上傳 `.notebooklm/sources/*.md`；不要上傳 manifest、upload plan 或 README。
 - changed 的本地 static source 必須在 NotebookLM 移除舊檔後重新上傳；unchanged 不需重傳。
 - 文件永遠優先於 evidence；低優先 evidence 若無法容納，必須以 `source_budget`

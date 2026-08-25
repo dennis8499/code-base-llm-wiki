@@ -11,6 +11,7 @@ reserved_source_slots = 0
 
 # Conservative local safety limits; Enterprise currently allows at most
 # 200 MB or 500,000 words per source.
+# max_source_words uses the additive Han-character/non-Han-token estimate.
 max_source_bytes = 180000000
 max_source_words = 450000
 
@@ -23,3 +24,8 @@ extra_paths = []
 # Paths below are in addition to the built-in generated/dependency/credential
 # exclusions. All values must remain relative to the repository root.
 exclude_paths = []
+
+# Offline Enterprise-style DLP preflight. Findings block export without
+# exposing the matched value. Allowlist only an exact path/rule/fingerprint.
+dlp_profile = "notebooklm-enterprise-basic"
+dlp_allowlist = []

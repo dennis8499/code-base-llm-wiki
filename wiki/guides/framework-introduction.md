@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:a0b4932e546b5aabeef350613fe862dba5ccee5b13eed799dc77400ea2d36647
+source_digest: sha256:4fdb98a3d32db28d257d12368b3e14f334e341de235f2b175ed41cb1124a0113
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-08-24
+last_updated: 2026-08-25
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -138,14 +138,18 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --apply --preflight-id <id> --output .notebooklm --format json
 ```
 
-只手動上傳 `.notebooklm/sources/*.md`。Schema v2 `manifest.json` 記錄 scan
-inventory、coverage、omissions、input/output hash 與 stable `logical_source_id`；
+只手動上傳 `.notebooklm/sources/*.md`。Schema v3 `manifest.json` 記錄 scan
+inventory、coverage、omissions、input/output hash、DLP status 與 stable `logical_source_id`；
 `upload-plan.md` 將每次結果分成 `added`、`changed`、`deleted`、`unchanged`。變更
 來源需先移除 NotebookLM 中的舊 static source 再上傳新檔，未變更來源不需重傳。
 打包採 documents-first：先保留完整功能文件，再以剩餘 source/byte budget 加入
 關鍵 evidence；`source_budget` 省略項目必須交付。預設 pack 使用 180 MB /
 450,000 words safety limits，且不超過 Enterprise 的 300 sources、200 MB /
 500,000 words hard limits；不同 Workspace tier 請在 `notebooklm.toml` 下調。
+
+Exporter 也會在本機執行 `notebooklm-enterprise-basic` DLP preflight，檢查信用卡、
+金融帳號、GCP credentials、GCP API key 與明文密碼。未 allowlist 的 finding 會
+阻擋 apply；報告只顯示 path、line、rule、severity 與 fingerprint，不保存敏感原文。
 
 ## 6. Guard modes
 

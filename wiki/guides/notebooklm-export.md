@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:c874ab6a716d3952e627a7238eb5621e8555f1f854ded6a8c34fabfbd4ef7c20
+source_digest: sha256:a64055c1dabb5e49015d524407d439c5fe70634269886c94522b4acdd800bf43
 derived_from: ["[[overview]]", "[[notebooklm-exporter]]", "[[project-function-catalog]]"]
-last_updated: 2026-08-24
+last_updated: 2026-08-25
 tags: [guide, notebooklm, export, incremental, enterprise]
 status: active
 notebooklm_group: project-guides
@@ -82,8 +82,8 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
 
 可把 `.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製成 Repo root 的
 `notebooklm.toml` 以調整 `source_limit`、`reserved_source_slots`、
-`max_source_bytes`、`max_source_words`、`include_evidence`、`extra_paths` 或
-`exclude_paths` 與 `scan_profile`。設定只能降低 hard limits，路徑必須是
+`max_source_bytes`、`max_source_words`、`include_evidence`、`extra_paths`、
+`exclude_paths`、`scan_profile`、`dlp_profile` 與 `dlp_allowlist`。設定只能降低 hard limits，路徑必須是
 Repo-relative；一般目標使用 `target`，本框架 Repo 使用 `framework`。若透過
 `--config` 明確指定設定檔時，該檔案必須位於 Repo root 內、不是 symlink/reparse
 path，且存在並是一般檔案；不存在或無法解析時 preflight/apply 會拒絕執行，不會靜默
@@ -92,7 +92,7 @@ path，且存在並是一般檔案；不存在或無法解析時 preflight/apply
 輸出目錄包含：
 
 - `sources/*.md`：唯一應手動加入 NotebookLM 的 source files；
-- `manifest.json`：schema v2、scan inventory/coverage、profile、設定 limits、input/output hashes、stable IDs、warnings、omitted evidence 與 skipped paths；
+- `manifest.json`：schema v3、scan inventory/coverage、profile、設定 limits、input/output hashes、stable IDs、DLP status、warnings、omitted evidence 與 skipped paths；
 - `upload-plan.md`：本次相對上一次 manifest 的操作分類；
 - `README.md`：給上傳者的本機操作摘要。
 
@@ -100,7 +100,7 @@ path，且存在並是一般檔案；不存在或無法解析時 preflight/apply
 
 每個 source 依 `notebooklm_group` 使用 stable `logical_source_id`，主要形式是
 `docs:<group>` 與 `evidence:<group>`；需要合併或切分時使用 deterministic
-compaction/part IDs。Schema v1 previous manifest 會在比較時轉成 v2 語意。重跑
+compaction/part IDs。Schema v1/v2 previous manifest 會在比較時轉成 v3 語意。重跑
 exporter 後依 `upload-plan.md` 操作：
 
 | 狀態 | NotebookLM 手動操作 |
@@ -120,11 +120,35 @@ Exporter 會保留 output directory 中不由它管理的檔案；Git 預設忽�
 
 Enterprise profile 的 hard limits 是每本 notebook 最多 300 sources、每個 source
 最多 200 MB 與 500,000 words。Exporter 預設使用較低的 180 MB 與 450,000
-estimated words safety limits，並可預留 source slots。打包順序固定為 documents-first：
+estimated words safety limits；`estimated_words` 採
+`han_characters_plus_non_han_tokens` 加總模型，將 Han/CJK 字元與非 Han、非空白
+token runs 分開計算，避免繁中與程式碼混合時低估。打包順序固定為 documents-first：
 完整功能文件先取得來源與容量預算，關鍵 evidence 再依功能優先序加入；不足時以
 `source_budget` 透明省略低優先 evidence，而不是刪減必要文件。若文件本身超限或
 無法安全切分，export 會在 atomic commit 前失敗並保留舊 pack。不同 Workspace tier
 請在 `notebooklm.toml` 下調，不要把 Enterprise 設定當成所有租戶通用。
+
+### 本機 DLP preflight
+
+Exporter 預設以 `notebooklm-enterprise-basic` 執行離線 deterministic DLP 檢核，
+包含 `CREDIT_CARD_NUMBER`、`FINANCIAL_ACCOUNT_NUMBER`、`GCP_CREDENTIALS`、
+`GCP_API_KEY` 與 `PASSWORD`。這是 export-side safety gate，不會呼叫 Google Cloud
+或 NotebookLM，也不會修改來源內容。
+
+未 allowlist 的 finding 會讓 `ready_to_export=false`，並阻擋 `--apply` 覆寫既有
+pack。報告只保留 repo-relative path、行號、rule、severity 與 fingerprint，不會
+輸出命中值或周邊文字。已知且經人工確認的誤報可在設定中精確 allowlist：
+
+```toml
+dlp_profile = "notebooklm-enterprise-basic"
+dlp_allowlist = [
+  { path = "docs/example.md", rule = "GCP_API_KEY", fingerprint = "sha256:<64 lowercase hex>" },
+]
+```
+
+allowlist 命中時狀態為 `passed_with_allowlist`，仍會在 preflight 與 manifest 留下
+警告。租戶自訂的 Advanced DLP／Model Armor template 仍可能在雲端額外阻擋。
+
 若 output replacement 在 commit 期間失敗，staging/backup rollback 也會保留上一份有效 pack；
 transaction journal 與子程序終止 regression 已驗證下一次 apply 可恢復上一份有效 pack；
 同一 output 的並行 commit 由 transaction lock 保護，已有 writer 時後來的程序會 fail closed；

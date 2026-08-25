@@ -39,7 +39,7 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 | Wiki stats | Page types、statuses、links 與 Wiki 規模 |
 | Wiki lint | Deterministic/semantic/overall 狀態、真正 orphan、links、index/log；語意檢查維持 `agent_review_required` |
 | Index check | 唯讀比較 managed region 的 page/type entries，並保留 marker 外人工內容 |
-| NotebookLM preflight/export | 強制 preflight ID、必要文件/critical gate、framework profile、schema v1→v2、documents-first 預算、stable IDs、hash/diff plan 與 previous-pack preservation |
+| NotebookLM preflight/export | 強制 preflight ID、必要文件/critical/DLP gate、framework profile、schema v1/v2→v3、documents-first 預算、stable IDs、hash/diff plan 與 previous-pack preservation |
 
 ## Task Tracker E2E
 

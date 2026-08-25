@@ -126,7 +126,8 @@ NotebookLM Enterprise export:
 與 framework adapters。依 entrypoint/use case/data boundary 建立功能 coverage，列出
 Wiki/evidence/容量預覽並等待確認。確認後只增量更新繁中功能文件、index 與一筆
 ingest log，再產生 .notebooklm source pack、manifest 與 upload plan。文件優先，
-因額度略過的 evidence 必須明列；不呼叫雲端 API。
+因額度略過的 evidence 必須明列；Exporter 另在本機執行 Basic DLP 檢核，
+未 allowlist finding 會阻擋 apply，且不呼叫雲端 API。
 ```
 
 Explicit delegation:

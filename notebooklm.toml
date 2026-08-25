@@ -9,3 +9,5 @@ max_source_words = 450000
 include_evidence = true
 extra_paths = []
 exclude_paths = []
+dlp_profile = "notebooklm-enterprise-basic"
+dlp_allowlist = []

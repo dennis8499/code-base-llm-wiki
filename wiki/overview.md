@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:1e1c9c93124dc0c4564e5e18a7f3f2eb723a48cdf8fee0c27f8f75e8e2d7b696
+source_digest: sha256:ec887ba862b2e4936022dfa035dc0d0860a59451ccda460c0c255dc330ac2ebc
 derived_from: []
-last_updated: 2026-08-24
+last_updated: 2026-08-25
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 notebooklm_group: project
@@ -121,7 +121,7 @@ nested quoted paths。Delegation 只有使用者明確要求時啟用。
 - **Archaeology**：追蹤 call path 與非破壞性 Git history。
 - **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
 - **NotebookLM export**：每次全量掃描安全範圍，完成必要功能文件後取得
-  `preflight_id`；apply 重新驗證相同輸入，才產生 documents-first source pack。
+  `preflight_id`；apply 重新驗證相同輸入與本機 DLP gate，才產生 documents-first source pack。
 - **Delegation**：明確要求時才路由給專業代理。
 
 ## 安全與品質
@@ -133,6 +133,7 @@ nested quoted paths。Delegation 只有使用者明確要求時啟用。
 - `wiki-only` 只允許 Wiki；`coexist` 支援正常 coding session；`framework` 才允許
   維護 schema、adapters、docs、samples、tests 與 release tooling。
 - NotebookLM export 預設使用 300 sources、每 source 200 MB / 500,000 words 的 Enterprise hard limits，實際 pack 以 180 MB / 450,000 words safety limits 先行切分或失敗；文件優先保留，低優先 evidence 的省略會透明記錄，Workspace tier 可在 `notebooklm.toml` 再下調。
+- Exporter 另以 `notebooklm-enterprise-basic` 在本機檢查信用卡、金融帳號、GCP credentials、GCP API key 與明文密碼；未 allowlist finding 會阻擋 apply，報告不保存敏感原文。
 - SQL Server live evidence 只允許 bounded read-only 查詢，且不得放入 frontmatter sources。
 
 ## 驗證方式

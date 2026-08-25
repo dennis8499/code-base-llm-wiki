@@ -45,9 +45,10 @@ tracked plus non-ignored untracked files; use a filesystem fallback outside Git.
      --root . --preflight --format json
    ```
 
-   Record the returned `preflight_id`. `ready_to_export` is true only when all
-   mandatory documents are active, required-document evidence is fresh, and
-   deterministic lint has no Critical findings.
+Record the returned `preflight_id`. `ready_to_export` is true only when all
+mandatory documents are active, required-document evidence is fresh,
+deterministic lint has no Critical findings, and the local DLP gate has no
+blocking findings.
 
 4. Read every included file in functional batches. Identify functions from
    runtime entrypoints, use cases, data boundaries, public interfaces, and
@@ -82,7 +83,7 @@ The exporter owns `.notebooklm/manifest.json`, `.notebooklm/upload-plan.md`,
 `.notebooklm/README.md`, and generated `.notebooklm/sources/*.md`. Unknown files
 inside the output directory are preserved.
 
-Each schema-v2 source has a stable `logical_source_id`:
+Each generated source has a stable `logical_source_id`:
 
 - `project-map` for the generated navigation source;
 - `docs:<notebooklm-group>` for complete curated Wiki documentation;
@@ -91,10 +92,10 @@ Each schema-v2 source has a stable `logical_source_id`:
   deterministic compaction;
 - `#part-###` suffixes for sources split at safe boundaries.
 
-The exporter accepts a previous schema-v1 manifest and produces an actionable
-one-time migration plan. The schema-v2 manifest records scan summary,
-functional-document coverage, input/output hashes, priorities, omissions, and
-limits. The upload plan contains:
+The exporter accepts previous schema-v1/v2 manifests and produces an actionable
+one-time migration plan. The schema-v3 manifest records scan summary,
+functional-document coverage, input/output hashes, priorities, omissions,
+limits, and the offline DLP profile/safe finding summary. The upload plan contains:
 
 - `added`: upload the new source;
 - `changed`: remove the old static source, then upload the replacement;
@@ -108,8 +109,11 @@ Do not upload `manifest.json`, `upload-plan.md`, or the README as evidence.
 The default Enterprise profile is bounded to 300 sources, 200 MB per source,
 and 500,000 words per source. The exporter uses lower safety defaults of 180 MB
 and 450,000 estimated words, supports `reserved_source_slots`, and rejects any
-configuration above the Enterprise hard limits. A different Workspace tier
-must lower `source_limit` in `notebooklm.toml`.
+configuration above the Enterprise hard limits. `estimated_words` uses the
+`han_characters_plus_non_han_tokens` model: Han/CJK characters are counted
+individually and non-Han, non-whitespace token runs are counted separately, so
+mixed Traditional Chinese and code content is not underestimated. A different
+Workspace tier must lower `source_limit` in `notebooklm.toml`.
 
 Documentation is mandatory and always consumes slots before evidence. Evidence
 priority is: explicit extra paths; overview/function-catalog/architecture/SA
@@ -128,6 +132,33 @@ uses `framework`, which treats its `.agents`, `.codex`, non-CI `.github`, and
 release tooling as product evidence while retaining secret/generated/test/CI
 exclusions.
 
+## Offline DLP preflight
+
+The exporter runs a local, deterministic Basic DLP profile before packaging
+content. It does not call Google Cloud, Model Armor, or NotebookLM. The default
+`notebooklm-enterprise-basic` profile checks high-confidence
+`CREDIT_CARD_NUMBER`, `FINANCIAL_ACCOUNT_NUMBER`, `GCP_CREDENTIALS`,
+`GCP_API_KEY`, and `PASSWORD` patterns. Existing sensitive filename exclusions
+remain a separate safety layer.
+
+The default enforcement is `inspect_and_block`: any non-allowlisted finding
+makes `ready_to_export` false and prevents `--apply` from replacing an existing
+pack. Reports contain only repo-relative path, line, rule, severity, and a
+SHA-256 fingerprint; matched values and surrounding text are never persisted.
+
+Known false positives can be allowlisted exactly in `notebooklm.toml`:
+
+```toml
+dlp_profile = "notebooklm-enterprise-basic"
+dlp_allowlist = [
+  { path = "docs/example.md", rule = "GCP_API_KEY", fingerprint = "sha256:<64 lowercase hex>" },
+]
+```
+
+An allowlisted match is reported as `passed_with_allowlist` with a warning. The
+local profile is an export-side approximation; tenant-specific Advanced
+Sensitive Data Protection templates may apply additional cloud-side checks.
+
 For tenant-specific behavior, verify the current [Google Cloud Gemini Notebook
 Enterprise limits](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview?authuser=2)
 and [NotebookLM source type and sync rules](https://support.google.com/notebooklm/answer/16215270?co=GENIE.Platform%3DDesktop&hl=en).
@@ -136,7 +167,8 @@ and [NotebookLM source type and sync rules](https://support.google.com/notebookl
 
 Export is complete only when the full safe inventory and functional preview
 were shown, the user confirmed, all required documents exist with explicit
-coverage states, every generated source is traceable, the manifest and upload
-plan were written atomically, no source exceeds its limit, and the final report
-lists added, changed, deleted, unchanged, skipped, source-budget omissions, and
+coverage states, the DLP gate is passed or explicitly allowlisted, every
+generated source is traceable, the manifest and upload plan were written
+atomically, no source exceeds its limit, and the final report lists added,
+changed, deleted, unchanged, skipped, source-budget omissions, DLP status, and
 all unresolved warnings. Preflight alone never writes `.notebooklm/`.

@@ -26,7 +26,7 @@ Wiki 與 export output 仍依安全 inventory 分類；測試與 CI 的行為由
 | 安裝與升級 | 安裝 Codex/Copilot surface、安全升級 | `install-framework.py` | install state、file fingerprints | [[installer-and-upgrade]] | covered |
 | Wiki 攝取與品質 | 建立可追溯頁面、偵測 stale/link/index/log 問題 | `$codebase-wiki`、quality CLIs | frontmatter、digest、wikilinks、log entries | [[wiki-quality-and-provenance]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
-| NotebookLM 準備 | 掃描功能、確認後產生離線 pack | `export-notebooklm.py` | inventory、preflight ID、manifest v2 | [[notebooklm-exporter]] | covered |
+| NotebookLM 準備 | 掃描功能、本機 DLP、確認後產生離線 pack | `export-notebooklm.py` | inventory、preflight ID、DLP、manifest v3 | [[notebooklm-exporter]] | covered |
 | 平台與發布 | 驗證 parity/CI、建立版本資產 | parity、CI、`release.py` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
 發布功能標為 partial，原因是程式與 CI 已具備，但專案擁有者尚未選擇 LICENSE，公開

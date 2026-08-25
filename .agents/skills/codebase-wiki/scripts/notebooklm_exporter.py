@@ -41,9 +41,9 @@ except ModuleNotFoundError:  # pragma: no cover - useful when loaded by a caller
     )
 
 
-EXPORT_SCHEMA_VERSION = 2
-SUPPORTED_MANIFEST_SCHEMAS = {1, EXPORT_SCHEMA_VERSION}
-PREFLIGHT_SCHEMA_VERSION = 1
+EXPORT_SCHEMA_VERSION = 3
+SUPPORTED_MANIFEST_SCHEMAS = {1, 2, EXPORT_SCHEMA_VERSION}
+PREFLIGHT_SCHEMA_VERSION = 2
 OUTPUT_TRANSACTION_VERSION = 1
 OUTPUT_TRANSACTION_SUFFIX = ".notebooklm-transaction.json"
 OUTPUT_TRANSACTION_LOCK_SUFFIX = ".notebooklm-transaction.lock"
@@ -182,11 +182,88 @@ CONFIG_NAMES = {
 }
 DATA_PARTS = {"data", "database", "db", "migration", "migrations", "schema", "schemas"}
 CJK_PATTERN = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
+NON_CJK_TOKEN_PATTERN = re.compile(
+    r"[^\s\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+"
+)
+WORD_COUNT_MODEL = "han_characters_plus_non_han_tokens"
 GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+DLP_PROFILE = "notebooklm-enterprise-basic"
+DLP_ENFORCEMENT = "inspect_and_block"
+DLP_DETECTORS = (
+    "CREDIT_CARD_NUMBER",
+    "FINANCIAL_ACCOUNT_NUMBER",
+    "GCP_CREDENTIALS",
+    "GCP_API_KEY",
+    "PASSWORD",
+)
+DLP_RULE_METADATA = {
+    "CREDIT_CARD_NUMBER": {"category": "financial", "severity": "high"},
+    "FINANCIAL_ACCOUNT_NUMBER": {"category": "financial", "severity": "high"},
+    "GCP_CREDENTIALS": {"category": "credential", "severity": "high"},
+    "GCP_API_KEY": {"category": "credential", "severity": "high"},
+    "PASSWORD": {"category": "credential", "severity": "high"},
+}
+DLP_FINGERPRINT_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+DLP_GCP_API_KEY_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9_-])AIza[0-9A-Za-z_-]{35}(?![A-Za-z0-9_-])"
+)
+DLP_PRIVATE_KEY_PATTERN = re.compile(
+    r"-----BEGIN(?: [A-Z0-9]+)? PRIVATE KEY-----.*?"
+    r"-----END(?: [A-Z0-9]+)? PRIVATE KEY-----",
+    re.DOTALL,
+)
+DLP_PASSWORD_PATTERN = re.compile(
+    r"""(?ix)
+    (?P<key>\b(?:password|passwd|pwd)\b)\s*(?:[:=]|=>)\s*
+    (?P<quote>['"]?)(?P<value>[^\s,;#}\]"']{3,})(?P=quote)
+    """
+)
+DLP_FINANCIAL_ACCOUNT_PATTERN = re.compile(
+    r"""(?ix)
+    \b(?:account(?:[_ -]?number)?|bank(?:[_ -]?account)?|iban)\b
+    \s*(?:[:=]\s*)?['"]?
+    (?P<value>\d(?:[\d -]{6,18}\d))['"]?
+    """
+)
+DLP_CREDIT_CARD_PATTERN = re.compile(r"(?<!\d)(?:\d[ -]?){11,18}\d(?!\d)")
 
 
 class ExportError(ValueError):
     """Raised when a safe, complete documentation pack cannot be produced."""
+
+
+@dataclass(frozen=True)
+class DlpAllowlistEntry:
+    path: str
+    rule: str
+    fingerprint: str
+
+    def as_dict(self) -> dict[str, str]:
+        return {
+            "path": self.path,
+            "rule": self.rule,
+            "fingerprint": self.fingerprint,
+        }
+
+
+@dataclass(frozen=True)
+class DlpFinding:
+    path: str
+    line: int
+    rule: str
+    category: str
+    severity: str
+    fingerprint: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "path": self.path,
+            "line": self.line,
+            "rule": self.rule,
+            "category": self.category,
+            "severity": self.severity,
+            "fingerprint": self.fingerprint,
+        }
 
 
 @dataclass(frozen=True)
@@ -201,6 +278,8 @@ class Settings:
     include_evidence: bool
     extra_paths: tuple[str, ...]
     exclude_paths: tuple[str, ...]
+    dlp_profile: str
+    dlp_allowlist: tuple[DlpAllowlistEntry, ...]
     config_path: Path | None
 
     @property
@@ -350,6 +429,38 @@ def _str_tuple_config(values: dict[str, Any], key: str) -> tuple[str, ...]:
     return tuple(value)
 
 
+def _dlp_allowlist_config(
+    values: dict[str, Any], root: Path
+) -> tuple[DlpAllowlistEntry, ...]:
+    value = values.get("dlp_allowlist", [])
+    if not isinstance(value, list):
+        raise ExportError("dlp_allowlist must be an array of tables")
+    entries: list[DlpAllowlistEntry] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            raise ExportError(f"dlp_allowlist[{index}] must be a table")
+        path = item.get("path")
+        rule = item.get("rule")
+        fingerprint = item.get("fingerprint")
+        if not isinstance(path, str) or not path.strip():
+            raise ExportError(f"dlp_allowlist[{index}].path must be a non-empty string")
+        if not isinstance(rule, str) or rule not in DLP_DETECTORS:
+            raise ExportError(
+                f"dlp_allowlist[{index}].rule must be one of {DLP_DETECTORS}"
+            )
+        if not isinstance(fingerprint, str) or not DLP_FINGERPRINT_PATTERN.fullmatch(
+            fingerprint
+        ):
+            raise ExportError(
+                f"dlp_allowlist[{index}].fingerprint must match sha256:<64 lowercase hex>"
+            )
+        relative = validate_relative_config_path(path, root, f"dlp_allowlist[{index}].path")
+        if relative == ".":
+            raise ExportError(f"dlp_allowlist[{index}].path must identify a file")
+        entries.append(DlpAllowlistEntry(relative, rule, fingerprint))
+    return tuple(sorted(entries, key=lambda item: (item.path, item.rule, item.fingerprint)))
+
+
 def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     if config_path is None:
         selected_config = root / "notebooklm.toml"
@@ -420,6 +531,10 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     if source_limit == 0 or max_bytes == 0 or max_words == 0:
         raise ExportError("source and size limits must be greater than zero")
 
+    dlp_profile = raw.get("dlp_profile", DLP_PROFILE)
+    if dlp_profile != DLP_PROFILE:
+        raise ExportError(f"dlp_profile must be {DLP_PROFILE!r}")
+
     extra_paths = tuple(
         validate_relative_config_path(value, root, "extra_paths")
         for value in _str_tuple_config(raw, "extra_paths")
@@ -439,16 +554,196 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
         include_evidence=include_evidence,
         extra_paths=extra_paths,
         exclude_paths=exclude_paths,
+        dlp_profile=dlp_profile,
+        dlp_allowlist=_dlp_allowlist_config(raw, root),
         config_path=selected_config if selected_config.is_file() else None,
     )
 
 
 def estimate_words(text: str) -> int:
-    """Conservatively estimate NotebookLM words for Latin and CJK text."""
+    """Estimate NotebookLM words without dropping mixed-language content.
 
-    tokens = len(re.findall(r"\S+", text))
-    cjk_characters = len(CJK_PATTERN.findall(text))
-    return max(tokens, cjk_characters)
+    NotebookLM can count Han characters independently of whitespace-delimited
+    Latin or code tokens.  Counting the larger of those two populations
+    underestimates a source that contains both, so the safety estimate adds
+    Han characters to maximal non-Han, non-whitespace token runs.  Han
+    characters inside a mixed token are therefore counted once as Han and the
+    surrounding identifier/text run is counted separately.
+    """
+
+    han_characters = len(CJK_PATTERN.findall(text))
+    non_han_tokens = len(NON_CJK_TOKEN_PATTERN.findall(text))
+    return han_characters + non_han_tokens
+
+
+def _line_number(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
+
+
+def _normalized_digits(value: str) -> str:
+    return re.sub(r"\D", "", value)
+
+
+def _luhn_valid(value: str) -> bool:
+    digits = _normalized_digits(value)
+    if not 12 <= len(digits) <= 19:
+        return False
+    total = 0
+    parity = len(digits) % 2
+    for index, digit in enumerate(digits):
+        number = int(digit)
+        if index % 2 == parity:
+            number *= 2
+            if number > 9:
+                number -= 9
+        total += number
+    return total % 10 == 0
+
+
+def _password_is_literal(value: str) -> bool:
+    normalized = value.strip().strip("'\"")
+    lowered = normalized.lower()
+    if not normalized:
+        return False
+    if lowered in {
+        "changeme",
+        "change-me",
+        "change_me",
+        "example",
+        "replace-me",
+        "replace_me",
+        "sample",
+        "todo",
+        "tbd",
+        "your-password",
+        "your_password",
+    }:
+        return False
+    return not normalized.startswith(("${", "{{", "$(", "<", "os.", "process.env", "getenv(", "env["))
+
+
+def _line_text(text: str, offset: int) -> str:
+    start = text.rfind("\n", 0, offset) + 1
+    end = text.find("\n", offset)
+    return text[start:] if end == -1 else text[start:end]
+
+
+def _iter_dlp_matches(text: str) -> Iterable[tuple[str, str, int]]:
+    for match in DLP_PRIVATE_KEY_PATTERN.finditer(text):
+        yield "GCP_CREDENTIALS", match.group(0), match.start()
+
+    for match in DLP_GCP_API_KEY_PATTERN.finditer(text):
+        yield "GCP_API_KEY", match.group(0), match.start()
+
+    for match in DLP_PASSWORD_PATTERN.finditer(text):
+        value = match.group("value")
+        if _password_is_literal(value):
+            yield "PASSWORD", value, match.start("value")
+
+    for match in DLP_FINANCIAL_ACCOUNT_PATTERN.finditer(text):
+        value = match.group("value")
+        if len(_normalized_digits(value)) >= 8:
+            yield "FINANCIAL_ACCOUNT_NUMBER", value, match.start("value")
+
+    for match in DLP_CREDIT_CARD_PATTERN.finditer(text):
+        value = match.group(0)
+        digits = _normalized_digits(value)
+        if not _luhn_valid(value):
+            continue
+        if not any(separator in value for separator in (" ", "-")):
+            context = _line_text(text, match.start()).lower()
+            if not any(
+                marker in context
+                for marker in ("credit", "card", "visa", "mastercard", "amex", "cc_number")
+            ):
+                continue
+        yield "CREDIT_CARD_NUMBER", digits, match.start()
+
+
+def _dlp_fingerprint(rule: str, value: str) -> str:
+    normalized = _normalized_digits(value) if rule in {
+        "CREDIT_CARD_NUMBER",
+        "FINANCIAL_ACCOUNT_NUMBER",
+    } else value
+    return f"sha256:{sha256_bytes(normalized.encode('utf-8'))}"
+
+
+def _finding_from_match(path: str, text: str, rule: str, value: str, offset: int) -> DlpFinding:
+    metadata = DLP_RULE_METADATA[rule]
+    return DlpFinding(
+        path=path,
+        line=_line_number(text, offset),
+        rule=rule,
+        category=metadata["category"],
+        severity=metadata["severity"],
+        fingerprint=_dlp_fingerprint(rule, value),
+    )
+
+
+def scan_dlp_inputs(
+    inputs: Iterable[InputFile], settings: Settings
+) -> dict[str, Any]:
+    unique_inputs = {item.path: item for item in inputs}
+    allowlist = {
+        (item.path, item.rule, item.fingerprint) for item in settings.dlp_allowlist
+    }
+    findings: list[DlpFinding] = []
+    allowlisted_count = 0
+    seen: set[tuple[str, int, str, str]] = set()
+    for item in sorted(unique_inputs.values(), key=lambda value: value.path):
+        for rule, value, offset in _iter_dlp_matches(item.text):
+            finding = _finding_from_match(item.path, item.text, rule, value, offset)
+            key = (finding.path, finding.line, finding.rule, finding.fingerprint)
+            if key in seen:
+                continue
+            seen.add(key)
+            allowlist_key = (finding.path, finding.rule, finding.fingerprint)
+            if allowlist_key in allowlist:
+                allowlisted_count += 1
+            else:
+                findings.append(finding)
+
+    findings.sort(key=lambda item: (item.path, item.line, item.rule, item.fingerprint))
+    findings_by_rule = dict(sorted(Counter(item.rule for item in findings).items()))
+    if findings:
+        status = "blocked"
+    elif allowlisted_count:
+        status = "passed_with_allowlist"
+    else:
+        status = "passed"
+    return {
+        "profile": settings.dlp_profile,
+        "enforcement": DLP_ENFORCEMENT,
+        "status": status,
+        "detectors": list(DLP_DETECTORS),
+        "scanned_input_count": len(unique_inputs),
+        "finding_count": len(findings),
+        "findings_by_rule": findings_by_rule,
+        "allowlisted_count": allowlisted_count,
+        "findings": [item.as_dict() for item in findings],
+    }
+
+
+def dlp_warning(report: dict[str, Any]) -> str | None:
+    if report["status"] == "blocked":
+        return (
+            f"DLP 檢核阻擋 export：發現 {report['finding_count']} 個可能被 "
+            "NotebookLM Enterprise 擋下的項目；報告不包含敏感原文"
+        )
+    if report["status"] == "passed_with_allowlist":
+        return (
+            f"DLP allowlist 已允許 {report['allowlisted_count']} 個精確命中；"
+            "請在上傳前重新確認這些內容"
+        )
+    return None
+
+
+def ensure_dlp_ready(report: dict[str, Any]) -> None:
+    if report["status"] == "blocked":
+        raise ExportError(
+            f"DLP 檢核未通過：{report['finding_count']} 個 finding；"
+            "請依 preflight 報告中的 path、line 與 rule 修正後重新執行 preflight"
+        )
 
 
 def is_sensitive(path: Path) -> bool:
@@ -1195,6 +1490,7 @@ def project_map_content(
     warnings: list[str],
     settings: Settings,
     coverage: dict[str, str],
+    dlp: dict[str, Any],
 ) -> str:
     lines = [
         f"# {root.name} — NotebookLM 專案導覽\n\n",
@@ -1211,7 +1507,19 @@ def project_map_content(
             "\n## Source catalog\n\n",
             f"- Profile: `{settings.profile}`\n",
             f"- Sources: `{len(materialized)}` / `{settings.available_source_slots}` available slots\n",
-            f"- 每 source safety limit: `{settings.max_source_bytes}` bytes / `{settings.max_source_words}` estimated words\n\n",
+            f"- 每 source safety limit: `{settings.max_source_bytes}` bytes / "
+            f"`{settings.max_source_words}` estimated words "
+            f"(model: `{WORD_COUNT_MODEL}`)\n\n",
+        ]
+    )
+    lines.extend(
+        [
+            "## DLP preflight\n\n",
+            f"- Profile: `{dlp['profile']}`\n",
+            f"- Enforcement: `{dlp['enforcement']}`\n",
+            f"- Status: `{dlp['status']}`\n",
+            f"- Findings: `{dlp['finding_count']}`\n",
+            f"- Allowlisted findings: `{dlp['allowlisted_count']}`\n\n",
         ]
     )
     for unit, filename, _ in materialized:
@@ -1594,6 +1902,9 @@ def readme_content() -> str:
 
 Exporter 完全離線，不會呼叫 NotebookLM、不會上傳檔案，也不會修改 raw sources
 或 Wiki pages。
+
+Exporter 也會在本機執行 `notebooklm-enterprise-basic` DLP preflight；未 allowlist
+的 finding 會在 commit 前阻擋並保留既有 pack，報告不包含命中值。
 """
 
 
@@ -1702,7 +2013,7 @@ def commit_output(
         raise ExportError(f"unable to acquire NotebookLM transaction lock: {output}") from exc
 
 
-def limits_payload(settings: Settings) -> dict[str, int]:
+def limits_payload(settings: Settings) -> dict[str, Any]:
     return {
         "enterprise_max_bytes": ENTERPRISE_MAX_BYTES,
         "enterprise_max_sources": ENTERPRISE_MAX_SOURCES,
@@ -1710,6 +2021,7 @@ def limits_payload(settings: Settings) -> dict[str, int]:
         "max_bytes": settings.max_source_bytes,
         "max_sources": settings.source_limit,
         "max_words": settings.max_source_words,
+        "word_count_model": WORD_COUNT_MODEL,
         "reserved_source_slots": settings.reserved_source_slots,
         "available_sources": settings.available_source_slots,
     }
@@ -1737,6 +2049,8 @@ def _settings_fingerprint(settings: Settings, root: Path) -> dict[str, Any]:
         "include_evidence": settings.include_evidence,
         "extra_paths": list(settings.extra_paths),
         "exclude_paths": list(settings.exclude_paths),
+        "dlp_profile": settings.dlp_profile,
+        "dlp_allowlist": [item.as_dict() for item in settings.dlp_allowlist],
         "config": repo_relative(settings.config_path, root) if settings.config_path else None,
     }
 
@@ -1747,6 +2061,7 @@ def _preflight_identity(
     pages: Sequence[InputFile],
     scan: dict[str, Any],
     lint_result: dict[str, Any],
+    dlp: dict[str, Any],
 ) -> tuple[str, str]:
     material = {
         "schema_version": PREFLIGHT_SCHEMA_VERSION,
@@ -1758,6 +2073,7 @@ def _preflight_identity(
         ],
         "required_documents": scan["required_documents"],
         "deterministic_findings": lint_result.get("findings", []),
+        "dlp": dlp,
     }
     inventory_hash = sha256_bytes(
         json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
@@ -1771,6 +2087,12 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     pages, skipped, warnings = collect_wiki_pages(root)
     scan = scan_project(root, settings, pages)
     coverage = coverage_summary(scan)
+    candidates = referenced_evidence(pages, root, settings, skipped) if settings.include_evidence else []
+    dlp_inputs = [*pages, *(candidate.input_file for candidate in candidates)]
+    dlp = scan_dlp_inputs(dlp_inputs, settings)
+    dlp_message = dlp_warning(dlp)
+    if dlp_message:
+        warnings.append(dlp_message)
     lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root)
     missing = [path for path, status in scan["required_documents"].items() if status != "active"]
     warnings.extend(f"必要文件尚未完成：{path} ({scan['required_documents'][path]})" for path in missing)
@@ -1791,9 +2113,14 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
         in {"frontmatter", "invalid_source", "missing_source", "stale_source"}
     ]
     critical_count = int(lint_result.get("summary", {}).get("critical", 0))
-    ready = not missing and not required_document_issues and critical_count == 0
+    ready = (
+        not missing
+        and not required_document_issues
+        and critical_count == 0
+        and dlp["status"] != "blocked"
+    )
     inventory_hash, preflight_id = _preflight_identity(
-        root, settings, pages, scan, lint_result
+        root, settings, pages, scan, lint_result, dlp
     )
     return {
         "ok": True,
@@ -1820,6 +2147,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
         "inventory": scan,
         "coverage": coverage,
         "limits": limits_payload(settings),
+        "dlp": dlp,
         "wiki_pages": len(pages),
         "lint": {
             "deterministic_status": lint_result.get("deterministic_status"),
@@ -1851,6 +2179,13 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
 
     skipped = list(initial_skipped)
     candidates = referenced_evidence(pages, root, settings, skipped) if settings.include_evidence else []
+    dlp = scan_dlp_inputs(
+        [*pages, *(candidate.input_file for candidate in candidates)], settings
+    )
+    dlp_message = dlp_warning(dlp)
+    if dlp_message:
+        warnings.append(dlp_message)
+    ensure_dlp_ready(dlp)
     available = settings.available_source_slots
     if available < 2:
         raise ExportError("at least two source slots are required for project map and documentation")
@@ -1862,7 +2197,9 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         group="project",
         title="專案導覽",
         inputs=tuple(pages),
-        content=project_map_content(root, documents, skipped, warnings, settings, coverage),
+        content=project_map_content(
+            root, documents, skipped, warnings, settings, coverage, dlp
+        ),
         priority=2_000_000,
     )
     preliminary_map_parts = materialize_units([preliminary_map], settings)
@@ -1898,6 +2235,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
                 current_warnings,
                 settings,
                 coverage,
+                dlp,
             ),
             priority=2_000_000,
         )
@@ -1935,6 +2273,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         "output_directory": output_relative,
         "config": config_relative,
         "limits": limits_payload(settings),
+        "dlp": dlp,
         "scan": scan_summary(scan),
         "coverage": {
             **coverage_summary(scan),
@@ -2035,7 +2374,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if not preflight["ready_to_export"]:
                 raise ExportError(
                     "preflight is not ready to export; complete mandatory documents and resolve "
-                    "deterministic Critical findings"
+                    "deterministic Critical or DLP findings"
                 )
             output = root / Path(*PurePosixPath(settings.output_directory).parts)
             _reject_symlink_components(root, output, "output")
@@ -2068,6 +2407,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"ready={str(result['ready_to_export']).lower()}"
         )
         print(f"Preflight ID: {result['preflight_id']}")
+        dlp = result["dlp"]
+        print(
+            "DLP: "
+            f"profile={dlp['profile']}, "
+            f"status={dlp['status']}, "
+            f"findings={dlp['finding_count']}, "
+            f"allowlisted={dlp['allowlisted_count']}"
+        )
+        for finding in dlp["findings"]:
+            print(
+                "DLP finding: "
+                f"{finding['path']}:{finding['line']} — "
+                f"{finding['rule']} ({finding['severity']})"
+            )
         for warning in result["warnings"]:
             print(f"Warning: {warning}")
     else:

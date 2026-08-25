@@ -50,6 +50,11 @@ def load_exporter():
     return module
 
 
+def load_canonical_exporter():
+    load_exporter()
+    return sys.modules["notebooklm_exporter"]
+
+
 def write_fixture(root: Path) -> None:
     (root / "wiki").mkdir(parents=True)
     (root / "src").mkdir()
@@ -162,6 +167,130 @@ class NotebookLMExporterTests(unittest.TestCase):
         self.assertEqual(wrapper_result.returncode, canonical_result.returncode)
         self.assertEqual(wrapper_result.stdout, canonical_result.stdout)
 
+    def test_estimate_words_adds_han_and_non_han_tokens(self) -> None:
+        module = load_canonical_exporter()
+
+        mixed = "中文NotebookLM\n"
+        legacy_estimate = max(
+            len(mixed.split()), len(module.CJK_PATTERN.findall(mixed))
+        )
+
+        self.assertEqual(module.estimate_words(mixed), 3)
+        self.assertEqual(module.estimate_words("中文"), 2)
+        self.assertEqual(module.estimate_words("def greet(name: str) -> str:"), 5)
+        self.assertGreater(module.estimate_words(mixed), legacy_estimate)
+
+    def test_mixed_content_is_split_using_additive_word_model(self) -> None:
+        module = load_canonical_exporter()
+        text = "中文NotebookLM\n"
+
+        chunks = module.split_text(text, max_bytes=1024, max_words=2)
+
+        self.assertEqual(len(chunks), 2)
+        self.assertEqual("".join(chunks), text)
+        self.assertTrue(all(module.estimate_words(chunk) <= 2 for chunk in chunks))
+
+    def test_dlp_basic_profile_reports_safe_findings_without_secret_values(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            config = root / "src/config.py"
+            api_key = "AIza" + "A" * 35
+            config.write_text(
+                "API_KEY = %r\n"
+                "password = 'p@ssword123!'\n"
+                "credit_card = '4111 1111 1111 1111'\n"
+                "bank_account = '123456789012'\n"
+                "PRIVATE_KEY = '''-----BEGIN PRIVATE KEY-----\n"
+                "example-key-material\n"
+                "-----END PRIVATE KEY-----'''\n" % api_key,
+                encoding="utf-8",
+            )
+            overview = root / "wiki/overview.md"
+            overview.write_text(
+                overview.read_text(encoding="utf-8").replace(
+                    "  - src/service.py\n", "  - src/service.py\n  - src/config.py\n"
+                ),
+                encoding="utf-8",
+            )
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            self.assertFalse(result["ready_to_export"])
+            self.assertEqual(result["dlp"]["status"], "blocked")
+            self.assertEqual(
+                {item["rule"] for item in result["dlp"]["findings"]},
+                {
+                    "CREDIT_CARD_NUMBER",
+                    "FINANCIAL_ACCOUNT_NUMBER",
+                    "GCP_CREDENTIALS",
+                    "GCP_API_KEY",
+                    "PASSWORD",
+                },
+            )
+            report = json.dumps(result, ensure_ascii=False)
+            for secret in (
+                api_key,
+                "p@ssword123!",
+                "4111 1111 1111 1111",
+                "123456789012",
+                "example-key-material",
+            ):
+                self.assertNotIn(secret, report)
+
+    def test_dlp_block_preserves_previous_pack(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            output = root / ".notebooklm"
+            first_code, _ = self.run_export(module, root, output)
+            self.assertEqual(first_code, 0)
+            before = (output / "manifest.json").read_bytes()
+
+            source = root / "src/service.py"
+            source.write_text("password = 'p@ssword123!'\n", encoding="utf-8")
+            code, result = self.run_export(module, root, output)
+
+            self.assertEqual(code, 2)
+            self.assertIn("DLP", result["error"])
+            self.assertNotIn("p@ssword123!", json.dumps(result, ensure_ascii=False))
+            self.assertEqual((output / "manifest.json").read_bytes(), before)
+
+    def test_dlp_allowlist_requires_exact_fingerprint(self) -> None:
+        module = load_exporter()
+        canonical = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            config = root / "src/config.py"
+            api_key = "AIza" + "B" * 35
+            config.write_text(f"API_KEY = {api_key!r}\n", encoding="utf-8")
+            overview = root / "wiki/overview.md"
+            overview.write_text(
+                overview.read_text(encoding="utf-8").replace(
+                    "  - src/service.py\n", "  - src/service.py\n  - src/config.py\n"
+                ),
+                encoding="utf-8",
+            )
+            fingerprint = canonical._dlp_fingerprint("GCP_API_KEY", api_key)
+            (root / "notebooklm.toml").write_text(
+                "dlp_allowlist = [\n"
+                "  { path = \"src/config.py\", rule = \"GCP_API_KEY\", "
+                f"fingerprint = \"{fingerprint}\" }}\n]\n",
+                encoding="utf-8",
+            )
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0, result)
+            self.assertTrue(result["ready_to_export"])
+            self.assertEqual(result["dlp"]["status"], "passed_with_allowlist")
+            self.assertEqual(result["dlp"]["allowlisted_count"], 1)
+            self.assertEqual(result["dlp"]["findings"], [])
+
     def run_export(self, module, root: Path, output: Path) -> tuple[int, dict[str, object]]:
         preflight_code, preflight = self.run_preflight(module, root)
         if preflight_code != 0:
@@ -205,6 +334,11 @@ class NotebookLMExporterTests(unittest.TestCase):
             first_code, first = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
             self.assertEqual(first["source_count"], 5)
+            self.assertEqual(
+                first["manifest"]["limits"]["word_count_model"],
+                "han_characters_plus_non_han_tokens",
+            )
+            self.assertEqual(first["manifest"]["dlp"]["status"], "passed")
             self.assertEqual(len(first["actions"]["added"]), 5)
             self.assertTrue((output / "manifest.json").is_file())
             self.assertTrue((output / "sources/project-map.md").is_file())
@@ -860,7 +994,7 @@ status: active
             self.assertIn("200000000", result["error"])
             self.assertFalse(output.exists())
 
-    def test_schema_v1_manifest_is_migrated_to_v2(self) -> None:
+    def test_schema_v1_manifest_is_migrated_to_v3(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -876,7 +1010,7 @@ status: active
             code, result = self.run_export(module, root, output)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["manifest"]["schema_version"], 2)
+            self.assertEqual(result["manifest"]["schema_version"], 3)
             self.assertEqual(len(result["actions"]["unchanged"]), 5)
 
     def test_previous_manifest_path_traversal_is_rejected_without_deletion(self) -> None:
@@ -1238,7 +1372,7 @@ status: active
 
             export_code, exported = self.run_export(module, root, output)
             self.assertEqual(export_code, 0)
-            self.assertEqual(exported["manifest"]["schema_version"], 2)
+            self.assertEqual(exported["manifest"]["schema_version"], 3)
             self.assertLessEqual(exported["manifest"]["source_count"], 300)
             self.assertTrue((output / "manifest.json").is_file())
 

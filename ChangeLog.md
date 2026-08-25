@@ -8,6 +8,12 @@
 
 ### Fixed
 
+- **NotebookLM mixed-language word estimation**：exporter 改用
+  `han_characters_plus_non_han_tokens` 加總模型，修正繁中敘事與程式碼混合時以
+  `max()` 估算造成的 source 字數低估，並在 manifest/preflight 暴露計數模型。
+- **NotebookLM local Basic DLP gate**：exporter 新增離線 deterministic 檢核，涵蓋
+  信用卡、金融帳號、GCP credentials、GCP API key 與明文密碼；未 allowlist 的 finding
+  會阻擋 preflight/apply，安全報告不保存命中值，manifest 升級至 schema v3。
 - **Generated cache boundaries**：將 `.mypy_cache/` 與 `.ruff_cache/` 納入 Git ignore、release archive 與 NotebookLM evidence exclusion，並補上回歸測試。
 - **Windows path spelling parity**：NotebookLM exporter 接受同一 Repo 的 Unicode 長路徑與 8.3 短路徑表示，同時維持 symlink/reparse 與 repository boundary 的 fail-closed 檢查。
 - **Hook payload type safety**：PreToolUse 與 PostToolUse 對合法 JSON 但非 object

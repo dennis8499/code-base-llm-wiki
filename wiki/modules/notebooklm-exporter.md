@@ -9,9 +9,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:986d22ade8bf0be0909fe2a016ddfa989202ee42fd611964284a3e338f6318fe
+source_digest: sha256:6c3311c2556b0a9b62385e077d7ba575cb7215ff06cd63005343490a0becc3fb
 derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
-last_updated: 2026-08-24
+last_updated: 2026-08-25
 tags: [module, notebooklm, exporter, preflight]
 status: active
 ---
@@ -31,9 +31,14 @@ status: active
 - 以 Wiki、inventory、設定與 deterministic findings 建立穩定 `preflight_id`。
 - 強制必要 overview、function catalog、architecture 與 SA 都為 active 且可匯出。
 - 先配置文件 source slots，再依證據優先序加入 raw evidence。
+- 以 `han_characters_plus_non_han_tokens` 加總模型估算 source words，避免混合繁中敘事與程式碼時低估容量。
 - 排除 `.mypy_cache/`、`.ruff_cache/`、平台 fallback hook audit logs 等 generated state，不把本機 audit output 當成 evidence；
   sensitive filename/path components 也會被排除。
-- 產生 schema-v2 manifest、upload plan、project map 與 stable logical source IDs。
+- 產生 schema-v3 manifest、upload plan、project map 與 stable logical source IDs。
+- 以 `notebooklm-enterprise-basic` 在本機檢查 `CREDIT_CARD_NUMBER`、
+  `FINANCIAL_ACCOUNT_NUMBER`、`GCP_CREDENTIALS`、`GCP_API_KEY` 與 `PASSWORD`。
+- 未 allowlist 的 DLP finding 會讓 preflight 不 ready，阻擋 apply 並保留既有 pack；
+  報告只包含 path、line、rule、severity 與 fingerprint，不包含命中值。
 - 套用既有 pack 前驗證 manifest source file 必須是 output 內的安全相對路徑；
   malformed 或 path-traversal manifest 會 fail closed 且保留既有 pack。
 - commit 前驗證新輸出 keys 與既有 output tree；path traversal、正規化碰撞或 symlink/
@@ -63,9 +68,18 @@ export-notebooklm.py --root . --apply --preflight-id sha256:... --output .notebo
 ```
 
 直接 export、遺漏 ID、ID 與目前 inventory/config/Wiki 不符，或
-`ready_to_export=false` 時皆回傳 exit code 2 且不寫入。`scan_profile=target`
+`ready_to_export=false` 時 apply 回傳 exit code 2 且不寫入。`scan_profile=target`
 排除已安裝 framework adapter；本 Repo 使用 `framework`，把 framework schema、
 雙平台 adapter 與 release tooling 視為產品證據。
+
+設定可使用：
+
+```toml
+dlp_profile = "notebooklm-enterprise-basic"
+dlp_allowlist = [
+  { path = "docs/example.md", rule = "GCP_API_KEY", fingerprint = "sha256:<64 lowercase hex>" },
+]
+```
 
 ## Evidence
 
@@ -80,6 +94,12 @@ export-notebooklm.py --root . --apply --preflight-id sha256:... --output .notebo
   `test_invalid_utf8_transaction_journal_is_rejected_without_traceback` 固定 malformed
   state 的 structured failure。
 - `main()` 在 apply 前重建 preflight 並比較 ID。
+- `estimate_words()` 將 Han/CJK 字元與非 Han、非空白 token runs 分開加總；`limits.word_count_model` 將模型寫入 preflight 與 manifest。
+- `scan_dlp_inputs()` 只掃描 export candidates 與 Wiki pages；`DlpFinding` 不保存敏感原文，
+  `DLP_PROFILE` 與 allowlist 會納入 preflight identity。
+- `test_dlp_basic_profile_reports_safe_findings_without_secret_values`、
+  `test_dlp_block_preserves_previous_pack` 與
+  `test_dlp_allowlist_requires_exact_fingerprint` 固定 DLP gate、safe report 與 pack rollback。
 - `commit_output()` 使用 staging/backup 與 `os.replace()`；若 replacement 失敗，會回復既有 pack。
 - `commit_output()` 寫入 active/committed transaction journal；下一次 apply 可在程序終止
   後復原舊 pack，再清理 stage/backup。
@@ -110,6 +130,8 @@ export-notebooklm.py --root . --apply --preflight-id sha256:... --output .notebo
 ## Gaps
 
 - 不呼叫 NotebookLM API，也不自動上傳、刪除或同步雲端 source。
+- 本機 Basic profile 是 export-side approximation；租戶自訂 Advanced DLP／Model Armor
+  template 仍可能在雲端額外檢核或阻擋。
 - 租戶實際來源額度仍需由管理員確認。
 
 ## 相關頁面

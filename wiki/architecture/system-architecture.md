@@ -9,9 +9,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:f0baf9f486bf047897bc4a293753805c729bb5a4b4d02b88cec95903a4675b02
+source_digest: sha256:0b515bbc36412ea9db2a10b5c801ba027a139bbcb35aa8b04a53943cbb615152
 derived_from: ["[[overview]]"]
-last_updated: 2026-08-24
+last_updated: 2026-08-25
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -34,7 +34,7 @@ operations 與 authorization policy 由
 | Installer v3 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
-| NotebookLM exporter | 全安全範圍盤點、preflight identity、文件優先 source pack | [[notebooklm-exporter]] |
+| NotebookLM exporter | 全安全範圍盤點、本機 DLP、preflight identity、文件優先 source pack | [[notebooklm-exporter]] |
 | Release surface | parity、CI、版本、資產與公開發布前置條件 | [[platform-adapters-and-release]] |
 
 ## Data Flow
@@ -46,6 +46,7 @@ User intent
   -> authorized Wiki/framework write
   -> frontmatter + digest + index + append-only log checks
   -> optional NotebookLM preflight
+  -> local DLP gate
   -> confirmed apply with matching preflight_id
 ```
 
@@ -79,7 +80,7 @@ symlink/reparse containment → 原子替換本機 pack。
 
 ## Gaps
 
-- 尚未提供 SaaS、NotebookLM API、自動 upload 或多租戶權限管理。
+- 尚未提供 SaaS、NotebookLM API、自動 upload、多租戶權限管理或 Advanced DLP template 同步。
 - 公開 Release 仍等待專案擁有者選擇明確 LICENSE。
 
 ## Related Pages

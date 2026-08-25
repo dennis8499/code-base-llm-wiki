@@ -130,7 +130,11 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --apply --preflight-id <id> --output .notebooklm --format json
 ```
 
-輸出包含 `sources/*.md`、schema v2 `manifest.json`、`upload-plan.md` 與 README。
+輸出包含 `sources/*.md`、schema v3 `manifest.json`、`upload-plan.md` 與 README。
+Exporter 會在本機執行 `notebooklm-enterprise-basic` DLP preflight，檢查
+信用卡、金融帳號、GCP credentials、GCP API key 與明文密碼。未 allowlist 的
+finding 會讓 `ready_to_export=false` 並阻擋 apply；報告不會包含命中值，也不會
+修改 raw source 或 Wiki。
 Apply 會重新掃描 Wiki、inventory 與設定；ID 不相符或必要文件／Critical lint
 未通過時拒絕寫入。直接 export 不再受支援。
 Source IDs 以功能群組為單位（例如 `docs:<group>`、`evidence:<group>`），舊 schema
@@ -139,7 +143,8 @@ v1 manifest 可遷移。打包採 documents-first：完整功能文件先保留�
 報告。NotebookLM 只需處理 `sources/*.md`；依 upload plan 對 `added`、`changed`、
 `deleted` 手動更新，`unchanged` 不需重傳。預設以 300 sources、每 source 200 MB /
 500,000 words 為 Enterprise hard limits，並用 180 MB / 450,000 words safety
-limits。若要調整 Workspace tier、保留 source slots 或 evidence scope，將
+limits；字數估算採 `han_characters_plus_non_han_tokens` 加總模型，避免繁中與程式碼
+混合時低估。若要調整 Workspace tier、保留 source slots 或 evidence scope，將
 `assets/notebooklm.toml` 複製成 repo root 的 `notebooklm.toml` 後修改。
 
 ## 12. Delegation

@@ -117,7 +117,7 @@ flowchart LR
   manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
 - **NotebookLM 全專案文件化**：強制 preflight ID 與必要文件 gate；source pack
-  採 documents-first、穩定 logical source IDs 與增量 upload plan。
+  採 documents-first、穩定 logical source IDs、Basic DLP gate 與增量 upload plan。
 - **可驗證**：跨 Python/Linux/Windows CI、parity、frontmatter、digest
   freshness、log/index、唯讀 lint 與單元測試。
 
@@ -211,7 +211,8 @@ NotebookLM Enterprise 匯出：
 預覽使用 `export-notebooklm.py --preflight`，不寫入 Wiki 或 pack，並回傳一次性的
 `preflight_id`。完成文件與確認後，使用
 `--apply --preflight-id <id>`；任何 inventory、Wiki 或設定變更都要求重新
-preflight。Exporter 不會呼叫雲端 API 或自動上傳。
+preflight。Exporter 不會呼叫雲端 API 或自動上傳，並會在本機執行 Basic DLP
+檢核；未 allowlist finding 會阻擋 apply。
 
 ---
 

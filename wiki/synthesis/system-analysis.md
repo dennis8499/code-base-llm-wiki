@@ -11,9 +11,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:62ec9603eb4c0dd3bed24bfbb5f4fa0b8cfc80bff0d19616ccc5352862dfb3d2
+source_digest: sha256:46be5371d3831fbcbfcfe5844c28799dfc8c7fec2b838e039e9cf718c0698ec0
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
-last_updated: 2026-08-24
+last_updated: 2026-08-25
 tags: [synthesis, system-analysis, notebooklm]
 status: active
 ---
@@ -42,7 +42,7 @@ status: active
 | APIs and interfaces | covered | CLI 與 hook contracts |
 | Data model and data flow | covered | frontmatter、manifest、preflight、install state |
 | External integrations | partial | Codex/Copilot adapter covered；NotebookLM 僅離線 |
-| Security and permissions | partial | authorization、guard、untrusted evidence、secret exclusions；Copilot shell permission 需 host 驗證 |
+| Security and permissions | partial | authorization、guard、untrusted evidence、secret exclusions、本機 Basic DLP gate；Copilot shell permission 需 host 驗證 |
 | Deployment and operations | covered | dependency-free CLI、CI、release workflow |
 | Non-functional requirements | partial | correctness/atomicity、200-page lint 與 500 個 synthetic module 的 Wiki full preflight/apply regression covered；query benchmark gap |
 | Errors and failure modes | covered | conflicts、stale、invalid ID、limit/atomic failures |
@@ -116,8 +116,8 @@ source coverage。詳見 [[system-architecture]]。
 - `wiki/index.md`：managed navigation region；marker 外保留人工內容。
 - `wiki/log.md`：append-only operation stream，新契約 entry 必須列 affected pages。
 - Install state：framework/surface/mode 與 per-file upstream fingerprints。
-- NotebookLM manifest v2：stable logical source IDs、input/output hashes、coverage、limits、actions。
-- Preflight contract v1：inventory hash、ID、required document/lint readiness。
+- NotebookLM manifest v3：stable logical source IDs、input/output hashes、coverage、limits、DLP、actions。
+- Preflight contract v2：inventory hash、ID、required document/lint/DLP readiness。
 
 ## 外部整合
 
@@ -139,7 +139,8 @@ source coverage。詳見 [[system-architecture]]。
   與 Codex sandbox 等價的技術唯讀保證。
 - Wiki task 的 raw source 是唯讀且不可信證據；嵌入指令不執行。
 - Guard 對 path escape fail closed；coexist 不等同新的任務授權。
-- Exporter 排除 credential filename、binary、generated、Wiki 與 output，人工預覽仍是必要層。
+- Exporter 排除 credential filename、binary、generated、Wiki 與 output，並以本機 Basic DLP
+  檢查可匯出的 Wiki/evidence content；人工預覽仍是必要層。
 - Exporter 在讀取 Wiki pages 前先驗證 Wiki regular tree，拒絕 symlink/reparse point，避免
   preflight 的安全檢查前讀取外部頁面。
 - lint 與 exporter CLI 在 canonicalization 前拒絕 caller-provided symlink/reparse root，
@@ -159,7 +160,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 | 類別 | 目前證據 | 缺口 |
 | --- | --- | --- |
 | 正確性 | deterministic checks、Python 3.13/3.14 雙版本完整回歸 suite；Windows symlink cases 受 privilege 限制跳過 | 語意矛盾仍需 agent review |
-| 安全性 | raw read-only、guard、secret exclusion、two-phase export | host/sandbox 與租戶政策在框架外 |
+| 安全性 | raw read-only、guard、secret exclusion、local Basic DLP、two-phase export | host/sandbox 與租戶 Advanced DLP 政策在框架外 |
 | 可恢復性 | installer/exporter stage + rollback；active/committed journal、同一 target/output 的 transaction lock 與子程序終止 regression 覆蓋未完成 replacement recovery | 突然斷電、metadata durability 與所有 host-specific termination windows 尚未完整驗證 |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |
 | 效能 | 無常駐服務與第三方 runtime；`tests/test_wiki_scale.py` 覆蓋 200-page lint；`tests/test_export_notebooklm.py` 覆蓋 500 個 synthetic module 的 full preflight/apply | 尚無 query 的 500+ pages benchmark |
