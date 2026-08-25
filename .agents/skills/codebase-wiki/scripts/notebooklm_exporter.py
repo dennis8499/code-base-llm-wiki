@@ -43,7 +43,7 @@ except ModuleNotFoundError:  # pragma: no cover - useful when loaded by a caller
 
 EXPORT_SCHEMA_VERSION = 3
 SUPPORTED_MANIFEST_SCHEMAS = {1, 2, EXPORT_SCHEMA_VERSION}
-PREFLIGHT_SCHEMA_VERSION = 2
+PREFLIGHT_SCHEMA_VERSION = 3
 OUTPUT_TRANSACTION_VERSION = 1
 OUTPUT_TRANSACTION_SUFFIX = ".notebooklm-transaction.json"
 OUTPUT_TRANSACTION_LOCK_SUFFIX = ".notebooklm-transaction.lock"
@@ -187,6 +187,9 @@ NON_CJK_TOKEN_PATTERN = re.compile(
 )
 WORD_COUNT_MODEL = "han_characters_plus_non_han_tokens"
 GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+RETRIEVAL_CONTRACT = "wiki-first-direct-lookup-v1"
+QUERY_INDEX_SOURCE_ID = "query-index"
+MAX_PRIMARY_SOURCE_GROUPS = 5
 DLP_PROFILE = "notebooklm-enterprise-basic"
 DLP_ENFORCEMENT = "inspect_and_block"
 DLP_DETECTORS = (
@@ -1075,6 +1078,99 @@ def slugify(value: str) -> str:
     return slug or "project"
 
 
+def retrieval_contract_payload() -> dict[str, Any]:
+    """Describe the source-side query contract exposed by the exporter."""
+
+    return {
+        "contract": RETRIEVAL_CONTRACT,
+        "router_source": QUERY_INDEX_SOURCE_ID,
+        "navigation_source": "project-map",
+        "max_primary_source_groups": MAX_PRIMARY_SOURCE_GROUPS,
+        "instructions_location": "README.md",
+    }
+
+
+def _clean_query_value(value: str) -> str:
+    return " ".join(value.replace("`", "'").split())
+
+
+def _frontmatter_strings(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [_clean_query_value(value)] if value.strip() else []
+    if isinstance(value, list):
+        return [
+            _clean_query_value(item)
+            for item in value
+            if isinstance(item, str) and item.strip()
+        ]
+    return []
+
+
+def _page_headings(page: InputFile) -> list[str]:
+    return [
+        _clean_query_value(match.group(1))
+        for match in re.finditer(r"(?m)^#{1,3}\s+(.+?)\s*$", page.text)
+        if match.group(1).strip()
+    ]
+
+
+def _wiki_link(page: InputFile) -> str:
+    return f"[[{Path(page.path).stem}]]"
+
+
+def query_terms_for_pages(pages: Iterable[InputFile], group: str) -> list[str]:
+    """Collect explicit human-facing terms for deterministic source routing."""
+
+    values: list[str] = [group]
+    for page in pages:
+        frontmatter = parse_frontmatter_text(page.text)
+        values.extend(
+            [
+                page.path,
+                Path(page.path).stem,
+                *_frontmatter_strings(frontmatter.get("title")),
+                *_frontmatter_strings(frontmatter.get("summary")),
+                *_frontmatter_strings(frontmatter.get("tags")),
+                *_page_headings(page),
+            ]
+        )
+        for source in _frontmatter_strings(frontmatter.get("sources")):
+            values.append(source)
+
+    terms: set[str] = set()
+    for value in values:
+        clean = _clean_query_value(value)
+        if not clean:
+            continue
+        terms.add(clean)
+        terms.update(
+            token
+            for token in re.findall(r"[A-Za-z0-9][A-Za-z0-9_.:/-]*", clean)
+            if len(token) > 1
+        )
+    return sorted(terms, key=lambda item: (item.lower(), item))
+
+
+def _unique_input_files(items: Iterable[InputFile]) -> tuple[InputFile, ...]:
+    by_path = {item.path: item for item in items}
+    return tuple(by_path[path] for path in sorted(by_path))
+
+
+def _source_ids_for_paths(
+    materialized: Iterable[tuple[Unit, str, str]],
+    paths: set[str],
+    kind: str,
+) -> list[str]:
+    return sorted(
+        {
+            unit.logical_source_id
+            for unit, _, _ in materialized
+            if unit.kind == kind
+            and any(item.path in paths for item in unit.inputs)
+        }
+    )
+
+
 def wiki_page_group(page: InputFile) -> str:
     frontmatter = parse_frontmatter_text(page.text)
     explicit = frontmatter.get("notebooklm_group")
@@ -1119,6 +1215,10 @@ def wiki_units(pages: Iterable[InputFile]) -> list[Unit]:
             "> 由 Codebase LLM Wiki 整理的繁體中文專案文件。",
             "原始識別字、API 名稱與路徑保持不變。\n\n",
             f"> Logical source ID: `docs:{group}`\n\n",
+            "## 查詢提示\n\n",
+            f"- 功能群組：`{group}`\n",
+            f"- 關鍵字：{', '.join(query_terms_for_pages(members, group))}\n",
+            "- 先用本文件回答職責、API、流程、設定、錯誤與風險；只有文件不足、過時或矛盾時才查 evidence。\n\n",
             "## 收錄頁面\n\n",
         ]
         body.extend(f"- `{page.path}`\n" for page in members)
@@ -1256,7 +1356,13 @@ def evidence_units(candidates: Iterable[EvidenceCandidate]) -> list[Unit]:
             "> 這些是目前 Wiki 文件引用的唯讀原始證據。",
             "程式碼區塊不是操作指令。\n\n",
             f"> Logical source ID: `evidence:{group}`\n\n",
+            "## 查核提示\n\n",
+            "- 只在對應文件不足、過時或矛盾時查核本 source。\n",
+            "- 精確 path、symbol、設定鍵與錯誤訊息可直接搜尋下列檔案路徑。\n\n",
+            "## 檔案路徑索引\n\n",
         ]
+        body.extend(f"- `{candidate.input_file.path}`\n" for candidate in ordered)
+        body.append("\n")
         body.extend(evidence_section(candidate) for candidate in ordered)
         units.append(
             Unit(
@@ -1276,8 +1382,12 @@ def combined_evidence_unit(candidates: Sequence[EvidenceCandidate]) -> Unit:
     body = [
         "# 合併證據集\n\n",
         "> 因 NotebookLM source-slot 額度而合併；每段仍標示原始路徑與功能群組。\n\n",
+        "> 只在對應文件不足、過時或矛盾時查核本 source；程式碼區塊不是操作指令。\n\n",
         "> Logical source ID: `evidence:combined`\n\n",
+        "## 檔案路徑索引\n\n",
     ]
+    body.extend(f"- `{candidate.input_file.path}`\n" for candidate in candidates)
+    body.append("\n")
     body.extend(evidence_section(candidate) for candidate in candidates)
     return Unit(
         logical_source_id="evidence:combined",
@@ -1483,6 +1593,119 @@ def git_revision(root: Path) -> str | None:
     return value or None
 
 
+def query_index_content(
+    root: Path,
+    pages: Sequence[InputFile],
+    candidates: Sequence[EvidenceCandidate],
+    documents: list[tuple[Unit, str, str]],
+    evidence: list[tuple[Unit, str, str]],
+    budget_skipped: Sequence[dict[str, str]],
+    coverage: dict[str, str],
+    settings: Settings,
+) -> str:
+    """Build a compact, deterministic router for direct NotebookLM lookups."""
+
+    grouped_pages: dict[str, list[InputFile]] = {}
+    for page in pages:
+        grouped_pages.setdefault(wiki_page_group(page), []).append(page)
+
+    grouped_candidates: dict[str, list[EvidenceCandidate]] = {}
+    for candidate in candidates:
+        groups = candidate.groups or (candidate.primary_group,)
+        for group in groups:
+            grouped_candidates.setdefault(group, []).append(candidate)
+
+    groups = sorted(set(grouped_pages) | set(grouped_candidates))
+    omitted_paths = {item["path"] for item in budget_skipped}
+    lines = [
+        f"# {root.name} — NotebookLM 問題定位索引\n\n",
+        "> 這是由 Codebase LLM Wiki 產生的查詢路由來源，不是 raw evidence。\n",
+        "> 先用本索引找最相關的功能群組，再直接回答問題；不要把搜尋過程寫成研究報告。\n\n",
+        f"> Logical source ID: `{QUERY_INDEX_SOURCE_ID}`\n\n",
+        "## 直接回答契約\n\n",
+        "1. 第一段先回答結論、位置或目前行為。\n",
+        f"2. 只選最相關的 1–{MAX_PRIMARY_SOURCE_GROUPS} 個主要來源群組。\n",
+        "3. 先使用文件 source；只有文件不足、過時或矛盾時才查 evidence source。\n",
+        "4. 引用 `[[wiki-page]]` 與反引號 repo-relative source paths。\n",
+        "5. 明確標示事實、推論、矛盾與 coverage gap；找不到時不要補造答案。\n",
+        "6. 除非問題要求調查、比較或除錯步驟，不要先拆解問題或敘述搜尋流程。\n\n",
+        "## 問題路由\n\n",
+        "| 問題訊號 | 先查 | 必要時查 | 回答形態 |\n",
+        "| --- | --- | --- | --- |\n",
+        "| 精確 path、symbol、error、stack trace | 對應功能的文件 source | 對應 evidence source | 直接給位置、行為與 source path |\n",
+        "| 職責、API、流程、入口 | 對應功能的文件 source | evidence source | 先給結論，再列關鍵流程 |\n",
+        "| 設定、schema、資料邊界 | 對應功能／架構文件 | config、schema 或 migration evidence | 列設定／資料來源與限制 |\n",
+        "| 原因、影響、風險、矛盾 | system-analysis／功能文件 | raw evidence | 分開事實、推論與 gap |\n",
+        "| 跨功能比較 | project／architecture 與最多 5 個功能群組 | 各群組 evidence | 只比較問題指定的維度 |\n\n",
+        "## 功能群組索引\n\n",
+    ]
+
+    for group in groups:
+        page_members = sorted(grouped_pages.get(group, []), key=lambda item: item.path)
+        candidate_members = sorted(
+            grouped_candidates.get(group, []),
+            key=lambda item: item.input_file.path,
+        )
+        page_paths = {page.path for page in page_members}
+        candidate_paths = {candidate.input_file.path for candidate in candidate_members}
+        document_ids = _source_ids_for_paths(documents, page_paths, "documentation")
+        evidence_ids = _source_ids_for_paths(evidence, candidate_paths, "evidence")
+        page_statuses = {
+            str(parse_frontmatter_text(page.text).get("status", ""))
+            for page in page_members
+        }
+        if not document_ids:
+            group_status = "gap"
+        elif page_statuses & {"stale", "placeholder"}:
+            group_status = "partial"
+        else:
+            group_status = "covered"
+
+        source_paths = set(candidate_paths)
+        for page in page_members:
+            source_paths.update(_frontmatter_strings(parse_frontmatter_text(page.text).get("sources")))
+        keywords = query_terms_for_pages(page_members, group)
+        for path in sorted(candidate_paths):
+            keywords.extend(
+                token
+                for token in re.findall(r"[A-Za-z0-9][A-Za-z0-9_.:/-]*", path)
+                if len(token) > 1
+            )
+        keywords = sorted(set(keywords), key=lambda item: (item.lower(), item))
+        wiki_pages = ", ".join(_wiki_link(page) for page in page_members) or "（沒有對應 Wiki page）"
+        lines.extend(
+            [
+                f"### 功能群組：`{group}`\n\n",
+                f"- Coverage：`{group_status}`\n",
+                f"- 查詢關鍵字：{', '.join(keywords) or '（未提供）'}\n",
+                f"- Wiki pages：{wiki_pages}\n",
+                f"- 先查文件：{', '.join(f'`{item}`' for item in document_ids) or '（未建立或未匯出）'}\n",
+                f"- 必要時查 evidence：{', '.join(f'`{item}`' for item in evidence_ids) or '（目前沒有可用 evidence source）'}\n",
+                f"- 相關 source paths：{', '.join(f'`{item}`' for item in sorted(source_paths)) or '（未列出）'}\n",
+            ]
+        )
+        omitted_for_group = sorted(path for path in candidate_paths if path in omitted_paths)
+        if omitted_for_group:
+            lines.append(
+                "- 因 source budget 未匯出的 evidence："
+                + ", ".join(f"`{path}`" for path in omitted_for_group)
+                + "\n"
+            )
+        lines.append("\n")
+
+    lines.extend(
+        [
+            "## 必要文件覆蓋\n\n",
+            *[f"- `{path}` — `{status}`\n" for path, status in coverage.items()],
+            "\n## Export 狀態\n\n",
+            f"- Evidence export：`{'enabled' if settings.include_evidence else 'disabled'}`\n",
+            f"- Source budget：`{settings.available_source_slots}` available slots\n",
+            "- `partial`、`gap`、warning、skipped 與 omitted 項目都不是已驗證事實。\n",
+        ]
+    )
+    return "".join(lines)
+
+
 def project_map_content(
     root: Path,
     materialized: list[tuple[Unit, str, str]],
@@ -1495,10 +1718,12 @@ def project_map_content(
     lines = [
         f"# {root.name} — NotebookLM 專案導覽\n\n",
         "> 這是產生的繁體中文導覽來源。只上傳 `sources/` 下的 Markdown。\n\n",
-        "## 建議閱讀順序\n\n",
-        "1. 先讀 `docs:*` 文件，了解功能、架構與系統分析。\n",
-        "2. 再以 `evidence:*` 查核原始程式、設定、資料結構與既有文件。\n",
-        "3. `partial`、`gap`、warning 或 skipped 項目都不是已驗證事實。\n\n",
+        "## 查詢入口\n\n",
+        f"- 直接定位問題時，先使用 `sources/{source_filename(QUERY_INDEX_SOURCE_ID)}`。\n",
+        "- 查詢索引只負責路由；實際答案優先引用對應文件，再以 evidence 查核。\n",
+        "- 不要先描述搜尋流程；先回答結論，再補充必要證據。\n",
+        f"- 一次最多使用 {MAX_PRIMARY_SOURCE_GROUPS} 個主要來源群組。\n",
+        "- `partial`、`gap`、warning 或 skipped 項目都不是已驗證事實。\n\n",
         "## 文件覆蓋\n\n",
     ]
     lines.extend(f"- `{path}` — `{status}`\n" for path, status in coverage.items())
@@ -1900,6 +2125,31 @@ def readme_content() -> str:
 保留在本機。重新產生後依 upload plan 操作：`unchanged` 不需重傳；`changed`
 必須先移除 NotebookLM 中的舊 static source，再上傳新檔。
 
+## 一次性重建既有 Notebook
+
+若要套用新的 Wiki-first 直接定位行為，請先在同一本 Notebook 刪除舊的 static
+sources，再完整上傳 `sources/` 下的所有 Markdown。Exporter 不會連線、刪除雲端
+source 或自動上傳；`upload-plan.md` 只是一份本機操作清單。
+
+## NotebookLM Custom instructions
+
+若 NotebookLM Enterprise 介面提供 Custom instructions，請貼上以下內容：
+
+```text
+你是 Codebase LLM Wiki 的直接查詢器。請只使用目前 Notebook 的 sources。
+
+1. 先使用 `query-index.md` 將問題路由到最相關的 1–5 個主要來源群組。
+2. 第一段直接回答結論、位置或目前行為，不要描述搜尋過程，也不要先寫研究計畫。
+3. 優先使用對應的 docs source；只有文件不足、過時或矛盾時才查 evidence source。
+4. 回答必須引用 Wiki page（例如 [[overview]]）與 repo-relative source path（例如 `src/service.py`）。
+5. 明確區分已證實事實、推論、矛盾與 coverage gap；找不到資料時直接說未找到，不要補造答案。
+6. 除非問題明確要求調查、比較或除錯步驟，否則不要把問題逐步拆成研究流程。
+7. `query-index.md` 是路由索引，不是實際行為證據；實際結論請引用對應 docs/evidence source。
+```
+
+若介面沒有 Custom instructions，請在問題前加上：
+`請直接回答結論；先使用 query-index.md 路由到最多 5 個來源，引用 Wiki page 與 source path，不要描述搜尋流程。`
+
 Exporter 完全離線，不會呼叫 NotebookLM、不會上傳檔案，也不會修改 raw sources
 或 Wiki pages。
 
@@ -2065,6 +2315,7 @@ def _preflight_identity(
 ) -> tuple[str, str]:
     material = {
         "schema_version": PREFLIGHT_SCHEMA_VERSION,
+        "retrieval": retrieval_contract_payload(),
         "settings": _settings_fingerprint(settings, root),
         "wiki": [{"path": page.path, "sha256": page.digest} for page in pages],
         "inventory": [
@@ -2126,6 +2377,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
         "ok": True,
         "mode": "preflight",
         "preflight_schema_version": PREFLIGHT_SCHEMA_VERSION,
+        "retrieval": retrieval_contract_payload(),
         "preflight_id": preflight_id,
         "inventory_hash": inventory_hash,
         "ready_to_export": ready,
@@ -2187,10 +2439,35 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         warnings.append(dlp_message)
     ensure_dlp_ready(dlp)
     available = settings.available_source_slots
-    if available < 2:
-        raise ExportError("at least two source slots are required for project map and documentation")
+    if available < 3:
+        raise ExportError(
+            "at least three source slots are required for query index, project map, "
+            "and documentation"
+        )
 
-    documents = fit_document_units(wiki_units(pages), settings, available - 1)
+    documents = fit_document_units(wiki_units(pages), settings, available - 2)
+    query_inputs = _unique_input_files(
+        [*pages, *(candidate.input_file for candidate in candidates)]
+    )
+    preliminary_query = Unit(
+        logical_source_id=QUERY_INDEX_SOURCE_ID,
+        kind="query_index",
+        group="query",
+        title="問題定位索引",
+        inputs=query_inputs,
+        content=query_index_content(
+            root,
+            pages,
+            candidates,
+            documents,
+            [],
+            [],
+            coverage,
+            settings,
+        ),
+        priority=2_100_000,
+    )
+    preliminary_query_parts = materialize_units([preliminary_query], settings)
     preliminary_map = Unit(
         logical_source_id="project-map",
         kind="project",
@@ -2198,17 +2475,30 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         title="專案導覽",
         inputs=tuple(pages),
         content=project_map_content(
-            root, documents, skipped, warnings, settings, coverage, dlp
+            root,
+            preliminary_query_parts + documents,
+            skipped,
+            warnings,
+            settings,
+            coverage,
+            dlp,
         ),
         priority=2_000_000,
     )
     preliminary_map_parts = materialize_units([preliminary_map], settings)
-    evidence_slots = max(0, available - len(documents) - len(preliminary_map_parts))
+    evidence_slots = max(
+        0,
+        available
+        - len(documents)
+        - len(preliminary_query_parts)
+        - len(preliminary_map_parts),
+    )
 
     evidence: list[tuple[Unit, str, str]] = []
     budget_skipped: list[dict[str, str]] = []
     project_parts: list[tuple[Unit, str, str]] = []
-    for _ in range(4):
+    query_parts: list[tuple[Unit, str, str]] = []
+    for _ in range(8):
         evidence, budget_skipped = select_evidence(candidates, settings, evidence_slots)
         all_skipped = skipped + budget_skipped
         current_warnings = list(warnings)
@@ -2222,6 +2512,25 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
             for candidate in candidates
             if candidate.input_file.path not in omitted_paths
         ]
+        query_unit = Unit(
+            logical_source_id=QUERY_INDEX_SOURCE_ID,
+            kind="query_index",
+            group="query",
+            title="問題定位索引",
+            inputs=query_inputs,
+            content=query_index_content(
+                root,
+                pages,
+                candidates,
+                documents,
+                evidence,
+                budget_skipped,
+                coverage,
+                settings,
+            ),
+            priority=2_100_000,
+        )
+        query_parts = materialize_units([query_unit], settings)
         project_unit = Unit(
             logical_source_id="project-map",
             kind="project",
@@ -2230,7 +2539,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
             inputs=tuple(project_inputs),
             content=project_map_content(
                 root,
-                documents + evidence,
+                query_parts + documents + evidence,
                 all_skipped,
                 current_warnings,
                 settings,
@@ -2240,7 +2549,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
             priority=2_000_000,
         )
         project_parts = materialize_units([project_unit], settings)
-        total = len(project_parts) + len(documents) + len(evidence)
+        total = len(query_parts) + len(project_parts) + len(documents) + len(evidence)
         if total <= available:
             warnings = current_warnings
             break
@@ -2248,7 +2557,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
     else:
         raise ExportError("unable to fit project map and mandatory documentation within source limit")
 
-    materialized = project_parts + documents + evidence
+    materialized = query_parts + project_parts + documents + evidence
     if len(materialized) > available:
         raise ExportError(
             f"source pack needs {len(materialized)} sources but only {available} slots are available"
@@ -2272,6 +2581,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         "project": root.name,
         "output_directory": output_relative,
         "config": config_relative,
+        "retrieval": retrieval_contract_payload(),
         "limits": limits_payload(settings),
         "dlp": dlp,
         "scan": scan_summary(scan),

@@ -8,7 +8,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:ec887ba862b2e4936022dfa035dc0d0860a59451ccda460c0c255dc330ac2ebc
+source_digest: sha256:4bcdac1519d3546db08b98dc7d22446deb6b7fd62846225ad05bdda8b5d9282d
 derived_from: []
 last_updated: 2026-08-25
 tags: [framework, llm, wiki, copilot, codex]
@@ -36,8 +36,8 @@ Codebase LLM Wiki 是面向 coding agents 的持久知識框架。Agent 將已�
 
 NotebookLM delivery pack 是由 Schema/Workflow 產生的可審查交付物，不是第四個
 知識層：Agent 每次先安全掃描全專案，依功能補齊 Wiki，再將完整文件與精選 evidence
-寫入 `.notebooklm/`。Pack 只供手動上傳，包含 Markdown sources、manifest 與增量
-upload plan，預設不進 Git，也不會自動連線 NotebookLM。
+寫入 `.notebooklm/`。Pack 只供手動上傳，包含 `query-index`、`project-map`、Markdown
+sources、manifest 與增量 upload plan，預設不進 Git，也不會自動連線 NotebookLM。
 Exporter 在 canonicalize output path 前拒絕 output root 或其 parent components
 透過 symlink/reparse point 到達，避免 pack boundary 被繞過。
 
@@ -121,7 +121,9 @@ nested quoted paths。Delegation 只有使用者明確要求時啟用。
 - **Archaeology**：追蹤 call path 與非破壞性 Git history。
 - **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
 - **NotebookLM export**：每次全量掃描安全範圍，完成必要功能文件後取得
-  `preflight_id`；apply 重新驗證相同輸入與本機 DLP gate，才產生 documents-first source pack。
+  `preflight_id`；apply 重新驗證相同輸入與本機 DLP gate，才產生含有
+  `query-index`/`project-map` 的 documents-first source pack。Query index 將
+  Wiki-first direct-lookup contract 帶入 NotebookLM，但不建立常駐搜尋服務。
 - **Delegation**：明確要求時才路由給專業代理。
 
 ## 安全與品質

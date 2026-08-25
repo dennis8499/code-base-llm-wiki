@@ -26,7 +26,7 @@ Wiki 與 export output 仍依安全 inventory 分類；測試與 CI 的行為由
 | 安裝與升級 | 安裝 Codex/Copilot surface、安全升級 | `install-framework.py` | install state、file fingerprints | [[installer-and-upgrade]] | covered |
 | Wiki 攝取與品質 | 建立可追溯頁面、偵測 stale/link/index/log 問題 | `$codebase-wiki`、quality CLIs | frontmatter、digest、wikilinks、log entries | [[wiki-quality-and-provenance]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
-| NotebookLM 準備 | 掃描功能、本機 DLP、確認後產生離線 pack | `export-notebooklm.py` | inventory、preflight ID、DLP、manifest v3 | [[notebooklm-exporter]] | covered |
+| NotebookLM 準備 | 掃描功能、本機 DLP、確認後產生 query-index、project-map 與離線 pack | `export-notebooklm.py` | inventory、preflight ID、Wiki-first retrieval contract、DLP、manifest v3 | [[notebooklm-exporter]] | covered |
 | 平台與發布 | 驗證 parity/CI、建立版本資產 | parity、CI、`release.py` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
 發布功能標為 partial，原因是程式與 CI 已具備，但專案擁有者尚未選擇 LICENSE，公開
@@ -59,7 +59,8 @@ release gate 會刻意拒絕建立資產。
 
 ## 未覆蓋與明確排除
 
-- 不提供 RAG、向量資料庫、常駐搜尋 runtime 或自動雲端同步。
+- 不提供 RAG、向量資料庫、常駐搜尋 runtime 或自動雲端同步；`query-index` 是匯出的
+  Markdown 路由來源，不是本機搜尋服務。
 - 缺少 LICENSE、SBOM、簽章與公開 release 實際演練。
 - SQL Server live evidence 是 Query sub-mode，不是框架本身的資料庫 runtime。
 

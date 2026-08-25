@@ -59,7 +59,7 @@ or source-code structure index.
 | `/save-synthesis {topic}`      | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。`                                        |
 | `/code-archaeology {target}`   | `請依 code archaeology 流程追蹤 {target} 的目前行為與 git history，清楚區分證據、推測與不確定性。`                     |
 | `/system-analysis-doc {scope}` | `請基於目前 wiki 內容產出 {scope} 的 SA 系統分析文件，寫入 wiki/synthesis/，標示 coverage gaps，並更新 index 與 log。` |
-| `/export-notebooklm`          | `請使用 NotebookLM export 流程：以 Wiki 為基線全量掃描安全的 runtime/config/schema/docs，先預覽功能 Ingest，確認後增量更新繁中 Wiki 並產生 .notebooklm pack。` |
+| `/export-notebooklm`          | `請使用 NotebookLM export 流程：以 Wiki 為基線全量掃描安全的 runtime/config/schema/docs，先預覽功能 Ingest，確認後更新繁中 Wiki，產生 query-index 與 .notebooklm pack，並提供直接定位問題的 Custom instructions。` |
 | `/update-index`                | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。`                                   |
 
 Codex CLI and IDE slash commands are platform controls. Do not add project-level
@@ -125,7 +125,8 @@ NotebookLM Enterprise export:
 與既有文件；排除 tests、CI/CD、IaC、build/dev tooling、依賴、產物、binary、secret
 與 framework adapters。依 entrypoint/use case/data boundary 建立功能 coverage，列出
 Wiki/evidence/容量預覽並等待確認。確認後只增量更新繁中功能文件、index 與一筆
-ingest log，再產生 .notebooklm source pack、manifest 與 upload plan。文件優先，
+ingest log，再產生 `query-index`、`project-map`、.notebooklm source pack、manifest 與 upload plan。
+NotebookLM 查詢優先使用 query-index 直接定位問題，文件優先，
 因額度略過的 evidence 必須明列；Exporter 另在本機執行 Basic DLP 檢核，
 未 allowlist finding 會阻擋 apply，且不呼叫雲端 API。
 ```

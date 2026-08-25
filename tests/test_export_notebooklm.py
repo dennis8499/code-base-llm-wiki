@@ -190,6 +190,27 @@ class NotebookLMExporterTests(unittest.TestCase):
         self.assertEqual("".join(chunks), text)
         self.assertTrue(all(module.estimate_words(chunk) <= 2 for chunk in chunks))
 
+    def test_preflight_exposes_wiki_first_direct_lookup_contract(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            self.assertEqual(result["preflight_schema_version"], 3)
+            self.assertEqual(
+                result["retrieval"],
+                {
+                    "contract": "wiki-first-direct-lookup-v1",
+                    "router_source": "query-index",
+                    "navigation_source": "project-map",
+                    "max_primary_source_groups": 5,
+                    "instructions_location": "README.md",
+                },
+            )
+
     def test_dlp_basic_profile_reports_safe_findings_without_secret_values(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
@@ -333,22 +354,35 @@ class NotebookLMExporterTests(unittest.TestCase):
 
             first_code, first = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
-            self.assertEqual(first["source_count"], 5)
+            self.assertEqual(first["source_count"], 6)
             self.assertEqual(
                 first["manifest"]["limits"]["word_count_model"],
                 "han_characters_plus_non_han_tokens",
             )
             self.assertEqual(first["manifest"]["dlp"]["status"], "passed")
-            self.assertEqual(len(first["actions"]["added"]), 5)
+            self.assertEqual(len(first["actions"]["added"]), 6)
             self.assertTrue((output / "manifest.json").is_file())
             self.assertTrue((output / "sources/project-map.md").is_file())
+            self.assertTrue((output / "sources/query-index.md").is_file())
+            query_index = (output / "sources/query-index.md").read_text(encoding="utf-8")
+            self.assertIn("直接回答契約", query_index)
+            self.assertIn("docs:project", query_index)
+            self.assertIn("evidence:project", query_index)
+            self.assertIn("src/service.py", query_index)
+            self.assertEqual(
+                first["manifest"]["retrieval"]["contract"],
+                "wiki-first-direct-lookup-v1",
+            )
+            readme = (output / "README.md").read_text(encoding="utf-8")
+            self.assertIn("NotebookLM Custom instructions", readme)
+            self.assertIn("不要描述搜尋過程", readme)
 
             second_code, second = self.run_export(module, root, output)
             self.assertEqual(second_code, 0)
             self.assertEqual(len(second["actions"]["added"]), 0)
             self.assertEqual(len(second["actions"]["changed"]), 0)
             self.assertEqual(len(second["actions"]["deleted"]), 0)
-            self.assertEqual(len(second["actions"]["unchanged"]), 5)
+            self.assertEqual(len(second["actions"]["unchanged"]), 6)
 
             (root / "src/service.py").write_text(
                 "def greet(name: str) -> str:\n    return f\"welcome {name}\"\n",
@@ -360,7 +394,7 @@ class NotebookLMExporterTests(unittest.TestCase):
                 [item["logical_source_id"] for item in changed["actions"]["changed"]],
                 ["evidence:project"],
             )
-            self.assertEqual(len(changed["actions"]["unchanged"]), 4)
+            self.assertEqual(len(changed["actions"]["unchanged"]), 5)
 
     def test_add_and_delete_page_updates_project_map_and_source_plan(self) -> None:
         module = load_exporter()
@@ -489,7 +523,7 @@ Call the service.
             root = Path(directory)
             write_fixture(root)
             (root / "notebooklm.toml").write_text(
-                "max_source_bytes = 220\nmax_source_words = 100\nsource_limit = 50\n",
+                "max_source_bytes = 220\nmax_source_words = 100\nsource_limit = 100\n",
                 encoding="utf-8",
             )
             output = root / ".notebooklm"
@@ -961,13 +995,13 @@ status: active
                 encoding="utf-8",
             )
             add_index_links(root, "usage")
-            (root / "notebooklm.toml").write_text("source_limit = 5\n", encoding="utf-8")
+            (root / "notebooklm.toml").write_text("source_limit = 6\n", encoding="utf-8")
             output = root / ".notebooklm"
 
             code, result = self.run_export(module, root, output)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["source_count"], 5)
+            self.assertEqual(result["source_count"], 6)
             self.assertEqual(result["manifest"]["omitted_evidence"], [
                 {"path": "src/service.py", "reason": "source_budget"}
             ])
@@ -1011,7 +1045,7 @@ status: active
 
             self.assertEqual(code, 0)
             self.assertEqual(result["manifest"]["schema_version"], 3)
-            self.assertEqual(len(result["actions"]["unchanged"]), 5)
+            self.assertEqual(len(result["actions"]["unchanged"]), 6)
 
     def test_previous_manifest_path_traversal_is_rejected_without_deletion(self) -> None:
         module = load_exporter()

@@ -8,7 +8,7 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:4fdb98a3d32db28d257d12368b3e14f334e341de235f2b175ed41cb1124a0113
+source_digest: sha256:c09435fcd73b4aeccec9bb637812994e1f4a02e482eb3cf801fc6ef7bc3a53e2
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-08-25
 tags: [guide, onboarding, framework, copilot, codex]

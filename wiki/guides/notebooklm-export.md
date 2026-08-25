@@ -1,14 +1,14 @@
 ---
 title: NotebookLM Enterprise — 全專案功能文件化與離線匯出
 type: guide
-summary: 先完成功能文件與安全 preflight，再以相符 ID 原子產生增量 NotebookLM source pack
+summary: 先完成功能文件與安全 preflight，再以 query-index 與相符 ID 原子產生 NotebookLM source pack
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:a64055c1dabb5e49015d524407d439c5fe70634269886c94522b4acdd800bf43
+source_digest: sha256:a38355a582768629c7b2dc1d7bc2c7549724ef24406597848ece13794693e5f3
 derived_from: ["[[overview]]", "[[notebooklm-exporter]]", "[[project-function-catalog]]"]
 last_updated: 2026-08-25
 tags: [guide, notebooklm, export, incremental, enterprise]
@@ -92,9 +92,22 @@ path，且存在並是一般檔案；不存在或無法解析時 preflight/apply
 輸出目錄包含：
 
 - `sources/*.md`：唯一應手動加入 NotebookLM 的 source files；
+- `sources/query-index.md`：Wiki-first direct-lookup 路由、問題類型、功能群組與 docs/evidence 對應；
+- `sources/project-map.md`：source catalog、coverage、DLP 與 warnings 導覽；
 - `manifest.json`：schema v3、scan inventory/coverage、profile、設定 limits、input/output hashes、stable IDs、DLP status、warnings、omitted evidence 與 skipped paths；
 - `upload-plan.md`：本次相對上一次 manifest 的操作分類；
-- `README.md`：給上傳者的本機操作摘要。
+- `README.md`：給上傳者的本機操作摘要、Custom instructions 與一次性重建步驟。
+
+## Wiki-first 直接定位查詢
+
+NotebookLM 的 source pack 不只保存文件，也把目前 Query workflow 的查詢契約帶入
+`query-index.md`：先路由到最多五個主要來源群組，第一段直接回答，文件不足、過時或
+矛盾時才查 evidence，並用 Wiki page、source path、fact/inference/gap 標籤維持可追溯性。
+`query-index.md` 是路由索引，不是行為證據；實際結論應引用對應 docs/evidence source。
+
+若要更新已建立的同一本 Notebook，先刪除舊 static sources，再完整上傳新的
+`sources/*.md`。Exporter 不會自動連線、刪除或上傳 NotebookLM source；README 的
+Custom instructions 只有在租戶介面提供該設定時才貼上，否則使用 README 的單次 prompt prefix。
 
 ## 穩定識別與更新
 

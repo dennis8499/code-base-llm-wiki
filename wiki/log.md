@@ -473,3 +473,9 @@ status: active
 - exporter 新增離線 Basic DLP 檢核、精確 allowlist 與 safe findings；未 allowlist 命中會阻擋 apply 並保留既有 pack
 - manifest 升級至 schema v3，preflight contract 升級至 v2；同步 exporter workflow、設定、測試與使用文件
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[project-function-catalog]]、[[system-analysis]]、[[framework-introduction]]
+
+## [2026-08-25] update | NotebookLM Wiki-first direct lookup
+
+- exporter 新增 `query-index` source，將 Wiki-first Query 的問題路由、最多五個主要來源群組、直接回答、文件優先 evidence 查核與 gap 標示帶入 NotebookLM；`project-map` 同步改為 direct lookup 導覽
+- manifest/preflight 暴露 `wiki-first-direct-lookup-v1` retrieval contract，README 提供 Custom instructions 與同一本 Notebook 清空舊 static sources 後重建的操作說明
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[project-function-catalog]]、[[system-analysis]]

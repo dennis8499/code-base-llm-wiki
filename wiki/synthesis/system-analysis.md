@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki System Analysis
 type: synthesis
-summary: 對框架目的、元件、流程、介面、安全、維運、風險與證據缺口的整體可追溯分析
+summary: 對框架目的、Wiki-first query-index、流程、介面、安全、維運、風險與證據缺口的整體可追溯分析
 notebooklm_group: system-analysis
 sources:
   - README.md
@@ -11,7 +11,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:46be5371d3831fbcbfcfe5844c28799dfc8c7fec2b838e039e9cf718c0698ec0
+source_digest: sha256:1a05d7e8c60f17e887d840ab47909182f6d3203769031859e4cf9c7e705e7867
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
 last_updated: 2026-08-25
 tags: [synthesis, system-analysis, notebooklm]
@@ -98,6 +98,8 @@ source coverage。詳見 [[system-architecture]]。
 
 - 入口：`--preflight`，其後 `--apply --preflight-id`。
 - 步驟：safe scan → function/document coverage → confirmation → required docs → apply rescan → pack。
+- source pack：`query-index` 先做 direct lookup routing，`project-map` 提供導覽，docs 優先，
+  evidence 只作不足、過時或矛盾時的查核。
 - 失敗：ID mismatch、required docs、Critical lint、source limit 或 atomic write error 均不替換舊 pack。
 
 ## API / 介面
@@ -107,7 +109,7 @@ source coverage。詳見 [[system-architecture]]。
 | Installer CLI | install、upgrade、apply | 部署 framework surface | [[installer-and-upgrade]] |
 | Wiki CLIs | validate、stale、lint、index、log | deterministic validation | [[wiki-quality-and-provenance]] |
 | Hook contract | SessionStart、PreToolUse、PostToolUse | context、guard、audit | [[platform-hooks-and-guards]] |
-| Export CLI | preflight、apply | 產生離線 source pack | [[notebooklm-exporter]] |
+| Export CLI | preflight、apply | 產生 query-index、project-map 與離線 source pack | [[notebooklm-exporter]] |
 | Release CLI | validate、build | tag/asset/readiness | [[platform-adapters-and-release]] |
 
 ## 資料模型與資料流
@@ -116,8 +118,8 @@ source coverage。詳見 [[system-architecture]]。
 - `wiki/index.md`：managed navigation region；marker 外保留人工內容。
 - `wiki/log.md`：append-only operation stream，新契約 entry 必須列 affected pages。
 - Install state：framework/surface/mode 與 per-file upstream fingerprints。
-- NotebookLM manifest v3：stable logical source IDs、input/output hashes、coverage、limits、DLP、actions。
-- Preflight contract v2：inventory hash、ID、required document/lint/DLP readiness。
+- NotebookLM manifest v3：stable logical source IDs、retrieval contract、input/output hashes、coverage、limits、DLP、actions。
+- Preflight contract v3：inventory hash、retrieval contract、ID、required document/lint/DLP readiness。
 
 ## 外部整合
 
@@ -126,7 +128,7 @@ source coverage。詳見 [[system-architecture]]。
 | OpenAI Codex | `.codex` hooks/agents + shared Skill | Project trust、host hook schema | [[platform-hooks-and-guards]] |
 | GitHub Copilot | `.github` prompts/agents/hooks | Host response/audit 表現差異 | [[platform-adapters-and-release]] |
 | Git | inventory、dirty paths、history、release tag | 無 Git 時部分工具使用 filesystem fallback | [[wiki-quality-and-provenance]] |
-| NotebookLM | 使用者手動上傳 static Markdown | 額度與租戶政策需外部確認 | [[notebooklm-export]] |
+| NotebookLM | 使用者手動上傳 query-index、project-map、docs/evidence static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
 
 ## 權限與安全
 
@@ -163,7 +165,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 | 安全性 | raw read-only、guard、secret exclusion、local Basic DLP、two-phase export | host/sandbox 與租戶 Advanced DLP 政策在框架外 |
 | 可恢復性 | installer/exporter stage + rollback；active/committed journal、同一 target/output 的 transaction lock 與子程序終止 regression 覆蓋未完成 replacement recovery | 突然斷電、metadata durability 與所有 host-specific termination windows 尚未完整驗證 |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |
-| 效能 | 無常駐服務與第三方 runtime；`tests/test_wiki_scale.py` 覆蓋 200-page lint；`tests/test_export_notebooklm.py` 覆蓋 500 個 synthetic module 的 full preflight/apply | 尚無 query 的 500+ pages benchmark |
+| 效能 | 無常駐服務與第三方 runtime；`query-index` 為 bounded Markdown router；`tests/test_wiki_scale.py` 覆蓋 200-page lint；`tests/test_export_notebooklm.py` 覆蓋 500 個 synthetic module 的 full preflight/apply | 尚無真實 NotebookLM retrieval benchmark |
 
 ## 錯誤與失敗模式
 
@@ -182,7 +184,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 | LICENSE 未決 | 無法公開 release | 專案擁有者選擇授權後再 tag |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
-| Large Wiki scale | 200-page lint 與 500 個 synthetic module 的 preflight/full pack apply 已覆蓋；更大規模查詢可能變慢 | 先完成 500+ pages query benchmark，再以證據評估分層 index 或 optional adapter |
+| NotebookLM retrieval drift | query-index、Custom instructions 與 source selection 可對齊 Wiki-first 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以固定問題集手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
 
 ## Evidence
 
@@ -196,13 +198,13 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 
 ## Inferences
 
-- 目前架構足以服務小至中型 codebase；超大型 Repo 的容量與查詢效能仍需要實測後
-  才能決定是否加入 optional search adapter。
+- 目前架構以 Markdown query-index 對齊小至中型 codebase 的 direct lookup；它不是
+  向量索引或常駐搜尋 runtime，NotebookLM 的超大型 Repo retrieval 仍需實測。
 
 ## 待確認事項
 
 - [ ] 專案擁有者選定 LICENSE，解除公開 release gate。
-- [ ] 在真實或合成 500+ pages Wiki 執行 query benchmark（lint/preflight/full pack apply 已有 synthetic evidence）。
+- [ ] 在 NotebookLM Enterprise 以固定問題集驗證 direct answer、來源命中、引用與 gap 行為。
 - [ ] 在實際 Codex/Copilot host 驗證 coexist audit context 呈現。
 
 ## 來源附錄

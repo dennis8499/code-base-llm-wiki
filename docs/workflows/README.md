@@ -130,14 +130,19 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --apply --preflight-id <id> --output .notebooklm --format json
 ```
 
-輸出包含 `sources/*.md`、schema v3 `manifest.json`、`upload-plan.md` 與 README。
+輸出包含 `sources/query-index.md`、`sources/project-map.md`、其他功能文件與
+evidence sources、schema v3 `manifest.json`、`upload-plan.md` 與 README。
+`query-index.md` 將 Wiki-first Query 的路由契約帶入 NotebookLM：先直接回答，
+使用最多五個相關來源群組，只有文件不足、過時或矛盾時才查 evidence。README
+另提供 Custom instructions 與同一本 Notebook 清空舊 static sources 後重傳的步驟。
 Exporter 會在本機執行 `notebooklm-enterprise-basic` DLP preflight，檢查
 信用卡、金融帳號、GCP credentials、GCP API key 與明文密碼。未 allowlist 的
 finding 會讓 `ready_to_export=false` 並阻擋 apply；報告不會包含命中值，也不會
 修改 raw source 或 Wiki。
 Apply 會重新掃描 Wiki、inventory 與設定；ID 不相符或必要文件／Critical lint
 未通過時拒絕寫入。直接 export 不再受支援。
-Source IDs 以功能群組為單位（例如 `docs:<group>`、`evidence:<group>`），舊 schema
+Source IDs 以查詢路由、導覽與功能群組為單位（`query-index`、`project-map`、
+`docs:<group>`、`evidence:<group>`），舊 schema
 v1 manifest 可遷移。打包採 documents-first：完整功能文件先保留，再以剩餘來源數與
 容量加入關鍵 evidence；被 `source_budget` 省略的 evidence 會列在 manifest 與交付
 報告。NotebookLM 只需處理 `sources/*.md`；依 upload plan 對 `added`、`changed`、

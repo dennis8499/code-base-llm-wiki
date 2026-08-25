@@ -1,7 +1,7 @@
 ---
 title: NotebookLM 離線匯出器
 type: module
-summary: 以強制 preflight identity、必要文件閘門與原子輸出建立可審查的增量 NotebookLM source pack
+summary: 以 Wiki-first query-index、必要文件閘門與原子輸出建立可直接定位問題的 NotebookLM source pack
 notebooklm_group: function-notebooklm-export
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:6c3311c2556b0a9b62385e077d7ba575cb7215ff06cd63005343490a0becc3fb
+source_digest: sha256:bccd0a578db678179bb70f48318fa8205913b17c371067df4cf853c0005a7a41
 derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
 last_updated: 2026-08-25
 tags: [module, notebooklm, exporter, preflight]
@@ -31,10 +31,13 @@ status: active
 - 以 Wiki、inventory、設定與 deterministic findings 建立穩定 `preflight_id`。
 - 強制必要 overview、function catalog、architecture 與 SA 都為 active 且可匯出。
 - 先配置文件 source slots，再依證據優先序加入 raw evidence。
+- 產生 `query-index` direct-lookup router 與 `project-map` navigation source，將 Wiki-first
+  Query 的路由、最多五個主要來源群組、文件優先與 evidence 查核契約帶入 NotebookLM。
 - 以 `han_characters_plus_non_han_tokens` 加總模型估算 source words，避免混合繁中敘事與程式碼時低估容量。
 - 排除 `.mypy_cache/`、`.ruff_cache/`、平台 fallback hook audit logs 等 generated state，不把本機 audit output 當成 evidence；
   sensitive filename/path components 也會被排除。
-- 產生 schema-v3 manifest、upload plan、project map 與 stable logical source IDs。
+- 產生 schema-v3 manifest、upload plan、query index、project map 與 stable logical source IDs；
+  manifest 暴露 `wiki-first-direct-lookup-v1` retrieval contract。
 - 以 `notebooklm-enterprise-basic` 在本機檢查 `CREDIT_CARD_NUMBER`、
   `FINANCIAL_ACCOUNT_NUMBER`、`GCP_CREDENTIALS`、`GCP_API_KEY` 與 `PASSWORD`。
 - 未 allowlist 的 DLP finding 會讓 preflight 不 ready，阻擋 apply 並保留既有 pack；
@@ -67,7 +70,7 @@ export-notebooklm.py --root . --preflight --format json
 export-notebooklm.py --root . --apply --preflight-id sha256:... --output .notebooklm
 ```
 
-直接 export、遺漏 ID、ID 與目前 inventory/config/Wiki 不符，或
+直接 export、遺漏 ID、ID 與目前 inventory/config/Wiki/retrieval contract 不符，或
 `ready_to_export=false` 時 apply 回傳 exit code 2 且不寫入。`scan_profile=target`
 排除已安裝 framework adapter；本 Repo 使用 `framework`，把 framework schema、
 雙平台 adapter 與 release tooling 視為產品證據。
@@ -84,6 +87,8 @@ dlp_allowlist = [
 ## Evidence
 
 - `build_preflight()` 結合 lint、required-document status、inventory hashes 與 coverage summary。
+- `build_preflight()` 與 `_preflight_identity()` 同時暴露並綁定
+  `wiki-first-direct-lookup-v1` retrieval contract；preflight schema version 為 3。
 - `collect_wiki_pages()` 在 page read 前驗證 Wiki regular tree；
   `tests/test_export_notebooklm.py::test_preflight_rejects_unsafe_wiki_tree_before_reading`
   以 invalid external junction 固定 fail-closed 邊界。
@@ -106,6 +111,8 @@ dlp_allowlist = [
 - 相容入口 `export-notebooklm.py` 只轉呼叫 canonical module，沒有第二套實作。
 - `tests/test_export_notebooklm.py::test_preflight_and_apply_handle_500_wiki_pages` 以
   500 個 synthetic module 驗證大規模 Wiki 的 full preflight/apply 與 source-limit compaction。
+- `query-index.md` 以 Wiki page metadata、headings、`frontmatter.sources` 與實際 evidence
+  input 建立可追溯路由；README 提供 Custom instructions 與同一本 Notebook 的一次性清空重傳步驟。
 - `tests/test_export_notebooklm.py::test_commit_output_restores_previous_pack_after_replacement_failure`
   以 replacement fault injection 驗證失敗時舊 manifest/source 保留且 staging/backup 清理。
 - `tests/test_export_notebooklm.py::test_commit_output_recovers_after_process_kill` 以
@@ -126,6 +133,8 @@ dlp_allowlist = [
 
 - Preflight ID 證明本機輸入集合未變，並不代表 NotebookLM 租戶政策或人工機密審查
   已完成。
+- Query index 與 Custom instructions 只能約束來源選擇與回答格式，不能取代 NotebookLM
+  私有的生成式 retrieval；若需要 deterministic 結果，仍應以本地 Wiki Query 為權威入口。
 
 ## Gaps
 

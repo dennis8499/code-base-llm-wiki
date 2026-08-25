@@ -8,6 +8,10 @@
 
 ### Fixed
 
+- **NotebookLM Wiki-first direct lookup**：Exporter 新增 `query-index` Markdown router，
+  將最多五個主要來源群組、文件優先/evidence 查核、直接回答、引用與 gap 契約帶入
+  NotebookLM；manifest/preflight 暴露 retrieval contract，README 提供 Custom instructions
+  與同一本 Notebook 的一次性清空重傳步驟。
 - **NotebookLM mixed-language word estimation**：exporter 改用
   `han_characters_plus_non_han_tokens` 加總模型，修正繁中敘事與程式碼混合時以
   `max()` 估算造成的 source 字數低估，並在 manifest/preflight 暴露計數模型。

@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:0b515bbc36412ea9db2a10b5c801ba027a139bbcb35aa8b04a53943cbb615152
+source_digest: sha256:e48e62b0856bffb6e4f9a2bacf2d3cdc8bb5c1f82653d00292de75be5ec100c7
 derived_from: ["[[overview]]"]
 last_updated: 2026-08-25
 tags: [architecture, framework, data-flow, safety]
@@ -34,7 +34,7 @@ operations 與 authorization policy 由
 | Installer v3 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
-| NotebookLM exporter | 全安全範圍盤點、本機 DLP、preflight identity、文件優先 source pack | [[notebooklm-exporter]] |
+| NotebookLM exporter | 全安全範圍盤點、本機 DLP、preflight identity、Wiki-first query-index、文件優先 source pack | [[notebooklm-exporter]] |
 | Release surface | parity、CI、版本、資產與公開發布前置條件 | [[platform-adapters-and-release]] |
 
 ## Data Flow
@@ -48,6 +48,7 @@ User intent
   -> optional NotebookLM preflight
   -> local DLP gate
   -> confirmed apply with matching preflight_id
+  -> query-index / project-map / documents / evidence source pack
 ```
 
 Installer 的資料流是 source framework → dry-run classification → staged writes →
@@ -75,8 +76,9 @@ symlink/reparse containment → 原子替換本機 pack。
 
 ## Inferences
 
-- 無常駐索引使安裝與稽核面積較小，但超大型 Wiki 的查詢效能仍依賴頁面拆分、分層
-  index 與文字搜尋；這是刻意取捨，不是缺少資料庫 migration。
+- 無常駐搜尋服務使安裝與稽核面積較小；NotebookLM export 以 Markdown
+  `query-index` 對齊 Wiki-first 路由，但超大型 Wiki 的雲端 retrieval 仍是生成式行為，
+  不能視為 deterministic local search。
 
 ## Gaps
 

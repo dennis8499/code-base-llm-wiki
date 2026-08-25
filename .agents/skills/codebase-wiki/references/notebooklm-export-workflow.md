@@ -56,7 +56,7 @@ blocking findings.
 5. Preview included/excluded counts and reasons, functional coverage, Wiki
    pages to add/update/leave unchanged, evidence paths, capacity estimate, and
    every unresolved gap. Wait for confirmation.
-6. After confirmation, create or update the required documentation set:
+6. After confirmation, create or update the required documentation set. Documentation is mandatory for export:
    - `wiki/overview.md`;
    - `wiki/synthesis/project-function-catalog.md`;
    - `wiki/architecture/system-architecture.md`;
@@ -85,6 +85,7 @@ inside the output directory are preserved.
 
 Each generated source has a stable `logical_source_id`:
 
+- `query-index` for the compact Wiki-first direct-lookup router;
 - `project-map` for the generated navigation source;
 - `docs:<notebooklm-group>` for complete curated Wiki documentation;
 - `evidence:<notebooklm-group>` for deduplicated raw evidence;
@@ -95,7 +96,11 @@ Each generated source has a stable `logical_source_id`:
 The exporter accepts previous schema-v1/v2 manifests and produces an actionable
 one-time migration plan. The schema-v3 manifest records scan summary,
 functional-document coverage, input/output hashes, priorities, omissions,
-limits, and the offline DLP profile/safe finding summary. The upload plan contains:
+limits, the offline DLP profile/safe finding summary, and the
+`wiki-first-direct-lookup-v1` retrieval contract. The retrieval contract points
+to `query-index.md`, limits the primary route to at most five source groups, and
+keeps the copy/paste Custom instructions in the local README. The upload plan
+contains:
 
 - `added`: upload the new source;
 - `changed`: remove the old static source, then upload the replacement;
@@ -103,6 +108,11 @@ limits, and the offline DLP profile/safe finding summary. The upload plan contai
 - `unchanged`: no NotebookLM action.
 
 Do not upload `manifest.json`, `upload-plan.md`, or the README as evidence.
+
+The generated README also documents a one-time rebuild procedure: remove old
+static sources from the same NotebookLM notebook, upload every Markdown file
+under `sources/`, and apply the Custom instructions when the tenant UI exposes
+them. The exporter remains offline and does not delete or upload cloud sources.
 
 ## Limits and safety
 
@@ -115,7 +125,8 @@ individually and non-Han, non-whitespace token runs are counted separately, so
 mixed Traditional Chinese and code content is not underestimated. A different
 Workspace tier must lower `source_limit` in `notebooklm.toml`.
 
-Documentation is mandatory and always consumes slots before evidence. Evidence
+The query index, project map, and documentation are mandatory and consume slots
+before evidence. Evidence
 priority is: explicit extra paths; overview/function-catalog/architecture/SA
 direct citations; multiply referenced entrypoints, interfaces, schemas, and
 config; other runtime implementation; existing docs. If evidence cannot fit,
@@ -167,8 +178,9 @@ and [NotebookLM source type and sync rules](https://support.google.com/notebookl
 
 Export is complete only when the full safe inventory and functional preview
 were shown, the user confirmed, all required documents exist with explicit
-coverage states, the DLP gate is passed or explicitly allowlisted, every
-generated source is traceable, the manifest and upload plan were written
-atomically, no source exceeds its limit, and the final report lists added,
+coverage states, the DLP gate is passed or explicitly allowlisted, the
+`query-index` and `project-map` sources are present, every generated source is
+traceable, the manifest and upload plan were written atomically, no source
+exceeds its limit, and the final report lists added,
 changed, deleted, unchanged, skipped, source-budget omissions, DLP status, and
 all unresolved warnings. Preflight alone never writes `.notebooklm/`.

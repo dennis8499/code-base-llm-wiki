@@ -117,7 +117,8 @@ flowchart LR
   manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
 - **NotebookLM 全專案文件化**：強制 preflight ID 與必要文件 gate；source pack
-  採 documents-first、穩定 logical source IDs、Basic DLP gate 與增量 upload plan。
+  採 documents-first、`query-index`/`project-map` 導覽、穩定 logical source IDs、
+  Basic DLP gate 與增量 upload plan。
 - **可驗證**：跨 Python/Linux/Windows CI、parity、frontmatter、digest
   freshness、log/index、唯讀 lint 與單元測試。
 
@@ -205,7 +206,8 @@ NotebookLM Enterprise 匯出：
 ```text
 請使用 $codebase-wiki 執行 NotebookLM export：先唯讀掃描整個專案的可分享 runtime source、
 必要設定、schema/migrations 與既有文件，依功能列出納入/排除、Wiki coverage、預計新增或更新
-的文件與容量預估，等待我確認。確認後以繁體中文補齊分層 Wiki，並產生 .notebooklm source pack。
+的文件與容量預估，等待我確認。確認後以繁體中文補齊分層 Wiki，產生 query-index、project-map
+與 .notebooklm source pack，並提供 Wiki-first 直接定位問題的 Custom instructions。
 ```
 
 預覽使用 `export-notebooklm.py --preflight`，不寫入 Wiki 或 pack，並回傳一次性的
@@ -248,8 +250,10 @@ preflight。Exporter 不會呼叫雲端 API 或自動上傳，並會在本機執
 | GitHub Copilot Chat | 支援 | Agents、prompts、hooks 與共用 skill |
 | OpenAI Codex | 支援 | AGENTS、repo-local skill、hooks 與 optional agents |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
-| NotebookLM Enterprise | 支援全專案文件化與離線匯出 | 功能導向 `.md` 文件、必要 evidence、manifest、hash-based upload plan；不含雲端 API |
+| NotebookLM Enterprise | 支援全專案文件化與離線匯出 | `query-index`、功能導向 `.md` 文件、必要 evidence、manifest、hash-based upload plan；不含雲端 API |
 
-本框架不提供 RAG、向量資料庫、本機 source index、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。NotebookLM export 只產生本地 `.notebooklm/`；SQL Server live evidence 僅是 Query 的唯讀子模式，且資料庫證據不得放進 frontmatter `sources`。
+本框架不提供 RAG、向量資料庫、本機搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
+NotebookLM export 產生的是可供 NotebookLM 使用的 Markdown `query-index`，不是常駐搜尋引擎；
+它只產生本地 `.notebooklm/`。SQL Server live evidence 僅是 Query 的唯讀子模式，且資料庫證據不得放進 frontmatter `sources`。
 
 本 Repo 尚未宣告軟體授權；請勿從參考專案的授權狀態推定本專案授權。

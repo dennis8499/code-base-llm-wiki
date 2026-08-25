@@ -45,8 +45,12 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
      --root . --apply --preflight-id <id> --output .notebooklm --format json
    ```
 
-7. 報告 `.notebooklm/upload-plan.md` 的 `added`、`changed`、`deleted`、
-   `unchanged`、skipped、`source_budget` omissions、DLP status、warnings 與剩餘 slots。
+7. 確認 exporter 產生 `sources/query-index.md` 與 `sources/project-map.md`；
+   `query-index.md` 必須把 Wiki-first 的直接回答契約、問題類型、功能群組、
+   Wiki pages、docs/evidence source IDs 與 source paths 對應起來。
+8. 報告 `.notebooklm/upload-plan.md` 的 `added`、`changed`、`deleted`、
+   `unchanged`、skipped、`source_budget` omissions、DLP status、warnings 與剩餘 slots，
+   並說明 README 中的 Custom instructions 與同一本 Notebook 清空重傳步驟。
 
 ## 限制與安全
 
@@ -54,6 +58,8 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
 - Exporter 會在本機執行 `notebooklm-enterprise-basic` DLP 檢核；未 allowlist 的
   finding 會阻擋 apply，報告不包含命中值。
 - 只上傳 `.notebooklm/sources/*.md`；不要上傳 manifest、upload plan 或 README。
+- NotebookLM 問答以 `query-index.md` 路由到最多五個相關來源群組；先直接回答，
+  文件不足、過時或矛盾時才查 evidence，不要把搜尋過程寫成研究報告。
 - changed 的本地 static source 必須在 NotebookLM 移除舊檔後重新上傳；unchanged 不需重傳。
 - 文件永遠優先於 evidence；低優先 evidence 若無法容納，必須以 `source_budget`
   明列。必要文件或單檔無法符合 300 sources、200 MB / 500,000 words hard limits
