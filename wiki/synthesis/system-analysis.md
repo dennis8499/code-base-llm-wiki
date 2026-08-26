@@ -11,9 +11,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:1a05d7e8c60f17e887d840ab47909182f6d3203769031859e4cf9c7e705e7867
+source_digest: sha256:4088180f02901896453c9aeafd1b027e259f3184b8b51871fabc7d50bffd43ae
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 tags: [synthesis, system-analysis, notebooklm]
 status: active
 ---
@@ -66,9 +66,10 @@ lint/ADR/guide/synthesis/SA、hooks 與離線 NotebookLM pack；不涵蓋 RAG ru
 
 使用者透過 Codex 自然語言或 Copilot prompts 觸發共同 Skill。Skill 先讀 Wiki，只有
 evidence gap 才回到 raw source；被授權的 durable change 寫回 Wiki/index/log。
-NotebookLM preparation 另行執行安全全量 inventory，並在 preflight 與人工確認後產生
-本機靜態 pack；`ready_to_export` 與 `coverage.status` 分別表示 gate readiness 與 Wiki
-source coverage。詳見 [[system-architecture]]。
+NotebookLM preparation 另行以 `--root` 的檔案系統邊界執行安全全量 inventory，並在
+preflight 與人工確認後產生本機靜態 pack；Git repository、clean working tree 與 nested
+repository 不會成為 export gate。`ready_to_export` 與 `coverage.status` 分別表示 gate
+readiness 與 Wiki source coverage。詳見 [[system-architecture]]。
 
 ## 架構與元件
 
@@ -127,7 +128,7 @@ source coverage。詳見 [[system-architecture]]。
 | --- | --- | --- | --- |
 | OpenAI Codex | `.codex` hooks/agents + shared Skill | Project trust、host hook schema | [[platform-hooks-and-guards]] |
 | GitHub Copilot | `.github` prompts/agents/hooks | Host response/audit 表現差異 | [[platform-adapters-and-release]] |
-| Git | inventory、dirty paths、history、release tag | 無 Git 時部分工具使用 filesystem fallback | [[wiki-quality-and-provenance]] |
+| Git | Wiki freshness/history、release tag、可選 manifest provenance | NotebookLM inventory/preflight 不依賴 Git；獨立 quality tools 仍可使用 Git 輔助 freshness | [[wiki-quality-and-provenance]] |
 | NotebookLM | 使用者手動上傳 query-index、project-map、docs/evidence static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
 
 ## 權限與安全
@@ -143,6 +144,10 @@ source coverage。詳見 [[system-architecture]]。
 - Guard 對 path escape fail closed；coexist 不等同新的任務授權。
 - Exporter 排除 credential filename、binary、generated、Wiki 與 output，並以本機 Basic DLP
   檢查可匯出的 Wiki/evidence content；人工預覽仍是必要層。
+- Exporter 以明確 `--root` 的檔案系統內容建立 inventory；不要求 `.git` 或 clean working
+  tree，也不因 nested repository 阻擋，nested `.git` metadata 仍按 generated 規則排除。
+- NotebookLM preflight 的 Wiki lint 停用 Git dirty-path、commit-date 與 log-baseline
+  lookup，仍以檔案內容 hash 驗證 input identity。
 - Exporter 在讀取 Wiki pages 前先驗證 Wiki regular tree，拒絕 symlink/reparse point，避免
   preflight 的安全檢查前讀取外部頁面。
 - lint 與 exporter CLI 在 canonicalization 前拒絕 caller-provided symlink/reparse root，

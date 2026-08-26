@@ -57,7 +57,9 @@ def _baseline_body(log_path: Path, repo_root: Path) -> str | None:
     return _body(result.stdout)
 
 
-def validate_log(log_path: Path, repo_root: Path) -> dict[str, Any]:
+def validate_log(
+    log_path: Path, repo_root: Path, *, use_git: bool = True
+) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     try:
@@ -141,7 +143,7 @@ def validate_log(log_path: Path, repo_root: Path) -> dict[str, Any]:
     if dates and (last_updated is None or last_updated < max(dates)):
         errors.append("log frontmatter.last_updated is earlier than the latest entry")
 
-    baseline = _baseline_body(log_path, repo_root)
+    baseline = _baseline_body(log_path, repo_root) if use_git else None
     if baseline is not None and not body.startswith(baseline):
         errors.append("existing wiki/log.md body differs from the Git baseline; entries are append-only")
 

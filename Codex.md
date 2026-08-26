@@ -121,11 +121,13 @@ NotebookLM Enterprise export:
 
 ```text
 請使用 $codebase-wiki 執行 NotebookLM export：先讀完整 Wiki，再執行 exporter
-的唯讀 --preflight，掃描全部 runtime source、必要 config/manifests、schema/migrations
-與既有文件；排除 tests、CI/CD、IaC、build/dev tooling、依賴、產物、binary、secret
-與 framework adapters。依 entrypoint/use case/data boundary 建立功能 coverage，列出
-Wiki/evidence/容量預覽並等待確認。確認後只增量更新繁中功能文件、index 與一筆
-ingest log，再產生 `query-index`、`project-map`、.notebooklm source pack、manifest 與 upload plan。
+的唯讀 --preflight，以 `--root` 指定的檔案系統目錄為邊界，掃描全部 runtime source、
+必要 config/manifests、schema/migrations 與既有文件；不要求 root 有 `.git` 或 clean
+working tree，也不因 nested repository 阻擋；排除 tests、CI/CD、IaC、build/dev
+tooling、依賴、產物、binary、secret 與 framework adapters。依 entrypoint/use case/
+data boundary 建立功能 coverage，列出 Wiki/evidence/容量預覽並等待確認。確認後只
+增量更新繁中功能文件、index 與一筆 ingest log，再產生 `query-index`、`project-map`、
+.notebooklm source pack、manifest 與 upload plan。
 NotebookLM 查詢優先使用 query-index 直接定位問題，文件優先，
 因額度略過的 evidence 必須明列；Exporter 另在本機執行 Basic DLP 檢核，
 未 allowlist finding 會阻擋 apply，且不呼叫雲端 API。

@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 tags: [log]
 status: active
 ---
@@ -479,3 +479,9 @@ status: active
 - exporter 新增 `query-index` source，將 Wiki-first Query 的問題路由、最多五個主要來源群組、直接回答、文件優先 evidence 查核與 gap 標示帶入 NotebookLM；`project-map` 同步改為 direct lookup 導覽
 - manifest/preflight 暴露 `wiki-first-direct-lookup-v1` retrieval contract，README 提供 Custom instructions 與同一本 Notebook 清空舊 static sources 後重建的操作說明
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[project-function-catalog]]、[[system-analysis]]
+
+## [2026-08-26] update | NotebookLM filesystem-root inventory
+
+- exporter 改以明確 `--root` 的檔案系統內容作為 NotebookLM inventory，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋；nested `.git` metadata 仍依 generated 排除規則處理
+- NotebookLM preflight 的 Wiki lint 停用 Git dirty-path、commit-date 與 log-baseline lookup，維持結構檢查、內容 hash、DLP 與 preflight identity；新增無 Git/nested repository regression
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[wiki-quality-and-provenance]]、[[framework-introduction]]、[[release-and-update]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-analysis]]

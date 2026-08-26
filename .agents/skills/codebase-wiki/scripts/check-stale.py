@@ -94,7 +94,9 @@ def _source_path(repo_root: pathlib.Path, source: str) -> pathlib.Path:
     return repo_root.joinpath(*pure.parts)
 
 
-def _source_files(repo_root: pathlib.Path, source: str) -> list[pathlib.Path]:
+def _source_files(
+    repo_root: pathlib.Path, source: str, *, use_git: bool = True
+) -> list[pathlib.Path]:
     source_path = _source_path(repo_root, source).resolve()
     try:
         source_path.relative_to(repo_root.resolve())
@@ -105,31 +107,34 @@ def _source_files(repo_root: pathlib.Path, source: str) -> list[pathlib.Path]:
     if not source_path.is_dir():
         return []
 
-    relative_source = source_path.relative_to(repo_root.resolve()).as_posix()
-    try:
-        result = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(repo_root),
-                "ls-files",
-                "--cached",
-                "--others",
-                "--exclude-standard",
-                "-z",
-                "--",
-                relative_source,
-            ],
-            check=True,
-            capture_output=True,
-        )
-        candidates = [
-            repo_root / value.decode("utf-8", errors="surrogateescape")
-            for value in result.stdout.split(b"\0")
-            if value
-        ]
-    except (OSError, subprocess.CalledProcessError):
+    if not use_git:
         candidates = list(source_path.rglob("*"))
+    else:
+        relative_source = source_path.relative_to(repo_root.resolve()).as_posix()
+        try:
+            result = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(repo_root),
+                    "ls-files",
+                    "--cached",
+                    "--others",
+                    "--exclude-standard",
+                    "-z",
+                    "--",
+                    relative_source,
+                ],
+                check=True,
+                capture_output=True,
+            )
+            candidates = [
+                repo_root / value.decode("utf-8", errors="surrogateescape")
+                for value in result.stdout.split(b"\0")
+                if value
+            ]
+        except (OSError, subprocess.CalledProcessError):
+            candidates = list(source_path.rglob("*"))
 
     files: list[pathlib.Path] = []
     for path in candidates:
@@ -145,12 +150,14 @@ def _source_files(repo_root: pathlib.Path, source: str) -> list[pathlib.Path]:
     return sorted(set(files), key=lambda item: item.resolve().as_posix())
 
 
-def compute_source_digest(repo_root: pathlib.Path, sources: list[str]) -> str:
+def compute_source_digest(
+    repo_root: pathlib.Path, sources: list[str], *, use_git: bool = True
+) -> str:
     """Return the stable aggregate digest for existing raw source files."""
 
     records: dict[str, str] = {}
     for source in sources:
-        for path in _source_files(repo_root, source):
+        for path in _source_files(repo_root, source, use_git=use_git):
             relative = path.resolve().relative_to(repo_root.resolve()).as_posix()
             records[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
     aggregate = hashlib.sha256()
@@ -162,13 +169,15 @@ def compute_source_digest(repo_root: pathlib.Path, sources: list[str]) -> str:
     return f"sha256:{aggregate.hexdigest()}"
 
 
-def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
+def check_stale(
+    wiki_dir: pathlib.Path, repo_root: pathlib.Path, *, use_git: bool = True
+):
     """檢查每個 wiki 頁面的 sources 是否仍存在。"""
     validate_regular_tree(wiki_dir)
     md_files = sorted(wiki_dir.rglob("*.md"))
     results: dict[str, list[Any]] = {"critical": [], "warning": [], "ok": []}
 
-    dirty_paths = git_dirty_paths(repo_root)
+    dirty_paths = git_dirty_paths(repo_root) if use_git else set()
     for fp in md_files:
         fm = parse_frontmatter(fp)
         sources = fm.get("sources", [])
@@ -231,13 +240,18 @@ def check_stale(wiki_dir: pathlib.Path, repo_root: pathlib.Path):
                 normalized in dirty_paths
                 or any(item.startswith(normalized + "/") for item in dirty_paths)
             )
-            changed_after_page = bool(page_date and (latest := latest_source_date(repo_root, normalized)) and latest > page_date)
+            changed_after_page = bool(
+                use_git
+                and page_date
+                and (latest := latest_source_date(repo_root, normalized))
+                and latest > page_date
+            )
             if dirty or changed_after_page:
                 stale.append(src)
 
         declared_digest = fm.get("source_digest")
         if isinstance(declared_digest, str) and existing and not missing and not invalid:
-            current_digest = compute_source_digest(repo_root, existing)
+            current_digest = compute_source_digest(repo_root, existing, use_git=use_git)
             if declared_digest != current_digest:
                 digest_mismatch = {
                     "declared": declared_digest,

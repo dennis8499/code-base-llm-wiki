@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:4bcdac1519d3546db08b98dc7d22446deb6b7fd62846225ad05bdda8b5d9282d
+source_digest: sha256:8797a8572b732e6e01061e560f62b49e3cb3337a5c02d4dd14bf6871f1532048
 derived_from: []
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 tags: [framework, llm, wiki, copilot, codex]
 status: active
 notebooklm_group: project
@@ -35,8 +35,10 @@ Codebase LLM Wiki 是面向 coding agents 的持久知識框架。Agent 將已�
 | Schema | `AGENTS.md`、`.agents/`、`.github/`、`.codex/` | 意圖、工作流、模板、scripts、hooks 與平台入口 |
 
 NotebookLM delivery pack 是由 Schema/Workflow 產生的可審查交付物，不是第四個
-知識層：Agent 每次先安全掃描全專案，依功能補齊 Wiki，再將完整文件與精選 evidence
-寫入 `.notebooklm/`。Pack 只供手動上傳，包含 `query-index`、`project-map`、Markdown
+知識層：Agent 每次以明確 `--root` 的檔案系統目錄為邊界安全掃描全專案，依功能補齊
+Wiki，再將完整文件與精選 evidence 寫入 `.notebooklm/`。掃描不要求 Git repository、
+clean working tree 或 root `.git`；nested repository 的專案檔案照常納入，`.git` metadata
+仍排除。Pack 只供手動上傳，包含 `query-index`、`project-map`、Markdown
 sources、manifest 與增量 upload plan，預設不進 Git，也不會自動連線 NotebookLM。
 Exporter 在 canonicalize output path 前拒絕 output root 或其 parent components
 透過 symlink/reparse point 到達，避免 pack boundary 被繞過。
@@ -120,10 +122,11 @@ nested quoted paths。Delegation 只有使用者明確要求時啟用。
 - **Follow-up actions**：高價值 Query 與 Lint findings 可提供有界的 Synthesis、Guide、重新 Ingest 或 Lint 選項；選項不會自動寫入或 Hand-Off。
 - **Archaeology**：追蹤 call path 與非破壞性 Git history。
 - **ADR / Synthesis / Guide / SA**：保存 durable decision、analysis 與操作知識。
-- **NotebookLM export**：每次全量掃描安全範圍，完成必要功能文件後取得
+- **NotebookLM export**：每次以 `--root` 進行檔案系統全量掃描，完成必要功能文件後取得
   `preflight_id`；apply 重新驗證相同輸入與本機 DLP gate，才產生含有
   `query-index`/`project-map` 的 documents-first source pack。Query index 將
-  Wiki-first direct-lookup contract 帶入 NotebookLM，但不建立常駐搜尋服務。
+  Wiki-first direct-lookup contract 帶入 NotebookLM，但不建立常駐搜尋服務；export
+  preflight 不依賴 Git status、commit date 或 log baseline。
 - **Delegation**：明確要求時才路由給專業代理。
 
 ## 安全與品質

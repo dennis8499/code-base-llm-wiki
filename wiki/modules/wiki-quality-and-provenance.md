@@ -14,9 +14,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/rebuild-index.py
   - tests/test_wiki_lint.py
   - tests/test_stale.py
-source_digest: sha256:d2629f680858749cb5471f89c358ddbdafb43199f3a9bb2e29686fcea9ec6188
+source_digest: sha256:e405b29520d8541b515e393d78b031496bbf1adf84ab3e48ce59414ceb7b20de
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-08-23
+last_updated: 2026-08-26
 tags: [module, lint, provenance, frontmatter, freshness]
 status: active
 ---
@@ -31,7 +31,8 @@ status: active
 - 檢查 `sources` 的實際解析路徑仍位於 repo root 內，拒絕 drive-qualified path 或逃逸到
   repo 外的 symlink。
 - 維護 index 的 managed region，保留 marker 外的人工內容。
-- 驗證 log operation、日期、affected pages、Git baseline 與 append-only 契約。
+- 驗證 log operation、日期、affected pages、Git baseline 與 append-only 契約；lint API
+  可在 NotebookLM preflight 使用 filesystem-only 模式，略過 Git baseline。
 
 ## 狀態契約
 
@@ -50,7 +51,8 @@ Orphan inbound 不計 `index.md`、`log.md` 或自我連結。`source_digest` �
 - `check-stale.py` 對排序後 path/file hash records 建立 aggregate SHA-256。
 - `check-stale.py` 在 existence/digest 判定前驗證 source symlink containment。
 - `check-stale.py`、`validate-frontmatter.py` 與 `wiki-stats.py` 都提供標準
-  `--help` CLI；source directory 在沒有 Git metadata 時 fallback 到 filesystem scan。
+  `--help` CLI；source directory 在沒有 Git metadata 時 fallback 到 filesystem scan，
+  並可由 lint API 明確停用 Git freshness/history lookup。
 - `check-stale.py` 與 digest resolver 對 repo-relative source 正規化 `/` 與 `\\`
   separators，讓同一 Wiki source 在 Windows/Linux host 維持一致。
 - `validate-log.py` 對新 contract marker 後的 entry 執行嚴格檢查，舊 entry 僅警告。

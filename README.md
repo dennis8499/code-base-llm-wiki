@@ -210,8 +210,9 @@ NotebookLM Enterprise 匯出：
 與 .notebooklm source pack，並提供 Wiki-first 直接定位問題的 Custom instructions。
 ```
 
-預覽使用 `export-notebooklm.py --preflight`，不寫入 Wiki 或 pack，並回傳一次性的
-`preflight_id`。完成文件與確認後，使用
+預覽使用 `export-notebooklm.py --preflight`，以 `--root` 指定的檔案系統目錄為掃描
+邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋；預覽不寫入
+Wiki 或 pack，並回傳一次性的 `preflight_id`。完成文件與確認後，使用
 `--apply --preflight-id <id>`；任何 inventory、Wiki 或設定變更都要求重新
 preflight。Exporter 不會呼叫雲端 API 或自動上傳，並會在本機執行 Basic DLP
 檢核；未 allowlist finding 會阻擋 apply。

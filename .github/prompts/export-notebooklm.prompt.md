@@ -9,9 +9,11 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
 
 ## 任務
 
-準備目前專案給 NotebookLM Enterprise 使用。預設範圍是整個專案。既有 Wiki
-是知識基線，不得作為 raw discovery 邊界；每次都必須重新建立完整安全範圍清單，
-但只增量更新真正改變或缺漏的 Wiki 知識。
+準備目前專案給 NotebookLM Enterprise 使用。預設範圍是 `--root` 指定的整個專案目錄及其
+全部子目錄。既有 Wiki 是知識基線，不得作為 raw discovery 邊界；每次都必須重新
+建立完整安全範圍清單，但只增量更新真正改變或缺漏的 Wiki 知識。掃描以檔案系統
+root 為準，不要求 root 有 `.git`、working tree clean，也不因 nested repository
+阻擋；nested repository 的 `.git` metadata 仍依 generated 排除規則忽略。
 
 完整載入 `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md`，
 並以該 reference 作為 preflight、確認、文件優先與 pack completion criterion 的唯一來源。

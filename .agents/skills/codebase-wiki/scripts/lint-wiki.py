@@ -58,7 +58,11 @@ def finding(
     return result
 
 
-def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
+def lint_wiki(
+    wiki_dir: Path, repo_root: Path, *, use_git: bool = True
+) -> dict[str, Any]:
+    """Run Wiki checks, optionally disabling Git freshness/baseline checks."""
+
     validate_regular_tree(wiki_dir)
     pages = sorted(wiki_dir.rglob("*.md"))
     findings: list[dict[str, Any]] = []
@@ -71,7 +75,7 @@ def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
         for error in validate.validate_page(path, wiki_dir):
             findings.append(finding("critical", "frontmatter", error, relative))
 
-    stale_results = stale.check_stale(wiki_dir, repo_root)
+    stale_results = stale.check_stale(wiki_dir, repo_root, use_git=use_git)
     for item in stale_results["critical"]:
         page = str(item["page"])
         if "invalid_sources" in item:
@@ -122,7 +126,7 @@ def lint_wiki(wiki_dir: Path, repo_root: Path) -> dict[str, Any]:
                 )
             )
 
-    log_result = log_validator.validate_log(wiki_dir / "log.md", repo_root)
+    log_result = log_validator.validate_log(wiki_dir / "log.md", repo_root, use_git=use_git)
     for message in log_result["errors"]:
         findings.append(finding("critical", "log_integrity", message, "log.md"))
     for message in log_result["warnings"]:

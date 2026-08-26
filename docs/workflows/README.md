@@ -96,7 +96,8 @@ frontmatter、append-only log、managed index、contradictions 與 coverage。�
 ## 11. NotebookLM Enterprise export
 
 這是「全專案功能文件化 + 離線 source pack」workflow，不會連線或上傳
-NotebookLM。每次執行都唯讀掃描整個專案的可分享 runtime source、必要
+NotebookLM。`--root` 指定檔案系統目錄就是掃描邊界，不要求 Git repository、clean
+working tree，也不因 nested repository 阻擋；每次執行都唯讀掃描整個專案的可分享 runtime source、必要
 config/manifests、schema/migrations 與既有文件；tests、CI/CD、IaC、build/dev
 tooling、dependencies、generated、binary、secrets、framework adapters 與輸出目錄
 預設排除。既有 Wiki 是可增量更新的知識基線，不是掃描邊界。

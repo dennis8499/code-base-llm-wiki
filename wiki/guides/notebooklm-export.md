@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:a38355a582768629c7b2dc1d7bc2c7549724ef24406597848ece13794693e5f3
+source_digest: sha256:95f481718b1015e266f0f3c000c1fa57b13cadcb2a9d4ae023794bc04f201358
 derived_from: ["[[overview]]", "[[notebooklm-exporter]]", "[[project-function-catalog]]"]
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 tags: [guide, notebooklm, export, incremental, enterprise]
 status: active
 notebooklm_group: project-guides
@@ -31,7 +31,7 @@ Wiki 是可複用的知識基線，但每次執行仍會重掃安全的全專案
 
 ## 執行前檢查
 
-1. 執行 `--preflight`，列出 Git tracked 與 non-ignored untracked files 的分類結果。
+1. 執行 `--preflight`，以 `--root` 指定目錄為檔案系統掃描邊界，列出所有安全納入與排除的檔案；不要求 `.git`、clean working tree，也不因 nested repository 阻擋。NotebookLM preflight 的 Wiki lint 也不查 Git dirty path、commit date 或 log baseline。
 2. 納入可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件。
 3. 排除 tests、CI/CD、IaC、build/dev tooling、dependencies、generated/build/cache、binary、secrets、Wiki/output 與明確設定的 exclusions；預設 `target` profile 另排除 framework adapters。
 4. 讀取全部 included files，依專案功能建立 source-to-function coverage map；讀 Wiki index/pages 判斷已覆蓋、stale、placeholder、矛盾與缺失文件。

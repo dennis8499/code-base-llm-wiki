@@ -25,7 +25,7 @@ workflow、schema、template 與 hook logic 的共同來源。
 - 保留人工內容，`wiki/log.md` 維持 append-only。
 - page add/delete/rename/major update 同步 `wiki/index.md`。
 - Lint 先報告 findings，再確認 repairs。
-- NotebookLM export 每次以 Wiki 為基線做全專案安全 preflight；預覽功能 Ingest 並確認後才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。
+- NotebookLM export 每次以 Wiki 為基線做全專案安全 preflight；`--root` 指定的檔案系統目錄是掃描邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。預覽功能 Ingest 並確認後才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。
 - Custom agents 是 explicit-delegation only；一般任務由目前 agent 完成。
 - `wiki-query` 只使用 `read/search`；`wiki-lint` 與 `wiki-archaeologist` 的
   `execute` 只依 profile instruction 執行 read-only checks/history。由於 `execute`

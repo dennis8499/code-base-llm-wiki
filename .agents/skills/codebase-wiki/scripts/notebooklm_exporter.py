@@ -1,8 +1,9 @@
 """Function-oriented NotebookLM Enterprise preflight and source-pack builder.
 
-``--preflight`` performs a read-only, Git-aware inventory. The default mode
-packages curated Wiki documents and selected evidence into ``.notebooklm``.
-This module never calls NotebookLM or modifies raw sources and Wiki pages.
+``--preflight`` performs a read-only inventory of the explicit filesystem root.
+The default mode packages curated Wiki documents and selected evidence into
+``.notebooklm``. This module never calls NotebookLM or modifies raw sources and
+Wiki pages.
 """
 
 from __future__ import annotations
@@ -862,17 +863,15 @@ def classify_project_file(relative: str) -> str:
 
 
 def repository_files(root: Path) -> list[Path]:
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
-            check=True,
-            capture_output=True,
-        )
-        values = [value for value in result.stdout.split(b"\0") if value]
-        paths = [root / value.decode("utf-8", errors="surrogateescape") for value in values]
-        return sorted((path for path in paths if path.is_file()), key=lambda item: item.as_posix())
-    except (OSError, subprocess.CalledProcessError):
-        return sorted((path for path in root.rglob("*") if path.is_file()), key=lambda item: item.as_posix())
+    """Enumerate files beneath the explicit root without consulting Git.
+
+    Git metadata and other unsafe/generated paths are classified later by
+    ``exclusion_reason``. Keeping enumeration independent from repository
+    state means an uncommitted or ignored project-owned text file is still
+    considered, while the existing safety and DLP gates remain authoritative.
+    """
+
+    return sorted((path for path in root.rglob("*") if path.is_file()), key=lambda item: item.as_posix())
 
 
 def declared_source_paths(pages: Iterable[InputFile], root: Path) -> tuple[str, ...]:
@@ -1579,7 +1578,20 @@ def select_evidence(
 
 
 def git_revision(root: Path) -> str | None:
+    metadata = root / ".git"
+    if not metadata.exists():
+        return None
     try:
+        root_path = root.resolve()
+        top_level = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        if Path(top_level.stdout.strip()).resolve() != root_path:
+            return None
         result = subprocess.run(
             ["git", "-C", str(root), "rev-parse", "HEAD"],
             check=True,
@@ -2344,7 +2356,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     dlp_message = dlp_warning(dlp)
     if dlp_message:
         warnings.append(dlp_message)
-    lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root)
+    lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root, use_git=False)
     missing = [path for path, status in scan["required_documents"].items() if status != "active"]
     warnings.extend(f"必要文件尚未完成：{path} ({scan['required_documents'][path]})" for path in missing)
     if coverage["status"] == "partial":

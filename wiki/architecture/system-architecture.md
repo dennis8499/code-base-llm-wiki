@@ -9,9 +9,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:e48e62b0856bffb6e4f9a2bacf2d3cdc8bb5c1f82653d00292de75be5ec100c7
+source_digest: sha256:9aa1f9a8648505a300a5c8b8f7d31ccd35f0cb7f403534903f34dd9ae49ed63f
 derived_from: ["[[overview]]"]
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -53,14 +53,15 @@ User intent
 
 Installer 的資料流是 source framework → dry-run classification → staged writes →
 transaction-journaled atomic replacement；遇到兩側同時變更時不寫入。NotebookLM 的資料流是先驗證
-Wiki regular tree，再讀取 Wiki 與安全 raw inventory → deterministic identity → apply 時重新掃描 → 檢查 output path 的
+Wiki regular tree，再以明確 `--root` 讀取檔案系統安全 raw inventory → deterministic identity → apply 時重新掃描 → 檢查 output path 的
 symlink/reparse containment → 原子替換本機 pack。
 
 ## Deployment
 
-框架沒有常駐服務或資料庫。執行環境只需要 Python 標準函式庫、Git（部分 freshness
-與 inventory 能力有 filesystem fallback），以及支援 Codex 或 GitHub Copilot 的
-專案入口。安裝後的 `.notebooklm/` 與 hook logs 是本機生成物，不進入 release。
+框架沒有常駐服務或資料庫。執行環境只需要 Python 標準函式庫，以及支援 Codex 或
+GitHub Copilot 的專案入口；Git 僅供獨立 Wiki freshness/history 與可選 manifest
+provenance 使用，NotebookLM export inventory 與 preflight 不要求 Git。安裝後的
+`.notebooklm/` 與 hook logs 是本機生成物，不進入 release。
 
 ## Evidence
 

@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:c09435fcd73b4aeccec9bb637812994e1f4a02e482eb3cf801fc6ef7bc3a53e2
+source_digest: sha256:784009f396a524d534cb65a08fa22ec870c29d40cbf22e69267470fb83ed4cd4
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -29,7 +29,7 @@ notebooklm_group: project-guides
 
 ## 前置需求
 
-- Git；
+- Git（版本控制與部分 Wiki freshness/history 功能需要；NotebookLM export 不要求）；
 - Python 3.11+；
 - GitHub Copilot Chat 或 OpenAI Codex，依選用入口決定；
 - 對目標 Repo 的讀取權限，以及對框架 schema/Wiki 的必要寫入權限。
@@ -113,11 +113,12 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 
 ## NotebookLM Enterprise export
 
-使用 `/export-notebooklm` 或 Codex 的自然語言 recipe。每次執行都重新掃描 Git
-tracked 與 non-ignored untracked files，納入可分享的 runtime source、必要
+使用 `/export-notebooklm` 或 Codex 的自然語言 recipe。每次執行都以 `--root` 指定的
+檔案系統目錄為邊界重新掃描，納入可分享的 runtime source、必要
 config/manifests、schema/migrations 與既有文件；tests、CI/CD、IaC、build/dev
 tooling、dependencies、generated、binary、secrets、framework adapters 與輸出目錄
-預設排除。既有 Wiki 是增量知識基線，不是掃描邊界。
+預設排除。Git repository、clean working tree 與 nested repository 都不會決定是否能
+export；nested `.git` metadata 仍排除。既有 Wiki 是增量知識基線，不是掃描邊界。
 
 先執行唯讀 preflight，取得納入/排除 inventory、Wiki coverage、缺失文件、容量與
 來源數估計、warnings 和未驗證事項：
@@ -132,6 +133,9 @@ stale、placeholder 或容量警告，也要等待使用者確認。確認後以
 功能目錄、系統架構、各功能 module/entity pages 與系統分析，填入真實
 `frontmatter.sources`、`notebooklm_group`、wikilinks，並同步 index、只追加一筆
 `ingest` log，最後才執行 exporter：
+
+NotebookLM preflight 的 Wiki lint 保留結構與內容檢查，但不查 Git dirty path、commit
+date 或 log baseline；檔案內容 hash 與 preflight identity 仍維持 deterministic。
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
@@ -182,8 +186,9 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --pref
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
 ```
 
-三個 path-based quality CLI 都接受標準 `--help`；`check-stale.py` 的 directory
-source 在沒有 Git metadata 時會 fallback 到 filesystem scan。
+三個 path-based quality CLI 都接受標準 `--help`；獨立執行時 `check-stale.py` 的
+directory source 在沒有 Git metadata 時會 fallback 到 filesystem scan，NotebookLM
+preflight 則直接使用 filesystem-only Wiki lint mode。
 
 Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不要以虛構 sources 或刪除 log 歷史規避檢查。
 

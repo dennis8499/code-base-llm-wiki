@@ -8,9 +8,9 @@ sources:
   - .github/workflows/release.yml
   - docs/releases/README.md
   - README.md
-source_digest: sha256:57b36b0a23e0a9857a9adb96c79988e84eae5a919d90ea3be08e92ee815e7d44
+source_digest: sha256:8ea59574ac433bca4e030e98a9eb7627eefeb1f53823e32c67906dd007e79390
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-08-24
+last_updated: 2026-08-26
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides

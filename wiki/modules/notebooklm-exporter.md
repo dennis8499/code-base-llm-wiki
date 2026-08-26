@@ -9,9 +9,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:bccd0a578db678179bb70f48318fa8205913b17c371067df4cf853c0005a7a41
+source_digest: sha256:0112886bde0b01cdccb12022fce720566d02ef2a59900912f89c8601d5b1e758
 derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 tags: [module, notebooklm, exporter, preflight]
 status: active
 ---
@@ -20,7 +20,11 @@ status: active
 
 ## 職責
 
-- 盤點 Git tracked 與 non-ignored untracked 的安全 UTF-8 專案證據。
+- 以 `--root` 指定的檔案系統目錄為邊界，盤點其中安全的 UTF-8 專案證據；不要求
+  `.git` 或 clean working tree，也不因 nested repository 阻擋，nested `.git` metadata
+  仍按 generated state 排除。
+- NotebookLM preflight 的 Wiki lint 保留結構與內容檢查，但停用 Git dirty-path、commit-date
+  與 log-baseline lookup；檔案內容 hash 與 preflight identity 仍維持 deterministic。
 - 在讀取任何 Wiki page 前先驗證 Wiki root 是 regular tree，拒絕 symlink/reparse point，
   避免安全檢查前讀取外部內容。
 - CLI 也在 canonicalization 前拒絕 symlink/reparse root，避免 `--root` 入口繞過

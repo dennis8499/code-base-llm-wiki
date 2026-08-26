@@ -833,6 +833,49 @@ Call the service.
             )
             self.assertRegex(result["preflight_id"], r"^sha256:[0-9a-f]{64}$")
 
+    def test_preflight_uses_filesystem_root_without_git_state(self) -> None:
+        load_exporter()
+        module = sys.modules["notebooklm_exporter"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            (root / ".gitignore").write_text(
+                "ignored-but-project-owned.py\n", encoding="utf-8"
+            )
+            (root / "ignored-but-project-owned.py").write_text(
+                "VALUE = 2\n", encoding="utf-8"
+            )
+            nested = root / "nested-repository"
+            (nested / ".git").mkdir(parents=True)
+            (nested / ".git/config").write_text("repository metadata\n", encoding="utf-8")
+            (nested / "src/feature.py").parent.mkdir(parents=True)
+            (nested / "src/feature.py").write_text("def feature():\n    return True\n", encoding="utf-8")
+
+            with mock.patch.object(
+                module.subprocess,
+                "run",
+                side_effect=AssertionError("NotebookLM preflight must not invoke Git"),
+            ):
+                code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            included = {item["path"] for item in result["inventory"]["included"]}
+            self.assertIn("ignored-but-project-owned.py", included)
+            self.assertIn("nested-repository/src/feature.py", included)
+            excluded = {
+                (item["path"], item["reason"])
+                for item in result["inventory"]["excluded"]
+            }
+            self.assertIn(
+                ("nested-repository/.git/config", "binary_or_generated"),
+                excluded,
+            )
+
+            output = root / ".notebooklm"
+            export_code, exported = self.run_export(module, root, output)
+            self.assertEqual(export_code, 0)
+            self.assertIsNone(exported["manifest"]["git_revision"])
+
     def test_preflight_rejects_symlinked_files_that_escape_repository(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:

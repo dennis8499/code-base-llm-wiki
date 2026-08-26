@@ -31,13 +31,19 @@ Include every UTF-8 project-owned text file in these categories:
 Exclude tests, CI/CD, IaC, build/development tooling, dependency and generated
 directories, binaries, credentials/secrets, the Wiki and export output, and
 installed Codebase LLM Wiki adapter/schema files. A production entrypoint is
-runtime source even if it lives under a scripts directory. Enumerate Git
-tracked plus non-ignored untracked files; use a filesystem fallback outside Git.
+runtime source even if it lives under a scripts directory. Recursively
+enumerate the filesystem beneath the explicit `--root`; Git status, a clean
+worktree, or a root `.git` are not prerequisites. Nested repositories are
+ordinary subdirectories: their project files follow the same rules, while
+their `.git` metadata remains excluded as generated state.
 
 ## Source order
 
 1. Read `wiki/index.md` and every Wiki Markdown page except `wiki/log.md`.
 2. Run the deterministic frontmatter, stale-source, and Wiki lint checks.
+   NotebookLM preflight keeps the structural and content checks but disables
+   Git dirty-path, commit-date, and log-baseline lookups; the preflight remains
+   filesystem-only.
 3. Run the read-only inventory:
 
    ```powershell

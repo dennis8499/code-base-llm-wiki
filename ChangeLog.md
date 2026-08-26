@@ -8,6 +8,10 @@
 
 ### Fixed
 
+- **NotebookLM filesystem-root inventory**：exporter 改以明確 `--root` 的檔案系統內容作為
+  inventory 邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋；
+  NotebookLM preflight 的 Wiki lint 停用 Git dirty-path、commit-date 與 log-baseline lookup，
+  但保留安全排除、內容 hash、DLP 與 preflight identity。
 - **NotebookLM Wiki-first direct lookup**：Exporter 新增 `query-index` Markdown router，
   將最多五個主要來源群組、文件優先/evidence 查核、直接回答、引用與 gap 契約帶入
   NotebookLM；manifest/preflight 暴露 retrieval contract，README 提供 Custom instructions
