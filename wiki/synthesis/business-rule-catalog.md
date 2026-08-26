@@ -14,6 +14,8 @@ status: active
 
 # 業務規則目錄
 
+<!-- codebase-wiki:managed:start -->
+
 ## 規則覆蓋矩陣
 
 | 規則 ID | 規則 | 適用流程 | 證據狀態 | 待確認事項 |
@@ -23,13 +25,20 @@ status: active
 
 ## 規則衝突與例外
 
-- 技術 traceability 可依預算省略，但 BA 文件與指定 business evidence 不可靜默省略。
-- DLP allowlist 只能精確處理已知 false positive，不能關閉 sensitive path 與內容安全邊界。
-- 歷史 schema v1–v3 pack 不與 BA-first pack 增量混合，必須 full rebuild。
+- Raw evidence 與 technical traceability 永不進入 BA source pack；BA 文件也不可靜默省略。
+- DLP finding 必須遮罩，final payload 有殘留時阻擋；schema v5 沒有 allowlist。
+- 歷史 schema v1–v4 pack 不與 `business-only-ba-v2` pack 增量混合，必須 full rebuild。
+<!-- codebase-wiki:managed:end -->
+
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+目前無人工補充。
+<!-- codebase-wiki:user-notes:end -->
 
 ## 相關頁面
 
 - [[business-process-catalog]]
+- [[functional-requirement-catalog]]
 - [[business-glossary]]
 - [[business-knowledge-gaps]]
-

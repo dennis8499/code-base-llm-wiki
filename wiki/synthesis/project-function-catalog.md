@@ -50,8 +50,9 @@ release gate 會刻意拒絕建立資產。
 
 ## Contradictions
 
-- 舊 exporter 以 architecture/module/function catalog 作為主要 NotebookLM 文件；schema v4
-  改以 BA overview、process/rule catalogs、glossary、gaps 與 process/rule pages 為必要集合。
+- 舊 exporter 以 architecture/module/function catalog 作為主要 NotebookLM 文件；schema v5
+  改以 BA overview、functional requirement/process/rule catalogs、glossary、gaps、coverage
+  ledger 與 requirement/process/rule pages 為必要集合。
 
 ## Inferences
 

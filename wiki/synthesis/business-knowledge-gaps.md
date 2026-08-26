@@ -14,6 +14,8 @@ status: active
 
 # 業務知識缺口
 
+<!-- codebase-wiki:managed:start -->
+
 | Gap ID | 待確認問題 | 影響流程／規則 | 已查證據 | 建議確認角色 | 狀態 |
 | --- | --- | --- | --- | --- | --- |
 | `gap-notebooklm-non-text-evidence` | PDF、Office、圖片或訪談中的業務知識由誰轉成可追溯 UTF-8 文字並核准？ | [[notebooklm-ba-knowledge-export]] | v1 workflow 明確不解析這些格式 | BA／PO／文件擁有者 | open |
@@ -23,4 +25,10 @@ status: active
 ## 已解決缺口
 
 目前無。解決後保留原 Gap ID，補上確認來源、日期與結果，不刪除歷史脈絡。
+<!-- codebase-wiki:managed:end -->
 
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+目前無人工補充。
+<!-- codebase-wiki:user-notes:end -->

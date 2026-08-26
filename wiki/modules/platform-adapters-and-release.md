@@ -11,7 +11,7 @@ sources:
   - tools/release.py
   - tests/test_release.py
   - tests/test_contracts.py
-source_digest: sha256:5a3bd49c5601c5d5ecdfd5f78e8e8f513d7ebdeca3d386fe267812c681444a38
+source_digest: sha256:2a12ddfa4f4d7578f3b80985c456c78c3f7d439bbd51db03ff9846a1b9362875
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-08-24
 tags: [module, adapters, ci, release, parity]

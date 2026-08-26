@@ -21,6 +21,11 @@ status: active
 | ------------ | ----------------- |
 | [[overview]] | Codebase 高階總覽 |
 
+## Business Requirements
+
+| 頁面 | 摘要 |
+| ---- | ---- |
+
 ## Business Processes
 
 | 頁面 | 摘要 |

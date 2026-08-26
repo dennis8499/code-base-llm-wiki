@@ -68,12 +68,14 @@ def create_directory_reparse_point(link: Path, target: Path) -> None:
 
 
 class WikiLintTests(unittest.TestCase):
-    def test_business_process_and_rule_frontmatter_and_index_sections(self) -> None:
+    def test_business_requirement_process_and_rule_frontmatter_and_index_sections(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             wiki = Path(directory) / "wiki"
             processes = wiki / "processes"
+            requirements = wiki / "requirements"
             rules = wiki / "rules"
             processes.mkdir(parents=True)
+            requirements.mkdir()
             rules.mkdir()
             process = processes / "order-cancellation.md"
             process.write_text(
@@ -117,12 +119,40 @@ notebooklm_terms: [cancellation window]
 """,
                 encoding="utf-8",
             )
+            requirement = requirements / "cancel-order.md"
+            requirement.write_text(
+                """---
+title: Cancel Order
+type: business-requirement
+sources: []
+last_updated: 2026-08-26
+tags: [business-requirement]
+status: active
+requirement_id: fr-order-cancellation
+capability_id: cap-order-cancellation
+applies_to: ["[[order-cancellation]]"]
+evidence_state: implementation-observed
+notebooklm_group: business-orders
+notebooklm_role: business
+notebooklm_terms: [cancel order, acceptance]
+---
+
+# Cancel Order
+
+## 驗收條件
+
+- `AC-ORDER-001`: Given an eligible order, when cancellation is requested, then the order is cancelled.
+""",
+                encoding="utf-8",
+            )
 
             self.assertEqual(VALIDATE.validate_page(process, wiki), [])
+            self.assertEqual(VALIDATE.validate_page(requirement, wiki), [])
             self.assertEqual(VALIDATE.validate_page(rule, wiki), [])
             self.assertEqual(
                 REBUILD.expected_index_entries(wiki),
                 {
+                    "cancel-order": "Business Requirements",
                     "order-cancellation": "Business Processes",
                     "cancellation-window": "Business Rules",
                 },

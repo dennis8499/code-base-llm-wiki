@@ -12,7 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:7063fc463f9c75732a8d5a4908c49bca1a1605cc6509bc023302317e0f91d85f
+source_digest: sha256:a9d25de12ee2e1df1a1249cb5f0655b27ceb1172afefd8b63e12abebf92ef8fa
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
 last_updated: 2026-08-26
 tags: [synthesis, system-analysis, notebooklm]
@@ -101,8 +101,8 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 
 - 入口：`--preflight`，其後 `--apply --preflight-id`。
 - 步驟：safe scan → discovery confirmation → BA knowledge update → readiness confirmation → apply rescan → pack。
-- source pack：`query-index` 先路由 BA 問題，`project-map` 提供流程／規則／角色導覽；BA
-  documents 與 business evidence 優先，technical traceability 是獨立可選附錄。
+- source pack：`query-index` 先路由 FR/AC 與 BA 問題，`project-map` 提供功能／流程／規則／角色導覽；
+  只 materialize BA documents，raw evidence 與 technical traceability 永不進入 pack。
 - 失敗：ID mismatch、required docs、Critical lint、source limit 或 atomic write error 均不替換舊 pack。
 
 ## API / 介面
@@ -121,8 +121,8 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 - `wiki/index.md`：managed navigation region；marker 外保留人工內容。
 - `wiki/log.md`：append-only operation stream，新契約 entry 必須列 affected pages。
 - Install state：framework/surface/mode 與 per-file upstream fingerprints。
-- NotebookLM manifest v4：audience、knowledge/retrieval contracts、BA coverage、source roles、stable IDs、hashes、limits、DLP、migration 與 actions。
-- Preflight schema v4：inventory hash、business structural gates、source policy、ID、required document/lint/DLP readiness。
+- NotebookLM manifest v5：audience、knowledge/retrieval contracts、FR/AC 與 file disposition coverage、stable IDs、hashes、limits、DLP phases、migration 與 actions。
+- Preflight schema v5：inventory hash、business/coverage gates、exact pack plan、source policy、ID、required document/lint/DLP readiness。
 
 ## 外部整合
 
@@ -131,7 +131,7 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 | OpenAI Codex | `.codex` hooks/agents + shared Skill | Project trust、host hook schema | [[platform-hooks-and-guards]] |
 | GitHub Copilot | `.github` prompts/agents/hooks | Host response/audit 表現差異 | [[platform-adapters-and-release]] |
 | Git | Wiki freshness/history、release tag、可選 manifest provenance | NotebookLM inventory/preflight 不依賴 Git；獨立 quality tools 仍可使用 Git 輔助 freshness | [[wiki-quality-and-provenance]] |
-| NotebookLM | 使用者手動上傳 query-index、project-map、BA docs/business evidence/trace static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
+| NotebookLM | 使用者手動上傳 query-index、project-map 與 BA-only static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
 
 ## 權限與安全
 

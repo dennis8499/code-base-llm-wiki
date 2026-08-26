@@ -503,3 +503,9 @@ status: active
 - 新增 `docs/README.md` 作為架構、安裝、工作流、驗證、發布、歷史、樣例與測試的集中導覽；根目錄 README 同步整理專案結構圖與文件索引。
 - 保留既有 `.agents/`、`.github/`、`.codex/`、`samples/`、`tests/`、`tools/` 與 `wiki/` 路徑契約；尚未選定的 LICENSE 與公開 release gate 維持不變。
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[release-and-update]]、[[system-analysis]]
+
+## [2026-08-26] update | NotebookLM schema v5 BA-only 功能需求匯出
+
+- Exporter 改為 `business-functional-requirements-v2`／`business-only-ba-v2`：全量分析安全 codebase、預設納入 behavioral tests、要求每個 included file 有 non-gap disposition，並只 materialize BA Wiki。
+- 新增 business-requirement、functional requirement catalog、stable FR/capability/AC IDs 與 managed/user-notes/local-only markers；DLP 改為 mask-and-residual-block，Enterprise byte limits 更新為 500/450 MB。
+- 受影響頁面：[[index]]、[[overview]]、[[notebooklm-ba-functional-export]]、[[functional-requirement-catalog]]、[[codebase-functional-coverage]]、[[notebooklm-ba-knowledge-export]]、[[ba-knowledge-precedes-traceability]]、[[readiness-preflight-required]]、[[business-process-catalog]]、[[business-rule-catalog]]、[[business-glossary]]、[[business-knowledge-gaps]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-architecture]]、[[system-analysis]]、[[wiki-quality-and-provenance]]、[[framework-introduction]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[release-and-update]]

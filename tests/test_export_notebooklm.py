@@ -71,10 +71,13 @@ status: active
 # Wiki Index
 
 [[overview]]
+[[functional-requirement-catalog]]
 [[business-process-catalog]]
 [[business-rule-catalog]]
 [[business-glossary]]
 [[business-knowledge-gaps]]
+[[codebase-functional-coverage]]
+[[greeting-requirement]]
 [[greeting]]
 [[greeting-format]]
 """,
@@ -119,6 +122,11 @@ status: active
         encoding="utf-8",
     )
     required = {
+        "synthesis/functional-requirement-catalog.md": (
+            "Functional Requirement Catalog",
+            "functional-requirements",
+            "[[greeting-requirement]] [[greeting]]",
+        ),
         "synthesis/business-process-catalog.md": (
             "Business Process Catalog",
             "business-process-catalog",
@@ -159,6 +167,42 @@ status: active
             f"# {title}\n\n{body}\n\n[[overview]]\n",
             encoding="utf-8",
         )
+    (root / "wiki/requirements").mkdir()
+    (root / "wiki/requirements/greeting-requirement.md").write_text(
+        """---
+title: Customer Greeting Requirement
+type: business-requirement
+summary: The system returns a greeting for a named customer.
+requirement_id: fr-customer-greeting
+capability_id: cap-customer-greeting
+applies_to: ["[[greeting]]"]
+evidence_state: implementation-observed
+notebooklm_group: business-greeting
+notebooklm_role: business
+notebooklm_terms: [greeting, customer, acceptance]
+sources: [src/service.py]
+derived_from: ["[[overview]]", "[[greeting]]"]
+last_updated: 2026-08-17
+tags: [business-requirement]
+status: active
+---
+
+# Customer Greeting Requirement
+
+<!-- codebase-wiki:managed:start -->
+The system returns a greeting for a named customer.
+
+## 驗收條件
+
+- `AC-GREETING-001`: Given a name, when greeting is requested, then hello and the name are returned.
+<!-- codebase-wiki:managed:end -->
+
+<!-- codebase-wiki:user-notes:start -->
+## BA Notes
+<!-- codebase-wiki:user-notes:end -->
+""",
+        encoding="utf-8",
+    )
     (root / "wiki/processes").mkdir()
     (root / "wiki/processes/greeting.md").write_text(
         """---
@@ -209,6 +253,33 @@ The observed implementation returns hello followed by the supplied name.
 """,
         encoding="utf-8",
     )
+    (root / "wiki/synthesis/codebase-functional-coverage.md").write_text(
+        """---
+title: Codebase Functional Coverage
+type: synthesis
+summary: Local-only complete disposition ledger.
+notebooklm_group: local-governance
+notebooklm_role: exclude
+sources: []
+derived_from: ["[[functional-requirement-catalog]]"]
+last_updated: 2026-08-17
+tags: [synthesis, coverage]
+status: active
+---
+
+# Codebase Functional Coverage
+
+| Path or prefix | Disposition | Functional requirements |
+| --- | --- | --- |
+| `src/` | functional-evidence | [[greeting-requirement]] |
+| `tests/` | functional-evidence | [[greeting-requirement]] |
+| `docs/` | supporting-technical | [[greeting-requirement]] |
+| `business/` | functional-evidence | [[greeting-requirement]] |
+| `notebooklm.toml` | supporting-technical | [[greeting-requirement]] |
+| `README.md` | supporting-technical | [[greeting-requirement]] |
+""",
+        encoding="utf-8",
+    )
 
 
 def add_index_links(root: Path, *stems: str) -> None:
@@ -217,6 +288,17 @@ def add_index_links(root: Path, *stems: str) -> None:
         index.read_text(encoding="utf-8").rstrip()
         + "\n"
         + "\n".join(f"[[{stem}]]" for stem in stems)
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def add_coverage_rows(root: Path, *rows: str) -> None:
+    ledger = root / "wiki/synthesis/codebase-functional-coverage.md"
+    ledger.write_text(
+        ledger.read_text(encoding="utf-8").rstrip()
+        + "\n"
+        + "\n".join(rows)
         + "\n",
         encoding="utf-8",
     )
@@ -265,7 +347,7 @@ class NotebookLMExporterTests(unittest.TestCase):
         self.assertEqual("".join(chunks), text)
         self.assertTrue(all(module.estimate_words(chunk) <= 2 for chunk in chunks))
 
-    def test_preflight_exposes_ba_first_direct_lookup_contract(self) -> None:
+    def test_preflight_exposes_ba_only_functional_contract(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -274,13 +356,13 @@ class NotebookLMExporterTests(unittest.TestCase):
             code, result = self.run_preflight(module, root)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["preflight_schema_version"], 4)
+            self.assertEqual(result["preflight_schema_version"], 5)
             self.assertEqual(
                 result["retrieval"],
                 {
-                    "contract": "business-first-ba-v1",
+                    "contract": "business-only-ba-v2",
                     "audience": "business-analyst",
-                    "knowledge_contract": "business-knowledge-v1",
+                    "knowledge_contract": "business-functional-requirements-v2",
                     "router_source": "query-index",
                     "navigation_source": "project-map",
                     "max_primary_source_groups": 5,
@@ -301,7 +383,7 @@ class NotebookLMExporterTests(unittest.TestCase):
             )
             (root / "notebooklm.toml").write_text(
                 'business_source_paths = ["tests/acceptance/greeting.feature"]\n'
-                "include_traceability = false\n",
+                'content_mode = "ba_only"\n',
                 encoding="utf-8",
             )
 
@@ -321,16 +403,11 @@ class NotebookLMExporterTests(unittest.TestCase):
             code, result = self.run_export(module, root, root / ".notebooklm")
             self.assertEqual(code, 0)
             kinds = {item["kind"] for item in result["manifest"]["sources"]}
-            self.assertIn("business_evidence", kinds)
+            self.assertEqual(kinds, {"router", "navigation", "business_documentation"})
             self.assertNotIn("technical_traceability", kinds)
-            self.assertTrue(
-                any(
-                    item["logical_source_id"].startswith("business-evidence:")
-                    for item in result["manifest"]["sources"]
-                )
-            )
+            self.assertFalse(result["manifest"]["source_policy"]["raw_source_content_included"])
 
-    def test_legacy_include_evidence_alias_and_conflict(self) -> None:
+    def test_legacy_raw_evidence_settings_are_rejected(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -339,11 +416,8 @@ class NotebookLMExporterTests(unittest.TestCase):
             config.write_text("include_evidence = false\n", encoding="utf-8")
 
             code, result = self.run_preflight(module, root)
-            self.assertEqual(code, 0)
-            self.assertFalse(result["source_policy"]["include_traceability"])
-            self.assertTrue(
-                any("include_evidence 已棄用" in item for item in result["warnings"])
-            )
+            self.assertEqual(code, 2)
+            self.assertIn("no longer accepts include_evidence", result["error"])
 
             config.write_text(
                 "include_traceability = true\ninclude_evidence = false\n",
@@ -351,7 +425,7 @@ class NotebookLMExporterTests(unittest.TestCase):
             )
             conflict_code, conflict = self.run_preflight(module, root)
             self.assertEqual(conflict_code, 2)
-            self.assertIn("must not conflict", conflict["error"])
+            self.assertIn("no longer accepts", conflict["error"])
 
     def test_business_contract_dangling_rule_keeps_preflight_not_ready(self) -> None:
         module = load_exporter()
@@ -377,7 +451,29 @@ class NotebookLMExporterTests(unittest.TestCase):
                 )
             )
 
-    def test_dlp_basic_profile_reports_safe_findings_without_secret_values(self) -> None:
+    def test_coverage_ledger_gap_and_dangling_requirement_block_export(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            add_coverage_rows(
+                root,
+                "| `src/service.py` | analysis-gap | [[missing-requirement]] |",
+            )
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            self.assertFalse(result["ready_to_export"])
+            self.assertEqual(result["coverage"]["analysis_gap_paths"], ["src/service.py"])
+            self.assertTrue(
+                any(
+                    "dangling requirement link" in issue
+                    for issue in result["coverage"]["ledger_issues"]
+                )
+            )
+
+    def test_dlp_masks_analysis_findings_without_secret_values(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -405,10 +501,12 @@ class NotebookLMExporterTests(unittest.TestCase):
             code, result = self.run_preflight(module, root)
 
             self.assertEqual(code, 0)
-            self.assertFalse(result["ready_to_export"])
-            self.assertEqual(result["dlp"]["status"], "blocked")
+            self.assertTrue(result["ready_to_export"])
+            analysis = result["dlp"]["analysis"]
+            self.assertEqual(analysis["status"], "passed_with_masking")
+            self.assertEqual(analysis["masked_count"], 5)
             self.assertEqual(
-                {item["rule"] for item in result["dlp"]["findings"]},
+                {item["rule"] for item in analysis["findings"]},
                 {
                     "CREDIT_CARD_NUMBER",
                     "FINANCIAL_ACCOUNT_NUMBER",
@@ -427,7 +525,7 @@ class NotebookLMExporterTests(unittest.TestCase):
             ):
                 self.assertNotIn(secret, report)
 
-    def test_dlp_block_preserves_previous_pack(self) -> None:
+    def test_dlp_masking_allows_ba_only_pack_without_raw_secret(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -435,18 +533,23 @@ class NotebookLMExporterTests(unittest.TestCase):
             output = root / ".notebooklm"
             first_code, _ = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
-            before = (output / "manifest.json").read_bytes()
-
             source = root / "src/service.py"
             source.write_text("password = 'p@ssword123!'\n", encoding="utf-8")
             code, result = self.run_export(module, root, output)
 
-            self.assertEqual(code, 2)
-            self.assertIn("DLP", result["error"])
+            self.assertEqual(code, 0)
+            self.assertEqual(
+                result["manifest"]["dlp"]["analysis"]["status"],
+                "passed_with_masking",
+            )
             self.assertNotIn("p@ssword123!", json.dumps(result, ensure_ascii=False))
-            self.assertEqual((output / "manifest.json").read_bytes(), before)
+            exported = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (output / "sources").glob("*.md")
+            )
+            self.assertNotIn("p@ssword123!", exported)
 
-    def test_dlp_allowlist_requires_exact_fingerprint(self) -> None:
+    def test_dlp_allowlist_is_rejected_in_ba_only_mode(self) -> None:
         module = load_exporter()
         canonical = sys.modules["notebooklm_exporter"]
         with tempfile.TemporaryDirectory() as directory:
@@ -472,11 +575,86 @@ class NotebookLMExporterTests(unittest.TestCase):
 
             code, result = self.run_preflight(module, root)
 
-            self.assertEqual(code, 0, result)
-            self.assertTrue(result["ready_to_export"])
-            self.assertEqual(result["dlp"]["status"], "passed_with_allowlist")
-            self.assertEqual(result["dlp"]["allowlisted_count"], 1)
-            self.assertEqual(result["dlp"]["findings"], [])
+            self.assertEqual(code, 2)
+            self.assertIn("no longer accepts dlp_allowlist", result["error"])
+
+    def test_ba_renderer_removes_frontmatter_local_only_code_and_paths(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            overview = root / "wiki/overview.md"
+            overview.write_text(
+                overview.read_text(encoding="utf-8")
+                + """
+
+<!-- codebase-wiki:user-notes:start -->
+BA note must remain.
+<!-- codebase-wiki:user-notes:end -->
+
+Local link: [implementation](src/service.py) and `src/service.py`.
+
+```python
+def raw_implementation():
+    return True
+```
+
+<!-- notebooklm:local-only:start -->
+password = 'local-secret-value'
+Evidence path: `src/service.py`
+<!-- notebooklm:local-only:end -->
+""",
+                encoding="utf-8",
+            )
+
+            code, result = self.run_export(module, root, root / ".notebooklm")
+
+            self.assertEqual(code, 0)
+            exported = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (root / ".notebooklm/sources").glob("*.md")
+            )
+            self.assertIn("BA note must remain.", exported)
+            self.assertNotIn("src/service.py", exported)
+            self.assertNotIn("raw_implementation", exported)
+            self.assertNotIn("local-secret-value", exported)
+            self.assertNotIn("notebooklm_role:", exported)
+            self.assertEqual(
+                result["manifest"]["dlp"]["managed_wiki"]["status"],
+                "passed_with_masking",
+            )
+
+    def test_preflight_pack_plan_matches_committed_source_hashes(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            preflight_code, preflight = self.run_preflight(module, root)
+            self.assertEqual(preflight_code, 0)
+            self.assertEqual(preflight["pack_plan"]["status"], "ready")
+
+            code, result = self.run_export(module, root, root / ".notebooklm")
+
+            self.assertEqual(code, 0)
+            expected = {
+                item["logical_source_id"]: (
+                    item["file"],
+                    item["byte_count"],
+                    item["estimated_words"],
+                    item["output_sha256"],
+                )
+                for item in preflight["pack_plan"]["sources"]
+            }
+            actual = {
+                item["logical_source_id"]: (
+                    item["file"],
+                    item["byte_count"],
+                    item["estimated_words"],
+                    item["output_sha256"],
+                )
+                for item in result["manifest"]["sources"]
+            }
+            self.assertEqual(actual, expected)
 
     def run_export(self, module, root: Path, output: Path) -> tuple[int, dict[str, object]]:
         preflight_code, preflight = self.run_preflight(module, root)
@@ -520,24 +698,25 @@ class NotebookLMExporterTests(unittest.TestCase):
 
             first_code, first = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
-            self.assertEqual(first["source_count"], 5)
+            self.assertEqual(first["source_count"], 4)
             self.assertEqual(
                 first["manifest"]["limits"]["word_count_model"],
                 "han_characters_plus_non_han_tokens",
             )
-            self.assertEqual(first["manifest"]["dlp"]["status"], "passed")
-            self.assertEqual(len(first["actions"]["added"]), 5)
+            self.assertEqual(first["manifest"]["dlp"]["payload"]["status"], "passed")
+            self.assertEqual(len(first["actions"]["added"]), 4)
             self.assertTrue((output / "manifest.json").is_file())
             self.assertTrue((output / "sources/project-map.md").is_file())
             self.assertTrue((output / "sources/query-index.md").is_file())
             query_index = (output / "sources/query-index.md").read_text(encoding="utf-8")
-            self.assertIn("直接回答契約", query_index)
+            self.assertIn("回答契約", query_index)
             self.assertIn("docs:business-core", query_index)
-            self.assertIn("trace:business-core", query_index)
-            self.assertIn("business-confirmed", query_index)
+            self.assertIn("fr-customer-greeting", query_index)
+            self.assertNotIn("trace:business-core", query_index)
+            self.assertIn("implementation-observed", query_index)
             self.assertEqual(
                 first["manifest"]["retrieval"]["contract"],
-                "business-first-ba-v1",
+                "business-only-ba-v2",
             )
             readme = (output / "README.md").read_text(encoding="utf-8")
             self.assertIn("NotebookLM Custom instructions", readme)
@@ -548,19 +727,27 @@ class NotebookLMExporterTests(unittest.TestCase):
             self.assertEqual(len(second["actions"]["added"]), 0)
             self.assertEqual(len(second["actions"]["changed"]), 0)
             self.assertEqual(len(second["actions"]["deleted"]), 0)
-            self.assertEqual(len(second["actions"]["unchanged"]), 5)
+            self.assertEqual(len(second["actions"]["unchanged"]), 4)
 
             (root / "src/service.py").write_text(
                 "def greet(name: str) -> str:\n    return f\"welcome {name}\"\n",
+                encoding="utf-8",
+            )
+            requirement = root / "wiki/requirements/greeting-requirement.md"
+            requirement.write_text(
+                requirement.read_text(encoding="utf-8").replace(
+                    "<!-- codebase-wiki:managed:end -->",
+                    "The observed greeting now says welcome.\n<!-- codebase-wiki:managed:end -->",
+                ),
                 encoding="utf-8",
             )
             changed_code, changed = self.run_export(module, root, output)
             self.assertEqual(changed_code, 0)
             self.assertEqual(
                 [item["logical_source_id"] for item in changed["actions"]["changed"]],
-                ["trace:business-core"],
+                ["docs:business-greeting"],
             )
-            self.assertEqual(len(changed["actions"]["unchanged"]), 4)
+            self.assertEqual(len(changed["actions"]["unchanged"]), 3)
 
     def test_add_and_delete_page_updates_project_map_and_source_plan(self) -> None:
         module = load_exporter()
@@ -637,8 +824,6 @@ Call the service.
             self.assertEqual(preflight_code, 0)
             code, result = self.run_export(module, root, output)
             self.assertEqual(code, 0)
-            skipped = {(item["path"], item["reason"]) for item in result["manifest"]["skipped"]}
-            self.assertIn((".env", "sensitive_filename"), skipped)
             excluded = {
                 (item["path"], item["reason"])
                 for item in preflight["inventory"]["excluded"]
@@ -650,7 +835,7 @@ Call the service.
             for name in (".mypy_cache", ".ruff_cache"):
                 self.assertIn((name, "binary_or_generated"), excluded_roots)
             self.assertIn((".github", "framework_adapter"), excluded_roots)
-            self.assertTrue(any(path == ".github" for path, _ in skipped))
+            self.assertIn((".env", "sensitive_filename"), excluded)
             exported_text = "\n".join(
                 path.read_text(encoding="utf-8")
                 for path in (output / "sources").glob("*.md")
@@ -986,12 +1171,12 @@ Call the service.
             self.assertEqual(included["config/runtime.toml"], "runtime_config")
             self.assertEqual(included["migrations/001.sql"], "data_schema")
             self.assertEqual(included["docs/usage.md"], "documentation")
+            self.assertEqual(included["tests/test_service.py"], "behavioral_test")
             excluded = {item["path"]: item["reason"] for item in result["inventory"]["excluded"]}
             excluded_roots = {
                 item["path"]: item["reason"]
                 for item in result["inventory"]["excluded_roots"]
             }
-            self.assertEqual(excluded_roots["tests"], "scan_scope_tests")
             self.assertEqual(excluded_roots[".github"], "framework_adapter")
             self.assertEqual(excluded_roots["infra"], "scan_scope_ci_or_iac")
             self.assertEqual(excluded_roots["tools"], "scan_scope_dev_tooling")
@@ -1003,13 +1188,13 @@ Call the service.
             self.assertEqual(excluded[".env"], "sensitive_filename")
             self.assertEqual(excluded_roots["secrets"], "sensitive_filename")
             self.assertEqual(excluded["logo.bin"], "binary_or_unsupported_encoding")
-            self.assertEqual(result["limits"]["enterprise_max_bytes"], 200_000_000)
-            self.assertEqual(result["limits"]["max_bytes"], 180_000_000)
-            self.assertTrue(result["ready_to_export"])
+            self.assertEqual(result["limits"]["enterprise_max_bytes"], 500_000_000)
+            self.assertEqual(result["limits"]["max_bytes"], 450_000_000)
+            self.assertFalse(result["ready_to_export"])
             self.assertEqual(result["coverage"]["status"], "partial")
             self.assertGreater(result["coverage"]["uncovered_count"], 0)
             self.assertTrue(
-                any("未被 Wiki sources 覆蓋" in warning for warning in result["warnings"])
+                any("完整 codebase disposition 尚未完成" in warning for warning in result["warnings"])
             )
             self.assertRegex(result["preflight_id"], r"^sha256:[0-9a-f]{64}$")
 
@@ -1030,6 +1215,12 @@ Call the service.
             (nested / ".git/config").write_text("repository metadata\n", encoding="utf-8")
             (nested / "src/feature.py").parent.mkdir(parents=True)
             (nested / "src/feature.py").write_text("def feature():\n    return True\n", encoding="utf-8")
+            add_coverage_rows(
+                root,
+                "| `.gitignore` | no-observable-behavior | |",
+                "| `ignored-but-project-owned.py` | functional-evidence | [[greeting-requirement]] |",
+                "| `nested-repository/` | functional-evidence | [[greeting-requirement]] |",
+            )
 
             with mock.patch.object(
                 module.subprocess,
@@ -1119,7 +1310,11 @@ Call the service.
             preflight_code, preflight = self.run_preflight(module, root)
             self.assertEqual(preflight_code, 0)
             self.assertTrue(
-                any(item["path"] == "src/node_modules" for item in preflight["skipped"])
+                any(
+                    item["path"] == "src/node_modules"
+                    and item["reason"] == "binary_or_generated"
+                    for item in preflight["inventory"]["excluded_roots"]
+                )
             )
 
             export_code, exported = self.run_export(module, root, output)
@@ -1271,7 +1466,7 @@ Call the service.
             included = {item["path"] for item in result["inventory"]["included"]}
             self.assertIn(".agents/skills/codebase-wiki/SKILL.md", included)
 
-    def test_documents_are_kept_when_evidence_exceeds_source_budget(self) -> None:
+    def test_ba_documents_are_kept_without_raw_evidence_sources(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1303,27 +1498,25 @@ status: active
 
             self.assertEqual(code, 0)
             self.assertEqual(result["source_count"], 5)
-            self.assertEqual(result["manifest"]["omitted_evidence"], [
-                {"path": "src/service.py", "reason": "source_budget"}
-            ])
+            self.assertEqual(result["manifest"]["omitted_evidence"], [])
             self.assertTrue(
                 all(
-                    item["kind"] != "technical_traceability"
+                    item["kind"] in {"router", "navigation", "business_documentation"}
                     for item in result["manifest"]["sources"]
                 )
             )
-            self.assertIn(
-                "因額度未匯出的技術追溯",
+            self.assertNotIn(
+                "技術追溯",
                 (output / "upload-plan.md").read_text(encoding="utf-8"),
             )
 
-    def test_enterprise_byte_limit_is_200_mb(self) -> None:
+    def test_enterprise_byte_limit_is_500_mb(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_fixture(root)
             (root / "notebooklm.toml").write_text(
-                "max_source_bytes = 200000001\n",
+                "max_source_bytes = 500000001\n",
                 encoding="utf-8",
             )
             output = root / ".notebooklm"
@@ -1331,10 +1524,10 @@ status: active
             code, result = self.run_export(module, root, output)
 
             self.assertEqual(code, 2)
-            self.assertIn("200000000", result["error"])
+            self.assertIn("500000000", result["error"])
             self.assertFalse(output.exists())
 
-    def test_schema_v1_manifest_is_migrated_to_v4(self) -> None:
+    def test_schema_v1_manifest_is_migrated_to_v5(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1350,8 +1543,8 @@ status: active
             code, result = self.run_export(module, root, output)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["manifest"]["schema_version"], 4)
-            self.assertEqual(len(result["actions"]["unchanged"]), 5)
+            self.assertEqual(result["manifest"]["schema_version"], 5)
+            self.assertEqual(len(result["actions"]["unchanged"]), 4)
 
     def test_legacy_retrieval_contract_requires_full_rebuild(self) -> None:
         module = load_exporter()
@@ -1387,6 +1580,10 @@ status: active
 
             victim = root / "victim.txt"
             victim.write_text("must survive\n", encoding="utf-8")
+            add_coverage_rows(
+                root,
+                "| `victim.txt` | no-observable-behavior | |",
+            )
             manifest_path = output / "manifest.json"
             previous = json.loads(manifest_path.read_text(encoding="utf-8"))
             previous["sources"][0]["file"] = "../victim.txt"
@@ -1749,11 +1946,11 @@ status: active
             self.assertEqual(preflight_code, 0)
             self.assertTrue(preflight["ready_to_export"])
             self.assertEqual(preflight["required_document_issues"], [])
-            self.assertEqual(preflight["wiki_pages"], 508)
+            self.assertEqual(preflight["wiki_pages"], 511)
 
             export_code, exported = self.run_export(module, root, output)
             self.assertEqual(export_code, 0)
-            self.assertEqual(exported["manifest"]["schema_version"], 4)
+            self.assertEqual(exported["manifest"]["schema_version"], 5)
             self.assertLessEqual(exported["manifest"]["source_count"], 300)
             self.assertTrue((output / "manifest.json").is_file())
 

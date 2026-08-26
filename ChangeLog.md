@@ -8,10 +8,19 @@
 
 ### Added
 
+- **BA 功能需求與完整覆蓋 schema**：新增 `business-requirement` page type、`fr-*`／
+  `cap-*`／stable `AC-*` 契約、functional requirement catalog、managed/user-notes/local-only
+  markers，以及 local-only codebase functional coverage ledger。
 - **文件總覽入口**：新增 `docs/README.md`，集中整理架構、安裝、工作流、驗證、發布、歷史、樣例與測試文件的閱讀路徑。
 
 ### Changed
 
+- **NotebookLM Exporter schema v5 BA-only contract**：改用
+  `business-functional-requirements-v2`／`business-only-ba-v2`，全量分析安全 codebase（預設包含
+  behavioral tests），要求每個安全檔案具有 non-gap disposition，只 materialize BA Wiki。
+  Raw code/config/business evidence/traceability 永不進入 upload sources；DLP 改為分析副本、
+  managed Wiki 與 exact final payload 的 mask-then-residual-block，移除 allowlist。Enterprise
+  hard/safety byte limits更新為 500/450 MB，舊 schema v1–v4 pack 要求 full rebuild。
 - **GitHub Repo 導覽**：重整根目錄 README 的專案結構圖與文件索引，保留既有 `.agents/`、`.github/`、`.codex/`、`samples/`、`tests/`、`tools/` 與 `wiki/` 路徑契約。
 - **NotebookLM Exporter 改為 BA-first knowledge contract**：manifest 升級至 schema v4 與
   `business-first-ba-v1`，以 business process、business rule、glossary、knowledge gaps 和

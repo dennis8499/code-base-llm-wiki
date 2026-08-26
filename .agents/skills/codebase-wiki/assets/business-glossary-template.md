@@ -14,6 +14,8 @@ status: active
 
 # 業務詞彙表
 
+<!-- codebase-wiki:managed:start -->
+
 | 詞彙 | 別名 | 業務定義 | 狀態／值語意 | 關聯流程／規則 | 證據狀態 |
 | --- | --- | --- | --- | --- | --- |
 | {term} | {aliases} | {definition} | {state-meaning} | [[{page}]] | business-confirmed / implementation-observed / inference / gap |
@@ -21,4 +23,10 @@ status: active
 ## 詞彙衝突
 
 ## 待確認事項
+<!-- codebase-wiki:managed:end -->
 
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+<!-- 保留人工維護內容；重新萃取時不得覆寫。 -->
+<!-- codebase-wiki:user-notes:end -->

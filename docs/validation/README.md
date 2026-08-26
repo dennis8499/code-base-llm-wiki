@@ -33,14 +33,14 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 | --- | --- |
 | Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract、NotebookLM BA schema/full-scan/two-tier evidence export、exclusion-aware fallback pruning/bounded excluded-root summaries、Wiki/CLI root、log regular-tree 與 malformed-state boundaries、process-kill recovery 與跨程序 transaction lock |
 | Parity | Copilot/Codex contract v3、guard modes、必要入口、移除舊 runtime references |
-| Frontmatter | 必填欄位、type、日期、status、raw/derived provenance、digest，以及 business-process/business-rule/NotebookLM role 契約 |
+| Frontmatter | 必填欄位、type、日期、status、raw/derived provenance、digest，以及 business-requirement/process/rule、FR/AC、NotebookLM role 契約 |
 | Stale source | source path、Git freshness 與 aggregate content digest |
 | Log integrity | operation、日期、affected pages、frontmatter 與 Git baseline append-only |
 | Wiki stats | Page types、statuses、links 與 Wiki 規模 |
 | Wiki lint | Deterministic/semantic/overall 狀態、真正 orphan、links、index/log；語意檢查維持 `agent_review_required` |
 | Index check | 唯讀比較 managed region 的 page/type entries，並保留 marker 外人工內容 |
-| NotebookLM preflight/export | discovery/readiness 兩階段、BA 必備文件與 catalog/ID/applies-to gate、critical/DLP gate、schema v4、business-first-ba-v1、必要 business evidence、可選 traceability、stable IDs、舊 contract full rebuild、hash/diff plan 與 previous-pack preservation |
-| NotebookLM BA UAT | 依 [固定 BA 題組](notebooklm-ba-uat.md) 驗證流程、規則、詞彙、證據狀態、gaps 與 BA 可讀性 |
+| NotebookLM preflight/export | discovery/readiness、七份必備文件、FR/BP/BR/AC 與完整 disposition gate、schema v5、business-only-ba-v2、三階段 DLP masking、exact pack plan、舊 contract full rebuild 與 previous-pack preservation |
+| NotebookLM BA UAT | 依 [固定 BA 題組](notebooklm-ba-uat.md) 驗證功能需求、驗收條件、流程、規則、詞彙、gaps、BA 可讀性與 raw evidence absence |
 
 ## Task Tracker E2E
 

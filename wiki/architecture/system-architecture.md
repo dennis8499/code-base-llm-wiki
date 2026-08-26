@@ -10,7 +10,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:8764b9b1fb437c4a9b1709074940637f001994e9942cc477b110f6e41dc1dcc2
+source_digest: sha256:4d9e1b09864cf96605154b9ad13db9c77b50d1afa4729ba1f9eee7d9488fa043
 derived_from: ["[[overview]]"]
 last_updated: 2026-08-26
 tags: [architecture, framework, data-flow, safety]
@@ -35,7 +35,7 @@ operations 與 authorization policy 由
 | Installer v3 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
-| NotebookLM exporter | BA 結構閘門、本機 DLP、兩階段 preflight、business-first query-index 與獨立 traceability | [[notebooklm-exporter]] |
+| NotebookLM exporter | FR/AC 與完整 disposition 閘門、DLP masking、兩階段 preflight、BA-only query-index | [[notebooklm-exporter]] |
 | Release surface | parity、CI、版本、資產與公開發布前置條件 | [[platform-adapters-and-release]] |
 
 ## Data Flow
@@ -47,10 +47,10 @@ User intent
   -> authorized Wiki/framework write
   -> frontmatter + digest + index + append-only log checks
   -> discovery preflight + first confirmation
-  -> BA process/rule/term/gap update
-  -> readiness preflight + local DLP + second confirmation
+  -> full BA requirement/process/rule/term/gap regeneration + file disposition
+  -> readiness preflight + exact pack plan + DLP masking + second confirmation
   -> apply with the readiness preflight_id
-  -> query-index / project-map / BA docs / business evidence / optional trace pack
+  -> query-index / project-map / BA-only docs pack
 ```
 
 Installer 的資料流是 source framework → dry-run classification → staged writes →

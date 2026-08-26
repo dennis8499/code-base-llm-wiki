@@ -14,6 +14,8 @@ status: active
 
 # 業務規則目錄
 
+<!-- codebase-wiki:managed:start -->
+
 ## 規則覆蓋矩陣
 
 | 規則 ID | 規則 | 適用流程 | 證據狀態 | 待確認事項 |
@@ -25,5 +27,12 @@ status: active
 ## 相關頁面
 
 - [[business-process-catalog]]
+- [[functional-requirement-catalog]]
 - [[business-knowledge-gaps]]
+<!-- codebase-wiki:managed:end -->
 
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+<!-- 保留人工維護內容；重新萃取時不得覆寫。 -->
+<!-- codebase-wiki:user-notes:end -->

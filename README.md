@@ -259,7 +259,7 @@ Basic DLP finding 會阻擋 apply。
 | GitHub Copilot Chat | 支援 | Agents、prompts、hooks 與共用 skill |
 | OpenAI Codex | 支援 | AGENTS、repo-local skill、hooks 與 optional agents |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
-| NotebookLM Enterprise | 支援 BA-first 業務知識整理與離線匯出 | `query-index`、流程／規則／詞彙／gaps、必要 business evidence、可選 traceability、schema v4 manifest；不含雲端 API |
+| NotebookLM Enterprise | 支援完整 codebase 的 BA-only 功能需求整理與離線匯出 | `fr-*`／`AC-*`、流程／規則／詞彙／gaps、DLP masking、schema v5 manifest；不含 raw evidence 或雲端 API |
 
 本框架不提供 RAG、向量資料庫、本機搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
 NotebookLM export 產生的是可供 NotebookLM 使用的 Markdown `query-index`，不是常駐搜尋引擎；

@@ -115,10 +115,10 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --preflight --format json
 ```
 
-Agent 只掃描安全 UTF-8 repo text，盤點 actor、流程、規則、詞彙、證據狀態與 gaps；
+Agent 掃描完整安全 UTF-8 repo text（包含 behavioral tests），盤點 FR/AC、actor、流程、規則、詞彙、證據狀態與 gaps；
 PDF/Office/圖片等非文字證據只登記缺口。預覽必須列出 inventory、BA coverage、準備建立
 或更新的 BA 文件、容量與未驗證事項；即使沒有警告也要等待第一次確認。確認後補齊
-`business-process`、`business-rule`、catalog、glossary 與 gaps，再重新執行上面的
+`business-requirement`、process、rule、catalog、glossary、gaps 與完整 file disposition ledger，再重新執行上面的
 `--preflight`。展示 readiness 結果並取得第二次確認後，才執行：
 
 ```powershell
@@ -126,12 +126,12 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --apply --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-Exporter 將 BA 文件、必要 business evidence 與可選 technical traceability 打包成
-`sources/*.md`、schema v4 `manifest.json`、`upload-plan.md` 與 README。BA 文件與 business
-evidence 優先；容量不足只能省略低優先 traceability，並在 manifest 明列。
+Exporter 只將 BA 文件打包成 `sources/*.md`、schema v5 `manifest.json`、`upload-plan.md`
+與 README。Raw source、config、business evidence 原文與 technical traceability 永不進入 pack；
+DLP finding 先遮罩，final payload 有殘留才阻擋。
 只把 `sources/*.md` 手動加入企業版 Notebook；再次執行時仍會全量重掃專案與增量
 更新 Wiki，再依 upload plan 處理新增、變更與刪除，`unchanged` 不需重新上傳。
-`.notebooklm/` 預設被 Git 忽略；若需調整 Workspace tier、business sources 或 traceability scope，可將
+`.notebooklm/` 預設被 Git 忽略；若需調整 Workspace tier 或 analysis scope，可將
 `.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製為 Repo root 的
 `notebooklm.toml` 後修改。
 

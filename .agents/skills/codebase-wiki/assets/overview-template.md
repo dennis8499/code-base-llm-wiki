@@ -14,6 +14,8 @@ status: placeholder
 
 # {Codebase Name}
 
+<!-- codebase-wiki:managed:start -->
+
 ## 業務目的與範圍
 
 ## 業務角色
@@ -25,3 +27,10 @@ status: placeholder
 ## 證據狀態與待確認事項
 
 ## 相關頁面
+<!-- codebase-wiki:managed:end -->
+
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+<!-- 保留人工維護內容；重新萃取時不得覆寫。 -->
+<!-- codebase-wiki:user-notes:end -->

@@ -26,19 +26,25 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
-| [[overview]] | 讓知識維護者把 codebase 中的業務流程、規則、詞彙與缺口整理成 BA 可直接詢問的持久 Wiki |
+| [[overview]] | 讓知識維護者把完整安全 codebase 重新萃取成功能需求、驗收條件、流程、規則與缺口 |
+
+## Business Requirements
+
+| 頁面 | 摘要 |
+|------|------|
+| [[notebooklm-ba-functional-export]] | 將完整安全 codebase 重新萃取成單一 Notebook 可使用、無 raw code 與敏感原文的 BA 功能需求來源包 |
 
 ## Business Processes
 
 | 頁面 | 摘要 |
 |------|------|
-| [[notebooklm-ba-knowledge-export]] | 知識維護者經 discovery 與 readiness 兩次確認，把可追溯業務知識交付給 BA 使用 |
+| [[notebooklm-ba-knowledge-export]] | 知識維護者經全量萃取與 readiness 檢核，把 BA-only 功能需求交付到單一 Notebook |
 
 ## Business Rules
 
 | 頁面 | 摘要 |
 |------|------|
-| [[ba-knowledge-precedes-traceability]] | NotebookLM 必須先以業務流程、規則、詞彙與缺口作答，技術細節只能作獨立附錄 |
+| [[ba-knowledge-precedes-traceability]] | NotebookLM source pack 只能包含功能需求、流程、規則、詞彙、驗收條件與缺口 |
 | [[readiness-preflight-required]] | BA 文件更新後必須重跑 readiness preflight，並以第二次確認的最新 ID 才能產生 pack |
 
 ## Architecture
@@ -52,7 +58,7 @@ notebooklm_role: exclude
 | 頁面 | 摘要 |
 |------|------|
 | [[installer-and-upgrade]] | Installer v3 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架 |
-| [[notebooklm-exporter]] | 以 schema v4、BA 結構閘門、必要 business evidence 與獨立 traceability 建立可審查的 NotebookLM source pack |
+| [[notebooklm-exporter]] | 以 schema v5、完整 codebase disposition、DLP masking 與 BA-only materialization 建立功能需求 source pack |
 | [[platform-adapters-and-release]] | 以 capability parity、跨平台 CI、單一版本來源與授權前置閘門維持可發布的雙平台框架 |
 | [[platform-hooks-and-guards]] | Codex 與 Copilot 共用 canonical hooks，並以 wiki-only、coexist、framework 三種模式明確控制寫入邊界 |
 | [[wiki-quality-and-provenance]] | 以 frontmatter、內容摘要、語意連結、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |
@@ -78,7 +84,7 @@ _（尚無頁面）_
 | 頁面 | 摘要 |
 |------|------|
 | [[framework-introduction]] | 從安裝、Wiki-first 操作到驗證與升級的框架使用路線 |
-| [[notebooklm-export]] | 依 discovery、BA 文件更新、readiness 與第二次確認四階段安全產生離線 source pack |
+| [[notebooklm-export]] | 依全量 discovery、BA 功能需求重建、readiness 與第二次確認安全產生 schema-v5 source pack |
 | [[release-and-update]] | 以 VERSION、contract 3、CI 與授權 readiness gate 管理可驗證的框架發布 |
 
 ## Synthesis
@@ -89,6 +95,8 @@ _（尚無頁面）_
 | [[business-knowledge-gaps]] | NotebookLM BA 知識交付中無可靠證據、尚未建模或需外部確認的事項 |
 | [[business-process-catalog]] | 框架可供 BA 查詢的業務能力、角色、觸發、結果與文件覆蓋 |
 | [[business-rule-catalog]] | NotebookLM BA 知識交付的規則、適用流程、證據狀態與例外 |
+| [[codebase-functional-coverage]] | 本機完整性 gate，將 framework scan profile 的每個安全檔案歸屬到功能需求或無可觀察行為 |
+| [[functional-requirement-catalog]] | Codebase LLM Wiki 提供給 BA 的 active 功能需求、能力、流程與驗收覆蓋 |
 | [[project-function-catalog]] | 將安裝、Wiki 品質、Hooks、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋 |
 | [[system-analysis]] | 對框架目的、BA-first NotebookLM contract、介面、安全、維運、風險與證據缺口的技術追溯分析 |
 

@@ -14,6 +14,8 @@ status: active
 
 # 業務流程目錄
 
+<!-- codebase-wiki:managed:start -->
+
 ## 文件與證據範圍
 
 本目錄只列出有獨立 BA 流程頁、穩定 process ID、actors、trigger、outcome 與 coverage
@@ -22,9 +24,9 @@ status: active
 
 ## 業務流程覆蓋矩陣
 
-| 業務能力 | 流程 ID | 流程 | 主要角色 | 觸發 | 業務結果 | 覆蓋狀態 |
-| --- | --- | --- | --- | --- | --- | --- |
-| BA 知識交付 | `bp-notebooklm-ba-knowledge-export` | [[notebooklm-ba-knowledge-export]] | 知識維護者、BA、業務擁有者 | 明確要求建立／更新 NotebookLM pack | 經兩次確認的 BA-first source pack | covered |
+| 業務能力 | 功能需求 | 流程 ID | 流程 | 主要角色 | 觸發 | 業務結果 | 覆蓋狀態 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| BA 功能知識交付 | [[notebooklm-ba-functional-export]] | `bp-notebooklm-ba-knowledge-export` | [[notebooklm-ba-knowledge-export]] | 知識維護者、BA、業務擁有者 | 明確要求建立／更新 NotebookLM pack | 經全量覆蓋與兩次確認的 BA-only source pack | covered |
 
 ## 跨流程關係
 
@@ -35,11 +37,18 @@ NotebookLM BA export 會使用一般 Wiki Ingest、index、log、lint 與 source
 
 - 非 NotebookLM 的一般 Wiki 使用旅程尚未拆成 business-process pages。
 - NotebookLM 雲端上傳、tenant 管理與回答生成不在本框架自動化範圍。
+<!-- codebase-wiki:managed:end -->
+
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+目前無人工補充。
+<!-- codebase-wiki:user-notes:end -->
 
 ## 相關頁面
 
 - [[overview]]
+- [[functional-requirement-catalog]]
 - [[business-rule-catalog]]
 - [[business-glossary]]
 - [[business-knowledge-gaps]]
-

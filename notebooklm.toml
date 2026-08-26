@@ -2,15 +2,15 @@
 profile = "gemini-notebook-enterprise"
 scan_profile = "framework"
 output_directory = ".notebooklm"
+content_mode = "ba_only"
+analysis_include_tests = true
 source_limit = 300
 reserved_source_slots = 0
-max_source_bytes = 180000000
+max_source_bytes = 450000000
 max_source_words = 450000
-include_traceability = true
 business_source_paths = [
   ".agents/skills/codebase-wiki/references/notebooklm-export-workflow.md",
 ]
 extra_paths = []
 exclude_paths = []
-dlp_profile = "notebooklm-enterprise-basic"
-dlp_allowlist = []
+dlp_profile = "notebooklm-enterprise-ba-mask-v1"

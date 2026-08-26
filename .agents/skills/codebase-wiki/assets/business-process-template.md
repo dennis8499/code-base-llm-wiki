@@ -19,6 +19,8 @@ status: active
 
 # {業務流程名稱}
 
+<!-- codebase-wiki:managed:start -->
+
 ## 業務目的與範圍
 
 ## 角色
@@ -47,12 +49,22 @@ status: active
 
 - `gap-{domain}-{topic}`：{question}
 
-## 追溯關聯
-
-- [[{traceability-page}]]（技術內容只保留在 `notebooklm_role: traceability` 頁；本頁不內嵌實作細節）
-
 ## 相關頁面
 
+- [[functional-requirement-catalog]]
 - [[business-process-catalog]]
 - [[business-rule-catalog]]
 - [[business-glossary]]
+<!-- codebase-wiki:managed:end -->
+
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+<!-- 保留人工維護內容；重新萃取時不得覆寫。 -->
+<!-- codebase-wiki:user-notes:end -->
+
+<!-- notebooklm:local-only:start -->
+## 本機追溯關聯
+
+- [[{traceability-page}]]（技術內容不進入 NotebookLM source pack）
+<!-- notebooklm:local-only:end -->

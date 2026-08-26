@@ -152,19 +152,26 @@ class ContractTests(unittest.TestCase):
             self.assertIn("notebooklm_group", text)
         self.assertIn("full safe project", workflow.lower())
         self.assertRegex(prompt, r"全專案|整個專案")
-        self.assertIn("business-first-ba-v1", workflow)
+        self.assertIn("business-only-ba-v2", workflow)
+        self.assertIn("business-functional-requirements-v2", workflow)
         self.assertIn("business_source_paths", workflow)
-        self.assertIn("include_traceability", workflow)
+        self.assertIn("analysis_include_tests", workflow)
+        self.assertIn("codebase-functional-coverage.md", workflow)
+        self.assertIn("notebooklm-enterprise-ba-mask-v1", workflow)
+        self.assertIn("500 MB", workflow)
         self.assertIn("second readiness preflight", workflow)
         self.assertIn("第二次確認", prompt)
         self.assertTrue((skill_root / "scripts" / "notebooklm_exporter.py").is_file())
         for template in (
             "business-process-template.md",
+            "business-requirement-template.md",
             "business-rule-template.md",
+            "functional-requirement-catalog-template.md",
             "business-process-catalog-template.md",
             "business-rule-catalog-template.md",
             "business-glossary-template.md",
             "business-knowledge-gaps-template.md",
+            "codebase-functional-coverage-template.md",
         ):
             self.assertTrue((skill_root / "assets" / template).is_file())
 

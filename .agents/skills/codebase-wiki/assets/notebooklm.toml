@@ -4,36 +4,31 @@
 profile = "gemini-notebook-enterprise"
 scan_profile = "target"
 output_directory = ".notebooklm"
+content_mode = "ba_only"
+analysis_include_tests = true
 
 # Lower source_limit when the organization's Workspace tier has fewer slots.
 source_limit = 300
 reserved_source_slots = 0
 
 # Conservative local safety limits; Enterprise currently allows at most
-# 200 MB or 500,000 words per source.
+# 500 MB or 500,000 words per source.
 # max_source_words uses the additive Han-character/non-Han-token estimate.
-max_source_bytes = 180000000
+max_source_bytes = 450000000
 max_source_words = 450000
 
-# BA documents and explicitly designated business evidence are mandatory.
-# Technical Wiki/raw evidence is isolated in a lower-priority traceability
-# appendix and may be omitted when the remaining source budget cannot hold it.
-include_traceability = true
-
-# Repo-relative UTF-8 files/directories that carry business-owned requirements,
-# process definitions, decision tables, or acceptance specifications. These
-# paths may opt selected text into the scan from tests/dev-tooling scope, but
-# never override secret/generated/binary/Wiki/output safety exclusions.
+# Repo-relative UTF-8 files/directories that carry business-owned requirements
+# or acceptance specifications. They are analyzed and must be represented in
+# the coverage ledger, but their raw text is never uploaded.
 business_source_paths = []
 
-# Extra paths remain technical traceability inputs.
+# Extra safe paths to analyze. Raw content is never uploaded.
 extra_paths = []
 
 # Paths below are in addition to the built-in generated/dependency/credential
 # exclusions. All values must remain relative to the repository root.
 exclude_paths = []
 
-# Offline Enterprise-style DLP preflight. Findings block export without
-# exposing the matched value. Allowlist only an exact path/rule/fingerprint.
-dlp_profile = "notebooklm-enterprise-basic"
-dlp_allowlist = []
+# Offline DLP masks analysis copies and final BA payloads. Any residual match
+# after payload masking blocks commit. Raw repository files are never changed.
+dlp_profile = "notebooklm-enterprise-ba-mask-v1"

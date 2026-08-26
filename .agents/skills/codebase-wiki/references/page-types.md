@@ -7,6 +7,7 @@ field validity lives in `frontmatter-spec.md`.
 | --- | --- | --- | --- |
 | `overview` | High-level codebase purpose and major areas | `assets/overview-template.md` | — |
 | `business-process` | An end-to-end actor/trigger/outcome business flow | `assets/business-process-template.md` | `process_id`, `actors`, `coverage_status`, NotebookLM metadata |
+| `business-requirement` | A testable BA-facing system behavior | `assets/business-requirement-template.md` | `requirement_id`, `capability_id`, `applies_to`, `evidence_state`, stable `AC-*` IDs, NotebookLM metadata |
 | `business-rule` | A condition/decision/exception rule applied to business processes | `assets/business-rule-template.md` | `rule_id`, `applies_to`, `evidence_state`, NotebookLM metadata |
 | `architecture` | Components, data flow, or deployment | `assets/architecture-template.md` | — |
 | `module` | A logical directory, package, or bounded area | `assets/module-template.md` | — |
@@ -17,6 +18,8 @@ field validity lives in `frontmatter-spec.md`.
 | `guide` | Actionable onboarding, setup, debugging, or operations | `assets/guide-template.md` | — |
 | `synthesis` | Durable cross-cutting analysis | `assets/synthesis-template.md` | — |
 | `synthesis` (function catalog) | Optional technical capability coverage for traceability or legacy Wiki maintenance | `assets/project-function-catalog-template.md` | tags include `function-catalog`; not a BA export prerequisite |
+| `synthesis` (functional requirement catalog) | Mandatory BA-facing index of every active `fr-*` requirement | `assets/functional-requirement-catalog-template.md` | tags include `functional-requirements`; every active requirement must be linked |
+| `synthesis` (codebase functional coverage) | Mandatory local-only disposition ledger for every safe analysis input | `assets/codebase-functional-coverage-template.md` | `notebooklm_role: exclude`; no uncovered or `analysis-gap` row may remain at export |
 | `synthesis` (business process catalog) | BA-facing capability and process coverage | `assets/business-process-catalog-template.md` | tags include `business-process-catalog` |
 | `synthesis` (business rule catalog) | BA-facing rule coverage and evidence states | `assets/business-rule-catalog-template.md` | tags include `business-rule-catalog` |
 | `synthesis` (business glossary) | Canonical business terms, aliases, and state meanings | `assets/business-glossary-template.md` | tags include `business-glossary` |

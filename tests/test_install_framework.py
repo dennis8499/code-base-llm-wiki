@@ -103,11 +103,14 @@ class FrameworkInstallerTests(unittest.TestCase):
             )
             for template in (
                 "business-process-template.md",
+                "business-requirement-template.md",
                 "business-rule-template.md",
+                "functional-requirement-catalog-template.md",
                 "business-process-catalog-template.md",
                 "business-rule-catalog-template.md",
                 "business-glossary-template.md",
                 "business-knowledge-gaps-template.md",
+                "codebase-functional-coverage-template.md",
             ):
                 self.assertTrue(
                     (

@@ -14,6 +14,8 @@ status: active
 
 # 業務流程目錄
 
+<!-- codebase-wiki:managed:start -->
+
 ## 文件與證據範圍
 
 ## 業務流程覆蓋矩陣
@@ -29,7 +31,14 @@ status: active
 ## 相關頁面
 
 - [[overview]]
+- [[functional-requirement-catalog]]
 - [[business-rule-catalog]]
 - [[business-glossary]]
 - [[business-knowledge-gaps]]
+<!-- codebase-wiki:managed:end -->
 
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+<!-- 保留人工維護內容；重新萃取時不得覆寫。 -->
+<!-- codebase-wiki:user-notes:end -->

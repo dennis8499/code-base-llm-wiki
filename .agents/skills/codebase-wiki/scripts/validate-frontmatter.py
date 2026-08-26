@@ -23,6 +23,7 @@ from frontmatter import configure_utf8_stdio, parse_frontmatter_text, validate_r
 REQUIRED_FIELDS = {"title", "type", "sources", "last_updated", "tags", "status"}
 ALLOWED_TYPES = {
     "business-process",
+    "business-requirement",
     "business-rule",
     "module",
     "entity",
@@ -52,6 +53,7 @@ DERIVED_FROM_PATTERN = re.compile(r"^\[\[[^\[\]]+\]\]$")
 
 TYPE_PATHS = {
     "business-process": pathlib.PurePosixPath("processes"),
+    "business-requirement": pathlib.PurePosixPath("requirements"),
     "business-rule": pathlib.PurePosixPath("rules"),
     "module": pathlib.PurePosixPath("modules"),
     "entity": pathlib.PurePosixPath("entities"),
@@ -226,6 +228,51 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
             errors.append(
                 f"{rel}: coverage_status must be one of "
                 f"{', '.join(sorted(ALLOWED_COVERAGE_STATUS))}; got {coverage_status!r}"
+            )
+
+    if page_type == "business-requirement":
+        requirement_id = fm.get("requirement_id")
+        if not isinstance(requirement_id, str) or not NOTEBOOKLM_GROUP_PATTERN.fullmatch(
+            requirement_id
+        ):
+            errors.append(
+                f"{rel}: business-requirement pages require kebab-case requirement_id"
+            )
+        capability_id = fm.get("capability_id")
+        if not isinstance(capability_id, str) or not NOTEBOOKLM_GROUP_PATTERN.fullmatch(
+            capability_id
+        ):
+            errors.append(
+                f"{rel}: business-requirement pages require kebab-case capability_id"
+            )
+        if notebooklm_role != "business":
+            errors.append(
+                f"{rel}: business-requirement pages require notebooklm_role: business"
+            )
+        if notebooklm_group is None:
+            errors.append(f"{rel}: business-requirement pages require notebooklm_group")
+        applies_to = fm.get("applies_to")
+        if not isinstance(applies_to, list) or not applies_to:
+            errors.append(
+                f"{rel}: business-requirement pages require a non-empty applies_to array"
+            )
+        else:
+            for value in applies_to:
+                if not isinstance(value, str) or not DERIVED_FROM_PATTERN.fullmatch(value):
+                    errors.append(
+                        f"{rel}: every applies_to entry must be a [[business-process]] wikilink"
+                    )
+        evidence_state = fm.get("evidence_state")
+        if evidence_state not in ALLOWED_EVIDENCE_STATES:
+            errors.append(
+                f"{rel}: evidence_state must be one of "
+                f"{', '.join(sorted(ALLOWED_EVIDENCE_STATES))}; got {evidence_state!r}"
+            )
+        if not re.search(r"(?m)^## 驗收條件\s*$", text):
+            errors.append(f"{rel}: business-requirement pages require a '## 驗收條件' section")
+        if not re.search(r"(?mi)^\s*[-*]\s+`?AC-[A-Za-z0-9][A-Za-z0-9-]*`?\s*[:：]", text):
+            errors.append(
+                f"{rel}: business-requirement pages require at least one stable AC-* acceptance ID"
             )
 
     if page_type == "business-rule":

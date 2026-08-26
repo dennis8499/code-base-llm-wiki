@@ -120,16 +120,17 @@ System analysis document:
 NotebookLM Enterprise export:
 
 ```text
-請使用 $codebase-wiki 執行 BA-first NotebookLM export。先執行唯讀 discovery preflight，
-以 `--root` 為檔案系統邊界，盤點安全 UTF-8 文字中的 actor、trigger、流程、例外、狀態變更、
-業務規則、詞彙、證據狀態與 gaps；PDF/Office/圖片等未轉成文字的內容只登記 gap。列出
-inventory、排除、BA coverage、文件計畫與容量並等待確認。確認後更新繁中
-`business-process`／`business-rule` pages、四份 BA synthesis 文件、index 與一筆 log。
-完成文件後重新執行 readiness preflight，檢查 catalog links、IDs、applies_to、lint、DLP
-與容量，再次等待確認；只以第二次 `preflight_id` 產生 `query-index`、`project-map`、
-.notebooklm source pack、schema v4 manifest 與 upload plan。
-NotebookLM 回答先使用 BA 文件與 business evidence；技術內容只能放可選 traceability
-appendix。舊 retrieval contract 必須 full rebuild。Exporter 不呼叫雲端 API。
+請使用 $codebase-wiki 執行 BA-only NotebookLM export。先執行唯讀 discovery preflight，
+以 `--root` 為檔案系統邊界，盤點安全 UTF-8 runtime source、config、schema、docs 與
+behavioral tests。依可觀察行為建立 `fr-*`／`cap-*`、`AC-*`、流程、規則、詞彙、證據狀態
+與 gaps，並讓每個安全檔案都有 non-gap disposition；PDF/Office/圖片等只登記 gap。
+列出 inventory、排除、coverage、全量 Wiki regeneration 計畫、DLP masking 與容量後等待確認。
+確認後重建 managed BA sections、保留 user notes，更新 requirement/process/rule pages、六份 BA
+synthesis 文件、local coverage ledger、index 與一筆 log。完成後重新執行 readiness
+preflight，檢查 catalogs、FR/BP/BR/AC IDs、applies_to、full disposition、lint、exact pack plan
+與三階段 DLP，再次等待確認；只以第二次 `preflight_id` 產生 BA-only `.notebooklm` sources、
+schema v5 manifest 與 upload plan。Raw code/config/traceability 不得上傳；schema v1–v4 或舊
+retrieval contract 必須 full rebuild。Exporter 不呼叫雲端 API。
 ```
 
 Explicit delegation:

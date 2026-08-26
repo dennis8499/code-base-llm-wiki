@@ -95,16 +95,14 @@ frontmatter、append-only log、managed index、contradictions 與 coverage。�
 
 ## 11. NotebookLM Enterprise export
 
-這是「BA 業務知識整理 + 離線 source pack」workflow，固定服務 Business Analyst，
-不會連線或上傳 NotebookLM。`--root` 指定檔案系統掃描邊界，不要求 Git repository、
-clean working tree，也不因 nested repository 阻擋。Exporter 只讀 UTF-8 repo text；
-PDF、Office、圖片或訪談內容若尚未轉成可信文字，必須登記為 knowledge gap，不得推測補齊。
+這是「完整 codebase → BA 功能需求 → 離線 BA-only source pack」workflow，固定服務
+Business Analyst，不會連線或上傳 NotebookLM。`--root` 是 filesystem boundary；不要求 Git
+或 clean worktree。Exporter 分析 UTF-8 runtime source、config、schema、project docs 與
+behavioral tests。PDF、Office、圖片或訪談若未轉成可信文字，登記 knowledge gap，不推測。
 
-預設盤點可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件；
-tests、CI/CD、IaC、build/dev tooling、dependencies、generated、binary、secrets、framework
-adapters 與輸出目錄維持排除。`business_source_paths` 可把 tests 或 dev-tooling 下的「確切
-文字檔」指定為業務證據，但不能繞過 sensitive、generated/dependency、CI/IaC、Wiki/output
-或其他安全排除。既有 Wiki 是增量知識基線，不是掃描邊界。
+CI/CD、IaC、build/dev tooling、dependencies、generated、binary、secrets、framework adapters、
+Wiki 與 output 維持排除。`business_source_paths` 可納入 dev-tooling 下的確切業務文字，但
+不能繞過安全邊界。Raw analysis inputs 永不直接成為 upload source。
 
 第一次執行 discovery preflight，不寫檔：
 
@@ -113,56 +111,49 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --preflight --format json
 ```
 
-Agent 依業務能力、actor、trigger、happy path、alternate/exception path、狀態變更與決策點，
-建立 source-to-business coverage map。預覽必須列出 inventory、排除摘要、既有 BA coverage、
-準備新增或重大更新的流程／規則／詞彙／gap 文件、容量、warnings 與未驗證事項；使用者確認
-此文件計畫後，才更新 Wiki。
+Agent 先依可觀察行為建立 `fr-*`／`cap-*` 與 stable `AC-*`，再連結 actor、trigger、
+happy/alternate/exception paths、state 與 `br-*`。預覽列出 inventory、排除摘要、
+requirement/process/rule coverage、每個 safe file disposition、全量 regeneration plan、DLP
+masking、容量、warnings 與 gaps；使用者確認後才更新 Wiki。
 
 每個可交付 BA pack 至少包含：
 
 - `wiki/overview.md`：業務目的、範圍、actors 與能力入口；
+- `wiki/synthesis/functional-requirement-catalog.md`：所有 active `fr-*` 與 AC coverage；
 - `wiki/synthesis/business-process-catalog.md`：流程導覽與 coverage；
 - `wiki/synthesis/business-rule-catalog.md`：規則導覽與適用流程；
 - `wiki/synthesis/business-glossary.md`：業務詞彙、別名與邊界；
 - `wiki/synthesis/business-knowledge-gaps.md`：缺口、影響與待確認對象；
+- `wiki/synthesis/codebase-functional-coverage.md`：local-only full disposition gate；
+- `wiki/requirements/*.md`：`type: business-requirement`，包含 FR/capability ID、process links、evidence state 與 `AC-*`；
 - `wiki/processes/*.md`：`type: business-process`，包含 `process_id`、actors、流程、例外與 `coverage_status`；
 - `wiki/rules/*.md`：`type: business-rule`，包含 `rule_id`、`applies_to` 與 `evidence_state`。
 
-BA 主文件使用 `notebooklm_role: business`、`notebooklm_group` 與
-`notebooklm_terms`。規則的證據標籤必須是 `business-confirmed`、
-`implementation-observed`、`inference` 或 `gap`；技術頁使用
-`notebooklm_role: traceability`，只能作獨立追溯附錄，不能取代業務說明。更新時同步
-`wiki/index.md`，並只追加一筆合法 `wiki/log.md` operation。
+BA 主文件使用 `notebooklm_role: business`、`notebooklm_group` 與 `notebooklm_terms`；
+技術與 governance 頁使用 `exclude`。證據標籤是 `business-confirmed`、
+`implementation-observed`、`inference` 或 `gap`。每次全量重建 managed markers、保留
+user-notes markers，技術 provenance 放 local-only markers。同步 index，追加一筆合法 log。
 
 文件更新完成後必須重新執行相同的 `--preflight`。第二次 readiness preflight 會檢查必備
-文件、active process、catalog links、唯一 process/rule IDs、`applies_to`、Critical lint、DLP、
-容量與設定；展示新的 `preflight_id` 並再次等待確認。確認後才套用第二次 ID：
+文件、active requirement/process、catalog links、FR/BP/BR/AC IDs、`applies_to`、完整
+non-gap disposition、Critical lint、exact pack plan、DLP masking、容量與設定；展示新的
+`preflight_id` 並再次等待確認。確認後才套用第二次 ID：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --apply --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-輸出包含 `sources/query-index.md`、`sources/project-map.md`、BA 文件、必要 business evidence、
-可選的 technical traceability、schema v4 `manifest.json`、`upload-plan.md` 與 README。
-`query-index.md` 採 `business-first-ba-v1`：先回答業務目的、流程、規則、資料語意與 gaps，
-再用 business evidence 驗證；只有需要實作定位時才讀 traceability appendix。README 提供相同
-Custom instructions。
+輸出只含 `sources/query-index.md`、`sources/project-map.md` 與 BA `docs:<group>`，另有本機
+schema v5 manifest、upload plan 與 README。Retrieval contract 是 `business-only-ba-v2`；
+raw code/config/business evidence/traceability 永不 materialize。Schema v1–v4 或其他舊 contract
+必須在同一本 Notebook full rebuild。
 
-`include_traceability` 控制技術附錄；舊 `include_evidence` 只作相容 alias，兩者衝突時
-fail closed。`business_source_paths` 指定的安全文字來源與 BA 文件／business evidence 為必要
-內容，traceability 可依 `source_budget` 省略。Source IDs 使用 `query-index`、`project-map`、
-`docs:<group>`、`business-evidence:<group>`、`trace:<group>`。schema v1–v3 或其他舊 retrieval
-contract 必須 full rebuild：先清除同一本 Notebook 的舊 static sources，再依新 upload plan
-完整上傳，不能把技術優先與 BA 優先來源混合。
-
-Exporter 會在本機執行 `notebooklm-enterprise-basic` DLP preflight；未 allowlist finding 會讓
-`ready_to_export=false` 並阻擋 apply，報告不含命中值。Apply 會重新掃描 Wiki、inventory 與
-設定；ID 不符或 readiness gate 未通過時拒絕寫入。NotebookLM 只需處理 `sources/*.md`；後續
-依 upload plan 手動處理 `added`、`changed`、`deleted`，`unchanged` 不需重傳。預設 hard limits
-為 300 sources、每 source 200 MB / 500,000 words，safety limits 為 180 MB / 450,000 words；
-字數採 `han_characters_plus_non_han_tokens`。自訂設定時，將 `assets/notebooklm.toml` 複製到
-repo root。
+`notebooklm-enterprise-ba-mask-v1` 在 analysis copy、managed Wiki 與 exact final payload 執行；
+finding 先遮罩，final residual 才阻擋，沒有 allowlist。Apply 重新掃描 Wiki、inventory、
+coverage 與設定；ID 漂移就拒絕。只手動上傳 `sources/*.md`，依 plan 處理 added/changed/deleted/
+unchanged。Hard limits 為 300 sources、每 source 500 MB / 500,000 words，safety limits 為
+450 MB / 450,000 words；字數採 `han_characters_plus_non_han_tokens`。
 
 ## 12. Delegation
 

@@ -14,11 +14,19 @@ status: active
 
 # 業務知識缺口
 
-| Gap ID | 待確認問題 | 影響流程／規則 | 已查證據 | 建議確認角色 | 狀態 |
+<!-- codebase-wiki:managed:start -->
+
+| Gap ID | 待確認問題 | 影響需求／流程／規則 | 已查證據狀態 | 建議確認角色 | 狀態 |
 | --- | --- | --- | --- | --- | --- |
-| `gap-{domain}-{topic}` | {question} | [[{page}]] | `{path}` | BA / PO / domain owner | open |
+| `gap-{domain}-{topic}` | {question} | [[{page}]] | {evidence-summary-without-raw-path} | BA / PO / domain owner | open |
 
 ## 已解決缺口
 
 解決後保留原 Gap ID，補上確認來源與結果，不刪除歷史脈絡。
+<!-- codebase-wiki:managed:end -->
 
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+<!-- 保留人工維護內容；重新萃取時不得覆寫。 -->
+<!-- codebase-wiki:user-notes:end -->

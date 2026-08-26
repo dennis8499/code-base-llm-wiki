@@ -46,6 +46,7 @@ exporter 會省略並回報 warning。
 | 值             | 對應目錄             | 說明                         |
 | -------------- | -------------------- | ---------------------------- |
 | `business-process` | `wiki/processes/` | 端到端業務流程 |
+| `business-requirement` | `wiki/requirements/` | 可驗收、可查詢的功能需求 |
 | `business-rule` | `wiki/rules/` | 可獨立查詢的業務條件與決策 |
 | `module`       | `wiki/modules/`      | 按模組/目錄的文件頁面        |
 | `entity`       | `wiki/entities/`     | 類別、服務、API 端點、DB 表  |
@@ -64,6 +65,7 @@ exporter 會省略並回報 warning。
 | `type` | 合法位置 |
 | --- | --- |
 | `business-process` | `wiki/processes/*.md` |
+| `business-requirement` | `wiki/requirements/*.md` |
 | `business-rule` | `wiki/rules/*.md` |
 | `module` | `wiki/modules/*.md` |
 | `entity` | `wiki/entities/*.md` |
@@ -142,6 +144,23 @@ exporter 會省略並回報 warning。
 | `notebooklm_role` | enum | ✅ | 固定為 `business` |
 | `notebooklm_terms` | string[] | ✅ | 非空的規則、條件、結果與同義詞 |
 
+### `type: business-requirement`
+
+| 欄位 | 型別 | 必填 | 說明 |
+| --- | --- | --- | --- |
+| `requirement_id` | string | ✅ | 穩定 kebab-case ID，建議 `fr-{domain}-{capability}` |
+| `capability_id` | string | ✅ | 穩定 kebab-case 能力 ID，建議 `cap-{domain}-{capability}` |
+| `applies_to` | string[] | ✅ | 至少一個 `[[business-process]]` wikilink |
+| `evidence_state` | enum | ✅ | `business-confirmed` / `implementation-observed` / `inference` / `gap` |
+| `notebooklm_group` | string | ✅ | 與適用流程相同的 business group |
+| `notebooklm_role` | enum | ✅ | 固定為 `business` |
+| `notebooklm_terms` | string[] | ✅ | 非空的功能、角色、結果、驗收與同義詞 |
+
+Body 必須包含 `## 驗收條件`，且至少有一個穩定的 `AC-*` ID。功能需求頁的
+自動萃取內容置於 `codebase-wiki:managed` markers；人工 BA 補充置於
+`codebase-wiki:user-notes` markers。只供本機追溯的 path、symbol 或技術細節置於
+`notebooklm:local-only` markers，匯出時會移除。
+
 ### `type: index` 與 `type: log`
 
 | 頁面 | 必填值 |
@@ -193,4 +212,4 @@ page-shape source of truth.
 14. `derived_from` 若存在，必須是由 `[[wikilink]]` 組成的陣列。
 15. `source_digest` 若存在，必須符合 `sha256:<64 lowercase hex>`。
 16. `notebooklm_role` 與 `notebooklm_terms` 必須符合上述角色契約。
-17. Business Process/Rule 頁面必須位於指定目錄且通過其 type-specific 驗證。
+17. Business Requirement/Process/Rule 頁面必須位於指定目錄且通過其 type-specific 驗證。

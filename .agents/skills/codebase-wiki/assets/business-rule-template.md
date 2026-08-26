@@ -19,6 +19,8 @@ status: active
 
 # {業務規則名稱}
 
+<!-- codebase-wiki:managed:start -->
+
 ## 規則敘述
 
 ## 條件與結果
@@ -35,6 +37,16 @@ status: active
 
 ## 待確認事項
 
-## 追溯關聯
+<!-- codebase-wiki:managed:end -->
 
-- [[{traceability-page}]]（技術內容只保留在 `notebooklm_role: traceability` 頁；本頁不內嵌實作細節）
+<!-- codebase-wiki:user-notes:start -->
+## BA 補充註記
+
+<!-- 保留人工維護內容；重新萃取時不得覆寫。 -->
+<!-- codebase-wiki:user-notes:end -->
+
+<!-- notebooklm:local-only:start -->
+## 本機追溯關聯
+
+- [[{traceability-page}]]（技術內容不進入 NotebookLM source pack）
+<!-- notebooklm:local-only:end -->

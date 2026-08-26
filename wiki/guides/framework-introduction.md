@@ -8,7 +8,7 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:e79f43b94de66b9da458904d426d2cb1c745c4efd1e166d34ce506e35d1ea5c1
+source_digest: sha256:556088af94a871ae5536a38f32e001c8627fbeb3ff97de3a996a128c8a8328bd
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-08-26
 tags: [guide, onboarding, framework, copilot, codex]
@@ -107,7 +107,7 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | Synthesis | 保存跨模組分析 | synthesis + index + log |
 | Guide | 保存 setup/runbook/onboarding | guide + index + log |
 | System Analysis / SA | 系統級文件與 gaps | synthesis + index + log |
-| NotebookLM export | 盤點流程、規則、詞彙與 gaps，經兩次確認後組成 BA source pack | BA 文件、`.notebooklm/`、schema v4 manifest、upload plan；不自動上傳 |
+| NotebookLM export | 全量盤點 codebase 並重建 FR/AC、流程、規則、詞彙與 gaps | BA-only 文件、`.notebooklm/`、schema v5 manifest、upload plan；不自動上傳 |
 | Delegation | 使用者明確要求專業代理 | 不擴張原任務權限 |
 
 完整提示詞與輸出契約位於 `docs/workflows/README.md`。
@@ -115,8 +115,9 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 ## NotebookLM Enterprise export
 
 使用 `/export-notebooklm` 或 Codex 自然語言 recipe。每次以 `--root` 為 filesystem
-boundary 掃描安全 UTF-8 repo text；非文字業務證據列為 gap。`business_source_paths` 可精確
-指定 tests/dev-tooling 下的業務文字，但不能繞過敏感、產物、CI/IaC、Wiki/output 等安全排除。
+boundary 掃描安全 UTF-8 repo text（behavioral tests 預設包含）；非文字業務證據列為 gap。
+`business_source_paths` 可精確指定 dev-tooling 下的業務文字，但不能繞過敏感、產物、
+CI/IaC、Wiki/output 等安全排除。
 
 第一次 discovery preflight 取得 inventory、BA coverage、文件計畫、DLP、容量與 gaps：
 
@@ -125,10 +126,10 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --preflight --format json
 ```
 
-先等待第一次確認，再建立繁中 overview、business process/rule catalogs、glossary、
-knowledge gaps，以及每個 `business-process`／`business-rule` page。BA pages 使用
-`notebooklm_role: business`、穩定 `notebooklm_group` 與 evidence state；工程頁只作
-`traceability`。同步 index 與一筆 log 後，重新執行相同 preflight。展示 readiness gates
+先等待第一次確認，再全量重建繁中 overview、functional requirement/process/rule catalogs、
+glossary、knowledge gaps、coverage ledger，以及每個 `business-requirement`／process／rule
+page。BA pages 使用 `notebooklm_role: business`、穩定 `notebooklm_group`、FR/AC IDs 與
+evidence state；工程頁使用 `exclude`。同步 index 與一筆 log 後，重新執行相同 preflight。展示 readiness gates
 與新 ID，等待第二次確認，最後才 apply：
 
 ```powershell
@@ -136,16 +137,15 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --apply --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-只手動上傳 `.notebooklm/sources/*.md`。Schema v4 `manifest.json` 記錄 audience、BA
-coverage、source roles、hash、DLP、migration 與 stable IDs；`upload-plan.md` 列出
-`added`、`changed`、`deleted`、`unchanged`。BA 文件與 business evidence 必須保留；
-只有低優先 traceability 可因 `source_budget` 省略。舊 retrieval contract 必須 full rebuild。
-預設 pack 使用 180 MB /
-450,000 words safety limits，且不超過 Enterprise 的 300 sources、200 MB /
+只手動上傳 `.notebooklm/sources/*.md`。Schema v5 `manifest.json` 記錄 audience、FR/AC 與
+file disposition coverage、hash、三階段 DLP、migration 與 stable IDs；`upload-plan.md` 列出
+`added`、`changed`、`deleted`、`unchanged`。Raw evidence 與 traceability 永不進入 pack；
+舊 schema v1–v4 或 retrieval contract 必須 full rebuild。預設 pack 使用 450 MB /
+450,000 words safety limits，且不超過 Enterprise 的 300 sources、500 MB /
 500,000 words hard limits；不同 Workspace tier 請在 `notebooklm.toml` 下調。
 
-Exporter 在本機執行 `notebooklm-enterprise-basic` DLP；未 allowlist finding 會阻擋
-apply，報告只顯示安全 metadata。詳細步驟與 BA UAT 見 [[notebooklm-export]]。
+Exporter 在本機執行 `notebooklm-enterprise-ba-mask-v1` DLP；finding 先遮罩，final payload
+有殘留才阻擋 apply，報告只顯示安全 metadata。詳細步驟與 BA UAT 見 [[notebooklm-export]]。
 
 ## 6. Guard modes
 
