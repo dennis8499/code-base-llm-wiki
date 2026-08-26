@@ -8,7 +8,7 @@ sources:
   - .github/workflows/release.yml
   - docs/releases/README.md
   - README.md
-source_digest: sha256:27d37893977b36860e06d552d640c5d6c5b9b0877d8d4537362e5934171b4739
+source_digest: sha256:17d19e3886842f66a247b71ceb90181082725c56e3e03668a7087309267eaa05
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-08-26
 tags: [guide, release, version, extension]

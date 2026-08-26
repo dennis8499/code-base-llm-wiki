@@ -37,6 +37,7 @@ class RepositoryFormatTests(unittest.TestCase):
 
     def test_product_documentation_and_history_are_separated(self) -> None:
         required = (
+            "docs/README.md",
             "docs/architecture/README.md",
             "docs/setup/README.md",
             "docs/workflows/README.md",
@@ -58,6 +59,19 @@ class RepositoryFormatTests(unittest.TestCase):
         self.assertIn("gist.github.com/karpathy/442a6bf555914893e9891c11519de94f", history)
         self.assertIn("does not declare a redistribution license", history)
         self.assertLess(len(history), 5_000)
+
+    def test_docs_hub_is_the_canonical_navigation_entrypoint(self) -> None:
+        hub = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
+        for target in (
+            "setup/README.md",
+            "workflows/README.md",
+            "architecture/README.md",
+            "validation/README.md",
+            "releases/README.md",
+            "history/README.md",
+        ):
+            with self.subTest(target=target):
+                self.assertIn(f"({target})", hub)
 
     def test_local_markdown_links_resolve(self) -> None:
         documents = [

@@ -33,22 +33,30 @@ Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent
 ```text
 code-base-llm-wiki/
 ├── .agents/skills/codebase-wiki/  # Copilot/Codex 共用 Skill、規格、模板與腳本
-├── .codex/                         # Codex hooks、設定與明確委派時使用的 agents
-├── .github/                        # Copilot agents、prompts、hooks 與 instructions
-├── docs/                           # 架構、安裝、工作流、驗證及歷史文件
-├── samples/task-tracker/           # 可操作的無第三方依賴 E2E 樣例
-├── tests/                          # Installer、contract、guard 與 Repo 格式測試
-├── wiki/                           # 持久 Markdown 知識庫與活動紀錄
-├── .notebooklm/                    # 本地產生的 NotebookLM source pack（預設忽略）
-├── AGENTS.md                       # Codex 專案規則與安全邊界
-├── Codex.md                        # 可隨 Codex surface 安裝的獨立操作手冊
-├── VERSION                         # 唯一產品版號來源
-├── tools/release.py                # Release asset 與更新 manifest builder
-├── ChangeLog.md                    # 版本變更紀錄
-└── README.md                       # 本頁：專案導覽與快速開始
+├── .codex/                        # Codex hooks、設定與明確委派時使用的 agents
+├── .github/                       # Copilot agents、prompts、hooks、instructions 與 CI
+├── docs/                          # 文件總覽、架構、工作流、驗證、發布與歷史
+│   ├── README.md                  # 文件入口與建議閱讀順序
+│   ├── architecture/              # 元件、資料流與安全邊界
+│   ├── setup/                     # 安裝、升級與平台設定
+│   ├── workflows/                 # 使用者意圖與工作流契約
+│   ├── validation/                # 自動檢查與 E2E 驗收
+│   ├── releases/                  # 版本、發布資產與更新契約
+│   └── history/                   # 上游概念 attribution 與歷史材料
+├── samples/task-tracker/          # 可操作的無第三方依賴 E2E 樣例
+├── tests/                         # Installer、contract、guard 與 Repo 格式測試
+├── tools/release.py               # Release asset 與更新 manifest builder
+├── wiki/                          # 持久 Markdown 知識庫與活動紀錄
+├── .notebooklm/                   # 本地產生的 NotebookLM source pack（預設忽略）
+├── AGENTS.md                      # Codex 專案規則與安全邊界
+├── Codex.md                       # 可隨 Codex surface 安裝的獨立操作手冊
+├── VERSION                        # 唯一產品版號來源
+├── ChangeLog.md                   # 版本變更紀錄
+└── README.md                      # 本頁：專案導覽與快速開始
 ```
 
-詳細元件關係與資料流請參閱 [架構文件](docs/architecture/README.md)。
+文件總覽請先參閱 [docs/README.md](docs/README.md)；詳細元件關係與資料流請參閱
+[架構文件](docs/architecture/README.md)。
 
 ---
 
@@ -230,6 +238,7 @@ Basic DLP finding 會阻擋 apply。
 
 | 文件 | 說明 |
 | --- | --- |
+| [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
 | [架構與資料流](docs/architecture/README.md) | 三層模型、雙入口、Agents、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
 | [工作流手冊](docs/workflows/README.md) | 十類意圖、12 個操作情境、平台對照與輸出契約 |

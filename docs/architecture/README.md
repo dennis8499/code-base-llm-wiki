@@ -1,6 +1,6 @@
 # Codebase LLM Wiki 架構
 
-本文件說明 Codebase LLM Wiki 的三層模型、Copilot/Codex 雙入口、Agent 職責、Hooks、Installer 與資料流。日常使用請從根目錄 [README](../../README.md) 開始。
+本文件說明 Codebase LLM Wiki 的三層模型、Copilot/Codex 雙入口、Agent 職責、Hooks、Installer 與資料流。文件總覽請先閱讀 [docs/README](../README.md)；日常使用與快速開始請從根目錄 [README](../../README.md) 開始。
 
 ## 三層模型
 

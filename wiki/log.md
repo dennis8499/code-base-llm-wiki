@@ -497,3 +497,9 @@ status: active
 - NotebookLM exporter 升級為 schema v4 `business-first-ba-v1`：固定 BA audience，以流程、規則、詞彙、evidence state 與 knowledge gaps 為主，指定 business evidence 必須保留，技術內容改為獨立可選 traceability
 - 新增 business-process/business-rule schema、catalogs、兩階段 discovery/readiness 確認、舊 retrieval contract full rebuild 與固定 BA UAT；框架 Wiki 完成自身 BA knowledge set 並刷新來源摘要
 - 受影響頁面：[[index]]、[[overview]]、[[notebooklm-ba-knowledge-export]]、[[ba-knowledge-precedes-traceability]]、[[readiness-preflight-required]]、[[business-process-catalog]]、[[business-rule-catalog]]、[[business-glossary]]、[[business-knowledge-gaps]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-architecture]]、[[project-function-catalog]]、[[system-analysis]]、[[wiki-quality-and-provenance]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[framework-introduction]]、[[release-and-update]]
+
+## [2026-08-26] update | GitHub Repo 文件導覽整理
+
+- 新增 `docs/README.md` 作為架構、安裝、工作流、驗證、發布、歷史、樣例與測試的集中導覽；根目錄 README 同步整理專案結構圖與文件索引。
+- 保留既有 `.agents/`、`.github/`、`.codex/`、`samples/`、`tests/`、`tools/` 與 `wiki/` 路徑契約；尚未選定的 LICENSE 與公開 release gate 維持不變。
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[release-and-update]]、[[system-analysis]]

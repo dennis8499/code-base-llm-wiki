@@ -6,8 +6,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- **文件總覽入口**：新增 `docs/README.md`，集中整理架構、安裝、工作流、驗證、發布、歷史、樣例與測試文件的閱讀路徑。
+
 ### Changed
 
+- **GitHub Repo 導覽**：重整根目錄 README 的專案結構圖與文件索引，保留既有 `.agents/`、`.github/`、`.codex/`、`samples/`、`tests/`、`tools/` 與 `wiki/` 路徑契約。
 - **NotebookLM Exporter 改為 BA-first knowledge contract**：manifest 升級至 schema v4 與
   `business-first-ba-v1`，以 business process、business rule、glossary、knowledge gaps 和
   明確 evidence state 作為必備來源；business evidence 必須保留，technical traceability

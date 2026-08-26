@@ -8,7 +8,7 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:d37255bce22f2fb6965763bd78b4517a47d2f636686ef93878e145345daf2c72
+source_digest: sha256:e79f43b94de66b9da458904d426d2cb1c745c4efd1e166d34ce506e35d1ea5c1
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-08-26
 tags: [guide, onboarding, framework, copilot, codex]
@@ -209,6 +209,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 
 ## 進一步閱讀
 
+- 文件總覽：`docs/README.md`
 - 架構與資料流：`docs/architecture/README.md`
 - 安裝、升級與排錯：`docs/setup/README.md`
 - 12 個操作情境：`docs/workflows/README.md`
