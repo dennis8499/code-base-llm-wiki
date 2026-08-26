@@ -2,7 +2,9 @@
 title: {Codebase Name}
 type: overview
 summary: "{系統目的與主要能力的一句話摘要}"
-notebooklm_group: project
+notebooklm_group: business-core
+notebooklm_role: business
+notebooklm_terms: ["{business-capability}", "{business-actor}"]
 sources: []
 derived_from: []
 last_updated: YYYY-MM-DD
@@ -12,12 +14,14 @@ status: placeholder
 
 # {Codebase Name}
 
-## Purpose
+## 業務目的與範圍
 
-## System Context
+## 業務角色
 
-## Major Areas
+## 業務能力地圖
 
-## Evidence Gaps
+## 系統脈絡
 
-## Related Pages
+## 證據狀態與待確認事項
+
+## 相關頁面

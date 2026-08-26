@@ -3,6 +3,7 @@ title: 平台 Hooks 與寫入邊界
 type: module
 summary: Codex 與 Copilot 共用 canonical hooks，並以 wiki-only、coexist、framework 三種模式明確控制寫入邊界
 notebooklm_group: function-platform-hooks
+notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py
   - .agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py

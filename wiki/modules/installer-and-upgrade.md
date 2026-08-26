@@ -3,13 +3,14 @@ title: Installer 與 Upgrade
 type: module
 summary: Installer v3 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架
 notebooklm_group: function-install-upgrade
+notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/references/install-workflow.md
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_install_framework.py
-source_digest: sha256:7781fc4f682519711d30272cd758b4edd66fd8c37ef0307ea4f37432a7d3dc84
+source_digest: sha256:6c9f9162cf391ebaed4767fc37b8de077fa9e54ab036146a3c95cdaad683c63b
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-08-24
 tags: [module, installer, upgrade, atomicity]
@@ -21,7 +22,8 @@ status: active
 ## 職責
 
 - 在 `install` 與 `upgrade` 前先產生不寫入的變更計畫。
-- 只安裝共用 Skill 與選定的 Codex/Copilot adapter；upgrade 不碰目標 Wiki。
+- 只安裝共用 Skill 與選定的 Codex/Copilot adapter；新 starter 建立 processes/rules 目錄，
+  upgrade 不碰目標 Wiki。
 - 將 root instructions 放入 managed marker block，保留 marker 外的專案規則。
 - 透過 `install-state.json` 分辨 upstream-only、user-only 與 two-sided changes。
 - 將所有輸出 staging 後原子替換，失敗時回復原檔。

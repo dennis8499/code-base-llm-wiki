@@ -31,15 +31,16 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 
 | 檢查 | 驗證內容 |
 | --- | --- |
-| Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract、NotebookLM full-scan/docs-first incremental export、exclusion-aware fallback pruning/bounded excluded-root summaries、Wiki/CLI root、log regular-tree 與 malformed-state boundaries、process-kill recovery 與跨程序 transaction lock |
+| Unit tests | Installer、conflict、surface isolation、guard、Repo links、sample contract、NotebookLM BA schema/full-scan/two-tier evidence export、exclusion-aware fallback pruning/bounded excluded-root summaries、Wiki/CLI root、log regular-tree 與 malformed-state boundaries、process-kill recovery 與跨程序 transaction lock |
 | Parity | Copilot/Codex contract v3、guard modes、必要入口、移除舊 runtime references |
-| Frontmatter | 必填欄位、type、日期、status、raw/derived provenance 與 digest 格式 |
+| Frontmatter | 必填欄位、type、日期、status、raw/derived provenance、digest，以及 business-process/business-rule/NotebookLM role 契約 |
 | Stale source | source path、Git freshness 與 aggregate content digest |
 | Log integrity | operation、日期、affected pages、frontmatter 與 Git baseline append-only |
 | Wiki stats | Page types、statuses、links 與 Wiki 規模 |
 | Wiki lint | Deterministic/semantic/overall 狀態、真正 orphan、links、index/log；語意檢查維持 `agent_review_required` |
 | Index check | 唯讀比較 managed region 的 page/type entries，並保留 marker 外人工內容 |
-| NotebookLM preflight/export | 強制 preflight ID、必要文件/critical/DLP gate、framework profile、schema v1/v2→v3、documents-first 預算、stable IDs、exclusion-aware filesystem fallback、bounded excluded-root warnings、hash/diff plan 與 previous-pack preservation |
+| NotebookLM preflight/export | discovery/readiness 兩階段、BA 必備文件與 catalog/ID/applies-to gate、critical/DLP gate、schema v4、business-first-ba-v1、必要 business evidence、可選 traceability、stable IDs、舊 contract full rebuild、hash/diff plan 與 previous-pack preservation |
+| NotebookLM BA UAT | 依 [固定 BA 題組](notebooklm-ba-uat.md) 驗證流程、規則、詞彙、證據狀態、gaps 與 BA 可讀性 |
 
 ## Task Tracker E2E
 
@@ -53,7 +54,7 @@ manifest 內的版本、tag、下載 URL 與 checksum 全部一致。
 4. Lint 產生無 Critical 的報告；
 5. 確認 raw source hashes 未改變；
 6. 確認新增頁面可由 index 導覽且 log 已追加。
-7. 確認 NotebookLM preflight 掃描所有可分享 runtime/docs/schema/config 且零寫入；確認後建立完整功能文件與本機 pack，第二次仍全量重掃並產生可操作的 diff plan。
+7. 確認 NotebookLM discovery preflight 零寫入；第一次確認後建立 BA 流程、規則、詞彙與 gaps，再跑 readiness preflight，第二次確認後建立本機 pack 與可操作的 diff plan。
 8. Query 對高價值結果顯示有界 follow-up 選項；簡單 Query 不顯示不必要選項。
 9. 選擇更新或修復後仍遵守 preview/confirmation；選擇暫不處理時不修改檔案。
 10. Installer 與 NotebookLM exporter 在受控 process-kill 後，下一次操作恢復舊內容並清理 transaction journal/stage/backup；另一個程序持鎖時，並行 writer fail closed。
@@ -70,7 +71,7 @@ Copilot 與 Codex 各自重複三次以下情境，驗收 process invariants：
 | Interactive Ingest | 探索與摘要完成後才確認寫入；index/log coupling 完整 |
 | Lint | deterministic findings 先報告；提供受 findings 支持的 options；repairs 等待確認 |
 | Delegation | 一般請求留在目前 agent；明確 delegation 才使用 custom agent |
-| NotebookLM export | full safe scan → inventory/coverage/docs plan confirmation → functional Ingest → documents-first pack；只手動上傳 changed sources |
+| NotebookLM export | full safe scan → discovery confirmation → BA knowledge update → readiness confirmation → BA-first pack；只手動上傳 changed sources |
 
 三次輸出可使用不同措辭，但流程不變量必須全部通過。
 

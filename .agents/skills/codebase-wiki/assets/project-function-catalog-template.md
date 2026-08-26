@@ -3,6 +3,7 @@ title: 專案功能目錄
 type: synthesis
 summary: 專案功能域、入口、資料與文件覆蓋的可追溯目錄
 notebooklm_group: project
+notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]"]
 last_updated: YYYY-MM-DD

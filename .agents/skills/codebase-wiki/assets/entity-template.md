@@ -5,6 +5,7 @@ summary: "{實體職責的一句話摘要}"
 entity_type: class | service | api-endpoint | database-table
 parent_module: "{parent-module-page-name}"
 notebooklm_group: "function-{functional-area-slug}"
+notebooklm_role: traceability
 sources:
   - "{path/to/source/file}"
 derived_from: []

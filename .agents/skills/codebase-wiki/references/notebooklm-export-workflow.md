@@ -1,17 +1,18 @@
-# NotebookLM Enterprise Export Workflow
+# NotebookLM Enterprise Business Analyst Export Workflow
 
 Use this workflow when a user explicitly asks to prepare the local Codebase
 LLM Wiki for NotebookLM Enterprise or to refresh an existing source pack.
 
 ## Scope and authorization
 
-This is a first-class `notebooklm_export` operation. It is an offline export:
+This is a first-class `notebooklm_export` operation whose fixed audience is
+Business Analysts. It is an offline export:
 the workflow does not call NotebookLM, upload files, or modify raw sources.
 The controlled output is the repository-local `.notebooklm/` directory.
 
 The first phase is always read-only and always scans the full safe project
 scope. Existing Wiki pages are the knowledge baseline, not a boundary on raw
-discovery. Even when the Wiki is clean, show the functional coverage preview
+discovery. Even when the Wiki is clean, show the business-process/rule coverage preview
 and wait for confirmation before updating Wiki or writing the local pack.
 
 After confirmation, use the Batch Ingest rules below, preserve user-authored
@@ -27,6 +28,14 @@ Include every UTF-8 project-owned text file in these categories:
 - runtime-required config and dependency manifests;
 - database schemas, migrations, messages, and interface schemas;
 - existing project documentation.
+
+`notebooklm.toml` may designate exact repo-relative UTF-8 files or directories
+as `business_source_paths`. These are business-owned requirements, process
+definitions, decision tables, or acceptance specifications. They may opt
+selected text into the scan from tests/dev-tooling scope, but never override
+secret, binary/generated/dependency, configured exclusion, Wiki/output, or
+symlink/reparse safety boundaries. PDF, Word, and Excel are not parsed in v1;
+record them as explicit knowledge gaps.
 
 Exclude tests, CI/CD, IaC, build/development tooling, dependency and generated
 directories, binaries, credentials/secrets, the Wiki and export output, and
@@ -55,37 +64,56 @@ report never reads or hashes content from that tree.
      --root . --preflight --format json
    ```
 
-Record the returned `preflight_id`. `ready_to_export` is true only when all
-mandatory documents are active, required-document evidence is fresh,
+Treat this first result as the discovery preflight. Its ID becomes invalid when
+the confirmed documentation update changes Wiki content; do not reuse it for
+apply. `ready_to_export` is true only when all mandatory BA documents are active,
+the BA structural contract is complete, required-document evidence is fresh,
 deterministic lint has no Critical findings, and the local DLP gate has no
 blocking findings.
 
-4. Read every included file in functional batches. Identify functions from
-   runtime entrypoints, use cases, data boundaries, public interfaces, and
-   external integrations rather than directory shape alone.
+4. Read designated business sources first, then project documentation,
+   use-case entrypoints, orchestration/services, state/data boundaries,
+   messages, public interfaces, and integrations. Identify end-to-end business
+   processes by actor, trigger, precondition, outcome, rule, exception, and
+   state transition rather than directory shape.
 5. Preview included file counts and reasons, pruned excluded-root counts and
-   bounded metadata summaries, functional coverage, Wiki pages to
+   bounded metadata summaries, business capability/process/rule/term coverage, Wiki pages to
    add/update/leave unchanged, evidence paths, capacity estimate, and every
    unresolved gap. A truncated or unreadable excluded-root summary is a
    warning, not evidence that the root was included. Wait for confirmation.
-6. After confirmation, create or update the required documentation set. Documentation is mandatory for export:
+6. After confirmation, create or update the required BA documentation set:
    - `wiki/overview.md`;
-   - `wiki/synthesis/project-function-catalog.md`;
-   - `wiki/architecture/system-architecture.md`;
-   - module/entity pages for every discovered functional area;
-   - `wiki/synthesis/system-analysis.md`.
-7. Give NotebookLM-prepared pages a stable kebab-case `notebooklm_group`.
-   Narrative content is Traditional Chinese; preserve code identifiers, API
-   names, and source paths exactly. Mark required coverage as `covered`,
-   `partial`, or `gap` instead of inventing facts.
-8. Synchronize index/log, rerun Wiki checks, then run:
+   - `wiki/synthesis/business-process-catalog.md`;
+   - `wiki/synthesis/business-rule-catalog.md`;
+   - `wiki/synthesis/business-glossary.md`;
+   - `wiki/synthesis/business-knowledge-gaps.md`;
+   - one `wiki/processes/` page per cataloged end-to-end process;
+   - one `wiki/rules/` page per independently queryable business rule.
+7. Use stable `business-{capability}` `notebooklm_group` values. BA pages use
+   `notebooklm_role: business`; selected module/entity/architecture pages use
+   `traceability`; unrelated pages use `exclude` or remain unclassified and are
+   omitted with a warning. Narrative content is Traditional Chinese.
+8. Label claims as `business-confirmed`, `implementation-observed`, `inference`,
+   or `gap`. Code/config/schema can prove observed behavior, not approved policy.
+   Registered business gaps are allowed; unlabeled or dangling knowledge is not.
+9. Synchronize index/log and rerun Wiki checks. Then run a second readiness
+   preflight and use its new ID for apply:
+
+   ```powershell
+   python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
+     --root . --preflight --format json
+   ```
+
+10. Show the second result, including readiness gates, capacity, DLP status, and
+    migration mode, then wait for a second confirmation. Apply only with the
+    second ID:
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
      --root . --apply --preflight-id <id> --output .notebooklm --format json
    ```
 
-   Apply rescans the Wiki, safe inventory, and configuration. Any change makes
+   Apply rescans the Wiki, safe inventory, and configuration. Any later change makes
    the ID invalid and requires a new preflight. Direct export without
    `--preflight` followed by `--apply` is rejected.
 
@@ -97,20 +125,24 @@ inside the output directory are preserved.
 
 Each generated source has a stable `logical_source_id`:
 
-- `query-index` for the compact Wiki-first direct-lookup router;
+- `query-index` for the compact BA-first direct-lookup router;
 - `project-map` for the generated navigation source;
-- `docs:<notebooklm-group>` for complete curated Wiki documentation;
-- `evidence:<notebooklm-group>` for deduplicated raw evidence;
-- `docs:combined` or `evidence:combined` only when slot pressure requires
+- `docs:<business-group>` for complete curated BA Wiki documentation;
+- `business-evidence:<business-group>` for designated business-owned text;
+- `trace:<business-group>` for technical Wiki/raw implementation traceability;
+- `docs:combined`, `business-evidence:combined`, or `trace:combined` only when slot pressure requires
   deterministic compaction;
 - `#part-###` suffixes for sources split at safe boundaries.
 
-The exporter accepts previous schema-v1/v2 manifests and produces an actionable
-one-time migration plan. The schema-v3 manifest records scan summary, including
+The exporter accepts previous schema-v1/v2/v3 manifests. The first export from
+a non-BA retrieval contract sets `migration.requires_full_rebuild=true` and
+instructs the uploader to remove all old static sources before uploading the new
+pack. The schema-v4 manifest records audience `business-analyst`, source roles,
+business coverage, and scan summary, including
 file-level exclusions and pruned excluded-root summaries,
-functional-document coverage, input/output hashes, priorities, omissions,
+business-process/rule coverage, input/output hashes, priorities, omissions,
 limits, the offline DLP profile/safe finding summary, and the
-`wiki-first-direct-lookup-v1` retrieval contract. The retrieval contract points
+`business-first-ba-v1` retrieval contract. The retrieval contract points
 to `query-index.md`, limits the primary route to at most five source groups, and
 keeps the copy/paste Custom instructions in the local README. The upload plan
 contains:
@@ -138,13 +170,13 @@ individually and non-Han, non-whitespace token runs are counted separately, so
 mixed Traditional Chinese and code content is not underestimated. A different
 Workspace tier must lower `source_limit` in `notebooklm.toml`.
 
-The query index, project map, and documentation are mandatory and consume slots
-before evidence. Evidence
-priority is: explicit extra paths; overview/function-catalog/architecture/SA
-direct citations; multiply referenced entrypoints, interfaces, schemas, and
-config; other runtime implementation; existing docs. If evidence cannot fit,
-omit complete lowest-priority files and record `source_budget` in the manifest,
-project map, upload plan, and final report. Never silently truncate evidence.
+The query index, project map, BA documentation, and designated business evidence
+are mandatory. They consume slots before technical traceability. Traceability
+priority is: BA process/rule direct citations; multiply referenced state models,
+interfaces, schemas, and config; other runtime implementation; explicitly marked
+technical Wiki pages. If traceability cannot fit, omit complete lowest-priority
+files and record `source_budget` in the manifest, project map, upload plan, and
+final report. Never truncate or omit mandatory BA knowledge silently.
 
 Excluded-root summaries use a fixed metadata entry bound. They may report
 `truncated` or metadata errors, but they never inspect file content and do not
@@ -154,7 +186,10 @@ If mandatory documentation cannot fit after deterministic compaction/splitting,
 or any source remains oversized, the exporter fails before committing a new
 pack and preserves the previous pack.
 
-`notebooklm.toml` may set `scan_profile = "target" | "framework"`. `target` is
+`notebooklm.toml` may set `scan_profile = "target" | "framework"`,
+`business_source_paths`, and `include_traceability`. Deprecated
+`include_evidence` maps to `include_traceability`; conflicting values fail
+closed. `target` is
 the default and excludes installed framework adapters. The framework repository
 uses `framework`, which treats its `.agents`, `.codex`, non-CI `.github`, and
 release tooling as product evidence while retaining secret/generated/test/CI
@@ -193,12 +228,14 @@ and [NotebookLM source type and sync rules](https://support.google.com/notebookl
 
 ## Completion Criterion
 
-Export is complete only when the full safe inventory and functional preview
-were shown, the user confirmed, all required documents exist with explicit
-coverage states, the DLP gate is passed or explicitly allowlisted, the
+Export is complete only when the full safe inventory and BA coverage preview
+were shown, the user confirmed, the second readiness preflight succeeded, all
+required documents and process/rule pages exist with explicit evidence states,
+the DLP gate is passed or explicitly allowlisted, the
 `query-index` and `project-map` sources are present, every generated source is
 traceable, the manifest and upload plan were written atomically, no source
 exceeds its limit, and the final report lists added,
-changed, deleted, unchanged, skipped, source-budget omissions, DLP status, and
+changed, deleted, unchanged, skipped, traceability source-budget omissions,
+DLP status, migration/full-rebuild status, and
 all unresolved warnings, including excluded-root truncation or metadata errors.
 Preflight alone never writes `.notebooklm/`.

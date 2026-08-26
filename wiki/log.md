@@ -491,3 +491,9 @@ status: active
 - exporter 與 Wiki stale digest fallback 改用 top-down 剪枝 walker，保留 ignored、untracked 與 nested repository runtime source，避免大型排除樹造成無界 fallback 掃描
 - manifest/preflight inventory 新增 directory-level `excluded_roots` bounded metadata summary；不讀取或 hash 排除內容，並對 truncation/metadata error 發出 warning；directory evidence 與 inventory 共用 exclusion-aware walker
 - 受影響頁面：[[index]]、[[notebooklm-exporter]]、[[notebooklm-export]]
+
+## [2026-08-26] update | NotebookLM BA-first business knowledge contract
+
+- NotebookLM exporter 升級為 schema v4 `business-first-ba-v1`：固定 BA audience，以流程、規則、詞彙、evidence state 與 knowledge gaps 為主，指定 business evidence 必須保留，技術內容改為獨立可選 traceability
+- 新增 business-process/business-rule schema、catalogs、兩階段 discovery/readiness 確認、舊 retrieval contract full rebuild 與固定 BA UAT；框架 Wiki 完成自身 BA knowledge set 並刷新來源摘要
+- 受影響頁面：[[index]]、[[overview]]、[[notebooklm-ba-knowledge-export]]、[[ba-knowledge-precedes-traceability]]、[[readiness-preflight-required]]、[[business-process-catalog]]、[[business-rule-catalog]]、[[business-glossary]]、[[business-knowledge-gaps]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-architecture]]、[[project-function-catalog]]、[[system-analysis]]、[[wiki-quality-and-provenance]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[framework-introduction]]、[[release-and-update]]

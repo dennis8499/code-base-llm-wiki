@@ -1,8 +1,9 @@
 ---
 title: Codebase LLM Wiki System Analysis
 type: synthesis
-summary: 對框架目的、Wiki-first query-index、流程、介面、安全、維運、風險與證據缺口的整體可追溯分析
+summary: 對框架目的、BA-first NotebookLM contract、介面、安全、維運、風險與證據缺口的技術追溯分析
 notebooklm_group: system-analysis
+notebooklm_role: traceability
 sources:
   - README.md
   - .agents/skills/codebase-wiki/capabilities.json
@@ -11,7 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:0d11346b1d294fb93409ad78dfe34ec1de41e242f2a667913b2f95c75c99b6e1
+source_digest: sha256:ad377e91a96c897818fe8db54d103018a14c7b0461b6eb723988c58e0f2d10f1
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
 last_updated: 2026-08-26
 tags: [synthesis, system-analysis, notebooklm]
@@ -58,6 +59,7 @@ lint/ADR/guide/synthesis/SA、hooks 與離線 NotebookLM pack；不涵蓋 RAG ru
 ## 讀者與利害關係人
 
 - 目標 Repo 開發者：查詢與維護專案知識。
+- Business Analyst：以流程、規則、詞彙與 gaps 理解業務，必要時才進入技術追溯。
 - Wiki 維護者：審查證據、矛盾、stale 與 log。
 - 框架維護者：維持 schema、雙平台 parity、installer 與 release。
 - 安全／法務擁有者：審查敏感資訊、租戶政策與 LICENSE 決策。
@@ -66,10 +68,10 @@ lint/ADR/guide/synthesis/SA、hooks 與離線 NotebookLM pack；不涵蓋 RAG ru
 
 使用者透過 Codex 自然語言或 Copilot prompts 觸發共同 Skill。Skill 先讀 Wiki，只有
 evidence gap 才回到 raw source；被授權的 durable change 寫回 Wiki/index/log。
-NotebookLM preparation 另行以 `--root` 的檔案系統邊界執行安全全量 inventory，並在
-preflight 與人工確認後產生本機靜態 pack；Git repository、clean working tree 與 nested
-repository 不會成為 export gate。`ready_to_export` 與 `coverage.status` 分別表示 gate
-readiness 與 Wiki source coverage。詳見 [[system-architecture]]。
+NotebookLM preparation 另行以 `--root` 的檔案系統邊界執行安全 inventory：先以 discovery
+確認 BA 文件計畫，更新知識後再以 readiness 與第二次確認產生本機 pack。Git repository、
+clean working tree 與 nested repository 不會成為 export gate。`ready_to_export` 表示
+deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gaps。詳見 [[system-architecture]]。
 
 ## 架構與元件
 
@@ -98,9 +100,9 @@ readiness 與 Wiki source coverage。詳見 [[system-architecture]]。
 ### NotebookLM export
 
 - 入口：`--preflight`，其後 `--apply --preflight-id`。
-- 步驟：safe scan → function/document coverage → confirmation → required docs → apply rescan → pack。
-- source pack：`query-index` 先做 direct lookup routing，`project-map` 提供導覽，docs 優先，
-  evidence 只作不足、過時或矛盾時的查核。
+- 步驟：safe scan → discovery confirmation → BA knowledge update → readiness confirmation → apply rescan → pack。
+- source pack：`query-index` 先路由 BA 問題，`project-map` 提供流程／規則／角色導覽；BA
+  documents 與 business evidence 優先，technical traceability 是獨立可選附錄。
 - 失敗：ID mismatch、required docs、Critical lint、source limit 或 atomic write error 均不替換舊 pack。
 
 ## API / 介面
@@ -119,8 +121,8 @@ readiness 與 Wiki source coverage。詳見 [[system-architecture]]。
 - `wiki/index.md`：managed navigation region；marker 外保留人工內容。
 - `wiki/log.md`：append-only operation stream，新契約 entry 必須列 affected pages。
 - Install state：framework/surface/mode 與 per-file upstream fingerprints。
-- NotebookLM manifest v3：stable logical source IDs、retrieval contract、input/output hashes、coverage、limits、DLP、actions。
-- Preflight contract v3：inventory hash、retrieval contract、ID、required document/lint/DLP readiness。
+- NotebookLM manifest v4：audience、knowledge/retrieval contracts、BA coverage、source roles、stable IDs、hashes、limits、DLP、migration 與 actions。
+- Preflight schema v4：inventory hash、business structural gates、source policy、ID、required document/lint/DLP readiness。
 
 ## 外部整合
 
@@ -129,7 +131,7 @@ readiness 與 Wiki source coverage。詳見 [[system-architecture]]。
 | OpenAI Codex | `.codex` hooks/agents + shared Skill | Project trust、host hook schema | [[platform-hooks-and-guards]] |
 | GitHub Copilot | `.github` prompts/agents/hooks | Host response/audit 表現差異 | [[platform-adapters-and-release]] |
 | Git | Wiki freshness/history、release tag、可選 manifest provenance | NotebookLM inventory/preflight 不依賴 Git；獨立 quality tools 仍可使用 Git 輔助 freshness | [[wiki-quality-and-provenance]] |
-| NotebookLM | 使用者手動上傳 query-index、project-map、docs/evidence static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
+| NotebookLM | 使用者手動上傳 query-index、project-map、BA docs/business evidence/trace static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
 
 ## 權限與安全
 
@@ -189,7 +191,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 | LICENSE 未決 | 無法公開 release | 專案擁有者選擇授權後再 tag |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
-| NotebookLM retrieval drift | query-index、Custom instructions 與 source selection 可對齊 Wiki-first 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以固定問題集手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
+| NotebookLM retrieval drift | query-index、Custom instructions 與 source roles 可對齊 BA-first 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以 `docs/validation/notebooklm-ba-uat.md` 固定題組手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
 
 ## Evidence
 
@@ -203,13 +205,13 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 
 ## Inferences
 
-- 目前架構以 Markdown query-index 對齊小至中型 codebase 的 direct lookup；它不是
+- 目前架構以 Markdown query-index 對齊小至中型 codebase 的 BA-first lookup；它不是
   向量索引或常駐搜尋 runtime，NotebookLM 的超大型 Repo retrieval 仍需實測。
 
 ## 待確認事項
 
 - [ ] 專案擁有者選定 LICENSE，解除公開 release gate。
-- [ ] 在 NotebookLM Enterprise 以固定問題集驗證 direct answer、來源命中、引用與 gap 行為。
+- [ ] 在 NotebookLM Enterprise 以 `docs/validation/notebooklm-ba-uat.md` 固定題組驗證答案、引用與 gap 行為。
 - [ ] 在實際 Codex/Copilot host 驗證 coexist audit context 呈現。
 
 ## 來源附錄

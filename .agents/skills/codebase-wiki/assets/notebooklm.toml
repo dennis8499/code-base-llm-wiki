@@ -15,10 +15,18 @@ reserved_source_slots = 0
 max_source_bytes = 180000000
 max_source_words = 450000
 
-# Documents are packed first. Wiki frontmatter.sources provide ranked evidence;
-# lower-priority evidence is explicitly reported if the remaining source budget
-# cannot hold it. Add narrowly scoped paths only for exceptional evidence.
-include_evidence = true
+# BA documents and explicitly designated business evidence are mandatory.
+# Technical Wiki/raw evidence is isolated in a lower-priority traceability
+# appendix and may be omitted when the remaining source budget cannot hold it.
+include_traceability = true
+
+# Repo-relative UTF-8 files/directories that carry business-owned requirements,
+# process definitions, decision tables, or acceptance specifications. These
+# paths may opt selected text into the scan from tests/dev-tooling scope, but
+# never override secret/generated/binary/Wiki/output safety exclusions.
+business_source_paths = []
+
+# Extra paths remain technical traceability inputs.
 extra_paths = []
 
 # Paths below are in addition to the built-in generated/dependency/credential

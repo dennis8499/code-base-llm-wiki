@@ -48,8 +48,9 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
    - 列出目標路徑下的所有子目錄和檔案
    - 建立初步的模組清單
    - 分析 import/export 關係，建立依賴圖
-   - 若由 NotebookLM preparation 觸發，依其 safe-scope contract 掃描全部
-     runtime/config/schema/docs，並以 entrypoint、use case、資料邊界與公開介面建立功能域
+   - 若由 NotebookLM preparation 觸發，先讀 `business_source_paths` 與現有業務文件，
+     再依 safe-scope contract 掃描 runtime/config/schema/docs；以角色、觸發、前置條件、
+     業務結果、例外、規則與狀態轉換建立端到端業務流程
 2. **排序階段**：
    - 按依賴關係排序：先處理被依賴最多的底層模組
    - 若無明確依賴關係，按目錄結構由外而內
@@ -65,11 +66,13 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
 
 ### NotebookLM 全專案模式
 
-NotebookLM export 的 Batch Ingest 不以目錄為最終文件邊界。先完成唯讀
-全專案 preflight 與使用者確認，再建立 overview、project function catalog、
-system architecture、每個功能域的 module/entity pages 與 system analysis。
-此模式建立或更新的頁面必須使用穩定 `notebooklm_group`，敘述固定為繁體中文，
-並保留原始識別字。一次確認後的整批更新只追加一筆 `ingest` log。
+NotebookLM export 的 Batch Ingest 不以目錄為最終文件邊界。先完成唯讀 discovery
+preflight 與使用者確認，再建立 BA overview、business process/rule catalogs、
+business glossary、business knowledge gaps，以及每個流程／規則頁。BA pages 使用
+`notebooklm_role: business`；選定的 module/entity/architecture pages 使用
+`traceability`，只作技術追溯。每項敘述標示 `business-confirmed`、
+`implementation-observed`、`inference` 或 `gap`。文件完成後必須再跑 readiness
+preflight，apply 使用第二次 ID。一次確認後的整批更新只追加一筆 `ingest` log。
 
 ---
 

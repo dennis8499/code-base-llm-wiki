@@ -3,6 +3,7 @@ title: "{模組名稱}"
 type: module
 summary: "{模組核心職責的一句話摘要}"
 notebooklm_group: "function-{functional-area-slug}"
+notebooklm_role: traceability
 sources:
   - "{path/to/module/directory/}"
 derived_from: []

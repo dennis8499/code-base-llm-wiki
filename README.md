@@ -96,7 +96,7 @@ flowchart LR
 | ADR | 保存架構決策 | 是 |
 | Synthesis / Guide | 保存長期分析或操作指南 | 是 |
 | System Analysis / SA | 產生標示 coverage gaps 的 SA 文件 | 是 |
-| NotebookLM export | 全專案安全掃描、功能導向補齊文件，再產生本地 Markdown source pack | 預覽後更新 `wiki/` 與 `.notebooklm/` |
+| NotebookLM export | 把流程、規則、詞彙、證據與缺口整理成 BA 可問答的本地 Markdown source pack | 兩次預覽後更新 `wiki/` 與 `.notebooklm/` |
 | Delegation | 明確要求時分派專業代理 | 視任務而定 |
 
 完整的提示詞與驗收條件請參閱 [工作流手冊](docs/workflows/README.md)。
@@ -116,9 +116,9 @@ flowchart LR
 - **零第三方依賴 installer**：contract v3 提供 managed blocks、fingerprint
   manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
-- **NotebookLM 全專案文件化**：強制 preflight ID 與必要文件 gate；source pack
-  採 documents-first、`query-index`/`project-map` 導覽、穩定 logical source IDs、
-  Basic DLP gate 與增量 upload plan。
+- **NotebookLM BA-first 知識包**：固定 Business Analyst audience；以流程、規則、詞彙、
+  evidence state 與 knowledge gaps 為主文件，技術細節只作可選 traceability appendix；
+  透過 discovery/readiness 兩次 preflight、Basic DLP 與 stable source IDs 保持可驗證。
 - **可驗證**：跨 Python/Linux/Windows CI、parity、frontmatter、digest
   freshness、log/index、唯讀 lint 與單元測試。
 
@@ -204,18 +204,17 @@ Codex 的 hooks、recipes、delegation 與排錯方式保留在可獨立安裝�
 NotebookLM Enterprise 匯出：
 
 ```text
-請使用 $codebase-wiki 執行 NotebookLM export：先唯讀掃描整個專案的可分享 runtime source、
-必要設定、schema/migrations 與既有文件，依功能列出納入/排除、Wiki coverage、預計新增或更新
-的文件與容量預估，等待我確認。確認後以繁體中文補齊分層 Wiki，產生 query-index、project-map
-與 .notebooklm source pack，並提供 Wiki-first 直接定位問題的 Custom instructions。
+請使用 $codebase-wiki 執行 BA-first NotebookLM export：先做 discovery preflight，盤點業務流程、
+規則、詞彙、證據狀態與知識缺口，列出納入/排除、BA coverage、文件計畫與容量後等待我確認。
+確認後補齊繁中 BA Wiki，再做 readiness preflight 並再次等待確認；最後產生 query-index、
+project-map 與 .notebooklm source pack，技術內容只放獨立 traceability appendix。
 ```
 
 預覽使用 `export-notebooklm.py --preflight`，以 `--root` 指定的檔案系統目錄為掃描
-邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋；預覽不寫入
-Wiki 或 pack，並回傳一次性的 `preflight_id`。完成文件與確認後，使用
-`--apply --preflight-id <id>`；任何 inventory、Wiki 或設定變更都要求重新
-preflight。Exporter 不會呼叫雲端 API 或自動上傳，並會在本機執行 Basic DLP
-檢核；未 allowlist finding 會阻擋 apply。
+邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。第一次 ID 只
+用於 discovery；BA 文件更新後必須重跑，並以第二次 readiness `preflight_id` 執行
+`--apply`。Exporter 僅讀 UTF-8 repo text，不會呼叫雲端 API 或自動上傳；未 allowlist 的
+Basic DLP finding 會阻擋 apply。
 
 ---
 
@@ -251,7 +250,7 @@ preflight。Exporter 不會呼叫雲端 API 或自動上傳，並會在本機執
 | GitHub Copilot Chat | 支援 | Agents、prompts、hooks 與共用 skill |
 | OpenAI Codex | 支援 | AGENTS、repo-local skill、hooks 與 optional agents |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
-| NotebookLM Enterprise | 支援全專案文件化與離線匯出 | `query-index`、功能導向 `.md` 文件、必要 evidence、manifest、hash-based upload plan；不含雲端 API |
+| NotebookLM Enterprise | 支援 BA-first 業務知識整理與離線匯出 | `query-index`、流程／規則／詞彙／gaps、必要 business evidence、可選 traceability、schema v4 manifest；不含雲端 API |
 
 本框架不提供 RAG、向量資料庫、本機搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
 NotebookLM export 產生的是可供 NotebookLM 使用的 Markdown `query-index`，不是常駐搜尋引擎；

@@ -27,6 +27,14 @@ _No pages yet. Run Ingest when source evidence is available._
 
 _No pages yet. Run Ingest when source evidence is available._
 
+## Business Processes
+
+_No BA process pages yet. Run NotebookLM discovery and confirmed business Ingest first._
+
+## Business Rules
+
+_No BA rule pages yet. Run NotebookLM discovery and confirmed business Ingest first._
+
 ## Entities
 
 _No pages yet. Run Ingest when source evidence is available._

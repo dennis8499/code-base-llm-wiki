@@ -8,12 +8,13 @@ sources:
   - .github/workflows/release.yml
   - docs/releases/README.md
   - README.md
-source_digest: sha256:8ea59574ac433bca4e030e98a9eb7627eefeb1f53823e32c67906dd007e79390
+source_digest: sha256:27d37893977b36860e06d552d640c5d6c5b9b0877d8d4537362e5934171b4739
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-08-26
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
+notebooklm_role: traceability
 ---
 
 # Codebase LLM Wiki — 版本、發佈與更新

@@ -71,9 +71,12 @@ status: active
 # Wiki Index
 
 [[overview]]
-[[project-function-catalog]]
-[[system-architecture]]
-[[system-analysis]]
+[[business-process-catalog]]
+[[business-rule-catalog]]
+[[business-glossary]]
+[[business-knowledge-gaps]]
+[[greeting]]
+[[greeting-format]]
 """,
         encoding="utf-8",
     )
@@ -81,6 +84,9 @@ status: active
         """---
 title: Project Overview
 type: overview
+notebooklm_group: business-core
+notebooklm_role: business
+notebooklm_terms: [greeting, customer]
 sources:
   - src/service.py
 last_updated: 2026-08-17
@@ -113,27 +119,96 @@ status: active
         encoding="utf-8",
     )
     required = {
-        "synthesis/project-function-catalog.md": ("Function Catalog", "synthesis", "project"),
-        "architecture/system-architecture.md": ("System Architecture", "architecture", "architecture"),
-        "synthesis/system-analysis.md": ("System Analysis", "synthesis", "system-analysis"),
+        "synthesis/business-process-catalog.md": (
+            "Business Process Catalog",
+            "business-process-catalog",
+            "[[greeting]]",
+        ),
+        "synthesis/business-rule-catalog.md": (
+            "Business Rule Catalog",
+            "business-rule-catalog",
+            "[[greeting-format]] [[greeting]]",
+        ),
+        "synthesis/business-glossary.md": (
+            "Business Glossary",
+            "business-glossary",
+            "Greeting means the customer-facing salutation.",
+        ),
+        "synthesis/business-knowledge-gaps.md": (
+            "Business Knowledge Gaps",
+            "business-knowledge-gaps",
+            "No registered gaps.",
+        ),
     }
-    for relative, (title, page_type, group) in required.items():
+    for relative, (title, tag, body) in required.items():
         path = root / "wiki" / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             "---\n"
             f"title: {title}\n"
-            f"type: {page_type}\n"
-            f"notebooklm_group: {group}\n"
+            "type: synthesis\n"
+            "notebooklm_group: business-core\n"
+            "notebooklm_role: business\n"
+            f"notebooklm_terms: [{tag}, greeting]\n"
             "sources: []\n"
             "derived_from: [\"[[overview]]\"]\n"
             "last_updated: 2026-08-17\n"
-            f"tags: [{page_type}]\n"
+            f"tags: [synthesis, {tag}]\n"
             "status: active\n"
             "---\n\n"
-            f"# {title}\n\n[[overview]]\n",
+            f"# {title}\n\n{body}\n\n[[overview]]\n",
             encoding="utf-8",
         )
+    (root / "wiki/processes").mkdir()
+    (root / "wiki/processes/greeting.md").write_text(
+        """---
+title: Customer Greeting
+type: business-process
+summary: The service returns a greeting to a customer.
+process_id: bp-customer-greeting
+actors: [customer]
+coverage_status: covered
+notebooklm_group: business-greeting
+notebooklm_role: business
+notebooklm_terms: [greeting, customer, salutation]
+sources: [src/service.py]
+derived_from: ["[[overview]]"]
+last_updated: 2026-08-17
+tags: [business-process]
+status: active
+---
+
+# Customer Greeting
+
+The customer requests and receives a greeting. Evidence state: implementation-observed.
+""",
+        encoding="utf-8",
+    )
+    (root / "wiki/rules").mkdir()
+    (root / "wiki/rules/greeting-format.md").write_text(
+        """---
+title: Greeting Format
+type: business-rule
+summary: A greeting starts with hello and includes the supplied name.
+rule_id: br-greeting-format
+applies_to: ["[[greeting]]"]
+evidence_state: implementation-observed
+notebooklm_group: business-greeting
+notebooklm_role: business
+notebooklm_terms: [hello, name, greeting format]
+sources: [src/service.py]
+derived_from: ["[[greeting]]"]
+last_updated: 2026-08-17
+tags: [business-rule]
+status: active
+---
+
+# Greeting Format
+
+The observed implementation returns hello followed by the supplied name.
+""",
+        encoding="utf-8",
+    )
 
 
 def add_index_links(root: Path, *stems: str) -> None:
@@ -190,7 +265,7 @@ class NotebookLMExporterTests(unittest.TestCase):
         self.assertEqual("".join(chunks), text)
         self.assertTrue(all(module.estimate_words(chunk) <= 2 for chunk in chunks))
 
-    def test_preflight_exposes_wiki_first_direct_lookup_contract(self) -> None:
+    def test_preflight_exposes_ba_first_direct_lookup_contract(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -199,16 +274,107 @@ class NotebookLMExporterTests(unittest.TestCase):
             code, result = self.run_preflight(module, root)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["preflight_schema_version"], 3)
+            self.assertEqual(result["preflight_schema_version"], 4)
             self.assertEqual(
                 result["retrieval"],
                 {
-                    "contract": "wiki-first-direct-lookup-v1",
+                    "contract": "business-first-ba-v1",
+                    "audience": "business-analyst",
+                    "knowledge_contract": "business-knowledge-v1",
                     "router_source": "query-index",
                     "navigation_source": "project-map",
                     "max_primary_source_groups": 5,
                     "instructions_location": "README.md",
                 },
+            )
+
+    def test_business_source_paths_override_test_scope_and_are_mandatory(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            acceptance = root / "tests/acceptance/greeting.feature"
+            acceptance.parent.mkdir(parents=True)
+            acceptance.write_text(
+                "Feature: Customer greeting\n  Scenario: Greet a named customer\n",
+                encoding="utf-8",
+            )
+            (root / "notebooklm.toml").write_text(
+                'business_source_paths = ["tests/acceptance/greeting.feature"]\n'
+                "include_traceability = false\n",
+                encoding="utf-8",
+            )
+
+            preflight_code, preflight = self.run_preflight(module, root)
+            self.assertEqual(preflight_code, 0)
+            self.assertTrue(preflight["ready_to_export"])
+            self.assertEqual(preflight["inventory"]["business_source_count"], 1)
+            included = {
+                item["path"]: item["category"]
+                for item in preflight["inventory"]["included"]
+            }
+            self.assertEqual(
+                included["tests/acceptance/greeting.feature"],
+                "business_documentation",
+            )
+
+            code, result = self.run_export(module, root, root / ".notebooklm")
+            self.assertEqual(code, 0)
+            kinds = {item["kind"] for item in result["manifest"]["sources"]}
+            self.assertIn("business_evidence", kinds)
+            self.assertNotIn("technical_traceability", kinds)
+            self.assertTrue(
+                any(
+                    item["logical_source_id"].startswith("business-evidence:")
+                    for item in result["manifest"]["sources"]
+                )
+            )
+
+    def test_legacy_include_evidence_alias_and_conflict(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            config = root / "notebooklm.toml"
+            config.write_text("include_evidence = false\n", encoding="utf-8")
+
+            code, result = self.run_preflight(module, root)
+            self.assertEqual(code, 0)
+            self.assertFalse(result["source_policy"]["include_traceability"])
+            self.assertTrue(
+                any("include_evidence 已棄用" in item for item in result["warnings"])
+            )
+
+            config.write_text(
+                "include_traceability = true\ninclude_evidence = false\n",
+                encoding="utf-8",
+            )
+            conflict_code, conflict = self.run_preflight(module, root)
+            self.assertEqual(conflict_code, 2)
+            self.assertIn("must not conflict", conflict["error"])
+
+    def test_business_contract_dangling_rule_keeps_preflight_not_ready(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            rule = root / "wiki/rules/greeting-format.md"
+            rule.write_text(
+                rule.read_text(encoding="utf-8").replace(
+                    'applies_to: ["[[greeting]]"]',
+                    'applies_to: ["[[missing-process]]"]',
+                ),
+                encoding="utf-8",
+            )
+
+            code, result = self.run_preflight(module, root)
+            self.assertEqual(code, 0)
+            self.assertFalse(result["ready_to_export"])
+            self.assertTrue(
+                any(
+                    "dangling applies_to" in item
+                    for item in result["business_coverage"]["structural_issues"]
+                )
             )
 
     def test_dlp_basic_profile_reports_safe_findings_without_secret_values(self) -> None:
@@ -354,24 +520,24 @@ class NotebookLMExporterTests(unittest.TestCase):
 
             first_code, first = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
-            self.assertEqual(first["source_count"], 6)
+            self.assertEqual(first["source_count"], 5)
             self.assertEqual(
                 first["manifest"]["limits"]["word_count_model"],
                 "han_characters_plus_non_han_tokens",
             )
             self.assertEqual(first["manifest"]["dlp"]["status"], "passed")
-            self.assertEqual(len(first["actions"]["added"]), 6)
+            self.assertEqual(len(first["actions"]["added"]), 5)
             self.assertTrue((output / "manifest.json").is_file())
             self.assertTrue((output / "sources/project-map.md").is_file())
             self.assertTrue((output / "sources/query-index.md").is_file())
             query_index = (output / "sources/query-index.md").read_text(encoding="utf-8")
             self.assertIn("直接回答契約", query_index)
-            self.assertIn("docs:project", query_index)
-            self.assertIn("evidence:project", query_index)
-            self.assertIn("src/service.py", query_index)
+            self.assertIn("docs:business-core", query_index)
+            self.assertIn("trace:business-core", query_index)
+            self.assertIn("business-confirmed", query_index)
             self.assertEqual(
                 first["manifest"]["retrieval"]["contract"],
-                "wiki-first-direct-lookup-v1",
+                "business-first-ba-v1",
             )
             readme = (output / "README.md").read_text(encoding="utf-8")
             self.assertIn("NotebookLM Custom instructions", readme)
@@ -382,7 +548,7 @@ class NotebookLMExporterTests(unittest.TestCase):
             self.assertEqual(len(second["actions"]["added"]), 0)
             self.assertEqual(len(second["actions"]["changed"]), 0)
             self.assertEqual(len(second["actions"]["deleted"]), 0)
-            self.assertEqual(len(second["actions"]["unchanged"]), 6)
+            self.assertEqual(len(second["actions"]["unchanged"]), 5)
 
             (root / "src/service.py").write_text(
                 "def greet(name: str) -> str:\n    return f\"welcome {name}\"\n",
@@ -392,9 +558,9 @@ class NotebookLMExporterTests(unittest.TestCase):
             self.assertEqual(changed_code, 0)
             self.assertEqual(
                 [item["logical_source_id"] for item in changed["actions"]["changed"]],
-                ["evidence:project"],
+                ["trace:business-core"],
             )
-            self.assertEqual(len(changed["actions"]["unchanged"]), 5)
+            self.assertEqual(len(changed["actions"]["unchanged"]), 4)
 
     def test_add_and_delete_page_updates_project_map_and_source_plan(self) -> None:
         module = load_exporter()
@@ -410,6 +576,9 @@ class NotebookLMExporterTests(unittest.TestCase):
                 """---
 title: Usage
 type: guide
+notebooklm_group: project-guides
+notebooklm_role: business
+notebooklm_terms: [usage]
 sources: []
 last_updated: 2026-08-17
 tags: [guide]
@@ -528,7 +697,7 @@ Call the service.
             root = Path(directory)
             write_fixture(root)
             (root / "notebooklm.toml").write_text(
-                "max_source_bytes = 220\nmax_source_words = 100\nsource_limit = 100\n",
+                "max_source_bytes = 220\nmax_source_words = 100\nsource_limit = 300\n",
                 encoding="utf-8",
             )
             output = root / ".notebooklm"
@@ -1063,10 +1232,12 @@ Call the service.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_fixture(root)
-            (root / "wiki/synthesis/system-analysis.md").unlink()
+            (root / "wiki/synthesis/business-knowledge-gaps.md").unlink()
             index = root / "wiki/index.md"
             index.write_text(
-                index.read_text(encoding="utf-8").replace("[[system-analysis]]\n", ""),
+                index.read_text(encoding="utf-8").replace(
+                    "[[business-knowledge-gaps]]\n", ""
+                ),
                 encoding="utf-8",
             )
 
@@ -1076,7 +1247,7 @@ Call the service.
             self.assertFalse(result["ready_to_export"])
             self.assertEqual(
                 result["inventory"]["required_documents"][
-                    "wiki/synthesis/system-analysis.md"
+                    "wiki/synthesis/business-knowledge-gaps.md"
                 ],
                 "missing",
             )
@@ -1112,6 +1283,8 @@ Call the service.
 title: Usage
 type: guide
 notebooklm_group: project-guides
+notebooklm_role: business
+notebooklm_terms: [usage]
 sources: []
 last_updated: 2026-08-20
 tags: [guide]
@@ -1123,19 +1296,24 @@ status: active
                 encoding="utf-8",
             )
             add_index_links(root, "usage")
-            (root / "notebooklm.toml").write_text("source_limit = 6\n", encoding="utf-8")
+            (root / "notebooklm.toml").write_text("source_limit = 5\n", encoding="utf-8")
             output = root / ".notebooklm"
 
             code, result = self.run_export(module, root, output)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["source_count"], 6)
+            self.assertEqual(result["source_count"], 5)
             self.assertEqual(result["manifest"]["omitted_evidence"], [
                 {"path": "src/service.py", "reason": "source_budget"}
             ])
-            self.assertTrue(all(item["kind"] != "evidence" for item in result["manifest"]["sources"]))
+            self.assertTrue(
+                all(
+                    item["kind"] != "technical_traceability"
+                    for item in result["manifest"]["sources"]
+                )
+            )
             self.assertIn(
-                "因額度未匯出的證據",
+                "因額度未匯出的技術追溯",
                 (output / "upload-plan.md").read_text(encoding="utf-8"),
             )
 
@@ -1156,7 +1334,7 @@ status: active
             self.assertIn("200000000", result["error"])
             self.assertFalse(output.exists())
 
-    def test_schema_v1_manifest_is_migrated_to_v3(self) -> None:
+    def test_schema_v1_manifest_is_migrated_to_v4(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1172,8 +1350,31 @@ status: active
             code, result = self.run_export(module, root, output)
 
             self.assertEqual(code, 0)
-            self.assertEqual(result["manifest"]["schema_version"], 3)
-            self.assertEqual(len(result["actions"]["unchanged"]), 6)
+            self.assertEqual(result["manifest"]["schema_version"], 4)
+            self.assertEqual(len(result["actions"]["unchanged"]), 5)
+
+    def test_legacy_retrieval_contract_requires_full_rebuild(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            output = root / ".notebooklm"
+            first_code, _ = self.run_export(module, root, output)
+            self.assertEqual(first_code, 0)
+            manifest_path = output / "manifest.json"
+            previous = json.loads(manifest_path.read_text(encoding="utf-8"))
+            previous["schema_version"] = 3
+            previous["retrieval"] = {"contract": "wiki-first-direct-lookup-v1"}
+            manifest_path.write_text(json.dumps(previous), encoding="utf-8")
+
+            code, result = self.run_export(module, root, output)
+
+            self.assertEqual(code, 0)
+            self.assertTrue(result["manifest"]["migration"]["requires_full_rebuild"])
+            self.assertIn(
+                "必須一次性完整重建",
+                (output / "upload-plan.md").read_text(encoding="utf-8"),
+            )
 
     def test_previous_manifest_path_traversal_is_rejected_without_deletion(self) -> None:
         module = load_exporter()
@@ -1433,71 +1634,89 @@ with module._OutputTransactionLock(Path({lock_path_literal})):
                 stage.rmdir()
                 backup.rmdir()
 
-    def test_functional_pages_share_stable_document_group(self) -> None:
+    def test_business_process_and_rule_share_stable_document_group(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_fixture(root)
-            modules = root / "wiki/modules"
-            entities = root / "wiki/entities"
-            modules.mkdir()
-            entities.mkdir()
-            module_page = modules / "orders.md"
-            module_page.write_text(
+            process_page = root / "wiki/processes/orders.md"
+            process_page.write_text(
                 """---
-title: Orders
-type: module
-notebooklm_group: function-orders
+title: Order Processing
+type: business-process
+summary: A customer submits an order for processing.
+process_id: bp-order-processing
+actors: [customer]
+coverage_status: covered
+notebooklm_group: business-orders
+notebooklm_role: business
+notebooklm_terms: [order, submit order]
 sources: []
 last_updated: 2026-08-20
-tags: [orders]
+tags: [business-process, orders]
 status: active
 ---
 
-# Orders
+# Order Processing
 """,
                 encoding="utf-8",
             )
-            (entities / "order-service.md").write_text(
+            rule_page = root / "wiki/rules/order-eligibility.md"
+            rule_page.write_text(
                 """---
-title: Order Service
-type: entity
-entity_type: service
-parent_module: orders
-notebooklm_group: function-orders
+title: Order Eligibility
+type: business-rule
+summary: Only an eligible request may create an order.
+rule_id: br-order-eligibility
+applies_to: ["[[orders]]"]
+evidence_state: implementation-observed
+notebooklm_group: business-orders
+notebooklm_role: business
+notebooklm_terms: [eligible order, order request]
 sources: []
 last_updated: 2026-08-20
-tags: [orders]
+tags: [business-rule, orders]
 status: active
 ---
 
-# Order Service
+# Order Eligibility
 """,
                 encoding="utf-8",
             )
-            add_index_links(root, "orders", "order-service")
+            process_catalog = root / "wiki/synthesis/business-process-catalog.md"
+            process_catalog.write_text(
+                process_catalog.read_text(encoding="utf-8") + "\n[[orders]]\n",
+                encoding="utf-8",
+            )
+            rule_catalog = root / "wiki/synthesis/business-rule-catalog.md"
+            rule_catalog.write_text(
+                rule_catalog.read_text(encoding="utf-8")
+                + "\n[[order-eligibility]] [[orders]]\n",
+                encoding="utf-8",
+            )
+            add_index_links(root, "orders", "order-eligibility")
             output = root / ".notebooklm"
             first_code, first = self.run_export(module, root, output)
             self.assertEqual(first_code, 0)
             ids = [item["logical_source_id"] for item in first["manifest"]["sources"]]
-            self.assertEqual(ids.count("docs:function-orders"), 1)
+            self.assertEqual(ids.count("docs:business-orders"), 1)
             grouped = next(
                 item for item in first["manifest"]["sources"]
-                if item["logical_source_id"] == "docs:function-orders"
+                if item["logical_source_id"] == "docs:business-orders"
             )
             self.assertEqual(
                 {item["path"] for item in grouped["inputs"]},
-                {"wiki/modules/orders.md", "wiki/entities/order-service.md"},
+                {"wiki/processes/orders.md", "wiki/rules/order-eligibility.md"},
             )
 
-            module_page.write_text(
-                module_page.read_text(encoding="utf-8") + "\nUpdated responsibility.\n",
+            process_page.write_text(
+                process_page.read_text(encoding="utf-8") + "\nUpdated outcome.\n",
                 encoding="utf-8",
             )
             changed_code, changed = self.run_export(module, root, output)
             self.assertEqual(changed_code, 0)
             self.assertIn(
-                "docs:function-orders",
+                "docs:business-orders",
                 {item["logical_source_id"] for item in changed["actions"]["changed"]},
             )
 
@@ -1530,11 +1749,11 @@ status: active
             self.assertEqual(preflight_code, 0)
             self.assertTrue(preflight["ready_to_export"])
             self.assertEqual(preflight["required_document_issues"], [])
-            self.assertEqual(preflight["wiki_pages"], 505)
+            self.assertEqual(preflight["wiki_pages"], 508)
 
             export_code, exported = self.run_export(module, root, output)
             self.assertEqual(export_code, 0)
-            self.assertEqual(exported["manifest"]["schema_version"], 3)
+            self.assertEqual(exported["manifest"]["schema_version"], 4)
             self.assertLessEqual(exported["manifest"]["source_count"], 300)
             self.assertTrue((output / "manifest.json").is_file())
 

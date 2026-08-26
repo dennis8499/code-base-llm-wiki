@@ -1,8 +1,9 @@
 ---
-title: NotebookLM 離線匯出器
+title: NotebookLM BA-first 離線匯出器
 type: module
-summary: 以 Wiki-first query-index、必要文件閘門、exclusion-aware fallback 與原子輸出建立可直接定位問題的 NotebookLM source pack
-notebooklm_group: function-notebooklm-export
+summary: 以 schema v4、BA 結構閘門、必要 business evidence 與獨立 traceability 建立可審查的 NotebookLM source pack
+notebooklm_group: business-notebooklm-export
+notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/check-stale.py
@@ -10,160 +11,109 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:9f718569b11bcbf1f1b3b844ea93299f8164927422a75581fac52831d24e4d36
-derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
+source_digest: sha256:f3be2f613acfdc3042bedc6821307e30fd4d36c43e2695b7f3609ca165d94ef0
+derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
 last_updated: 2026-08-26
-tags: [module, notebooklm, exporter, preflight]
+tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
 
-# NotebookLM 離線匯出器
+# NotebookLM BA-first 離線匯出器
 
 ## 職責
 
-- 以 `--root` 指定的檔案系統目錄為邊界，盤點其中安全的 UTF-8 專案證據；不要求
-  `.git` 或 clean working tree，也不因 nested repository 阻擋，nested `.git` metadata
-  仍按 generated state 排除。
-- 以 top-down exclusion-aware walker 保留 ignored、untracked 與 nested repository 的
-  runtime source，並在進入排除目錄前剪枝；排除目錄只產生 bounded metadata-only root
-  summary，不讀取或 hash 其中內容。
-- NotebookLM preflight 的 Wiki lint 保留結構與內容檢查，但停用 Git dirty-path、commit-date
-  與 log-baseline lookup；檔案內容 hash 與 preflight identity 仍維持 deterministic。
-- 在讀取任何 Wiki page 前先驗證 Wiki root 是 regular tree，拒絕 symlink/reparse point，
-  避免安全檢查前讀取外部內容。
-- CLI 也在 canonicalization 前拒絕 symlink/reparse root，避免 `--root` 入口繞過
-  exporter 的 repository boundary。
-- 直接 page collection API 同樣拒絕 symlink/reparse project root，不只依賴 CLI guard。
-- 非 UTF-8 config、previous manifest 或 transaction journal 會轉成受控 `ExportError`，
-  不讓 malformed state 穿透成 traceback。
-- 以 Wiki、inventory、設定與 deterministic findings 建立穩定 `preflight_id`。
-- 強制必要 overview、function catalog、architecture 與 SA 都為 active 且可匯出。
-- 先配置文件 source slots，再依證據優先序加入 raw evidence。
-- 產生 `query-index` direct-lookup router 與 `project-map` navigation source，將 Wiki-first
-  Query 的路由、最多五個主要來源群組、文件優先與 evidence 查核契約帶入 NotebookLM。
-- 以 `han_characters_plus_non_han_tokens` 加總模型估算 source words，避免混合繁中敘事與程式碼時低估容量。
-- 排除 `.mypy_cache/`、`.ruff_cache/`、平台 fallback hook audit logs 等 generated state，不把本機 audit output 當成 evidence；
-  sensitive filename/path components 也會被排除。
-- 產生 schema-v3 manifest、upload plan、query index、project map 與 stable logical source IDs；
-  manifest 暴露 `wiki-first-direct-lookup-v1` retrieval contract。
-- 以 `notebooklm-enterprise-basic` 在本機檢查 `CREDIT_CARD_NUMBER`、
-  `FINANCIAL_ACCOUNT_NUMBER`、`GCP_CREDENTIALS`、`GCP_API_KEY` 與 `PASSWORD`。
-- 未 allowlist 的 DLP finding 會讓 preflight 不 ready，阻擋 apply 並保留既有 pack；
-  報告只包含 path、line、rule、severity 與 fingerprint，不包含命中值。
-- 套用既有 pack 前驗證 manifest source file 必須是 output 內的安全相對路徑；
-  malformed 或 path-traversal manifest 會 fail closed 且保留既有 pack。
-- commit 前驗證新輸出 keys 與既有 output tree；path traversal、正規化碰撞或 symlink/
-  Windows reparse point
-  會 fail closed。
-- 明確指定的 `--config` 必須位於 Repo root 內、不是 symlink/reparse path，且存在並是
-  可解析的 TOML 一般檔案；缺檔不會靜默回退到預設設定。
-- `--output` 必須位於 repo root 之下，且 override 會納入 `preflight_id`；更換輸出目錄
-  會使舊 ID 失效。
-- output root 與其既有 parent components 不得透過 symlink 到達；檢查在 `resolve()` 前
-  執行，避免 symlink output 繞過 atomic pack boundary。
-- 敏感檔名／目錄判定使用 repo-relative path components，不會因 repository 的絕對父目錄
-  名稱包含 `secrets` 或 `credentials` 而誤排除整個專案。
-- Preflight 額外回報 `coverage.status`、未覆蓋路徑數量與明確 warning；`ready_to_export`
-  只代表必要文件與 deterministic gate 通過，不代表全專案已被 Wiki sources 覆蓋。
-- Inventory 同時區分 file-level `excluded` 與 directory-level `excluded_roots`；後者包含
-  `observed_entries`、`observed_files`、`observed_directories`、`observed_bytes`、
-  `entry_limit`、`truncated` 與 metadata `errors`，讓大型排除樹的範圍可稽核而不觸發
-  無界內容掃描。
-- 在輸出限制或寫入失敗時保留上一份有效 pack。
-- 以 sibling transaction lock 序列化同一 output 的 commit；並行 writer 會 fail closed，避免
-  互相覆蓋 recovery journal。
-- 若單一 UTF-8 字元或其他內容無法在 byte/word limits 內安全切分，會在 commit 前
-  fail closed，不產生超限 source。
+`notebooklm_exporter.py` 把已確認的 BA Wiki 與安全 repo text 編排成離線 source pack。
+固定 audience 是 `business-analyst`，knowledge contract 是 `business-knowledge-v1`，
+retrieval contract 是 `business-first-ba-v1`。它不呼叫 NotebookLM API、不修改 raw sources，
+也不把技術頁混入 BA 主文件。
 
-## 對外介面
+## 輸入分類
+
+| 類別 | 來源 | Pack 優先序 |
+| --- | --- | --- |
+| BA documents | `notebooklm_role: business` 的 overview、catalogs、glossary、gaps、process/rule pages | 必要 |
+| Business evidence | `business_source_paths` 指定且通過安全政策的 UTF-8 text | 必要 |
+| Technical traceability | `notebooklm_role: traceability` 的 Wiki 與其餘安全實作來源 | 可選、最後配置 |
+| Excluded | `notebooklm_role: exclude`、sensitive、binary/generated/dependency、CI/IaC、Wiki/output 等 | 不匯出 |
+
+`business_source_paths` 只可覆蓋 tests/dev-tooling 的 scope 分類，不能覆蓋 sensitive、
+generated/dependency、CI/IaC、configured exclusion、Wiki/output 或 symlink/reparse boundary。
+未指定角色的舊 Wiki 頁不會自動成為 BA source，preflight 會列出 warning。
+
+## BA 結構閘門
+
+Preflight 的 `business_coverage` 驗證：
+
+- overview、business process catalog、business rule catalog、glossary 與 gaps 都存在、active，
+  且是 `notebooklm_role: business`；
+- 至少一個 active `business-process`，每個 process/rule ID 唯一；
+- process 與 rule catalogs 實際連到對應頁；
+- 每條 rule 的 `applies_to` 指向存在的 process；
+- business page 有穩定 `notebooklm_group` 與非空 `notebooklm_terms`；
+- 規則證據狀態只使用 `business-confirmed`、`implementation-observed`、`inference` 或 `gap`。
+
+已登記 gap 可以存在；缺少結構、dangling knowledge 或 required-document stale 則
+`ready_to_export=false`。
+
+## Preflight identity 與兩次確認
+
+Discovery 與 readiness 使用同一個唯讀命令，但扮演不同業務階段。ID 綁定 Wiki、safe
+inventory、設定、DLP summary、source policy 與 retrieval contract。第一次文件更新後必然
+失效；第二次結果必須展示並取得確認，apply 又會完整重算，任何漂移都 fail closed。
 
 ```text
 export-notebooklm.py --root . --preflight --format json
 export-notebooklm.py --root . --apply --preflight-id sha256:... --output .notebooklm
 ```
 
-直接 export、遺漏 ID、ID 與目前 inventory/config/Wiki/retrieval contract 不符，或
-`ready_to_export=false` 時 apply 回傳 exit code 2 且不寫入。`scan_profile=target`
-排除已安裝 framework adapter；本 Repo 使用 `framework`，把 framework schema、
-雙平台 adapter 與 release tooling 視為產品證據。
+## 打包與路由
 
-設定可使用：
+固定 logical source IDs：
 
-```toml
-dlp_profile = "notebooklm-enterprise-basic"
-dlp_allowlist = [
-  { path = "docs/example.md", rule = "GCP_API_KEY", fingerprint = "sha256:<64 lowercase hex>" },
-]
-```
+- `query-index`：BA 問題類型與最多五個業務群組的 router；
+- `project-map`：流程、規則、coverage、source roles 與 gaps 導覽；
+- `docs:<group>`：完整 BA Wiki 文件；
+- `business-evidence:<group>`：指定業務文字證據；
+- `trace:<group>`：技術追溯；
+- slot 壓力下才使用 `*:combined`，安全分割時加 `#part-###`。
 
-## Evidence
+選源順序永遠是 query/map → BA documents → business evidence → traceability。
+`include_traceability=false` 可完全停用技術附錄；deprecated `include_evidence` 只作 alias，
+若兩個 key 衝突就拒絕設定。必要 BA 內容不能因 `source_budget` 靜默消失。
 
-- `build_preflight()` 結合 lint、required-document status、inventory hashes 與 coverage summary。
-- `build_preflight()` 與 `_preflight_identity()` 同時暴露並綁定
-  `wiki-first-direct-lookup-v1` retrieval contract；preflight schema version 為 3。
-- `collect_wiki_pages()` 在 page read 前驗證 Wiki regular tree；
-  `tests/test_export_notebooklm.py::test_preflight_rejects_unsafe_wiki_tree_before_reading`
-  以 invalid external junction 固定 fail-closed 邊界。
-- `test_preflight_rejects_reparse_root_before_resolving` 固定 `--root` 的 CLI lexical
-  boundary 不會被 `resolve()` 繞過。
-- `test_invalid_utf8_config_is_rejected_without_traceback`、
-  `test_invalid_utf8_previous_manifest_is_rejected_without_traceback` 與
-  `test_invalid_utf8_transaction_journal_is_rejected_without_traceback` 固定 malformed
-  state 的 structured failure。
-- `main()` 在 apply 前重建 preflight 並比較 ID。
-- `estimate_words()` 將 Han/CJK 字元與非 Han、非空白 token runs 分開加總；`limits.word_count_model` 將模型寫入 preflight 與 manifest。
-- `scan_dlp_inputs()` 只掃描 export candidates 與 Wiki pages；`DlpFinding` 不保存敏感原文，
-  `DLP_PROFILE` 與 allowlist 會納入 preflight identity。
-- `test_dlp_basic_profile_reports_safe_findings_without_secret_values`、
-  `test_dlp_block_preserves_previous_pack` 與
-  `test_dlp_allowlist_requires_exact_fingerprint` 固定 DLP gate、safe report 與 pack rollback。
-- `commit_output()` 使用 staging/backup 與 `os.replace()`；若 replacement 失敗，會回復既有 pack。
-- `commit_output()` 寫入 active/committed transaction journal；下一次 apply 可在程序終止
-  後復原舊 pack，再清理 stage/backup。
-- 相容入口 `export-notebooklm.py` 只轉呼叫 canonical module，沒有第二套實作。
-- `tests/test_export_notebooklm.py::test_preflight_and_apply_handle_500_wiki_pages` 以
-  500 個 synthetic module 驗證大規模 Wiki 的 full preflight/apply 與 source-limit compaction。
-- `test_preflight_prunes_large_excluded_tree_with_bounded_summary` 驗證 fallback 全量掃描
-  在大型 `node_modules` 下只保留 root summary、仍納入 runtime source，並回報 truncation
-  warning；`test_directory_evidence_uses_same_exclusion_aware_walker` 驗證 directory
-  evidence 不會重新遞迴讀取已排除的 nested dependency tree。
-- `tests/test_stale.py::test_filesystem_fallback_prunes_digest_excluded_directories` 驗證
-  exporter preflight 使用的 no-Git Wiki digest fallback 同樣在 `node_modules`、`build`
-  等目錄邊界剪枝。
-- `query-index.md` 以 Wiki page metadata、headings、`frontmatter.sources` 與實際 evidence
-  input 建立可追溯路由；README 提供 Custom instructions 與同一本 Notebook 的一次性清空重傳步驟。
-- `tests/test_export_notebooklm.py::test_commit_output_restores_previous_pack_after_replacement_failure`
-  以 replacement fault injection 驗證失敗時舊 manifest/source 保留且 staging/backup 清理。
-- `tests/test_export_notebooklm.py::test_commit_output_recovers_after_process_kill` 以
-  子程序在新 pack 可見後終止，驗證 journal recovery 恢復既有 manifest/source。
-- `test_explicit_config_outside_repository_is_rejected_before_reading` 固定明確設定檔不會
-  越過 Repo root 讀取。
-- `test_commit_output_rejects_concurrent_writer` 驗證另一個程序持鎖時 commit 會 fail closed。
-- transaction journal 與 lock filename 會被 inventory 分類為 generated；
-  `test_output_transaction_journal_is_excluded_from_inventory` 防止 transaction state 變成 evidence；
-  stage/backup/journal temporary artifact 也會被分類為 generated；root `.gitignore` 與
-  release builder 同步排除整組 sibling recovery artifact。
+## Schema v4 與 migration
 
-## Contradictions
+Manifest 記錄 audience、knowledge/retrieval contract、business coverage、source policy、
+roles、inventory、input/output hashes、limits、DLP、omissions 與 upload diff。Exporter 可讀
+schema v1–v3 previous manifest，但非 `business-first-ba-v1` contract 一律設定
+`migration.requires_full_rebuild=true`，要求先移除舊 static sources，避免技術優先與 BA
+優先內容共存。
 
-- v0.1 的 `--preflight` 是選填且必要文件只產生 warning；v0.2 改為不可繞過的寫入契約。
+## 安全、容量與原子性
 
-## Inferences
+- Top-down walker 在進入排除樹前剪枝，只回報 bounded metadata summary，不讀取其內容。
+- 只解析 UTF-8 text；非 UTF-8 或 malformed config/manifest/journal 回傳受控錯誤。
+- 本機 `notebooklm-enterprise-basic` DLP 檢查高信心金融、GCP credential/API key 與明文
+  password patterns；finding report 不保存命中值。
+- 預設 Enterprise hard limits 為 300 sources、200 MB、500,000 words；safety limits 為
+  180 MB、450,000 words，字數採 `han_characters_plus_non_han_tokens`。
+- Output 使用 containment checks、transaction lock、journal、stage/backup 與 `os.replace()`；
+  失敗或程序中止時保留／恢復上一份有效 pack。
 
-- Preflight ID 證明本機輸入集合未變，並不代表 NotebookLM 租戶政策或人工機密審查
-  已完成。
-- Query index 與 Custom instructions 只能約束來源選擇與回答格式，不能取代 NotebookLM
-  私有的生成式 retrieval；若需要 deterministic 結果，仍應以本地 Wiki Query 為權威入口。
+## 驗證證據
 
-## Gaps
-
-- 不呼叫 NotebookLM API，也不自動上傳、刪除或同步雲端 source。
-- 本機 Basic profile 是 export-side approximation；租戶自訂 Advanced DLP／Model Armor
-  template 仍可能在雲端額外檢核或阻擋。
-- 租戶實際來源額度仍需由管理員確認。
+- `tests/test_export_notebooklm.py` 覆蓋 schema v4、BA 必備文件、business source override、
+  dangling `applies_to`、legacy alias conflict、full-rebuild migration、DLP、容量、path safety、
+  process-kill recovery、並行 writer 與 500-page compaction。
+- `tests/test_contracts.py::test_framework_notebooklm_preflight_is_ready` 固定本框架 Wiki 本身
+  必須通過 BA readiness gate。
+- 固定答案品質驗收見 `docs/validation/notebooklm-ba-uat.md`；這是手動 tenant UAT，不由
+  exporter 假裝驗證生成式回答。
 
 ## 相關頁面
 
+- [[notebooklm-ba-knowledge-export]]
+- [[ba-knowledge-precedes-traceability]]
+- [[readiness-preflight-required]]
 - [[notebooklm-export]]
-- [[project-function-catalog]]
-- [[system-analysis]]
+- [[business-knowledge-gaps]]

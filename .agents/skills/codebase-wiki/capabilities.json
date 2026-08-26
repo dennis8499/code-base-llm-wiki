@@ -56,7 +56,10 @@
     "notebooklm_export": {
       "writes_by_default": false,
       "requires_confirmation": true,
-      "authorization_policy": "preview_then_confirm"
+      "authorization_policy": "preview_then_confirm",
+      "confirmation_stages": ["discovery_plan", "readiness_apply"],
+      "audience": "business-analyst",
+      "knowledge_contract": "business-knowledge-v1"
     },
     "delegation": {
       "writes_by_default": false,

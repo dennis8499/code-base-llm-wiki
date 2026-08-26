@@ -44,6 +44,8 @@ def extract_first_sentence(filepath: pathlib.Path) -> str:
 # 頁面類型對應的 index 分類
 TYPE_SECTIONS = {
     "overview": "Overview",
+    "business-process": "Business Processes",
+    "business-rule": "Business Rules",
     "architecture": "Architecture",
     "module": "Modules",
     "entity": "Entities",

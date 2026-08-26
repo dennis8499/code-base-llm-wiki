@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **NotebookLM Exporter 改為 BA-first knowledge contract**：manifest 升級至 schema v4 與
+  `business-first-ba-v1`，以 business process、business rule、glossary、knowledge gaps 和
+  明確 evidence state 作為必備來源；business evidence 必須保留，technical traceability
+  改為獨立可選附錄。新增 `business_source_paths`、`include_traceability`、兩次 preflight
+  workflow、舊 retrieval contract full-rebuild migration，以及固定 BA 驗收題組。
+
 ### Fixed
 
 - **NotebookLM exclusion-aware fallback traversal**：exporter 與 Wiki stale digest fallback

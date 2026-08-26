@@ -21,6 +21,16 @@ status: active
 | ------------ | ----------------- |
 | [[overview]] | Codebase 高階總覽 |
 
+## Business Processes
+
+| 頁面 | 摘要 |
+| ---- | ---- |
+
+## Business Rules
+
+| 頁面 | 摘要 |
+| ---- | ---- |
+
 ## Architecture
 
 | 頁面 | 摘要 |

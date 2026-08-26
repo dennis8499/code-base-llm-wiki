@@ -107,31 +107,31 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 
 ## NotebookLM Enterprise source pack
 
-NotebookLM export 是獨立的離線產出流程，不需要 API credentials，也不會由
-installer 自動啟用或上傳檔案。從 Repo root 先執行唯讀全專案 preflight：
+NotebookLM export 是固定服務 BA 的離線產出流程，不需要 API credentials，也不會由
+installer 自動啟用或上傳檔案。從 Repo root 先執行唯讀 discovery preflight：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --preflight --format json
 ```
 
-Agent 會掃描可分享的 runtime source、必要設定與 manifests、schema/migrations、
-既有文件，並排除 tests、CI/CD、IaC、build/dev tooling、dependencies、generated、
-binary、secrets 與 framework adapters。預覽必須列出納入/排除 inventory、Wiki
-coverage、預計建立或更新的功能文件、容量預估與未驗證項目；即使沒有警告也要等待
-確認。確認後，Agent 以繁體中文依功能補齊 Wiki，再執行：
+Agent 只掃描安全 UTF-8 repo text，盤點 actor、流程、規則、詞彙、證據狀態與 gaps；
+PDF/Office/圖片等非文字證據只登記缺口。預覽必須列出 inventory、BA coverage、準備建立
+或更新的 BA 文件、容量與未驗證事項；即使沒有警告也要等待第一次確認。確認後補齊
+`business-process`、`business-rule`、catalog、glossary 與 gaps，再重新執行上面的
+`--preflight`。展示 readiness 結果並取得第二次確認後，才執行：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --apply --preflight-id <id> --output .notebooklm --format json
+  --root . --apply --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-Exporter 將功能導向 Wiki 文件與精選原始 evidence 打包成穩定命名的
-`sources/*.md`、`manifest.json`、`upload-plan.md` 與 README。文件優先於原始
-evidence；容量不足時會保留完整文件並在 manifest 記錄被省略的低優先 evidence。
+Exporter 將 BA 文件、必要 business evidence 與可選 technical traceability 打包成
+`sources/*.md`、schema v4 `manifest.json`、`upload-plan.md` 與 README。BA 文件與 business
+evidence 優先；容量不足只能省略低優先 traceability，並在 manifest 明列。
 只把 `sources/*.md` 手動加入企業版 Notebook；再次執行時仍會全量重掃專案與增量
 更新 Wiki，再依 upload plan 處理新增、變更與刪除，`unchanged` 不需重新上傳。
-`.notebooklm/` 預設被 Git 忽略；若需調整 Workspace tier、保留 source slots 或 evidence scope，可將
+`.notebooklm/` 預設被 Git 忽略；若需調整 Workspace tier、business sources 或 traceability scope，可將
 `.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製為 Repo root 的
 `notebooklm.toml` 後修改。
 

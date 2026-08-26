@@ -1,8 +1,8 @@
 ---
 name: export-notebooklm
 description: >
-  全量掃描安全的專案程式、設定、資料結構與既有文件，先預覽功能導向
-  Ingest，再產生符合 NotebookLM Enterprise 限制的繁中 source pack。
+  全量掃描安全的業務文件與專案實作，先預覽 BA 流程／規則導向
+  Ingest，再產生符合 NotebookLM Enterprise 限制的繁中業務知識 source pack。
 agent: "wiki-keeper"
 argument-hint: "可選：匯出範圍；預設為整個目前專案"
 ---
@@ -33,19 +33,25 @@ repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-
      --root . --preflight --format json
    ```
 
-3. 讀取 preflight 納入的每個 UTF-8 檔案：runtime code、必要設定/manifests、
-   schema/migrations 與既有文件。排除 tests、CI/CD、IaC、build/dev tooling、
+3. 先讀 `business_source_paths` 指定的需求、流程、決策表或 acceptance spec，再讀
+   preflight 納入的其他 UTF-8 runtime code、必要設定/manifests、schema/migrations
+   與既有文件。未明確指定者仍排除 tests、CI/CD、IaC、build/dev tooling、
    dependencies/generated、binary、credentials、framework adapters、Wiki 與 output。
-4. 從 entrypoints、use cases、資料邊界、public interfaces 與 integrations 建立
-   功能域，不要只照目錄切頁。回報 included file counts、file-level exclusion reasons、
-   pruned excluded-root counts/summaries、功能 coverage、預計新增/更新/不變的 Wiki
+4. 依角色、觸發、前置條件、主／例外流程、業務結果、規則與狀態轉換建立業務能力，
+   不要只照目錄切頁，也不要把實作行為當成正式政策。回報 included file counts、
+   file-level exclusion reasons、pruned excluded-root counts/summaries、業務流程／規則／詞彙
+   coverage、預計新增/更新/不變的 Wiki
    pages、evidence、容量估計、DLP status 與 gaps，然後等待使用者確認。
    即使 Wiki clean 也必須預覽並確認；確認前不修改 Wiki 或產生 pack。
-5. 確認後保留人工內容並增量建立：overview、project function catalog、system
-   architecture、每個功能域的 module/entity pages、system analysis。敘述固定繁體
-   中文，code identifiers 不翻譯；頁面使用穩定 kebab-case `notebooklm_group`，
-   coverage 標成 covered/partial/gap。同步 index 並只追加一筆 `ingest` log。
-6. 驗證 Wiki 後執行：
+5. 確認後保留人工內容並增量建立：BA overview、business process/rule catalogs、
+   glossary、knowledge gaps，以及每個 process/rule page。BA pages 的
+   `notebooklm_group` 使用穩定 `business-{capability}` 值，並設為
+   `notebooklm_role: business`；選定工程頁只標成
+   `traceability`。每項知識標示 business-confirmed、implementation-observed、
+   inference 或 gap。同步 index 並只追加一筆 `ingest` log。
+6. 驗證 Wiki 後重新執行 `--preflight`，取得文件更新後的 readiness ID；不得沿用
+   discovery preflight ID。展示 readiness gates、容量、DLP、migration 與 gaps，等待
+   第二次確認後再執行：
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
@@ -53,10 +59,11 @@ repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-
    ```
 
 7. 確認 exporter 產生 `sources/query-index.md` 與 `sources/project-map.md`；
-   `query-index.md` 必須把 Wiki-first 的直接回答契約、問題類型、功能群組、
-   Wiki pages、docs/evidence source IDs 與 source paths 對應起來。
+   `query-index.md` 必須把 BA 問題類型、業務能力群組、process/rule/glossary pages、
+   business evidence 與 technical traceability source IDs 對應起來。
 8. 報告 `.notebooklm/upload-plan.md` 的 `added`、`changed`、`deleted`、
-   `unchanged`、skipped、`source_budget` omissions、DLP status、warnings 與剩餘 slots，
+   `unchanged`、skipped、traceability `source_budget` omissions、DLP status、
+   migration/full-rebuild status、warnings 與剩餘 slots，
    並說明 README 中的 Custom instructions 與同一本 Notebook 清空重傳步驟。
 
 ## 限制與安全
@@ -65,9 +72,11 @@ repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-
 - Exporter 會在本機執行 `notebooklm-enterprise-basic` DLP 檢核；未 allowlist 的
   finding 會阻擋 apply，報告不包含命中值。
 - 只上傳 `.notebooklm/sources/*.md`；不要上傳 manifest、upload plan 或 README。
-- NotebookLM 問答以 `query-index.md` 路由到最多五個相關來源群組；先直接回答，
-  文件不足、過時或矛盾時才查 evidence，不要把搜尋過程寫成研究報告。
+- NotebookLM 問答以 `query-index.md` 路由到最多五個業務能力群組；先以業務語言回答，
+  正式政策查 business evidence，目前實作才查 traceability。未要求時不要以 path/API
+  主導答案，也不得把 implementation-observed 說成核准政策。
 - changed 的本地 static source 必須在 NotebookLM 移除舊檔後重新上傳；unchanged 不需重傳。
-- 文件永遠優先於 evidence；低優先 evidence 若無法容納，必須以 `source_budget`
-  明列。必要文件或單檔無法符合 300 sources、200 MB / 500,000 words hard limits
+- BA 文件與指定 business evidence 永遠優先；低優先 technical traceability 若無法容納，
+  必須以 `source_budget` 明列。必要 BA 內容或單檔無法符合 300 sources、200 MB /
+  500,000 words hard limits
   時保留舊 pack 並失敗，不得靜默截斷。

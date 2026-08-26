@@ -3,9 +3,10 @@ title: Codebase LLM Wiki 專案功能目錄
 type: synthesis
 summary: 將安裝、Wiki 品質、Hooks、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋
 notebooklm_group: project
+notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-08-21
+last_updated: 2026-08-26
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -26,7 +27,7 @@ Wiki 與 export output 仍依安全 inventory 分類；測試與 CI 的行為由
 | 安裝與升級 | 安裝 Codex/Copilot surface、安全升級 | `install-framework.py` | install state、file fingerprints | [[installer-and-upgrade]] | covered |
 | Wiki 攝取與品質 | 建立可追溯頁面、偵測 stale/link/index/log 問題 | `$codebase-wiki`、quality CLIs | frontmatter、digest、wikilinks、log entries | [[wiki-quality-and-provenance]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
-| NotebookLM 準備 | 掃描功能、本機 DLP、確認後產生 query-index、project-map 與離線 pack | `export-notebooklm.py` | inventory、preflight ID、Wiki-first retrieval contract、DLP、manifest v3 | [[notebooklm-exporter]] | covered |
+| NotebookLM 準備 | 建立 BA 流程、規則、詞彙與 gaps，經兩次確認後產生離線 pack | `export-notebooklm.py` | BA coverage、兩階段 preflight ID、business-first retrieval contract、DLP、manifest v4 | [[notebooklm-exporter]] | covered |
 | 平台與發布 | 驗證 parity/CI、建立版本資產 | parity、CI、`release.py` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
 發布功能標為 partial，原因是程式與 CI 已具備，但專案擁有者尚未選擇 LICENSE，公開
@@ -49,13 +50,13 @@ release gate 會刻意拒絕建立資產。
 
 ## Contradictions
 
-- 舊 Wiki 沒有 architecture/module/synthesis 頁，無法滿足 exporter 所宣告的必要文件；
-  本次自我攝取已補齊。
+- 舊 exporter 以 architecture/module/function catalog 作為主要 NotebookLM 文件；schema v4
+  改以 BA overview、process/rule catalogs、glossary、gaps 與 process/rule pages 為必要集合。
 
 ## Inferences
 
-- 現有五個功能域是產品能力邊界，而不是單純依目錄切分，因此可用於 NotebookLM
-  source grouping 與後續 Wiki owner 分工。
+- 現有五個功能域是工程產品能力邊界，可用於 technical traceability 與 Wiki owner 分工；
+  NotebookLM BA 主路由改由 [[business-process-catalog]] 與 [[business-rule-catalog]] 定義。
 
 ## 未覆蓋與明確排除
 

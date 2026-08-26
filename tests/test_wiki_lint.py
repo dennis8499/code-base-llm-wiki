@@ -68,6 +68,80 @@ def create_directory_reparse_point(link: Path, target: Path) -> None:
 
 
 class WikiLintTests(unittest.TestCase):
+    def test_business_process_and_rule_frontmatter_and_index_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            processes = wiki / "processes"
+            rules = wiki / "rules"
+            processes.mkdir(parents=True)
+            rules.mkdir()
+            process = processes / "order-cancellation.md"
+            process.write_text(
+                """---
+title: Order Cancellation
+type: business-process
+sources: []
+last_updated: 2026-08-26
+tags: [business-process]
+status: active
+process_id: bp-order-cancellation
+actors: [customer]
+coverage_status: partial
+notebooklm_group: business-orders
+notebooklm_role: business
+notebooklm_terms: [order cancellation, customer]
+---
+
+# Order Cancellation
+""",
+                encoding="utf-8",
+            )
+            rule = rules / "cancellation-window.md"
+            rule.write_text(
+                """---
+title: Cancellation Window
+type: business-rule
+sources: []
+last_updated: 2026-08-26
+tags: [business-rule]
+status: active
+rule_id: br-order-cancellation-window
+applies_to: ["[[order-cancellation]]"]
+evidence_state: business-confirmed
+notebooklm_group: business-orders
+notebooklm_role: business
+notebooklm_terms: [cancellation window]
+---
+
+# Cancellation Window
+""",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(VALIDATE.validate_page(process, wiki), [])
+            self.assertEqual(VALIDATE.validate_page(rule, wiki), [])
+            self.assertEqual(
+                REBUILD.expected_index_entries(wiki),
+                {
+                    "order-cancellation": "Business Processes",
+                    "cancellation-window": "Business Rules",
+                },
+            )
+
+            rule.write_text(
+                rule.read_text(encoding="utf-8").replace(
+                    "evidence_state: business-confirmed",
+                    "evidence_state: assumed",
+                ),
+                encoding="utf-8",
+            )
+            self.assertTrue(
+                any(
+                    "evidence_state must be one of" in error
+                    for error in VALIDATE.validate_page(rule, wiki)
+                )
+            )
+
     def test_validate_frontmatter_cli_reports_success_failures_and_tree_errors(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

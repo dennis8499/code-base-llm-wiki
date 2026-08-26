@@ -3,6 +3,7 @@ title: 平台 Adapter、CI 與 Release
 type: module
 summary: 以 capability parity、跨平台 CI、單一版本來源與授權前置閘門維持可發布的雙平台框架
 notebooklm_group: function-platform-release
+notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/parity-check.py
@@ -10,7 +11,7 @@ sources:
   - tools/release.py
   - tests/test_release.py
   - tests/test_contracts.py
-source_digest: sha256:85c35f81eef45eb666cebc511b561b44fc5ba0ab16f9f11360ac9e50d159fc9e
+source_digest: sha256:5a3bd49c5601c5d5ecdfd5f78e8e8f513d7ebdeca3d386fe267812c681444a38
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-08-24
 tags: [module, adapters, ci, release, parity]

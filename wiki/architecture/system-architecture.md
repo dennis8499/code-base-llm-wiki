@@ -3,13 +3,14 @@ title: Codebase LLM Wiki 系統架構
 type: architecture
 summary: 以共享 Skill 為規格核心，透過雙平台 adapter、離線工具與持久 Markdown Wiki 形成可驗證的知識維護系統
 notebooklm_group: architecture
+notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:d9407c01c70f88d6dc4d90452c2ff2171973d0edb50965de3ddd13f9eda47d5a
+source_digest: sha256:8764b9b1fb437c4a9b1709074940637f001994e9942cc477b110f6e41dc1dcc2
 derived_from: ["[[overview]]"]
 last_updated: 2026-08-26
 tags: [architecture, framework, data-flow, safety]
@@ -34,7 +35,7 @@ operations 與 authorization policy 由
 | Installer v3 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
-| NotebookLM exporter | 全安全範圍盤點、本機 DLP、preflight identity、Wiki-first query-index、文件優先 source pack | [[notebooklm-exporter]] |
+| NotebookLM exporter | BA 結構閘門、本機 DLP、兩階段 preflight、business-first query-index 與獨立 traceability | [[notebooklm-exporter]] |
 | Release surface | parity、CI、版本、資產與公開發布前置條件 | [[platform-adapters-and-release]] |
 
 ## Data Flow
@@ -45,16 +46,17 @@ User intent
   -> Wiki-first evidence read
   -> authorized Wiki/framework write
   -> frontmatter + digest + index + append-only log checks
-  -> optional NotebookLM preflight
-  -> local DLP gate
-  -> confirmed apply with matching preflight_id
-  -> query-index / project-map / documents / evidence source pack
+  -> discovery preflight + first confirmation
+  -> BA process/rule/term/gap update
+  -> readiness preflight + local DLP + second confirmation
+  -> apply with the readiness preflight_id
+  -> query-index / project-map / BA docs / business evidence / optional trace pack
 ```
 
 Installer 的資料流是 source framework → dry-run classification → staged writes →
-transaction-journaled atomic replacement；遇到兩側同時變更時不寫入。NotebookLM 的資料流是先驗證
-Wiki regular tree，再以明確 `--root` 讀取檔案系統安全 raw inventory → deterministic identity → apply 時重新掃描 → 檢查 output path 的
-symlink/reparse containment → 原子替換本機 pack。
+transaction-journaled atomic replacement；遇到兩側同時變更時不寫入。NotebookLM 先驗證
+Wiki regular tree，以明確 `--root` 讀取安全 inventory；discovery ID 在文件更新後失效，
+readiness 重新建立 identity，apply 再次掃描並檢查 output containment，最後原子替換本機 pack。
 
 ## Deployment
 
@@ -78,7 +80,7 @@ provenance 使用，NotebookLM export inventory 與 preflight 不要求 Git。�
 ## Inferences
 
 - 無常駐搜尋服務使安裝與稽核面積較小；NotebookLM export 以 Markdown
-  `query-index` 對齊 Wiki-first 路由，但超大型 Wiki 的雲端 retrieval 仍是生成式行為，
+  `query-index` 對齊 BA-first 路由，但超大型 Wiki 的雲端 retrieval 仍是生成式行為，
   不能視為 deterministic local search。
 
 ## Gaps

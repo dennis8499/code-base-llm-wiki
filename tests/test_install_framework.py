@@ -101,16 +101,24 @@ class FrameworkInstallerTests(unittest.TestCase):
                     / "notebooklm_exporter.py"
                 ).exists()
             )
-            self.assertTrue(
-                (
-                    target
-                    / ".agents"
-                    / "skills"
-                    / "codebase-wiki"
-                    / "assets"
-                    / "project-function-catalog-template.md"
-                ).exists()
-            )
+            for template in (
+                "business-process-template.md",
+                "business-rule-template.md",
+                "business-process-catalog-template.md",
+                "business-rule-catalog-template.md",
+                "business-glossary-template.md",
+                "business-knowledge-gaps-template.md",
+            ):
+                self.assertTrue(
+                    (
+                        target
+                        / ".agents"
+                        / "skills"
+                        / "codebase-wiki"
+                        / "assets"
+                        / template
+                    ).exists()
+                )
             self.assertTrue(
                 (
                     target
@@ -132,6 +140,8 @@ class FrameworkInstallerTests(unittest.TestCase):
                 (target / ".agents/skills/codebase-wiki/install-state.json").exists()
             )
             self.assertTrue((target / "wiki" / "index.md").exists())
+            self.assertTrue((target / "wiki" / "processes").is_dir())
+            self.assertTrue((target / "wiki" / "rules").is_dir())
             self.assertFalse((target / ".github").exists())
             self.assertFalse((target / ".codebase-wiki").exists())
             self.assertIn(

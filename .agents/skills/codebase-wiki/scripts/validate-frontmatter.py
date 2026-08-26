@@ -22,6 +22,8 @@ from frontmatter import configure_utf8_stdio, parse_frontmatter_text, validate_r
 
 REQUIRED_FIELDS = {"title", "type", "sources", "last_updated", "tags", "status"}
 ALLOWED_TYPES = {
+    "business-process",
+    "business-rule",
     "module",
     "entity",
     "pattern",
@@ -36,11 +38,21 @@ ALLOWED_TYPES = {
 }
 ALLOWED_STATUS = {"active", "stale", "placeholder"}
 ALLOWED_DECISION_STATUS = {"proposed", "accepted", "deprecated", "superseded"}
+ALLOWED_NOTEBOOKLM_ROLES = {"business", "traceability", "exclude"}
+ALLOWED_COVERAGE_STATUS = {"covered", "partial", "gap"}
+ALLOWED_EVIDENCE_STATES = {
+    "business-confirmed",
+    "implementation-observed",
+    "inference",
+    "gap",
+}
 NOTEBOOKLM_GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SOURCE_DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 DERIVED_FROM_PATTERN = re.compile(r"^\[\[[^\[\]]+\]\]$")
 
 TYPE_PATHS = {
+    "business-process": pathlib.PurePosixPath("processes"),
+    "business-rule": pathlib.PurePosixPath("rules"),
     "module": pathlib.PurePosixPath("modules"),
     "entity": pathlib.PurePosixPath("entities"),
     "pattern": pathlib.PurePosixPath("patterns"),
@@ -68,6 +80,14 @@ def is_valid_date(value: Any) -> bool:
 
 def is_list(value: Any) -> bool:
     return isinstance(value, list)
+
+
+def is_non_empty_string_list(value: Any, *, allow_empty: bool = False) -> bool:
+    return (
+        isinstance(value, list)
+        and (allow_empty or bool(value))
+        and all(is_non_empty_string(item) for item in value)
+    )
 
 
 def relative_posix(path: pathlib.Path, root: pathlib.Path) -> pathlib.PurePosixPath:
@@ -135,6 +155,21 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
     ):
         errors.append(f"{rel}: notebooklm_group must be a non-empty kebab-case string")
 
+    notebooklm_role = fm.get("notebooklm_role")
+    if notebooklm_role is not None and notebooklm_role not in ALLOWED_NOTEBOOKLM_ROLES:
+        errors.append(
+            f"{rel}: notebooklm_role must be one of "
+            f"{', '.join(sorted(ALLOWED_NOTEBOOKLM_ROLES))}; got {notebooklm_role!r}"
+        )
+    if notebooklm_role is not None and notebooklm_group is None:
+        errors.append(f"{rel}: notebooklm_role requires notebooklm_group")
+
+    notebooklm_terms = fm.get("notebooklm_terms")
+    if notebooklm_terms is not None and not is_non_empty_string_list(notebooklm_terms):
+        errors.append(f"{rel}: notebooklm_terms must be a non-empty array of strings")
+    if notebooklm_role == "business" and notebooklm_terms is None:
+        errors.append(f"{rel}: business NotebookLM pages require notebooklm_terms")
+
     summary = fm.get("summary")
     if summary is not None and not is_non_empty_string(summary):
         errors.append(f"{rel}: summary must be a non-empty string when present")
@@ -172,6 +207,50 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
             errors.append(f"{rel}: dependency pages require non-empty package_name")
         if not is_non_empty_string(fm.get("version")):
             errors.append(f"{rel}: dependency pages require non-empty version")
+
+    if page_type == "business-process":
+        process_id = fm.get("process_id")
+        if not isinstance(process_id, str) or not NOTEBOOKLM_GROUP_PATTERN.fullmatch(
+            process_id
+        ):
+            errors.append(f"{rel}: business-process pages require kebab-case process_id")
+        if notebooklm_role != "business":
+            errors.append(f"{rel}: business-process pages require notebooklm_role: business")
+        if notebooklm_group is None:
+            errors.append(f"{rel}: business-process pages require notebooklm_group")
+        actors = fm.get("actors")
+        if not is_non_empty_string_list(actors, allow_empty=True):
+            errors.append(f"{rel}: business-process pages require an actors array")
+        coverage_status = fm.get("coverage_status")
+        if coverage_status not in ALLOWED_COVERAGE_STATUS:
+            errors.append(
+                f"{rel}: coverage_status must be one of "
+                f"{', '.join(sorted(ALLOWED_COVERAGE_STATUS))}; got {coverage_status!r}"
+            )
+
+    if page_type == "business-rule":
+        rule_id = fm.get("rule_id")
+        if not isinstance(rule_id, str) or not NOTEBOOKLM_GROUP_PATTERN.fullmatch(rule_id):
+            errors.append(f"{rel}: business-rule pages require kebab-case rule_id")
+        if notebooklm_role != "business":
+            errors.append(f"{rel}: business-rule pages require notebooklm_role: business")
+        if notebooklm_group is None:
+            errors.append(f"{rel}: business-rule pages require notebooklm_group")
+        applies_to = fm.get("applies_to")
+        if not isinstance(applies_to, list) or not applies_to:
+            errors.append(f"{rel}: business-rule pages require a non-empty applies_to array")
+        else:
+            for value in applies_to:
+                if not isinstance(value, str) or not DERIVED_FROM_PATTERN.fullmatch(value):
+                    errors.append(
+                        f"{rel}: every applies_to entry must be a [[business-process]] wikilink"
+                    )
+        evidence_state = fm.get("evidence_state")
+        if evidence_state not in ALLOWED_EVIDENCE_STATES:
+            errors.append(
+                f"{rel}: evidence_state must be one of "
+                f"{', '.join(sorted(ALLOWED_EVIDENCE_STATES))}; got {evidence_state!r}"
+            )
 
     expected_dir = TYPE_PATHS.get(str(page_type))
     if expected_dir and rel.parent != expected_dir:

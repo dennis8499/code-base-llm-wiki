@@ -42,9 +42,9 @@ except ModuleNotFoundError:  # pragma: no cover - useful when loaded by a caller
     )
 
 
-EXPORT_SCHEMA_VERSION = 3
-SUPPORTED_MANIFEST_SCHEMAS = {1, 2, EXPORT_SCHEMA_VERSION}
-PREFLIGHT_SCHEMA_VERSION = 3
+EXPORT_SCHEMA_VERSION = 4
+SUPPORTED_MANIFEST_SCHEMAS = {1, 2, 3, EXPORT_SCHEMA_VERSION}
+PREFLIGHT_SCHEMA_VERSION = 4
 OUTPUT_TRANSACTION_VERSION = 1
 OUTPUT_TRANSACTION_SUFFIX = ".notebooklm-transaction.json"
 OUTPUT_TRANSACTION_LOCK_SUFFIX = ".notebooklm-transaction.lock"
@@ -60,9 +60,10 @@ EXCLUDED_SUMMARY_ENTRY_LIMIT = 4_096
 WIKI_LOG_PATH = "wiki/log.md"
 REQUIRED_WIKI_DOCUMENTS = (
     "wiki/overview.md",
-    "wiki/synthesis/project-function-catalog.md",
-    "wiki/architecture/system-architecture.md",
-    "wiki/synthesis/system-analysis.md",
+    "wiki/synthesis/business-process-catalog.md",
+    "wiki/synthesis/business-rule-catalog.md",
+    "wiki/synthesis/business-glossary.md",
+    "wiki/synthesis/business-knowledge-gaps.md",
 )
 
 DEFAULT_GENERATED_PARTS = {
@@ -189,7 +190,9 @@ NON_CJK_TOKEN_PATTERN = re.compile(
 )
 WORD_COUNT_MODEL = "han_characters_plus_non_han_tokens"
 GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-RETRIEVAL_CONTRACT = "wiki-first-direct-lookup-v1"
+AUDIENCE = "business-analyst"
+KNOWLEDGE_CONTRACT = "business-knowledge-v1"
+RETRIEVAL_CONTRACT = "business-first-ba-v1"
 QUERY_INDEX_SOURCE_ID = "query-index"
 MAX_PRIMARY_SOURCE_GROUPS = 5
 DLP_PROFILE = "notebooklm-enterprise-basic"
@@ -280,7 +283,9 @@ class Settings:
     reserved_source_slots: int
     max_source_bytes: int
     max_source_words: int
-    include_evidence: bool
+    include_traceability: bool
+    legacy_include_evidence: bool
+    business_source_paths: tuple[str, ...]
     extra_paths: tuple[str, ...]
     exclude_paths: tuple[str, ...]
     dlp_profile: str
@@ -515,9 +520,29 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     reserved = _int_config(raw, "reserved_source_slots", 0)
     max_bytes = _int_config(raw, "max_source_bytes", DEFAULT_MAX_BYTES)
     max_words = _int_config(raw, "max_source_words", DEFAULT_MAX_WORDS)
-    include_evidence = raw.get("include_evidence", True)
-    if not isinstance(include_evidence, bool):
+    include_traceability_value = raw.get("include_traceability")
+    include_evidence_value = raw.get("include_evidence")
+    if include_traceability_value is not None and not isinstance(
+        include_traceability_value, bool
+    ):
+        raise ExportError("include_traceability must be true or false")
+    if include_evidence_value is not None and not isinstance(include_evidence_value, bool):
         raise ExportError("include_evidence must be true or false")
+    if (
+        include_traceability_value is not None
+        and include_evidence_value is not None
+        and include_traceability_value != include_evidence_value
+    ):
+        raise ExportError(
+            "include_traceability and deprecated include_evidence must not conflict"
+        )
+    include_traceability = (
+        include_traceability_value
+        if include_traceability_value is not None
+        else include_evidence_value
+        if include_evidence_value is not None
+        else True
+    )
 
     if source_limit > ENTERPRISE_MAX_SOURCES:
         raise ExportError(
@@ -548,6 +573,10 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
         validate_relative_config_path(value, root, "exclude_paths")
         for value in _str_tuple_config(raw, "exclude_paths")
     )
+    business_source_paths = tuple(
+        validate_relative_config_path(value, root, "business_source_paths")
+        for value in _str_tuple_config(raw, "business_source_paths")
+    )
     return Settings(
         profile=profile,
         scan_profile=scan_profile,
@@ -556,7 +585,9 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
         reserved_source_slots=reserved,
         max_source_bytes=max_bytes,
         max_source_words=max_words,
-        include_evidence=include_evidence,
+        include_traceability=include_traceability,
+        legacy_include_evidence=include_evidence_value is not None,
+        business_source_paths=business_source_paths,
         extra_paths=extra_paths,
         exclude_paths=exclude_paths,
         dlp_profile=dlp_profile,
@@ -813,7 +844,16 @@ def _is_transaction_artifact(relative: str) -> bool:
     return False
 
 
-def _exclusion_reason_for_relative(relative: str, settings: Settings) -> str | None:
+def _is_business_source_path(relative: str, settings: Settings) -> bool:
+    return _has_prefix(relative, settings.business_source_paths)
+
+
+def _exclusion_reason_for_relative(
+    relative: str,
+    settings: Settings,
+    *,
+    business_override: bool = False,
+) -> str | None:
     """Classify a lexical repo-relative path without resolving it."""
 
     path = PurePosixPath(relative)
@@ -833,13 +873,13 @@ def _exclusion_reason_for_relative(relative: str, settings: Settings) -> str | N
         return "wiki_knowledge_layer"
     if parts & DEFAULT_GENERATED_PARTS or parts & DEFAULT_DEPENDENCY_PARTS:
         return "binary_or_generated"
-    if _is_test_file(lower):
+    if _is_test_file(lower) and not business_override:
         return "scan_scope_tests"
     if _is_ci_or_iac(lower):
         return "scan_scope_ci_or_iac"
     if settings.scan_profile == "target" and _has_prefix(lower, DEFAULT_FRAMEWORK_PREFIXES):
         return "framework_adapter"
-    if _is_dev_tool(lower) and not (
+    if _is_dev_tool(lower) and not business_override and not (
         settings.scan_profile == "framework"
         and _has_prefix(lower, (*DEFAULT_FRAMEWORK_PREFIXES, "tools"))
     ):
@@ -987,6 +1027,7 @@ def _iter_project_files(
     start: Path | None = None,
     excluded_roots: list[dict[str, Any]] | None = None,
     skipped: list[dict[str, str]] | None = None,
+    business_override: bool = False,
 ) -> Iterable[tuple[Path, str]]:
     """Walk only eligible trees while retaining ignored/untracked source files."""
 
@@ -1010,7 +1051,9 @@ def _iter_project_files(
                 boundary_only=True,
             )
             return
-        reason = _exclusion_reason_for_relative(base_relative, settings)
+        reason = _exclusion_reason_for_relative(
+            base_relative, settings, business_override=business_override
+        )
         if reason:
             _append_excluded_root(
                 excluded_roots, skipped, base, base_relative, reason
@@ -1079,7 +1122,9 @@ def _iter_project_files(
                     continue
 
                 if is_directory:
-                    reason = _exclusion_reason_for_relative(relative, settings)
+                    reason = _exclusion_reason_for_relative(
+                        relative, settings, business_override=business_override
+                    )
                     if reason:
                         _append_excluded_root(
                             excluded_roots, skipped, path, relative, reason
@@ -1169,6 +1214,28 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
             }
         )
 
+    business_skipped: list[dict[str, str]] = []
+    business_inputs: dict[str, InputFile] = {}
+    for source in settings.business_source_paths:
+        for item in expand_path(
+            source,
+            root,
+            settings,
+            business_skipped,
+            business_override=True,
+        ):
+            business_inputs[item.path] = item
+    by_path = {item["path"]: item for item in included}
+    for item in business_inputs.values():
+        by_path[item.path] = {
+            "path": item.path,
+            "category": "business_documentation",
+            "byte_count": len(item.text.encode("utf-8")),
+            "sha256": item.digest,
+        }
+    included = list(by_path.values())
+    excluded.extend(business_skipped)
+
     included.sort(key=lambda item: item["path"])
     excluded.sort(key=lambda item: (item["path"], item["reason"]))
     excluded_roots.sort(key=lambda item: (item["path"], item["reason"]))
@@ -1190,6 +1257,8 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
         "excluded_count": len(excluded),
         "excluded_root_count": len(excluded_roots),
         "included_by_category": dict(sorted(Counter(item["category"] for item in included).items())),
+        "business_source_paths": list(settings.business_source_paths),
+        "business_source_count": len(business_inputs),
         "excluded_by_reason": dict(sorted(Counter(item["reason"] for item in excluded).items())),
         "excluded_roots_by_reason": dict(
             sorted(Counter(item["reason"] for item in excluded_roots).items())
@@ -1207,6 +1276,8 @@ def scan_summary(scan: dict[str, Any]) -> dict[str, Any]:
         "excluded_count": scan["excluded_count"],
         "excluded_root_count": scan["excluded_root_count"],
         "included_by_category": scan["included_by_category"],
+        "business_source_paths": scan["business_source_paths"],
+        "business_source_count": scan["business_source_count"],
         "excluded_by_reason": scan["excluded_by_reason"],
         "excluded_roots_by_reason": scan["excluded_roots_by_reason"],
         "excluded_roots": scan["excluded_roots"],
@@ -1255,6 +1326,7 @@ def read_text_file(
     skipped: list[dict[str, str]],
     *,
     relative: str | None = None,
+    business_override: bool = False,
 ) -> InputFile | None:
     displayed_relative = relative
     try:
@@ -1269,7 +1341,9 @@ def read_text_file(
         )
         return None
     assert displayed_relative is not None
-    reason = _exclusion_reason_for_relative(displayed_relative, settings)
+    reason = _exclusion_reason_for_relative(
+        displayed_relative, settings, business_override=business_override
+    )
     if reason:
         skipped.append({"path": displayed_relative, "reason": reason})
         return None
@@ -1297,6 +1371,8 @@ def expand_path(
     root: Path,
     settings: Settings,
     skipped: list[dict[str, str]],
+    *,
+    business_override: bool = False,
 ) -> list[InputFile]:
     relative = validate_relative_config_path(value, root, "source path")
     path = root / Path(*PurePosixPath(relative).parts)
@@ -1306,11 +1382,22 @@ def expand_path(
     if path.is_file():
         paths: Iterable[tuple[Path, str]] = ((path, relative),)
     else:
-        paths = _iter_project_files(root, settings, start=path, skipped=skipped)
+        paths = _iter_project_files(
+            root,
+            settings,
+            start=path,
+            skipped=skipped,
+            business_override=business_override,
+        )
     for item, item_relative in paths:
         if item.is_file() or item.is_symlink():
             content = read_text_file(
-                item, root, settings, skipped, relative=item_relative
+                item,
+                root,
+                settings,
+                skipped,
+                relative=item_relative,
+                business_override=business_override,
             )
             if content is not None:
                 files.append(content)
@@ -1362,6 +1449,8 @@ def retrieval_contract_payload() -> dict[str, Any]:
 
     return {
         "contract": RETRIEVAL_CONTRACT,
+        "audience": AUDIENCE,
+        "knowledge_contract": KNOWLEDGE_CONTRACT,
         "router_source": QUERY_INDEX_SOURCE_ID,
         "navigation_source": "project-map",
         "max_primary_source_groups": MAX_PRIMARY_SOURCE_GROUPS,
@@ -1383,6 +1472,144 @@ def _frontmatter_strings(value: Any) -> list[str]:
             if isinstance(item, str) and item.strip()
         ]
     return []
+
+
+def notebooklm_role(page: InputFile) -> str | None:
+    value = parse_frontmatter_text(page.text).get("notebooklm_role")
+    return value if value in {"business", "traceability", "exclude"} else None
+
+
+def pages_for_role(pages: Iterable[InputFile], role: str) -> list[InputFile]:
+    return [page for page in pages if notebooklm_role(page) == role]
+
+
+def _wiki_link_targets(text: str) -> set[str]:
+    return {
+        PurePosixPath(raw.split("|", 1)[0].split("#", 1)[0].strip()).stem
+        for raw in re.findall(r"\[\[([^\]]+)\]\]", text)
+        if raw.split("|", 1)[0].split("#", 1)[0].strip()
+    }
+
+
+def business_contract_coverage(pages: Sequence[InputFile]) -> dict[str, Any]:
+    """Validate the structural BA knowledge contract without judging semantics."""
+
+    by_path = {page.path: page for page in pages}
+    processes = [
+        page
+        for page in pages
+        if parse_frontmatter_text(page.text).get("type") == "business-process"
+    ]
+    rules = [
+        page
+        for page in pages
+        if parse_frontmatter_text(page.text).get("type") == "business-rule"
+    ]
+    issues: list[str] = []
+
+    for path in REQUIRED_WIKI_DOCUMENTS:
+        page = by_path.get(path)
+        if page is not None and notebooklm_role(page) != "business":
+            issues.append(f"required BA document lacks notebooklm_role business: {path}")
+
+    process_ids = [
+        str(parse_frontmatter_text(page.text).get("process_id", "")) for page in processes
+    ]
+    rule_ids = [
+        str(parse_frontmatter_text(page.text).get("rule_id", "")) for page in rules
+    ]
+    for label, values in (("process_id", process_ids), ("rule_id", rule_ids)):
+        duplicates = sorted(value for value, count in Counter(values).items() if value and count > 1)
+        if duplicates:
+            issues.append(f"duplicate {label}: {', '.join(duplicates)}")
+
+    active_processes = [
+        page
+        for page in processes
+        if parse_frontmatter_text(page.text).get("status") == "active"
+    ]
+    active_rules = [
+        page for page in rules if parse_frontmatter_text(page.text).get("status") == "active"
+    ]
+    if not active_processes:
+        issues.append("no active business-process page")
+
+    process_catalog = by_path.get("wiki/synthesis/business-process-catalog.md")
+    process_catalog_links = _wiki_link_targets(process_catalog.text) if process_catalog else set()
+    for page in active_processes:
+        if Path(page.path).stem not in process_catalog_links:
+            issues.append(f"business process missing from catalog: {page.path}")
+
+    rule_catalog = by_path.get("wiki/synthesis/business-rule-catalog.md")
+    rule_catalog_links = _wiki_link_targets(rule_catalog.text) if rule_catalog else set()
+    process_stems = {Path(page.path).stem for page in processes}
+    for page in active_rules:
+        frontmatter = parse_frontmatter_text(page.text)
+        if Path(page.path).stem not in rule_catalog_links:
+            issues.append(f"business rule missing from catalog: {page.path}")
+        for value in _frontmatter_strings(frontmatter.get("applies_to")):
+            target = value[2:-2] if value.startswith("[[") and value.endswith("]]") else value
+            if PurePosixPath(target).stem not in process_stems:
+                issues.append(f"business rule has dangling applies_to: {page.path} -> {value}")
+
+    business_pages = pages_for_role(pages, "business")
+    term_count = len(
+        {
+            term
+            for page in business_pages
+            for term in _frontmatter_strings(
+                parse_frontmatter_text(page.text).get("notebooklm_terms")
+            )
+        }
+    )
+    process_statuses = Counter(
+        str(parse_frontmatter_text(page.text).get("coverage_status", "gap"))
+        for page in processes
+    )
+    evidence_states = Counter(
+        str(parse_frontmatter_text(page.text).get("evidence_state", "gap"))
+        for page in rules
+    )
+    gaps_page = by_path.get("wiki/synthesis/business-knowledge-gaps.md")
+    gap_ids = sorted(
+        set(re.findall(r"\bgap-[a-z0-9]+(?:-[a-z0-9]+)*\b", gaps_page.text.lower()))
+        if gaps_page
+        else set()
+    )
+    if issues:
+        status = "gap"
+    elif (
+        process_statuses.get("partial", 0)
+        or process_statuses.get("gap", 0)
+        or evidence_states.get("inference", 0)
+        or evidence_states.get("gap", 0)
+        or gap_ids
+    ):
+        status = "partial"
+    else:
+        status = "covered"
+
+    return {
+        "status": status,
+        "required_documents": required_document_coverage(pages),
+        "processes": {
+            "total": len(processes),
+            "active": len(active_processes),
+            "by_coverage_status": dict(sorted(process_statuses.items())),
+        },
+        "rules": {
+            "total": len(rules),
+            "active": len(active_rules),
+            "by_evidence_state": dict(sorted(evidence_states.items())),
+        },
+        "notebooklm_term_count": term_count,
+        "gap_count": len(gap_ids),
+        "gap_ids": gap_ids,
+        "structural_issues": sorted(set(issues)),
+        "unclassified_pages": sorted(
+            page.path for page in pages if notebooklm_role(page) is None
+        ),
+    }
 
 
 def _page_headings(page: InputFile) -> list[str]:
@@ -1410,11 +1637,15 @@ def query_terms_for_pages(pages: Iterable[InputFile], group: str) -> list[str]:
                 *_frontmatter_strings(frontmatter.get("title")),
                 *_frontmatter_strings(frontmatter.get("summary")),
                 *_frontmatter_strings(frontmatter.get("tags")),
+                *_frontmatter_strings(frontmatter.get("notebooklm_terms")),
+                *_frontmatter_strings(frontmatter.get("actors")),
+                *_frontmatter_strings(frontmatter.get("process_id")),
+                *_frontmatter_strings(frontmatter.get("rule_id")),
                 *_page_headings(page),
             ]
         )
-        for source in _frontmatter_strings(frontmatter.get("sources")):
-            values.append(source)
+        if notebooklm_role(page) != "business":
+            values.extend(_frontmatter_strings(frontmatter.get("sources")))
 
     terms: set[str] = set()
     for value in values:
@@ -1485,19 +1716,19 @@ def wiki_units(pages: Iterable[InputFile]) -> list[Unit]:
     grouped: dict[str, list[InputFile]] = {}
     for page in pages:
         grouped.setdefault(wiki_page_group(page), []).append(page)
-    preferred = {"project": 0, "architecture": 1, "system-analysis": 3}
+    preferred = {"business-core": 0}
     units: list[Unit] = []
     for group in sorted(grouped, key=lambda value: (preferred.get(value, 2), value)):
         members = sorted(grouped[group], key=lambda value: value.path)
         body = [
-            f"# 專案文件群組：{group}\n\n",
-            "> 由 Codebase LLM Wiki 整理的繁體中文專案文件。",
-            "原始識別字、API 名稱與路徑保持不變。\n\n",
+            f"# 業務知識群組：{group}\n\n",
+            "> 由 Codebase LLM Wiki 整理給 Business Analyst 使用的繁體中文業務文件。",
+            "技術識別字與路徑只出現在明確的技術追溯段落。\n\n",
             f"> Logical source ID: `docs:{group}`\n\n",
-            "## 查詢提示\n\n",
-            f"- 功能群組：`{group}`\n",
+            "## BA 查詢提示\n\n",
+            f"- 業務能力群組：`{group}`\n",
             f"- 關鍵字：{', '.join(query_terms_for_pages(members, group))}\n",
-            "- 先用本文件回答職責、API、流程、設定、錯誤與風險；只有文件不足、過時或矛盾時才查 evidence。\n\n",
+            "- 先回答角色、觸發、流程、規則、狀態與業務結果；需要確認正式政策時查 business evidence，只有查核目前實作時才查 technical traceability。\n\n",
             "## 收錄頁面\n\n",
         ]
         body.extend(f"- `{page.path}`\n" for page in members)
@@ -1512,9 +1743,9 @@ def wiki_units(pages: Iterable[InputFile]) -> list[Unit]:
         units.append(
             Unit(
                 logical_source_id=f"docs:{group}",
-                kind="documentation",
+                kind="business_documentation",
                 group=group,
-                title=f"專案文件群組：{group}",
+                title=f"業務知識群組：{group}",
                 inputs=tuple(members),
                 content="".join(body),
                 priority=1_000_000,
@@ -1526,6 +1757,8 @@ def wiki_units(pages: Iterable[InputFile]) -> list[Unit]:
 def _page_priority(page: InputFile) -> int:
     page_type = str(parse_frontmatter_text(page.text).get("type", ""))
     return {
+        "business-process": 100,
+        "business-rule": 98,
         "overview": 95,
         "architecture": 90,
         "synthesis": 85,
@@ -1580,7 +1813,13 @@ def referenced_evidence(
         for position, source in enumerate(sources):
             relative = validate_relative_config_path(source, root, "frontmatter.sources")
             direct = (root / Path(*PurePosixPath(relative).parts)).is_file()
-            for item in expand_path(relative, root, settings, skipped):
+            for item in expand_path(
+                relative,
+                root,
+                settings,
+                skipped,
+                business_override=_is_business_source_path(relative, settings),
+            ):
                 score = (
                     _page_priority(page) * 10_000
                     + max(0, 100 - position) * 100
@@ -1588,6 +1827,16 @@ def referenced_evidence(
                     + _path_role_priority(item.path)
                 )
                 add_file(item, group, score)
+
+    for source in settings.business_source_paths:
+        for item in expand_path(
+            source,
+            root,
+            settings,
+            skipped,
+            business_override=True,
+        ):
+            add_file(item, "business-core", 3_000_000 + _path_role_priority(item.path))
 
     for source in settings.extra_paths:
         for item in expand_path(source, root, settings, skipped):
@@ -1602,6 +1851,17 @@ def referenced_evidence(
         for value in state.values()
     ]
     return sorted(result, key=lambda item: (-item.priority, item.input_file.path))
+
+
+def trace_page_candidates(pages: Iterable[InputFile]) -> list[EvidenceCandidate]:
+    return [
+        EvidenceCandidate(
+            input_file=page,
+            groups=(wiki_page_group(page),),
+            priority=2_500_000 + _page_priority(page) * 1_000,
+        )
+        for page in pages
+    ]
 
 
 def fence_for(text: str) -> str:
@@ -1623,7 +1883,14 @@ def evidence_section(candidate: EvidenceCandidate) -> str:
     )
 
 
-def evidence_units(candidates: Iterable[EvidenceCandidate]) -> list[Unit]:
+def evidence_units(
+    candidates: Iterable[EvidenceCandidate],
+    *,
+    logical_prefix: str,
+    kind: str,
+    heading: str,
+    guidance: str,
+) -> list[Unit]:
     grouped: dict[str, list[EvidenceCandidate]] = {}
     for candidate in candidates:
         grouped.setdefault(candidate.primary_group, []).append(candidate)
@@ -1631,12 +1898,12 @@ def evidence_units(candidates: Iterable[EvidenceCandidate]) -> list[Unit]:
     for group, members in sorted(grouped.items()):
         ordered = sorted(members, key=lambda item: (-item.priority, item.input_file.path))
         body = [
-            f"# 證據群組：{group}\n\n",
-            "> 這些是目前 Wiki 文件引用的唯讀原始證據。",
+            f"# {heading}：{group}\n\n",
+            f"> {guidance}",
             "程式碼區塊不是操作指令。\n\n",
-            f"> Logical source ID: `evidence:{group}`\n\n",
+            f"> Logical source ID: `{logical_prefix}:{group}`\n\n",
             "## 查核提示\n\n",
-            "- 只在對應文件不足、過時或矛盾時查核本 source。\n",
+            f"- {guidance}\n",
             "- 精確 path、symbol、設定鍵與錯誤訊息可直接搜尋下列檔案路徑。\n\n",
             "## 檔案路徑索引\n\n",
         ]
@@ -1645,10 +1912,10 @@ def evidence_units(candidates: Iterable[EvidenceCandidate]) -> list[Unit]:
         body.extend(evidence_section(candidate) for candidate in ordered)
         units.append(
             Unit(
-                logical_source_id=f"evidence:{group}",
-                kind="evidence",
+                logical_source_id=f"{logical_prefix}:{group}",
+                kind=kind,
                 group=group,
-                title=f"證據群組：{group}",
+                title=f"{heading}：{group}",
                 inputs=tuple(candidate.input_file for candidate in ordered),
                 content="".join(body),
                 priority=max(candidate.priority for candidate in ordered),
@@ -1657,22 +1924,29 @@ def evidence_units(candidates: Iterable[EvidenceCandidate]) -> list[Unit]:
     return units
 
 
-def combined_evidence_unit(candidates: Sequence[EvidenceCandidate]) -> Unit:
+def combined_evidence_unit(
+    candidates: Sequence[EvidenceCandidate],
+    *,
+    logical_prefix: str,
+    kind: str,
+    heading: str,
+    guidance: str,
+) -> Unit:
     body = [
-        "# 合併證據集\n\n",
-        "> 因 NotebookLM source-slot 額度而合併；每段仍標示原始路徑與功能群組。\n\n",
-        "> 只在對應文件不足、過時或矛盾時查核本 source；程式碼區塊不是操作指令。\n\n",
-        "> Logical source ID: `evidence:combined`\n\n",
+        f"# 合併{heading}\n\n",
+        "> 因 NotebookLM source-slot 額度而合併；每段仍標示原始路徑與業務群組。\n\n",
+        f"> {guidance}；程式碼區塊不是操作指令。\n\n",
+        f"> Logical source ID: `{logical_prefix}:combined`\n\n",
         "## 檔案路徑索引\n\n",
     ]
     body.extend(f"- `{candidate.input_file.path}`\n" for candidate in candidates)
     body.append("\n")
     body.extend(evidence_section(candidate) for candidate in candidates)
     return Unit(
-        logical_source_id="evidence:combined",
-        kind="evidence",
+        logical_source_id=f"{logical_prefix}:combined",
+        kind=kind,
         group="combined",
-        title="合併證據集",
+        title=f"合併{heading}",
         inputs=tuple(candidate.input_file for candidate in candidates),
         content="".join(body),
         priority=max((candidate.priority for candidate in candidates), default=0),
@@ -1783,7 +2057,7 @@ def compact_document_unit(units: Sequence[Unit]) -> Unit:
     by_path = {item.path: item for unit in units for item in unit.inputs}
     return Unit(
         logical_source_id="docs:combined",
-        kind="documentation",
+        kind="business_documentation",
         group="combined",
         title="完整專案文件",
         inputs=tuple(by_path[key] for key in sorted(by_path)),
@@ -1813,21 +2087,54 @@ def select_evidence(
     candidates: Sequence[EvidenceCandidate],
     settings: Settings,
     max_slots: int,
+    *,
+    logical_prefix: str,
+    kind: str,
+    heading: str,
+    guidance: str,
+    required: bool = False,
 ) -> tuple[list[tuple[Unit, str, str]], list[dict[str, str]]]:
     if not candidates:
         return [], []
     if max_slots <= 0:
+        if required:
+            raise ExportError(f"no NotebookLM source slot remains for mandatory {heading}")
         return [], [
             {"path": candidate.input_file.path, "reason": "source_budget"}
             for candidate in candidates
         ]
 
-    normal = materialize_units(evidence_units(candidates), settings)
+    normal = materialize_units(
+        evidence_units(
+            candidates,
+            logical_prefix=logical_prefix,
+            kind=kind,
+            heading=heading,
+            guidance=guidance,
+        ),
+        settings,
+    )
     if len(normal) <= max_slots:
         return normal, []
-    combined = materialize_units([combined_evidence_unit(candidates)], settings)
+    combined = materialize_units(
+        [
+            combined_evidence_unit(
+                candidates,
+                logical_prefix=logical_prefix,
+                kind=kind,
+                heading=heading,
+                guidance=guidance,
+            )
+        ],
+        settings,
+    )
     if len(combined) <= max_slots:
         return combined, []
+    if required:
+        raise ExportError(
+            f"mandatory {heading} needs {len(combined)} sources after compaction "
+            f"but only {max_slots} slots are available"
+        )
 
     max_bytes = max_slots * settings.max_source_bytes
     max_words = max_slots * settings.max_source_words
@@ -1846,10 +2153,40 @@ def select_evidence(
         else:
             omitted.append(candidate)
 
-    materialized = materialize_units([combined_evidence_unit(selected)], settings) if selected else []
+    materialized = (
+        materialize_units(
+            [
+                combined_evidence_unit(
+                    selected,
+                    logical_prefix=logical_prefix,
+                    kind=kind,
+                    heading=heading,
+                    guidance=guidance,
+                )
+            ],
+            settings,
+        )
+        if selected
+        else []
+    )
     while len(materialized) > max_slots and selected:
         omitted.append(selected.pop())
-        materialized = materialize_units([combined_evidence_unit(selected)], settings) if selected else []
+        materialized = (
+            materialize_units(
+                [
+                    combined_evidence_unit(
+                        selected,
+                        logical_prefix=logical_prefix,
+                        kind=kind,
+                        heading=heading,
+                        guidance=guidance,
+                    )
+                ],
+                settings,
+            )
+            if selected
+            else []
+        )
     skipped = [
         {"path": candidate.input_file.path, "reason": "source_budget"}
         for candidate in sorted(omitted, key=lambda item: item.input_file.path)
@@ -1888,60 +2225,82 @@ def git_revision(root: Path) -> str | None:
 def query_index_content(
     root: Path,
     pages: Sequence[InputFile],
-    candidates: Sequence[EvidenceCandidate],
+    business_candidates: Sequence[EvidenceCandidate],
+    trace_candidates: Sequence[EvidenceCandidate],
     documents: list[tuple[Unit, str, str]],
-    evidence: list[tuple[Unit, str, str]],
+    business_evidence: list[tuple[Unit, str, str]],
+    traceability: list[tuple[Unit, str, str]],
     budget_skipped: Sequence[dict[str, str]],
-    coverage: dict[str, str],
+    coverage: dict[str, Any],
     settings: Settings,
 ) -> str:
-    """Build a compact, deterministic router for direct NotebookLM lookups."""
+    """Build a compact business-first router for direct BA lookups."""
 
     grouped_pages: dict[str, list[InputFile]] = {}
     for page in pages:
         grouped_pages.setdefault(wiki_page_group(page), []).append(page)
 
-    grouped_candidates: dict[str, list[EvidenceCandidate]] = {}
-    for candidate in candidates:
-        groups = candidate.groups or (candidate.primary_group,)
-        for group in groups:
-            grouped_candidates.setdefault(group, []).append(candidate)
+    def grouped(
+        candidates: Sequence[EvidenceCandidate],
+    ) -> dict[str, list[EvidenceCandidate]]:
+        result: dict[str, list[EvidenceCandidate]] = {}
+        for candidate in candidates:
+            groups = candidate.groups or (candidate.primary_group,)
+            for group in groups:
+                result.setdefault(group, []).append(candidate)
+        return result
 
-    groups = sorted(set(grouped_pages) | set(grouped_candidates))
+    grouped_business = grouped(business_candidates)
+    grouped_trace = grouped(trace_candidates)
+
+    groups = sorted(set(grouped_pages) | set(grouped_business) | set(grouped_trace))
     omitted_paths = {item["path"] for item in budget_skipped}
     lines = [
-        f"# {root.name} — NotebookLM 問題定位索引\n\n",
+        f"# {root.name} — BA 業務問題索引\n\n",
         "> 這是由 Codebase LLM Wiki 產生的查詢路由來源，不是 raw evidence。\n",
-        "> 先用本索引找最相關的功能群組，再直接回答問題；不要把搜尋過程寫成研究報告。\n\n",
+        "> 先找最相關的業務能力群組，再以業務語言直接回答；不要把搜尋過程寫成研究報告。\n\n",
         f"> Logical source ID: `{QUERY_INDEX_SOURCE_ID}`\n\n",
         "## 直接回答契約\n\n",
-        "1. 第一段先回答結論、位置或目前行為。\n",
+        "1. 第一段先回答角色、條件、流程、規則或業務結果，不先列程式路徑。\n",
         f"2. 只選最相關的 1–{MAX_PRIMARY_SOURCE_GROUPS} 個主要來源群組。\n",
-        "3. 先使用文件 source；只有文件不足、過時或矛盾時才查 evidence source。\n",
-        "4. 引用 `[[wiki-page]]` 與反引號 repo-relative source paths。\n",
-        "5. 明確標示事實、推論、矛盾與 coverage gap；找不到時不要補造答案。\n",
-        "6. 除非問題要求調查、比較或除錯步驟，不要先拆解問題或敘述搜尋流程。\n\n",
+        "3. 先用 business docs；正式政策需要查 business evidence，目前實作才查 traceability。\n",
+        "4. 使用 process/rule ID、`[[wiki-page]]` 與 business-confirmed / implementation-observed / inference / gap 標籤。\n",
+        "5. 不得把 implementation-observed 說成已核准的業務政策；找不到時直接列 gap。\n",
+        "6. 只有使用者要求技術查核時，才在答案最後加入『技術追溯』與 repo-relative paths。\n\n",
         "## 問題路由\n\n",
         "| 問題訊號 | 先查 | 必要時查 | 回答形態 |\n",
         "| --- | --- | --- | --- |\n",
-        "| 精確 path、symbol、error、stack trace | 對應功能的文件 source | 對應 evidence source | 直接給位置、行為與 source path |\n",
-        "| 職責、API、流程、入口 | 對應功能的文件 source | evidence source | 先給結論，再列關鍵流程 |\n",
-        "| 設定、schema、資料邊界 | 對應功能／架構文件 | config、schema 或 migration evidence | 列設定／資料來源與限制 |\n",
-        "| 原因、影響、風險、矛盾 | system-analysis／功能文件 | raw evidence | 分開事實、推論與 gap |\n",
-        "| 跨功能比較 | project／architecture 與最多 5 個功能群組 | 各群組 evidence | 只比較問題指定的維度 |\n\n",
-        "## 功能群組索引\n\n",
+        "| 業務目的、能力、角色 | overview／process catalog | business evidence | 先說誰為何能做什麼 |\n",
+        "| 觸發、前置條件、主流程 | business process | 對應 rules | 依時間順序說明行為與結果 |\n",
+        "| 替代、例外、決策條件 | business process／rule | business evidence | 明列條件、結果與 evidence state |\n",
+        "| 名詞、狀態、資料語意 | business glossary | process／rule | 使用業務定義，不以欄位名稱代替 |\n",
+        "| 上下游或規則變更影響 | process catalog 與相關群組 | traceability | 先列業務影響，技術內容置於附錄 |\n",
+        "| 未知政策、矛盾 | business knowledge gaps | 已查 business evidence | 說明未知內容與應確認角色 |\n",
+        "| path、symbol、API、schema | 對應 business docs | technical traceability | 僅在問題明確要求時列技術追溯 |\n\n",
+        "## 業務能力群組索引\n\n",
     ]
 
     for group in groups:
         page_members = sorted(grouped_pages.get(group, []), key=lambda item: item.path)
-        candidate_members = sorted(
-            grouped_candidates.get(group, []),
+        business_members = sorted(
+            grouped_business.get(group, []),
             key=lambda item: item.input_file.path,
         )
+        trace_members = sorted(
+            grouped_trace.get(group, []), key=lambda item: item.input_file.path
+        )
         page_paths = {page.path for page in page_members}
-        candidate_paths = {candidate.input_file.path for candidate in candidate_members}
-        document_ids = _source_ids_for_paths(documents, page_paths, "documentation")
-        evidence_ids = _source_ids_for_paths(evidence, candidate_paths, "evidence")
+        business_paths = {candidate.input_file.path for candidate in business_members}
+        trace_paths = {candidate.input_file.path for candidate in trace_members}
+        document_ids = _source_ids_for_paths(
+            documents, page_paths, "business_documentation"
+        )
+        business_ids = _source_ids_for_paths(
+            business_evidence, business_paths, "business_evidence"
+        )
+        trace_ids = _source_ids_for_paths(
+            traceability, trace_paths, "technical_traceability"
+        )
         page_statuses = {
             str(parse_frontmatter_text(page.text).get("status", ""))
             for page in page_members
@@ -1953,33 +2312,24 @@ def query_index_content(
         else:
             group_status = "covered"
 
-        source_paths = set(candidate_paths)
-        for page in page_members:
-            source_paths.update(_frontmatter_strings(parse_frontmatter_text(page.text).get("sources")))
         keywords = query_terms_for_pages(page_members, group)
-        for path in sorted(candidate_paths):
-            keywords.extend(
-                token
-                for token in re.findall(r"[A-Za-z0-9][A-Za-z0-9_.:/-]*", path)
-                if len(token) > 1
-            )
         keywords = sorted(set(keywords), key=lambda item: (item.lower(), item))
         wiki_pages = ", ".join(_wiki_link(page) for page in page_members) or "（沒有對應 Wiki page）"
         lines.extend(
             [
-                f"### 功能群組：`{group}`\n\n",
+                f"### 業務能力群組：`{group}`\n\n",
                 f"- Coverage：`{group_status}`\n",
                 f"- 查詢關鍵字：{', '.join(keywords) or '（未提供）'}\n",
                 f"- Wiki pages：{wiki_pages}\n",
-                f"- 先查文件：{', '.join(f'`{item}`' for item in document_ids) or '（未建立或未匯出）'}\n",
-                f"- 必要時查 evidence：{', '.join(f'`{item}`' for item in evidence_ids) or '（目前沒有可用 evidence source）'}\n",
-                f"- 相關 source paths：{', '.join(f'`{item}`' for item in sorted(source_paths)) or '（未列出）'}\n",
+                f"- 先查業務文件：{', '.join(f'`{item}`' for item in document_ids) or '（未建立或未匯出）'}\n",
+                f"- 正式業務證據：{', '.join(f'`{item}`' for item in business_ids) or '（未指定 business evidence）'}\n",
+                f"- 技術追溯：{', '.join(f'`{item}`' for item in trace_ids) or '（未匯出）'}\n",
             ]
         )
-        omitted_for_group = sorted(path for path in candidate_paths if path in omitted_paths)
+        omitted_for_group = sorted(path for path in trace_paths if path in omitted_paths)
         if omitted_for_group:
             lines.append(
-                "- 因 source budget 未匯出的 evidence："
+                "- 因 source budget 未匯出的技術追溯："
                 + ", ".join(f"`{path}`" for path in omitted_for_group)
                 + "\n"
             )
@@ -1987,12 +2337,20 @@ def query_index_content(
 
     lines.extend(
         [
-            "## 必要文件覆蓋\n\n",
-            *[f"- `{path}` — `{status}`\n" for path, status in coverage.items()],
+            "## BA 知識覆蓋\n\n",
+            f"- Overall：`{coverage['status']}`\n",
+            f"- Processes：`{coverage['processes']['active']}` active / `{coverage['processes']['total']}` total\n",
+            f"- Rules：`{coverage['rules']['active']}` active / `{coverage['rules']['total']}` total\n",
+            f"- Business terms：`{coverage['notebooklm_term_count']}`\n",
+            f"- Registered gaps：`{coverage['gap_count']}`\n",
+            *[
+                f"- Required `{path}` — `{status}`\n"
+                for path, status in coverage["required_documents"].items()
+            ],
             "\n## Export 狀態\n\n",
-            f"- Evidence export：`{'enabled' if settings.include_evidence else 'disabled'}`\n",
+            f"- Technical traceability：`{'enabled' if settings.include_traceability else 'disabled'}`\n",
             f"- Source budget：`{settings.available_source_slots}` available slots\n",
-            "- `partial`、`gap`、warning、skipped 與 omitted 項目都不是已驗證事實。\n",
+            "- `implementation-observed` 不是正式業務政策；`partial`、`gap`、warning 與 omitted 都必須明說。\n",
         ]
     )
     return "".join(lines)
@@ -2004,21 +2362,33 @@ def project_map_content(
     skipped: list[dict[str, str]],
     warnings: list[str],
     settings: Settings,
-    coverage: dict[str, str],
+    coverage: dict[str, Any],
     dlp: dict[str, Any],
 ) -> str:
     lines = [
-        f"# {root.name} — NotebookLM 專案導覽\n\n",
-        "> 這是產生的繁體中文導覽來源。只上傳 `sources/` 下的 Markdown。\n\n",
+        f"# {root.name} — NotebookLM 業務知識導覽\n\n",
+        "> 這是給 Business Analyst 使用的繁體中文導覽來源。只上傳 `sources/` 下的 Markdown。\n\n",
         "## 查詢入口\n\n",
         f"- 直接定位問題時，先使用 `sources/{source_filename(QUERY_INDEX_SOURCE_ID)}`。\n",
-        "- 查詢索引只負責路由；實際答案優先引用對應文件，再以 evidence 查核。\n",
-        "- 不要先描述搜尋流程；先回答結論，再補充必要證據。\n",
+        "- 查詢索引只負責路由；先引用業務文件，正式政策查 business evidence，目前實作才查 traceability。\n",
+        "- 不要先描述搜尋流程；先以業務語言回答角色、條件、流程、規則與結果。\n",
         f"- 一次最多使用 {MAX_PRIMARY_SOURCE_GROUPS} 個主要來源群組。\n",
-        "- `partial`、`gap`、warning 或 skipped 項目都不是已驗證事實。\n\n",
-        "## 文件覆蓋\n\n",
+        "- 不得把 `implementation-observed` 說成已核准政策；`gap` 不可補造。\n\n",
+        "## BA 知識覆蓋\n\n",
     ]
-    lines.extend(f"- `{path}` — `{status}`\n" for path, status in coverage.items())
+    lines.extend(
+        [
+            f"- Overall：`{coverage['status']}`\n",
+            f"- Processes：`{coverage['processes']['active']}` active / `{coverage['processes']['total']}` total\n",
+            f"- Rules：`{coverage['rules']['active']}` active / `{coverage['rules']['total']}` total\n",
+            f"- Business terms：`{coverage['notebooklm_term_count']}`\n",
+            f"- Registered gaps：`{coverage['gap_count']}`\n",
+        ]
+    )
+    lines.extend(
+        f"- Required `{path}` — `{status}`\n"
+        for path, status in coverage["required_documents"].items()
+    )
     lines.extend(
         [
             "\n## Source catalog\n\n",
@@ -2041,7 +2411,7 @@ def project_map_content(
     )
     for unit, filename, _ in materialized:
         lines.append(
-            f"- `{unit.logical_source_id}` — `{filename}` — {unit.title} — group `{unit.group}`\n"
+            f"- `{unit.logical_source_id}` — `{filename}` — {unit.title} — role `{unit.kind}` — group `{unit.group}`\n"
         )
     if warnings:
         lines.extend(["\n## Warnings\n\n"])
@@ -2372,12 +2742,20 @@ def upload_plan_content(
     actions: dict[str, list[dict[str, Any]]],
     omitted_evidence: list[dict[str, str]],
     warnings: list[str],
+    migration: dict[str, Any],
 ) -> str:
     lines = [
-        "# NotebookLM 增量上傳計畫\n\n",
+        "# NotebookLM BA 業務知識上傳計畫\n\n",
         f"產生來源數：{source_count}/{available_slots} 個可用 slots。\n\n",
         "只上傳 `sources/` 下的 Markdown。不要把 manifest、upload plan 或 README 當成專案證據。\n\n",
     ]
+    if migration.get("requires_full_rebuild"):
+        lines.extend(
+            [
+                "## 必須一次性完整重建\n\n",
+                "舊 source pack 不是 `business-first-ba-v1`。請先刪除同一本 Notebook 中所有舊 static sources，再上傳本次 `sources/*.md`；本次不要只依增量 actions 操作。\n\n",
+            ]
+        )
     labels = (
         ("added", "## 新增\n\n"),
         ("changed", "## 替換（先移除舊 source）\n\n"),
@@ -2399,7 +2777,7 @@ def upload_plan_content(
                 lines.append(f"- `{item['logical_source_id']}` — `{item.get('file')}`\n")
         lines.append("\n")
     if omitted_evidence:
-        lines.extend(["## 因額度未匯出的證據\n\n"])
+        lines.extend(["## 因額度未匯出的技術追溯\n\n"])
         lines.extend(f"- `{item['path']}` — {item['reason']}\n" for item in omitted_evidence)
         lines.append("\n")
     if warnings:
@@ -2409,7 +2787,7 @@ def upload_plan_content(
 
 
 def readme_content() -> str:
-    return """# NotebookLM Enterprise 本機來源包
+    return """# NotebookLM Enterprise — BA 業務知識來源包
 
 此目錄由 `export-notebooklm.py` 產生。
 
@@ -2419,7 +2797,7 @@ def readme_content() -> str:
 
 ## 一次性重建既有 Notebook
 
-若要套用新的 Wiki-first 直接定位行為，請先在同一本 Notebook 刪除舊的 static
+若要套用新的 business-first BA 行為，請先在同一本 Notebook 刪除舊的 static
 sources，再完整上傳 `sources/` 下的所有 Markdown。Exporter 不會連線、刪除雲端
 source 或自動上傳；`upload-plan.md` 只是一份本機操作清單。
 
@@ -2428,19 +2806,20 @@ source 或自動上傳；`upload-plan.md` 只是一份本機操作清單。
 若 NotebookLM Enterprise 介面提供 Custom instructions，請貼上以下內容：
 
 ```text
-你是 Codebase LLM Wiki 的直接查詢器。請只使用目前 Notebook 的 sources。
+你是協助 Business Analyst 理解目前業務流程與規則的查詢器。請只使用目前 Notebook 的 sources。
 
-1. 先使用 `query-index.md` 將問題路由到最相關的 1–5 個主要來源群組。
-2. 第一段直接回答結論、位置或目前行為，不要描述搜尋過程，也不要先寫研究計畫。
-3. 優先使用對應的 docs source；只有文件不足、過時或矛盾時才查 evidence source。
-4. 回答必須引用 Wiki page（例如 [[overview]]）與 repo-relative source path（例如 `src/service.py`）。
-5. 明確區分已證實事實、推論、矛盾與 coverage gap；找不到資料時直接說未找到，不要補造答案。
-6. 除非問題明確要求調查、比較或除錯步驟，否則不要把問題逐步拆成研究流程。
-7. `query-index.md` 是路由索引，不是實際行為證據；實際結論請引用對應 docs/evidence source。
+1. 先使用 `query-index.md` 將問題路由到最相關的 1–5 個業務能力群組。
+2. 第一段以繁體中文業務語言回答角色、條件、流程、規則或結果；不要描述搜尋過程。
+3. 優先使用 business docs；正式政策需要 business evidence，目前實作才查 technical traceability。
+4. 回答引用 process/rule ID 與 Wiki page，並標示 business-confirmed、implementation-observed、inference 或 gap。
+5. 不得把 implementation-observed 說成已核准的業務政策；找不到可靠證據時列出 gap 與應確認角色。
+6. 除非問題明確要求技術查核，否則不要在主要答案列 path、symbol、API 或 schema。
+7. 需要技術內容時，在答案最後另列「技術追溯」與 repo-relative source path。
+8. `query-index.md` 是路由索引，不是業務事實；結論必須引用對應 business docs/evidence/traceability source。
 ```
 
 若介面沒有 Custom instructions，請在問題前加上：
-`請直接回答結論；先使用 query-index.md 路由到最多 5 個來源，引用 Wiki page 與 source path，不要描述搜尋流程。`
+`請先用 query-index.md 路由；以業務語言直接回答並標示證據狀態，未要求時不要列技術細節，未知內容明確列為 gap。`
 
 Exporter 完全離線，不會呼叫 NotebookLM、不會上傳檔案，也不會修改 raw sources
 或 Wiki pages。
@@ -2588,7 +2967,9 @@ def _settings_fingerprint(settings: Settings, root: Path) -> dict[str, Any]:
         "reserved_source_slots": settings.reserved_source_slots,
         "max_source_bytes": settings.max_source_bytes,
         "max_source_words": settings.max_source_words,
-        "include_evidence": settings.include_evidence,
+        "include_traceability": settings.include_traceability,
+        "legacy_include_evidence": settings.legacy_include_evidence,
+        "business_source_paths": list(settings.business_source_paths),
         "extra_paths": list(settings.extra_paths),
         "exclude_paths": list(settings.exclude_paths),
         "dlp_profile": settings.dlp_profile,
@@ -2628,11 +3009,45 @@ def _preflight_identity(
 
 def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     pages, skipped, warnings = collect_wiki_pages(root)
+    business_pages = pages_for_role(pages, "business")
+    trace_pages = pages_for_role(pages, "traceability")
+    business_coverage = business_contract_coverage(pages)
+    if business_coverage["unclassified_pages"]:
+        warnings.append(
+            "未標示 notebooklm_role 的 Wiki pages 將不匯出："
+            + ", ".join(
+                f"`{path}`" for path in business_coverage["unclassified_pages"]
+            )
+        )
+    if settings.legacy_include_evidence:
+        warnings.append(
+            "notebooklm.toml 的 include_evidence 已棄用；請改用 include_traceability"
+        )
     scan = scan_project(root, settings, pages)
     warnings.extend(excluded_root_warnings(scan))
     coverage = coverage_summary(scan)
-    candidates = referenced_evidence(pages, root, settings, skipped) if settings.include_evidence else []
-    dlp_inputs = [*pages, *(candidate.input_file for candidate in candidates)]
+    candidates = referenced_evidence(
+        [*business_pages, *trace_pages], root, settings, skipped
+    )
+    business_candidates = [
+        candidate
+        for candidate in candidates
+        if _is_business_source_path(candidate.input_file.path, settings)
+    ]
+    trace_candidates = [
+        candidate
+        for candidate in candidates
+        if not _is_business_source_path(candidate.input_file.path, settings)
+    ]
+    if settings.include_traceability:
+        trace_candidates.extend(trace_page_candidates(trace_pages))
+    else:
+        trace_candidates = []
+    dlp_inputs = [
+        *business_pages,
+        *(candidate.input_file for candidate in business_candidates),
+        *(candidate.input_file for candidate in trace_candidates),
+    ]
     dlp = scan_dlp_inputs(dlp_inputs, settings)
     dlp_message = dlp_warning(dlp)
     if dlp_message:
@@ -2640,6 +3055,10 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root, use_git=False)
     missing = [path for path, status in scan["required_documents"].items() if status != "active"]
     warnings.extend(f"必要文件尚未完成：{path} ({scan['required_documents'][path]})" for path in missing)
+    warnings.extend(
+        f"BA 知識契約問題：{issue}"
+        for issue in business_coverage["structural_issues"]
+    )
     if coverage["status"] == "partial":
         warnings.append(
             "安全掃描仍有 "
@@ -2659,6 +3078,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     critical_count = int(lint_result.get("summary", {}).get("critical", 0))
     ready = (
         not missing
+        and not business_coverage["structural_issues"]
         and not required_document_issues
         and critical_count == 0
         and dlp["status"] != "blocked"
@@ -2670,13 +3090,25 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
         "ok": True,
         "mode": "preflight",
         "preflight_schema_version": PREFLIGHT_SCHEMA_VERSION,
+        "audience": AUDIENCE,
+        "knowledge_contract": KNOWLEDGE_CONTRACT,
         "retrieval": retrieval_contract_payload(),
         "preflight_id": preflight_id,
         "inventory_hash": inventory_hash,
         "ready_to_export": ready,
         "scan_profile": settings.scan_profile,
+        "source_policy": {
+            "business_source_paths": list(settings.business_source_paths),
+            "include_traceability": settings.include_traceability,
+        },
         "scope": {
-            "included": ["runtime_source", "runtime_config", "data_schema", "documentation"],
+            "included": [
+                "business_documentation",
+                "runtime_source",
+                "runtime_config",
+                "data_schema",
+                "documentation",
+            ],
             "excluded": [
                 "tests",
                 "ci_cd",
@@ -2691,6 +3123,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
         },
         "inventory": scan,
         "coverage": coverage,
+        "business_coverage": business_coverage,
         "limits": limits_payload(settings),
         "dlp": dlp,
         "wiki_pages": len(pages),
@@ -2710,23 +3143,67 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
 def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
     _recover_pending_output(output)
     pages, initial_skipped, warnings = collect_wiki_pages(root)
+    business_pages = pages_for_role(pages, "business")
+    trace_pages = pages_for_role(pages, "traceability")
+    business_coverage = business_contract_coverage(pages)
+    if business_coverage["unclassified_pages"]:
+        warnings.append(
+            "未標示 notebooklm_role 的 Wiki pages 未匯出："
+            + ", ".join(
+                f"`{path}`" for path in business_coverage["unclassified_pages"]
+            )
+        )
+    if settings.legacy_include_evidence:
+        warnings.append(
+            "notebooklm.toml 的 include_evidence 已棄用；請改用 include_traceability"
+        )
     scan = scan_project(root, settings, pages)
     warnings.extend(excluded_root_warnings(scan))
-    coverage = scan["required_documents"]
-    incomplete = [path for path, status in coverage.items() if status != "active"]
+    required_coverage = scan["required_documents"]
+    incomplete = [
+        path for path, status in required_coverage.items() if status != "active"
+    ]
     if incomplete:
-        details = ", ".join(f"{path} ({coverage[path]})" for path in incomplete)
+        details = ", ".join(
+            f"{path} ({required_coverage[path]})" for path in incomplete
+        )
         raise ExportError(f"mandatory Wiki documentation is not active: {details}")
-    for path, status in coverage.items():
-        if status != "active":
-            warnings.append(f"必要文件尚未完成：{path} ({status})")
+    if business_coverage["structural_issues"]:
+        raise ExportError(
+            "BA knowledge contract is incomplete: "
+            + "; ".join(business_coverage["structural_issues"])
+        )
     if scan["uncovered_paths"]:
         warnings.append(f"安全掃描仍有 {len(scan['uncovered_paths'])} 個路徑未被 Wiki sources 覆蓋")
 
     skipped = list(initial_skipped)
-    candidates = referenced_evidence(pages, root, settings, skipped) if settings.include_evidence else []
+    candidates = referenced_evidence(
+        [*business_pages, *trace_pages], root, settings, skipped
+    )
+    business_candidates = [
+        candidate
+        for candidate in candidates
+        if _is_business_source_path(candidate.input_file.path, settings)
+    ]
+    trace_candidates = [
+        candidate
+        for candidate in candidates
+        if not _is_business_source_path(candidate.input_file.path, settings)
+    ]
+    if settings.include_traceability:
+        trace_candidates.extend(trace_page_candidates(trace_pages))
+        trace_candidates.sort(key=lambda item: (-item.priority, item.input_file.path))
+    else:
+        trace_candidates = []
     dlp = scan_dlp_inputs(
-        [*pages, *(candidate.input_file for candidate in candidates)], settings
+        _unique_input_files(
+            [
+                *business_pages,
+                *(candidate.input_file for candidate in business_candidates),
+                *(candidate.input_file for candidate in trace_candidates),
+            ]
+        ),
+        settings,
     )
     dlp_message = dlp_warning(dlp)
     if dlp_message:
@@ -2739,87 +3216,136 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
             "and documentation"
         )
 
-    documents = fit_document_units(wiki_units(pages), settings, available - 2)
+    documents = fit_document_units(wiki_units(business_pages), settings, available - 2)
     query_inputs = _unique_input_files(
-        [*pages, *(candidate.input_file for candidate in candidates)]
+        [
+            *business_pages,
+            *(candidate.input_file for candidate in business_candidates),
+            *(candidate.input_file for candidate in trace_candidates),
+        ]
     )
-    preliminary_query = Unit(
-        logical_source_id=QUERY_INDEX_SOURCE_ID,
-        kind="query_index",
-        group="query",
-        title="問題定位索引",
-        inputs=query_inputs,
-        content=query_index_content(
-            root,
-            pages,
-            candidates,
-            documents,
-            [],
-            [],
-            coverage,
+    business_slots = max(0, available - len(documents) - 2)
+    business_evidence: list[tuple[Unit, str, str]] = []
+    preliminary_query_parts: list[tuple[Unit, str, str]] = []
+    preliminary_map_parts: list[tuple[Unit, str, str]] = []
+    for _ in range(8):
+        business_evidence, _ = select_evidence(
+            business_candidates,
             settings,
-        ),
-        priority=2_100_000,
-    )
-    preliminary_query_parts = materialize_units([preliminary_query], settings)
-    preliminary_map = Unit(
-        logical_source_id="project-map",
-        kind="project",
-        group="project",
-        title="專案導覽",
-        inputs=tuple(pages),
-        content=project_map_content(
-            root,
-            preliminary_query_parts + documents,
-            skipped,
-            warnings,
-            settings,
-            coverage,
-            dlp,
-        ),
-        priority=2_000_000,
-    )
-    preliminary_map_parts = materialize_units([preliminary_map], settings)
-    evidence_slots = max(
-        0,
-        available
-        - len(documents)
-        - len(preliminary_query_parts)
-        - len(preliminary_map_parts),
-    )
+            business_slots,
+            logical_prefix="business-evidence",
+            kind="business_evidence",
+            heading="業務證據",
+            guidance="用來確認正式業務政策；不得由技術實作取代",
+            required=True,
+        )
+        preliminary_query = Unit(
+            logical_source_id=QUERY_INDEX_SOURCE_ID,
+            kind="router",
+            group="query",
+            title="BA 業務問題索引",
+            inputs=query_inputs,
+            content=query_index_content(
+                root,
+                business_pages,
+                business_candidates,
+                trace_candidates,
+                documents,
+                business_evidence,
+                [],
+                [],
+                business_coverage,
+                settings,
+            ),
+            priority=2_100_000,
+        )
+        preliminary_query_parts = materialize_units([preliminary_query], settings)
+        preliminary_map = Unit(
+            logical_source_id="project-map",
+            kind="navigation",
+            group="business-core",
+            title="業務知識導覽",
+            inputs=_unique_input_files(
+                [
+                    *business_pages,
+                    *(candidate.input_file for candidate in business_candidates),
+                ]
+            ),
+            content=project_map_content(
+                root,
+                preliminary_query_parts + documents + business_evidence,
+                skipped,
+                warnings,
+                settings,
+                business_coverage,
+                dlp,
+            ),
+            priority=2_000_000,
+        )
+        preliminary_map_parts = materialize_units([preliminary_map], settings)
+        mandatory_total = (
+            len(documents)
+            + len(business_evidence)
+            + len(preliminary_query_parts)
+            + len(preliminary_map_parts)
+        )
+        if mandatory_total <= available:
+            break
+        business_slots = max(0, business_slots - (mandatory_total - available))
+    else:
+        raise ExportError(
+            "unable to fit BA router, navigation, documentation, and business evidence"
+        )
 
-    evidence: list[tuple[Unit, str, str]] = []
+    trace_slots = max(0, available - mandatory_total)
+    traceability: list[tuple[Unit, str, str]] = []
     budget_skipped: list[dict[str, str]] = []
     project_parts: list[tuple[Unit, str, str]] = []
     query_parts: list[tuple[Unit, str, str]] = []
     for _ in range(8):
-        evidence, budget_skipped = select_evidence(candidates, settings, evidence_slots)
+        traceability, budget_skipped = select_evidence(
+            trace_candidates,
+            settings,
+            trace_slots,
+            logical_prefix="trace",
+            kind="technical_traceability",
+            heading="技術追溯",
+            guidance="只用來查核目前實作，不代表正式業務政策",
+        )
         all_skipped = skipped + budget_skipped
         current_warnings = list(warnings)
         if budget_skipped:
             current_warnings.append(
-                f"因 source budget 未匯出 {len(budget_skipped)} 個 evidence files"
+                f"因 source budget 未匯出 {len(budget_skipped)} 個 technical traceability files"
             )
         omitted_paths = {item["path"] for item in budget_skipped}
-        project_inputs = pages + [
-            candidate.input_file
-            for candidate in candidates
-            if candidate.input_file.path not in omitted_paths
-        ]
+        project_inputs = _unique_input_files(
+            [
+                *business_pages,
+                *(candidate.input_file for candidate in business_candidates),
+                *(
+                    candidate.input_file
+                    for candidate in trace_candidates
+                    if candidate.input_file.path not in omitted_paths
+                ),
+            ]
+        )
         query_unit = Unit(
             logical_source_id=QUERY_INDEX_SOURCE_ID,
-            kind="query_index",
+            kind="router",
             group="query",
-            title="問題定位索引",
+            title="BA 業務問題索引",
             inputs=query_inputs,
             content=query_index_content(
                 root,
-                pages,
-                candidates,
+                business_pages,
+                business_candidates,
+                trace_candidates,
                 documents,
-                evidence,
+                business_evidence,
+                traceability,
                 budget_skipped,
-                coverage,
+                business_coverage,
                 settings,
             ),
             priority=2_100_000,
@@ -2827,31 +3353,39 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         query_parts = materialize_units([query_unit], settings)
         project_unit = Unit(
             logical_source_id="project-map",
-            kind="project",
-            group="project",
-            title="專案導覽",
-            inputs=tuple(project_inputs),
+            kind="navigation",
+            group="business-core",
+            title="業務知識導覽",
+            inputs=project_inputs,
             content=project_map_content(
                 root,
-                query_parts + documents + evidence,
+                query_parts + documents + business_evidence + traceability,
                 all_skipped,
                 current_warnings,
                 settings,
-                coverage,
+                business_coverage,
                 dlp,
             ),
             priority=2_000_000,
         )
         project_parts = materialize_units([project_unit], settings)
-        total = len(query_parts) + len(project_parts) + len(documents) + len(evidence)
+        total = (
+            len(query_parts)
+            + len(project_parts)
+            + len(documents)
+            + len(business_evidence)
+            + len(traceability)
+        )
         if total <= available:
             warnings = current_warnings
             break
-        evidence_slots = max(0, evidence_slots - (total - available))
+        trace_slots = max(0, trace_slots - (total - available))
     else:
         raise ExportError("unable to fit project map and mandatory documentation within source limit")
 
-    materialized = query_parts + project_parts + documents + evidence
+    materialized = (
+        query_parts + project_parts + documents + business_evidence + traceability
+    )
     if len(materialized) > available:
         raise ExportError(
             f"source pack needs {len(materialized)} sources but only {available} slots are available"
@@ -2864,34 +3398,65 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
     previous_manifest = load_previous_manifest(output)
     previous = previous_by_id(previous_manifest, output)
     actions = build_actions(entries, previous)
+    previous_schema = previous_manifest.get("schema_version") if previous_manifest else None
+    previous_contract = (
+        previous_manifest.get("retrieval", {}).get("contract")
+        if previous_manifest and isinstance(previous_manifest.get("retrieval"), dict)
+        else None
+    )
+    requires_full_rebuild = bool(
+        previous_manifest and previous_contract != RETRIEVAL_CONTRACT
+    )
+    migration = {
+        "requires_full_rebuild": requires_full_rebuild,
+        "from_schema_version": previous_schema,
+        "reason": (
+            "previous source pack does not use business-first-ba-v1"
+            if requires_full_rebuild
+            else None
+        ),
+    }
     output_relative = repo_relative(output, root)
     config_relative = repo_relative(settings.config_path, root) if settings.config_path else None
     all_skipped = skipped + budget_skipped
     manifest = {
         "schema_version": EXPORT_SCHEMA_VERSION,
+        "audience": AUDIENCE,
+        "knowledge_contract": KNOWLEDGE_CONTRACT,
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "git_revision": git_revision(root),
         "profile": settings.profile,
         "project": root.name,
         "output_directory": output_relative,
         "config": config_relative,
+        "source_policy": {
+            "business_source_paths": list(settings.business_source_paths),
+            "include_traceability": settings.include_traceability,
+        },
         "retrieval": retrieval_contract_payload(),
+        "migration": migration,
         "limits": limits_payload(settings),
         "dlp": dlp,
         "scan": scan_summary(scan),
         "coverage": {
             **coverage_summary(scan),
-            "required_documents": coverage,
             "documentation_groups": sorted({unit.group for unit, _, _ in documents}),
         },
+        "business_coverage": business_coverage,
         "source_count": len(entries),
         "sources": entries,
         "omitted_evidence": budget_skipped,
+        "omitted_traceability": budget_skipped,
         "skipped": all_skipped,
         "warnings": warnings,
     }
     plan = upload_plan_content(
-        len(entries), settings.available_source_slots, actions, budget_skipped, warnings
+        len(entries),
+        settings.available_source_slots,
+        actions,
+        budget_skipped,
+        warnings,
+        migration,
     )
     files: dict[str, bytes] = {
         "manifest.json": _json_bytes(manifest),

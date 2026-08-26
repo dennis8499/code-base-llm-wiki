@@ -32,6 +32,14 @@ class ContractTests(unittest.TestCase):
             manifest["intents"]["notebooklm_export"]["authorization_policy"],
             "preview_then_confirm",
         )
+        self.assertEqual(
+            manifest["intents"]["notebooklm_export"]["confirmation_stages"],
+            ["discovery_plan", "readiness_apply"],
+        )
+        self.assertEqual(
+            manifest["intents"]["notebooklm_export"]["audience"],
+            "business-analyst",
+        )
         self.assertEqual(len(manifest["intents"]), 11)
         self.assertEqual(len(manifest["intent_groups"]), 10)
         grouped = [
@@ -144,12 +152,21 @@ class ContractTests(unittest.TestCase):
             self.assertIn("notebooklm_group", text)
         self.assertIn("full safe project", workflow.lower())
         self.assertRegex(prompt, r"全專案|整個專案")
-        self.assertIn("Documentation is mandatory", workflow)
-        self.assertIn("before evidence", workflow)
+        self.assertIn("business-first-ba-v1", workflow)
+        self.assertIn("business_source_paths", workflow)
+        self.assertIn("include_traceability", workflow)
+        self.assertIn("second readiness preflight", workflow)
+        self.assertIn("第二次確認", prompt)
         self.assertTrue((skill_root / "scripts" / "notebooklm_exporter.py").is_file())
-        self.assertTrue(
-            (skill_root / "assets" / "project-function-catalog-template.md").is_file()
-        )
+        for template in (
+            "business-process-template.md",
+            "business-rule-template.md",
+            "business-process-catalog-template.md",
+            "business-rule-catalog-template.md",
+            "business-glossary-template.md",
+            "business-knowledge-gaps-template.md",
+        ):
+            self.assertTrue((skill_root / "assets" / template).is_file())
 
     def test_ci_and_release_workflows_bind_runtime_and_release_gates(self) -> None:
         ci = (REPO_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")

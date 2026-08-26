@@ -3,6 +3,7 @@ title: Wiki 品質與證據追溯
 type: module
 summary: 以 frontmatter、內容摘要、語意連結、受管索引與 append-only log 建立可稽核的 Markdown 知識層
 notebooklm_group: function-wiki-quality
+notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/references/frontmatter-spec.md
   - .agents/skills/codebase-wiki/scripts/frontmatter.py
@@ -14,7 +15,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/rebuild-index.py
   - tests/test_wiki_lint.py
   - tests/test_stale.py
-source_digest: sha256:5428c57cfaaa0f87180c633fe16ea6967dda83b47d604d1cae3e3abd6e6af2ad
+source_digest: sha256:9af1b327b539b09e8623894d773c62946811e715c1989850a6bb607798f79758
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-08-26
 tags: [module, lint, provenance, frontmatter, freshness]
@@ -25,7 +26,10 @@ status: active
 
 ## 職責
 
-- 驗證頁面 type、路徑、日期、status 與型別特定 frontmatter。
+- 驗證頁面 type、路徑、日期、status 與型別特定 frontmatter；`business-process` 另驗證
+  `process_id`、actors、coverage，`business-rule` 驗證 `rule_id`、`applies_to` 與 evidence state。
+- 驗證 NotebookLM `business|traceability|exclude` roles、穩定 group，並要求 business pages
+  提供非空 `notebooklm_terms`。
 - 分離 raw `sources` 與 Wiki `derived_from`，並以 `source_digest` 偵測內容變更。
 - 檢查 missing/stale sources、broken/ambiguous wikilinks、真正 orphan 與 index completeness。
 - 檢查 `sources` 的實際解析路徑仍位於 repo root 內，拒絕 drive-qualified path 或逃逸到
@@ -47,7 +51,8 @@ Orphan inbound 不計 `index.md`、`log.md` 或自我連結。`source_digest` �
 
 ## Evidence
 
-- `validate-frontmatter.py` 驗證 `summary`、`derived_from` 與 digest 格式。
+- `validate-frontmatter.py` 驗證 `summary`、`derived_from`、digest、BA page types 與
+  NotebookLM role/term 契約。
 - `check-stale.py` 對排序後 path/file hash records 建立 aggregate SHA-256。
 - `check-stale.py` 在 existence/digest 判定前驗證 source symlink containment。
 - `check-stale.py`、`validate-frontmatter.py` 與 `wiki-stats.py` 都提供標準

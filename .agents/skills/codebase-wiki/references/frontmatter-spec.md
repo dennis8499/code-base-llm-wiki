@@ -28,20 +28,25 @@
 Wiki、dependency、generated、cache 與 export output。舊頁面缺少這些欄位時
 Lint 先回報 Info，不作為 schema failure。
 
-### NotebookLM 功能分組（選填）
+### NotebookLM 業務分組與角色（選填）
 
 | 欄位 | 型別 | 必填 | 說明 | 範例 |
 | --- | --- | --- | --- | --- |
-| `notebooklm_group` | string | NotebookLM preparation 建立或更新的頁面必填；其他頁面選填 | 穩定的功能文件群組，使用 kebab-case | `function-order-checkout` |
+| `notebooklm_group` | string | NotebookLM preparation 建立或更新的頁面必填；其他頁面選填 | 穩定的業務能力群組，使用 kebab-case | `business-order-cancellation` |
+| `notebooklm_role` | enum | NotebookLM preparation 建立或更新的頁面必填；其他頁面選填 | `business` / `traceability` / `exclude` | `business` |
+| `notebooklm_terms` | string[] | `notebooklm_role: business` 時必填且不可為空 | BA 查詢用角色、流程、規則與詞彙 | `[訂單取消, 客服]` |
 
 允許值必須符合 `^[a-z0-9]+(?:-[a-z0-9]+)*$`。同一功能域重跑時沿用既有值；
-共用高階頁面使用 `project`、`architecture` 或 `system-analysis`。舊頁面沒有此欄位時，
-exporter 會依 type/path 使用相容 fallback。
+BA 高階頁面使用 `business-core`，流程／規則與其追溯頁面共用
+`business-{capability}`。缺少 `notebooklm_role` 的舊頁面不會自動成為 BA source；
+exporter 會省略並回報 warning。
 
 ### `type` 允許值
 
 | 值             | 對應目錄             | 說明                         |
 | -------------- | -------------------- | ---------------------------- |
+| `business-process` | `wiki/processes/` | 端到端業務流程 |
+| `business-rule` | `wiki/rules/` | 可獨立查詢的業務條件與決策 |
 | `module`       | `wiki/modules/`      | 按模組/目錄的文件頁面        |
 | `entity`       | `wiki/entities/`     | 類別、服務、API 端點、DB 表  |
 | `pattern`      | `wiki/patterns/`     | 設計模式                     |
@@ -58,6 +63,8 @@ exporter 會依 type/path 使用相容 fallback。
 
 | `type` | 合法位置 |
 | --- | --- |
+| `business-process` | `wiki/processes/*.md` |
+| `business-rule` | `wiki/rules/*.md` |
 | `module` | `wiki/modules/*.md` |
 | `entity` | `wiki/entities/*.md` |
 | `pattern` | `wiki/patterns/*.md` |
@@ -113,6 +120,28 @@ exporter 會依 type/path 使用相容 fallback。
 | `version`      | string | ✅    | 目前使用版本               | `"^10.3.0"`      |
 | `registry`     | string | 建議 | npm / pypi / maven / nuget | `"npm"`          |
 
+### `type: business-process`
+
+| 欄位 | 型別 | 必填 | 說明 |
+| --- | --- | --- | --- |
+| `process_id` | string | ✅ | 穩定 kebab-case ID，建議 `bp-{domain}-{process}` |
+| `actors` | string[] | ✅ | 參與角色；未知時可為空並在 body 登錄 gap |
+| `coverage_status` | enum | ✅ | `covered` / `partial` / `gap` |
+| `notebooklm_group` | string | ✅ | `business-{capability}` |
+| `notebooklm_role` | enum | ✅ | 固定為 `business` |
+| `notebooklm_terms` | string[] | ✅ | 非空的流程、角色、觸發與同義詞 |
+
+### `type: business-rule`
+
+| 欄位 | 型別 | 必填 | 說明 |
+| --- | --- | --- | --- |
+| `rule_id` | string | ✅ | 穩定 kebab-case ID，建議 `br-{domain}-{rule}` |
+| `applies_to` | string[] | ✅ | 至少一個 `[[business-process]]` wikilink |
+| `evidence_state` | enum | ✅ | `business-confirmed` / `implementation-observed` / `inference` / `gap` |
+| `notebooklm_group` | string | ✅ | 與適用流程相同的 business group |
+| `notebooklm_role` | enum | ✅ | 固定為 `business` |
+| `notebooklm_terms` | string[] | ✅ | 非空的規則、條件、結果與同義詞 |
+
 ### `type: index` 與 `type: log`
 
 | 頁面 | 必填值 |
@@ -163,3 +192,5 @@ page-shape source of truth.
 13. `summary` 若存在，必須是非空字串。
 14. `derived_from` 若存在，必須是由 `[[wikilink]]` 組成的陣列。
 15. `source_digest` 若存在，必須符合 `sha256:<64 lowercase hex>`。
+16. `notebooklm_role` 與 `notebooklm_terms` 必須符合上述角色契約。
+17. Business Process/Rule 頁面必須位於指定目錄且通過其 type-specific 驗證。

@@ -24,9 +24,9 @@ flowchart TB
     Enough -->|否| Sources[唯讀檢查 raw sources]
     Sources --> Result
     Result -->|持久化工作流| Wiki[更新頁面 / index / append-only log]
-    Project[Full safe project scan] -->|NotebookLM export| Docs[Functional Wiki documents]
+    Project[Full safe project scan] -->|NotebookLM export| Docs[BA processes, rules, terms, gaps]
     Docs --> Wiki
-    Docs --> Pack[.notebooklm documents-first pack]
+    Docs --> Pack[.notebooklm BA-first pack]
 ```
 
 ## 雙入口與共用契約
@@ -104,8 +104,7 @@ substitution.
 - Query 不因讀取而自動持久化結果。
 - SQL Server live evidence 只允許 bounded read-only evidence，且不能放入 frontmatter sources。
 - 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
-- NotebookLM export 每次唯讀全量掃描可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件；既有 Wiki 是增量知識基線，不是掃描邊界。
-- 確認 inventory、coverage、文件計畫與容量後，Agent 依功能更新 Wiki；exporter
-  必須以相符 `preflight_id` apply，本機 `.notebooklm/` 採 documents-first 與原子替換。
-- Export 不呼叫 NotebookLM API，也不自動上傳；敏感檔案、tests、CI/IaC、build/dev tooling、dependencies、generated/binary 與 framework adapters 不會被打包。
+- NotebookLM export 每次唯讀全量掃描安全 UTF-8 repo text；既有 Wiki 是增量知識基線，不是掃描邊界，非文字業務證據列為 gap。
+- Agent 先以 discovery preflight 確認 BA 文件計畫，更新流程、規則、詞彙與 gaps 後，再以 readiness preflight 的新 ID 確認 apply；本機 `.notebooklm/` 採 BA-first 與原子替換。
+- Export 不呼叫 NotebookLM API，也不自動上傳；敏感、generated/dependency、CI/IaC、Wiki/output 等安全排除不能被設定繞過；技術 traceability 預設獨立且可省略。
 - 不允許 delegation 隱性改變寫入或安全邊界。
