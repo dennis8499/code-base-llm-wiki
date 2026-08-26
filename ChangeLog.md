@@ -8,6 +8,11 @@
 
 ### Fixed
 
+- **NotebookLM exclusion-aware fallback traversal**：exporter 與 Wiki stale digest fallback
+  改用 top-down 剪枝 walker；保留 ignored、untracked、nested repository 的 runtime source，
+  在進入 `.git`、dependencies、generated/cache、tests、CI/IaC、tooling、Wiki/output 等
+  排除目錄前停止遞迴，並以 bounded metadata-only root summary 回報排除範圍與 truncation，
+  避免大型專案在全量 fallback 掃描時因無界 `rglob` 超過 timeout。
 - **NotebookLM filesystem-root inventory**：exporter 改以明確 `--root` 的檔案系統內容作為
   inventory 邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋；
   NotebookLM preflight 的 Wiki lint 停用 Git dirty-path、commit-date 與 log-baseline lookup，

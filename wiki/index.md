@@ -37,7 +37,7 @@ status: active
 | 頁面 | 摘要 |
 |------|------|
 | [[installer-and-upgrade]] | Installer v3 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架 |
-| [[notebooklm-exporter]] | 以 Wiki-first query-index、本機 Basic DLP、強制 preflight identity、必要文件閘門與原子輸出建立可直接定位問題的 NotebookLM source pack |
+| [[notebooklm-exporter]] | 以 Wiki-first query-index、本機 Basic DLP、exclusion-aware fallback、強制 preflight identity、必要文件閘門與原子輸出建立可直接定位問題的 NotebookLM source pack |
 | [[platform-adapters-and-release]] | 以 capability parity、跨平台 CI、單一版本來源與授權前置閘門維持可發布的雙平台框架 |
 | [[platform-hooks-and-guards]] | Codex 與 Copilot 共用 canonical hooks，並以 wiki-only、coexist、framework 三種模式明確控制寫入邊界 |
 | [[wiki-quality-and-provenance]] | 以 frontmatter、內容摘要、語意連結、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |
@@ -63,7 +63,7 @@ _（尚無頁面）_
 | 頁面 | 摘要 |
 |------|------|
 | [[framework-introduction]] | 從安裝、Wiki-first 操作到驗證與升級的框架使用路線 |
-| [[notebooklm-export]] | 先完成功能文件與 DLP preflight，再以 query-index、project-map 與相符 ID 原子產生 NotebookLM source pack |
+| [[notebooklm-export]] | 先完成功能文件與 DLP preflight，再以 exclusion-aware 全量掃描、query-index、project-map 與相符 ID 原子產生 NotebookLM source pack |
 | [[release-and-update]] | 以 VERSION、contract 3、CI 與授權 readiness gate 管理可驗證的框架發布 |
 
 ## Synthesis

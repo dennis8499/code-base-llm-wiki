@@ -14,7 +14,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/rebuild-index.py
   - tests/test_wiki_lint.py
   - tests/test_stale.py
-source_digest: sha256:e405b29520d8541b515e393d78b031496bbf1adf84ab3e48ce59414ceb7b20de
+source_digest: sha256:5428c57cfaaa0f87180c633fe16ea6967dda83b47d604d1cae3e3abd6e6af2ad
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-08-26
 tags: [module, lint, provenance, frontmatter, freshness]

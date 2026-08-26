@@ -485,3 +485,9 @@ status: active
 - exporter 改以明確 `--root` 的檔案系統內容作為 NotebookLM inventory，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋；nested `.git` metadata 仍依 generated 排除規則處理
 - NotebookLM preflight 的 Wiki lint 停用 Git dirty-path、commit-date 與 log-baseline lookup，維持結構檢查、內容 hash、DLP 與 preflight identity；新增無 Git/nested repository regression
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[wiki-quality-and-provenance]]、[[framework-introduction]]、[[release-and-update]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-analysis]]
+
+## [2026-08-26] update | NotebookLM exclusion-aware fallback traversal
+
+- exporter 與 Wiki stale digest fallback 改用 top-down 剪枝 walker，保留 ignored、untracked 與 nested repository runtime source，避免大型排除樹造成無界 fallback 掃描
+- manifest/preflight inventory 新增 directory-level `excluded_roots` bounded metadata summary；不讀取或 hash 排除內容，並對 truncation/metadata error 發出 warning；directory evidence 與 inventory 共用 exclusion-aware walker
+- 受影響頁面：[[index]]、[[notebooklm-exporter]]、[[notebooklm-export]]

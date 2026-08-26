@@ -1,15 +1,16 @@
 ---
 title: NotebookLM 離線匯出器
 type: module
-summary: 以 Wiki-first query-index、必要文件閘門與原子輸出建立可直接定位問題的 NotebookLM source pack
+summary: 以 Wiki-first query-index、必要文件閘門、exclusion-aware fallback 與原子輸出建立可直接定位問題的 NotebookLM source pack
 notebooklm_group: function-notebooklm-export
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
+  - .agents/skills/codebase-wiki/scripts/check-stale.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:0112886bde0b01cdccb12022fce720566d02ef2a59900912f89c8601d5b1e758
+source_digest: sha256:9f718569b11bcbf1f1b3b844ea93299f8164927422a75581fac52831d24e4d36
 derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
 last_updated: 2026-08-26
 tags: [module, notebooklm, exporter, preflight]
@@ -23,6 +24,9 @@ status: active
 - 以 `--root` 指定的檔案系統目錄為邊界，盤點其中安全的 UTF-8 專案證據；不要求
   `.git` 或 clean working tree，也不因 nested repository 阻擋，nested `.git` metadata
   仍按 generated state 排除。
+- 以 top-down exclusion-aware walker 保留 ignored、untracked 與 nested repository 的
+  runtime source，並在進入排除目錄前剪枝；排除目錄只產生 bounded metadata-only root
+  summary，不讀取或 hash 其中內容。
 - NotebookLM preflight 的 Wiki lint 保留結構與內容檢查，但停用 Git dirty-path、commit-date
   與 log-baseline lookup；檔案內容 hash 與 preflight identity 仍維持 deterministic。
 - 在讀取任何 Wiki page 前先驗證 Wiki root 是 regular tree，拒絕 symlink/reparse point，
@@ -61,6 +65,10 @@ status: active
   名稱包含 `secrets` 或 `credentials` 而誤排除整個專案。
 - Preflight 額外回報 `coverage.status`、未覆蓋路徑數量與明確 warning；`ready_to_export`
   只代表必要文件與 deterministic gate 通過，不代表全專案已被 Wiki sources 覆蓋。
+- Inventory 同時區分 file-level `excluded` 與 directory-level `excluded_roots`；後者包含
+  `observed_entries`、`observed_files`、`observed_directories`、`observed_bytes`、
+  `entry_limit`、`truncated` 與 metadata `errors`，讓大型排除樹的範圍可稽核而不觸發
+  無界內容掃描。
 - 在輸出限制或寫入失敗時保留上一份有效 pack。
 - 以 sibling transaction lock 序列化同一 output 的 commit；並行 writer 會 fail closed，避免
   互相覆蓋 recovery journal。
@@ -115,6 +123,13 @@ dlp_allowlist = [
 - 相容入口 `export-notebooklm.py` 只轉呼叫 canonical module，沒有第二套實作。
 - `tests/test_export_notebooklm.py::test_preflight_and_apply_handle_500_wiki_pages` 以
   500 個 synthetic module 驗證大規模 Wiki 的 full preflight/apply 與 source-limit compaction。
+- `test_preflight_prunes_large_excluded_tree_with_bounded_summary` 驗證 fallback 全量掃描
+  在大型 `node_modules` 下只保留 root summary、仍納入 runtime source，並回報 truncation
+  warning；`test_directory_evidence_uses_same_exclusion_aware_walker` 驗證 directory
+  evidence 不會重新遞迴讀取已排除的 nested dependency tree。
+- `tests/test_stale.py::test_filesystem_fallback_prunes_digest_excluded_directories` 驗證
+  exporter preflight 使用的 no-Git Wiki digest fallback 同樣在 `node_modules`、`build`
+  等目錄邊界剪枝。
 - `query-index.md` 以 Wiki page metadata、headings、`frontmatter.sources` 與實際 evidence
   input 建立可追溯路由；README 提供 Custom instructions 與同一本 Notebook 的一次性清空重傳步驟。
 - `tests/test_export_notebooklm.py::test_commit_output_restores_previous_pack_after_replacement_failure`

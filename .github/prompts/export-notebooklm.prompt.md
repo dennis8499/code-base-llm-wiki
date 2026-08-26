@@ -14,6 +14,10 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
 建立完整安全範圍清單，但只增量更新真正改變或缺漏的 Wiki 知識。掃描以檔案系統
 root 為準，不要求 root 有 `.git`、working tree clean，也不因 nested repository
 阻擋；nested repository 的 `.git` metadata 仍依 generated 排除規則忽略。
+使用 exporter 的 top-down exclusion-aware walker：保留 ignored、untracked 與 nested
+repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-level exclusions
+與 directory-level excluded-root summaries；summary 只做 bounded metadata-only
+觀察，不讀取或 hash 排除內容，`truncated` 或 metadata errors 必須保留為 warning。
 
 完整載入 `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md`，
 並以該 reference 作為 preflight、確認、文件優先與 pack completion criterion 的唯一來源。
@@ -33,8 +37,9 @@ root 為準，不要求 root 有 `.git`、working tree clean，也不因 nested 
    schema/migrations 與既有文件。排除 tests、CI/CD、IaC、build/dev tooling、
    dependencies/generated、binary、credentials、framework adapters、Wiki 與 output。
 4. 從 entrypoints、use cases、資料邊界、public interfaces 與 integrations 建立
-   功能域，不要只照目錄切頁。回報掃描數量與排除原因、功能 coverage、預計新增/
-   更新/不變的 Wiki pages、evidence、容量估計、DLP status 與 gaps，然後等待使用者確認。
+   功能域，不要只照目錄切頁。回報 included file counts、file-level exclusion reasons、
+   pruned excluded-root counts/summaries、功能 coverage、預計新增/更新/不變的 Wiki
+   pages、evidence、容量估計、DLP status 與 gaps，然後等待使用者確認。
    即使 Wiki clean 也必須預覽並確認；確認前不修改 Wiki 或產生 pack。
 5. 確認後保留人工內容並增量建立：overview、project function catalog、system
    architecture、每個功能域的 module/entity pages、system analysis。敘述固定繁體

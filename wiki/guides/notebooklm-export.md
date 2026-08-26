@@ -1,14 +1,15 @@
 ---
 title: NotebookLM Enterprise — 全專案功能文件化與離線匯出
 type: guide
-summary: 先完成功能文件與安全 preflight，再以 query-index 與相符 ID 原子產生 NotebookLM source pack
+summary: 先完成功能文件與安全 preflight，再以 exclusion-aware 全量掃描、query-index 與相符 ID 原子產生 NotebookLM source pack
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
+  - .agents/skills/codebase-wiki/scripts/check-stale.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:95f481718b1015e266f0f3c000c1fa57b13cadcb2a9d4ae023794bc04f201358
+source_digest: sha256:65ef99d9660c1565038f498c24930b8bdecd51942b1292218e23427b6bd8071a
 derived_from: ["[[overview]]", "[[notebooklm-exporter]]", "[[project-function-catalog]]"]
 last_updated: 2026-08-26
 tags: [guide, notebooklm, export, incremental, enterprise]
@@ -18,7 +19,7 @@ notebooklm_group: project-guides
 
 # NotebookLM Enterprise — 全專案功能文件化與離線匯出
 
-> 每次安全掃描整個專案，依功能建立可搜尋的繁體中文 Wiki，再整理成可審查、
+> 每次安全掃描整個專案的安全 runtime scope，依功能建立可搜尋的繁體中文 Wiki，再整理成可審查、
 > 可手動上傳且可重跑比對的 NotebookLM source pack。這是離線產出流程，不是
 > NotebookLM API 或自動同步服務。
 
@@ -31,11 +32,11 @@ Wiki 是可複用的知識基線，但每次執行仍會重掃安全的全專案
 
 ## 執行前檢查
 
-1. 執行 `--preflight`，以 `--root` 指定目錄為檔案系統掃描邊界，列出所有安全納入與排除的檔案；不要求 `.git`、clean working tree，也不因 nested repository 阻擋。NotebookLM preflight 的 Wiki lint 也不查 Git dirty path、commit date 或 log baseline。
+1. 執行 `--preflight`，以 `--root` 指定目錄為檔案系統掃描邊界，列出 included files、file-level exclusions 與 pruned excluded-root summaries；walker 在進入排除目錄前剪枝，不要求 `.git`、clean working tree，也不因 nested repository 阻擋。Root summary 只做 bounded metadata scan，不讀取或 hash 排除樹內容；若標記 `truncated` 或 metadata error，必須列入 warning。NotebookLM preflight 的 Wiki lint 也不查 Git dirty path、commit date 或 log baseline。
 2. 納入可分享的 runtime source、必要 config/manifests、schema/migrations 與既有文件。
 3. 排除 tests、CI/CD、IaC、build/dev tooling、dependencies、generated/build/cache、binary、secrets、Wiki/output 與明確設定的 exclusions；預設 `target` profile 另排除 framework adapters。
 4. 讀取全部 included files，依專案功能建立 source-to-function coverage map；讀 Wiki index/pages 判斷已覆蓋、stale、placeholder、矛盾與缺失文件。
-5. 預覽 included/excluded inventory、功能群組、預計新增或重大更新頁面、來源數/容量估計、warnings 與未驗證事項；即使沒有問題也等待確認。
+5. 預覽 included files、file-level exclusions、pruned excluded-root summaries、功能群組、預計新增或重大更新頁面、來源數/容量估計、warnings 與未驗證事項；若 root summary 標記 `truncated` 或 metadata error，列入 warning；即使沒有問題也等待確認。
 6. 人工確認預覽沒有不應分享的商業機密、個資、憑證或租戶政策衝突。
 
 唯讀預覽命令：
@@ -94,7 +95,7 @@ path，且存在並是一般檔案；不存在或無法解析時 preflight/apply
 - `sources/*.md`：唯一應手動加入 NotebookLM 的 source files；
 - `sources/query-index.md`：Wiki-first direct-lookup 路由、問題類型、功能群組與 docs/evidence 對應；
 - `sources/project-map.md`：source catalog、coverage、DLP 與 warnings 導覽；
-- `manifest.json`：schema v3、scan inventory/coverage、profile、設定 limits、input/output hashes、stable IDs、DLP status、warnings、omitted evidence 與 skipped paths；
+- `manifest.json`：schema v3、scan inventory/coverage（含 file-level exclusions 與 excluded-root summaries）、profile、設定 limits、input/output hashes、stable IDs、DLP status、warnings、omitted evidence 與 skipped paths；
 - `upload-plan.md`：本次相對上一次 manifest 的操作分類；
 - `README.md`：給上傳者的本機操作摘要、Custom instructions 與一次性重建步驟。
 
@@ -178,7 +179,8 @@ Wiki input tree 也會在讀取頁面前驗證為 regular tree；若 Wiki root �
 拒絕，避免命令列輸入繞過 repository boundary。
 
 預設會回報並排除 secrets/credentials、binary、tests、CI/IaC、build/dev tooling、
-generated/build/cache、platform fallback audit logs、dependency、framework adapter 目錄與 export output。任何
+generated/build/cache、platform fallback audit logs、dependency、framework adapter 目錄與 export output；
+排除目錄以 root summary 呈現 bounded metadata 統計，不逐檔展開。任何
 skipped、omitted、warning 或 unresolved item
 都必須在交付報告中列出；人工審查仍負責確認商業機密、個資與租戶政策。
 

@@ -94,6 +94,37 @@ def _source_path(repo_root: pathlib.Path, source: str) -> pathlib.Path:
     return repo_root.joinpath(*pure.parts)
 
 
+def _filesystem_source_files(
+    repo_root: pathlib.Path, source_path: pathlib.Path
+) -> list[pathlib.Path]:
+    """Enumerate a source directory without descending into digest exclusions."""
+
+    pending = [source_path]
+    candidates: list[pathlib.Path] = []
+    resolved_root = repo_root.resolve()
+    while pending:
+        current = pending.pop()
+        try:
+            entries = sorted(current.iterdir(), key=lambda item: item.name)
+        except OSError:
+            continue
+        for path in entries:
+            try:
+                relative = path.relative_to(resolved_root)
+            except ValueError:
+                continue
+            if set(relative.parts) & DIGEST_EXCLUDED_PARTS:
+                continue
+            try:
+                if path.is_dir() and not path.is_symlink():
+                    pending.append(path)
+                elif path.is_file() or path.is_symlink():
+                    candidates.append(path)
+            except OSError:
+                continue
+    return candidates
+
+
 def _source_files(
     repo_root: pathlib.Path, source: str, *, use_git: bool = True
 ) -> list[pathlib.Path]:
@@ -108,7 +139,7 @@ def _source_files(
         return []
 
     if not use_git:
-        candidates = list(source_path.rglob("*"))
+        candidates = _filesystem_source_files(repo_root, source_path)
     else:
         relative_source = source_path.relative_to(repo_root.resolve()).as_posix()
         try:
@@ -134,7 +165,7 @@ def _source_files(
                 if value
             ]
         except (OSError, subprocess.CalledProcessError):
-            candidates = list(source_path.rglob("*"))
+            candidates = _filesystem_source_files(repo_root, source_path)
 
     files: list[pathlib.Path] = []
     for path in candidates:

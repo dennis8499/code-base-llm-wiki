@@ -8,7 +8,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:8797a8572b732e6e01061e560f62b49e3cb3337a5c02d4dd14bf6871f1532048
+source_digest: sha256:fb106e6ab6b12d8af27748f03177382364669b8ce18005f409811791dbca3d61
 derived_from: []
 last_updated: 2026-08-26
 tags: [framework, llm, wiki, copilot, codex]

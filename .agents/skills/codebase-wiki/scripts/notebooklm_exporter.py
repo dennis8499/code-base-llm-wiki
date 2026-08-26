@@ -55,6 +55,7 @@ ENTERPRISE_MAX_WORDS = 500_000
 DEFAULT_MAX_SOURCES = ENTERPRISE_MAX_SOURCES
 DEFAULT_MAX_BYTES = 180_000_000
 DEFAULT_MAX_WORDS = 450_000
+EXCLUDED_SUMMARY_ENTRY_LIMIT = 4_096
 
 WIKI_LOG_PATH = "wiki/log.md"
 REQUIRED_WIKI_DOCUMENTS = (
@@ -812,10 +813,13 @@ def _is_transaction_artifact(relative: str) -> bool:
     return False
 
 
-def exclusion_reason(path: Path, root: Path, settings: Settings) -> str | None:
-    relative = repo_relative(path, root)
+def _exclusion_reason_for_relative(relative: str, settings: Settings) -> str | None:
+    """Classify a lexical repo-relative path without resolving it."""
+
+    path = PurePosixPath(relative)
     lower = relative.lower()
-    parts = set(PurePosixPath(lower).parts)
+    lower_path = PurePosixPath(lower)
+    parts = set(lower_path.parts)
     output = settings.output_directory.lower()
     if _is_transaction_artifact(relative):
         return "binary_or_generated"
@@ -842,11 +846,17 @@ def exclusion_reason(path: Path, root: Path, settings: Settings) -> str | None:
         return "scan_scope_dev_tooling"
     if _has_prefix(relative, settings.exclude_paths):
         return "configured_exclude"
-    if is_sensitive(Path(*PurePosixPath(relative).parts)):
+    if is_sensitive(path):
         return "sensitive_filename"
     if path.name == ".gitkeep":
         return "binary_or_generated"
     return None
+
+
+def exclusion_reason(path: Path, root: Path, settings: Settings) -> str | None:
+    """Classify a path after enforcing its repository boundary."""
+
+    return _exclusion_reason_for_relative(repo_relative(path, root), settings)
 
 
 def classify_project_file(relative: str) -> str:
@@ -862,16 +872,226 @@ def classify_project_file(relative: str) -> str:
     return "runtime_source"
 
 
-def repository_files(root: Path) -> list[Path]:
-    """Enumerate files beneath the explicit root without consulting Git.
+def _lexical_relative(path: Path, root: Path) -> str:
+    """Return a repo-relative path without resolving filesystem links."""
 
-    Git metadata and other unsafe/generated paths are classified later by
-    ``exclusion_reason``. Keeping enumeration independent from repository
-    state means an uncommitted or ignored project-owned text file is still
-    considered, while the existing safety and DLP gates remain authoritative.
-    """
+    try:
+        return Path(os.path.relpath(os.fspath(path), os.fspath(root))).as_posix()
+    except ValueError as exc:
+        raise ExportError(f"path escapes repository root: {path}") from exc
 
-    return sorted((path for path in root.rglob("*") if path.is_file()), key=lambda item: item.as_posix())
+
+def _path_requires_resolution(path: Path) -> bool:
+    """Identify links/reparse points whose canonical target needs checking."""
+
+    if path.is_symlink():
+        return True
+    return os.name == "nt" and _is_reparse_point(path)
+
+
+def _link_exclusion_reason(
+    path: Path, relative: str, root: Path, settings: Settings
+) -> str:
+    """Classify a link without ever traversing its target."""
+
+    configured = _exclusion_reason_for_relative(relative, settings)
+    if configured:
+        return configured
+    try:
+        repo_relative(path, root)
+    except ExportError:
+        return "path_escape"
+    return "binary_or_generated"
+
+
+def _bounded_excluded_root_summary(
+    path: Path, relative: str, reason: str, *, boundary_only: bool = False
+) -> dict[str, Any]:
+    """Summarize a pruned tree using bounded metadata-only inspection."""
+
+    summary: dict[str, Any] = {
+        "path": relative,
+        "reason": reason,
+        "kind": "directory",
+        "pruned": True,
+        "entry_limit": EXCLUDED_SUMMARY_ENTRY_LIMIT,
+        "observed_entries": 0,
+        "observed_files": 0,
+        "observed_directories": 0,
+        "observed_bytes": 0,
+        "errors": 0,
+        "truncated": False,
+    }
+    if boundary_only:
+        return summary
+
+    pending = [path]
+    while pending and summary["observed_entries"] < EXCLUDED_SUMMARY_ENTRY_LIMIT:
+        current = pending.pop()
+        try:
+            with os.scandir(current) as iterator:
+                entries = sorted(iterator, key=lambda item: item.name)
+        except OSError:
+            summary["errors"] += 1
+            continue
+        for entry in entries:
+            if summary["observed_entries"] >= EXCLUDED_SUMMARY_ENTRY_LIMIT:
+                summary["truncated"] = True
+                break
+            summary["observed_entries"] += 1
+            try:
+                if entry.is_symlink():
+                    continue
+                if entry.is_dir(follow_symlinks=False):
+                    summary["observed_directories"] += 1
+                    entry_path = Path(entry.path)
+                    if os.name == "nt" and _is_reparse_point(entry_path):
+                        continue
+                    pending.append(entry_path)
+                elif entry.is_file(follow_symlinks=False):
+                    summary["observed_files"] += 1
+                    summary["observed_bytes"] += entry.stat(
+                        follow_symlinks=False
+                    ).st_size
+            except OSError:
+                summary["errors"] += 1
+
+    if pending:
+        summary["truncated"] = True
+    return summary
+
+
+def _append_excluded_root(
+    excluded_roots: list[dict[str, Any]] | None,
+    skipped: list[dict[str, str]] | None,
+    path: Path,
+    relative: str,
+    reason: str,
+    *,
+    boundary_only: bool = False,
+) -> None:
+    if excluded_roots is not None:
+        excluded_roots.append(
+            _bounded_excluded_root_summary(
+                path, relative, reason, boundary_only=boundary_only
+            )
+        )
+    if skipped is not None:
+        skipped.append({"path": relative, "reason": reason})
+
+
+def _iter_project_files(
+    root: Path,
+    settings: Settings,
+    *,
+    start: Path | None = None,
+    excluded_roots: list[dict[str, Any]] | None = None,
+    skipped: list[dict[str, str]] | None = None,
+) -> Iterable[tuple[Path, str]]:
+    """Walk only eligible trees while retaining ignored/untracked source files."""
+
+    base = start or root
+    if base.is_file():
+        yield base, _lexical_relative(base, root)
+        return
+    if not base.is_dir():
+        return
+
+    base_relative = _lexical_relative(base, root)
+    if base_relative != ".":
+        if _path_requires_resolution(base):
+            reason = _link_exclusion_reason(base, base_relative, root, settings)
+            _append_excluded_root(
+                excluded_roots,
+                skipped,
+                base,
+                base_relative,
+                reason,
+                boundary_only=True,
+            )
+            return
+        reason = _exclusion_reason_for_relative(base_relative, settings)
+        if reason:
+            _append_excluded_root(
+                excluded_roots, skipped, base, base_relative, reason
+            )
+            return
+
+    pending = [base]
+    while pending:
+        current = pending.pop()
+        try:
+            with os.scandir(current) as iterator:
+                entries = sorted(iterator, key=lambda item: item.name)
+        except OSError:
+            relative = _lexical_relative(current, root)
+            _append_excluded_root(
+                excluded_roots,
+                skipped,
+                current,
+                relative,
+                "unreadable",
+                boundary_only=True,
+            )
+            continue
+
+        directories: list[Path] = []
+        try:
+            for entry in entries:
+                path = Path(entry.path)
+                relative = _lexical_relative(path, root)
+                try:
+                    is_symlink = entry.is_symlink()
+                    is_directory = entry.is_dir(follow_symlinks=False)
+                    is_file = entry.is_file(follow_symlinks=False)
+                except OSError:
+                    _append_excluded_root(
+                        excluded_roots,
+                        skipped,
+                        path,
+                        relative,
+                        "unreadable",
+                        boundary_only=True,
+                    )
+                    continue
+
+                is_reparse = is_symlink or (
+                    os.name == "nt" and _is_reparse_point(path)
+                )
+                if is_reparse:
+                    linked_directory = is_directory
+                    if is_symlink and not linked_directory:
+                        try:
+                            linked_directory = entry.is_dir(follow_symlinks=True)
+                        except OSError:
+                            linked_directory = False
+                    if linked_directory:
+                        _append_excluded_root(
+                            excluded_roots,
+                            skipped,
+                            path,
+                            relative,
+                            _link_exclusion_reason(path, relative, root, settings),
+                            boundary_only=True,
+                        )
+                    else:
+                        yield path, relative
+                    continue
+
+                if is_directory:
+                    reason = _exclusion_reason_for_relative(relative, settings)
+                    if reason:
+                        _append_excluded_root(
+                            excluded_roots, skipped, path, relative, reason
+                        )
+                    else:
+                        directories.append(path)
+                elif is_file:
+                    yield path, relative
+        finally:
+            entries.clear()
+
+        pending.extend(reversed(directories))
 
 
 def declared_source_paths(pages: Iterable[InputFile], root: Path) -> tuple[str, ...]:
@@ -910,17 +1130,20 @@ def required_document_coverage(pages: Iterable[InputFile]) -> dict[str, str]:
 def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> dict[str, Any]:
     included: list[dict[str, Any]] = []
     excluded: list[dict[str, str]] = []
-    for path in repository_files(root):
+    excluded_roots: list[dict[str, Any]] = []
+    for path, lexical_relative in _iter_project_files(
+        root, settings, excluded_roots=excluded_roots
+    ):
         try:
-            relative = repo_relative(path, root)
+            relative = (
+                repo_relative(path, root)
+                if _path_requires_resolution(path)
+                else lexical_relative
+            )
         except ExportError:
-            try:
-                displayed = path.relative_to(root).as_posix()
-            except ValueError:
-                displayed = str(path)
-            excluded.append({"path": displayed, "reason": "path_escape"})
+            excluded.append({"path": lexical_relative, "reason": "path_escape"})
             continue
-        reason = exclusion_reason(path, root, settings)
+        reason = _exclusion_reason_for_relative(relative, settings)
         if reason:
             excluded.append({"path": relative, "reason": reason})
             continue
@@ -946,6 +1169,9 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
             }
         )
 
+    included.sort(key=lambda item: item["path"])
+    excluded.sort(key=lambda item: (item["path"], item["reason"]))
+    excluded_roots.sort(key=lambda item: (item["path"], item["reason"]))
     page_list = list(pages)
     sources = declared_source_paths(page_list, root)
     uncovered = [
@@ -959,10 +1185,15 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
     return {
         "included": included,
         "excluded": excluded,
+        "excluded_roots": excluded_roots,
         "included_count": len(included),
         "excluded_count": len(excluded),
+        "excluded_root_count": len(excluded_roots),
         "included_by_category": dict(sorted(Counter(item["category"] for item in included).items())),
         "excluded_by_reason": dict(sorted(Counter(item["reason"] for item in excluded).items())),
+        "excluded_roots_by_reason": dict(
+            sorted(Counter(item["reason"] for item in excluded_roots).items())
+        ),
         "declared_source_paths": list(sources),
         "uncovered_paths": uncovered,
         "wiki_status_counts": dict(sorted(status_counts.items())),
@@ -974,8 +1205,11 @@ def scan_summary(scan: dict[str, Any]) -> dict[str, Any]:
     return {
         "included_count": scan["included_count"],
         "excluded_count": scan["excluded_count"],
+        "excluded_root_count": scan["excluded_root_count"],
         "included_by_category": scan["included_by_category"],
         "excluded_by_reason": scan["excluded_by_reason"],
+        "excluded_roots_by_reason": scan["excluded_roots_by_reason"],
+        "excluded_roots": scan["excluded_roots"],
         "uncovered_paths": scan["uncovered_paths"],
         "required_documents": scan["required_documents"],
     }
@@ -991,30 +1225,71 @@ def coverage_summary(scan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def excluded_root_warnings(scan: dict[str, Any]) -> list[str]:
+    """Describe bounded or partially unreadable excluded-tree summaries."""
+
+    warnings: list[str] = []
+    truncated = [
+        item["path"] for item in scan["excluded_roots"] if item.get("truncated")
+    ]
+    if truncated:
+        warnings.append(
+            "排除目錄摘要採 bounded metadata scan，以下路徑超過統計上限："
+            + ", ".join(f"`{path}`" for path in truncated)
+        )
+    unreadable = [
+        item["path"] for item in scan["excluded_roots"] if item.get("errors")
+    ]
+    if unreadable:
+        warnings.append(
+            "部分排除目錄只能取得不完整 metadata："
+            + ", ".join(f"`{path}`" for path in unreadable)
+        )
+    return warnings
+
+
 def read_text_file(
     path: Path,
     root: Path,
     settings: Settings,
     skipped: list[dict[str, str]],
+    *,
+    relative: str | None = None,
 ) -> InputFile | None:
-    relative = repo_relative(path, root)
-    reason = exclusion_reason(path, root, settings)
+    displayed_relative = relative
+    try:
+        if displayed_relative is None or _path_requires_resolution(path):
+            displayed_relative = repo_relative(path, root)
+    except ExportError:
+        skipped.append(
+            {
+                "path": displayed_relative or _lexical_relative(path, root),
+                "reason": "path_escape",
+            }
+        )
+        return None
+    assert displayed_relative is not None
+    reason = _exclusion_reason_for_relative(displayed_relative, settings)
     if reason:
-        skipped.append({"path": relative, "reason": reason})
+        skipped.append({"path": displayed_relative, "reason": reason})
         return None
     if not path.is_file():
-        skipped.append({"path": relative, "reason": "not_a_file"})
+        skipped.append({"path": displayed_relative, "reason": "not_a_file"})
         return None
     try:
         data = path.read_bytes()
         if b"\x00" in data:
-            skipped.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
+            skipped.append(
+                {"path": displayed_relative, "reason": "binary_or_unsupported_encoding"}
+            )
             return None
         text = data.decode("utf-8")
     except (OSError, UnicodeDecodeError):
-        skipped.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
+        skipped.append(
+            {"path": displayed_relative, "reason": "binary_or_unsupported_encoding"}
+        )
         return None
-    return InputFile(path=relative, text=text, digest=sha256_bytes(data))
+    return InputFile(path=displayed_relative, text=text, digest=sha256_bytes(data))
 
 
 def expand_path(
@@ -1027,11 +1302,16 @@ def expand_path(
     path = root / Path(*PurePosixPath(relative).parts)
     if not path.exists():
         raise ExportError(f"referenced source does not exist: {relative}")
-    paths = [path] if path.is_file() else sorted(path.rglob("*"))
     files: list[InputFile] = []
-    for item in paths:
-        if item.is_file():
-            content = read_text_file(item, root, settings, skipped)
+    if path.is_file():
+        paths: Iterable[tuple[Path, str]] = ((path, relative),)
+    else:
+        paths = _iter_project_files(root, settings, start=path, skipped=skipped)
+    for item, item_relative in paths:
+        if item.is_file() or item.is_symlink():
+            content = read_text_file(
+                item, root, settings, skipped, relative=item_relative
+            )
             if content is not None:
                 files.append(content)
     return files
@@ -2349,6 +2629,7 @@ def _preflight_identity(
 def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     pages, skipped, warnings = collect_wiki_pages(root)
     scan = scan_project(root, settings, pages)
+    warnings.extend(excluded_root_warnings(scan))
     coverage = coverage_summary(scan)
     candidates = referenced_evidence(pages, root, settings, skipped) if settings.include_evidence else []
     dlp_inputs = [*pages, *(candidate.input_file for candidate in candidates)]
@@ -2430,6 +2711,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
     _recover_pending_output(output)
     pages, initial_skipped, warnings = collect_wiki_pages(root)
     scan = scan_project(root, settings, pages)
+    warnings.extend(excluded_root_warnings(scan))
     coverage = scan["required_documents"]
     incomplete = [path for path, status in coverage.items() if status != "active"]
     if incomplete:
@@ -2724,7 +3006,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(
             "NotebookLM preflight: "
             f"included={inventory['included_count']}, "
-            f"excluded={inventory['excluded_count']}, "
+            f"excluded_files={inventory['excluded_count']}, "
+            f"excluded_roots={inventory['excluded_root_count']}, "
             f"uncovered={len(inventory['uncovered_paths'])}, "
             f"ready={str(result['ready_to_export']).lower()}"
         )

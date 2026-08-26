@@ -100,7 +100,8 @@ NotebookLM。`--root` 指定檔案系統目錄就是掃描邊界，不要求 Git
 working tree，也不因 nested repository 阻擋；每次執行都唯讀掃描整個專案的可分享 runtime source、必要
 config/manifests、schema/migrations 與既有文件；tests、CI/CD、IaC、build/dev
 tooling、dependencies、generated、binary、secrets、framework adapters 與輸出目錄
-預設排除。既有 Wiki 是可增量更新的知識基線，不是掃描邊界。
+預設排除。walker 會在進入排除目錄前剪枝，但保留 ignored、untracked 與 nested
+repository 的 runtime source；既有 Wiki 是可增量更新的知識基線，不是掃描邊界。
 
 先執行不寫檔的 preflight：
 
@@ -110,7 +111,8 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
 ```
 
 Agent 依功能批次閱讀所有 included files，建立 source-to-function coverage map，並
-預覽 included/excluded inventory、缺失或 stale Wiki、預計新增/重大更新頁面、
+預覽 included files、file-level exclusions 與 pruned excluded-root summaries（後者只
+做 bounded metadata scan，不讀取或 hash 排除樹內容）、缺失或 stale Wiki、預計新增/重大更新頁面、
 容量/來源數估計、warnings 與未驗證事項。即使預覽乾淨，也必須等待確認。
 
 確認後以繁體中文建立或更新至少下列 durable 文件，為每頁填入 raw
@@ -146,7 +148,8 @@ Source IDs 以查詢路由、導覽與功能群組為單位（`query-index`、`p
 `docs:<group>`、`evidence:<group>`），舊 schema
 v1 manifest 可遷移。打包採 documents-first：完整功能文件先保留，再以剩餘來源數與
 容量加入關鍵 evidence；被 `source_budget` 省略的 evidence 會列在 manifest 與交付
-報告。NotebookLM 只需處理 `sources/*.md`；依 upload plan 對 `added`、`changed`、
+報告。若 excluded-root summary 標記 `truncated` 或 metadata error，必須列為 warning，
+但不代表排除內容被納入 evidence。NotebookLM 只需處理 `sources/*.md`；依 upload plan 對 `added`、`changed`、
 `deleted` 手動更新，`unchanged` 不需重傳。預設以 300 sources、每 source 200 MB /
 500,000 words 為 Enterprise hard limits，並用 180 MB / 450,000 words safety
 limits；字數估算採 `han_characters_plus_non_han_tokens` 加總模型，避免繁中與程式碼

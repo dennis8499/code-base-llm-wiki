@@ -474,9 +474,14 @@ Call the service.
                 (item["path"], item["reason"])
                 for item in preflight["inventory"]["excluded"]
             }
+            excluded_roots = {
+                (item["path"], item["reason"])
+                for item in preflight["inventory"]["excluded_roots"]
+            }
             for name in (".mypy_cache", ".ruff_cache"):
-                self.assertIn((f"{name}/cache.json", "binary_or_generated"), excluded)
-            self.assertTrue(any(path == ".github/private.md" for path, _ in skipped))
+                self.assertIn((name, "binary_or_generated"), excluded_roots)
+            self.assertIn((".github", "framework_adapter"), excluded_roots)
+            self.assertTrue(any(path == ".github" for path, _ in skipped))
             exported_text = "\n".join(
                 path.read_text(encoding="utf-8")
                 for path in (output / "sources").glob("*.md")
@@ -813,15 +818,21 @@ Call the service.
             self.assertEqual(included["migrations/001.sql"], "data_schema")
             self.assertEqual(included["docs/usage.md"], "documentation")
             excluded = {item["path"]: item["reason"] for item in result["inventory"]["excluded"]}
-            self.assertEqual(excluded["tests/test_service.py"], "scan_scope_tests")
-            self.assertEqual(excluded[".github/workflows/ci.yml"], "scan_scope_ci_or_iac")
-            self.assertEqual(excluded["infra/main.tf"], "scan_scope_ci_or_iac")
-            self.assertEqual(excluded["tools/build.py"], "scan_scope_dev_tooling")
-            self.assertEqual(excluded[".codex-hook-logs/audit.jsonl"], "binary_or_generated")
-            self.assertEqual(excluded[".github-hook-logs/audit.jsonl"], "binary_or_generated")
-            self.assertEqual(excluded[".agents/skills/codebase-wiki/SKILL.md"], "framework_adapter")
+            excluded_roots = {
+                item["path"]: item["reason"]
+                for item in result["inventory"]["excluded_roots"]
+            }
+            self.assertEqual(excluded_roots["tests"], "scan_scope_tests")
+            self.assertEqual(excluded_roots[".github"], "framework_adapter")
+            self.assertEqual(excluded_roots["infra"], "scan_scope_ci_or_iac")
+            self.assertEqual(excluded_roots["tools"], "scan_scope_dev_tooling")
+            self.assertEqual(excluded_roots[".codex-hook-logs"], "binary_or_generated")
+            self.assertEqual(excluded_roots[".github-hook-logs"], "binary_or_generated")
+            self.assertEqual(
+                excluded_roots[".agents/skills/codebase-wiki"], "framework_adapter"
+            )
             self.assertEqual(excluded[".env"], "sensitive_filename")
-            self.assertEqual(excluded["secrets/runtime.toml"], "sensitive_filename")
+            self.assertEqual(excluded_roots["secrets"], "sensitive_filename")
             self.assertEqual(excluded["logo.bin"], "binary_or_unsupported_encoding")
             self.assertEqual(result["limits"]["enterprise_max_bytes"], 200_000_000)
             self.assertEqual(result["limits"]["max_bytes"], 180_000_000)
@@ -862,19 +873,93 @@ Call the service.
             included = {item["path"] for item in result["inventory"]["included"]}
             self.assertIn("ignored-but-project-owned.py", included)
             self.assertIn("nested-repository/src/feature.py", included)
-            excluded = {
+            excluded_roots = {
                 (item["path"], item["reason"])
-                for item in result["inventory"]["excluded"]
+                for item in result["inventory"]["excluded_roots"]
             }
             self.assertIn(
-                ("nested-repository/.git/config", "binary_or_generated"),
-                excluded,
+                ("nested-repository/.git", "binary_or_generated"),
+                excluded_roots,
             )
 
             output = root / ".notebooklm"
             export_code, exported = self.run_export(module, root, output)
             self.assertEqual(export_code, 0)
             self.assertIsNone(exported["manifest"]["git_revision"])
+
+    def test_preflight_prunes_large_excluded_tree_with_bounded_summary(self) -> None:
+        module = load_canonical_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            generated = root / "node_modules"
+            generated.mkdir()
+            for index in range(module.EXCLUDED_SUMMARY_ENTRY_LIMIT + 8):
+                (generated / f"package-{index:04d}.js").write_text(
+                    "generated\n", encoding="utf-8"
+                )
+            (root / "src/main.py").write_text("def main():\n    return True\n", encoding="utf-8")
+
+            code, result = self.run_preflight(module, root)
+
+            self.assertEqual(code, 0)
+            included = {item["path"] for item in result["inventory"]["included"]}
+            self.assertIn("src/main.py", included)
+            excluded_paths = {item["path"] for item in result["inventory"]["excluded"]}
+            self.assertFalse(any(path.startswith("node_modules/") for path in excluded_paths))
+            summary = next(
+                item
+                for item in result["inventory"]["excluded_roots"]
+                if item["path"] == "node_modules"
+            )
+            self.assertEqual(summary["reason"], "binary_or_generated")
+            self.assertEqual(
+                summary["observed_entries"], module.EXCLUDED_SUMMARY_ENTRY_LIMIT
+            )
+            self.assertTrue(summary["truncated"])
+            self.assertGreater(summary["observed_bytes"], 0)
+            self.assertTrue(any("bounded metadata scan" in item for item in result["warnings"]))
+
+            export_code, exported = self.run_export(module, root, root / ".notebooklm")
+            self.assertEqual(export_code, 0)
+            manifest_summary = next(
+                item
+                for item in exported["manifest"]["scan"]["excluded_roots"]
+                if item["path"] == "node_modules"
+            )
+            self.assertEqual(manifest_summary, summary)
+
+    def test_directory_evidence_uses_same_exclusion_aware_walker(self) -> None:
+        module = load_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            (root / "src/node_modules").mkdir(parents=True)
+            (root / "src/node_modules/generated.py").write_text(
+                "MUST_NOT_BE_EVIDENCE\n", encoding="utf-8"
+            )
+            overview = root / "wiki/overview.md"
+            overview.write_text(
+                overview.read_text(encoding="utf-8").replace(
+                    "  - src/service.py\n", "  - src\n"
+                ),
+                encoding="utf-8",
+            )
+            output = root / ".notebooklm"
+
+            preflight_code, preflight = self.run_preflight(module, root)
+            self.assertEqual(preflight_code, 0)
+            self.assertTrue(
+                any(item["path"] == "src/node_modules" for item in preflight["skipped"])
+            )
+
+            export_code, exported = self.run_export(module, root, output)
+            self.assertEqual(export_code, 0)
+            exported_text = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (output / "sources").glob("*.md")
+            )
+            self.assertNotIn("MUST_NOT_BE_EVIDENCE", exported_text)
 
     def test_preflight_rejects_symlinked_files_that_escape_repository(self) -> None:
         module = load_exporter()

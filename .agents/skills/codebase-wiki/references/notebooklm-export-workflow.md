@@ -31,11 +31,15 @@ Include every UTF-8 project-owned text file in these categories:
 Exclude tests, CI/CD, IaC, build/development tooling, dependency and generated
 directories, binaries, credentials/secrets, the Wiki and export output, and
 installed Codebase LLM Wiki adapter/schema files. A production entrypoint is
-runtime source even if it lives under a scripts directory. Recursively
-enumerate the filesystem beneath the explicit `--root`; Git status, a clean
+runtime source even if it lives under a scripts directory. Walk the filesystem
+top-down beneath the explicit `--root`, pruning an excluded directory before
+enumerating its descendants; this keeps the fallback bounded without dropping
+ignored, untracked, or nested-repository runtime source. Git status, a clean
 worktree, or a root `.git` are not prerequisites. Nested repositories are
 ordinary subdirectories: their project files follow the same rules, while
-their `.git` metadata remains excluded as generated state.
+their `.git` metadata remains excluded as generated state. Each pruned root is
+reported as a directory-level exclusion with bounded metadata-only counts; the
+report never reads or hashes content from that tree.
 
 ## Source order
 
@@ -59,9 +63,11 @@ blocking findings.
 4. Read every included file in functional batches. Identify functions from
    runtime entrypoints, use cases, data boundaries, public interfaces, and
    external integrations rather than directory shape alone.
-5. Preview included/excluded counts and reasons, functional coverage, Wiki
-   pages to add/update/leave unchanged, evidence paths, capacity estimate, and
-   every unresolved gap. Wait for confirmation.
+5. Preview included file counts and reasons, pruned excluded-root counts and
+   bounded metadata summaries, functional coverage, Wiki pages to
+   add/update/leave unchanged, evidence paths, capacity estimate, and every
+   unresolved gap. A truncated or unreadable excluded-root summary is a
+   warning, not evidence that the root was included. Wait for confirmation.
 6. After confirmation, create or update the required documentation set. Documentation is mandatory for export:
    - `wiki/overview.md`;
    - `wiki/synthesis/project-function-catalog.md`;
@@ -100,7 +106,8 @@ Each generated source has a stable `logical_source_id`:
 - `#part-###` suffixes for sources split at safe boundaries.
 
 The exporter accepts previous schema-v1/v2 manifests and produces an actionable
-one-time migration plan. The schema-v3 manifest records scan summary,
+one-time migration plan. The schema-v3 manifest records scan summary, including
+file-level exclusions and pruned excluded-root summaries,
 functional-document coverage, input/output hashes, priorities, omissions,
 limits, the offline DLP profile/safe finding summary, and the
 `wiki-first-direct-lookup-v1` retrieval contract. The retrieval contract points
@@ -138,6 +145,10 @@ direct citations; multiply referenced entrypoints, interfaces, schemas, and
 config; other runtime implementation; existing docs. If evidence cannot fit,
 omit complete lowest-priority files and record `source_budget` in the manifest,
 project map, upload plan, and final report. Never silently truncate evidence.
+
+Excluded-root summaries use a fixed metadata entry bound. They may report
+`truncated` or metadata errors, but they never inspect file content and do not
+turn excluded files into evidence.
 
 If mandatory documentation cannot fit after deterministic compaction/splitting,
 or any source remains oversized, the exporter fails before committing a new
@@ -189,4 +200,5 @@ coverage states, the DLP gate is passed or explicitly allowlisted, the
 traceable, the manifest and upload plan were written atomically, no source
 exceeds its limit, and the final report lists added,
 changed, deleted, unchanged, skipped, source-budget omissions, DLP status, and
-all unresolved warnings. Preflight alone never writes `.notebooklm/`.
+all unresolved warnings, including excluded-root truncation or metadata errors.
+Preflight alone never writes `.notebooklm/`.

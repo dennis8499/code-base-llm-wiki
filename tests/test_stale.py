@@ -113,6 +113,26 @@ class StaleTests(unittest.TestCase):
                 r"^sha256:[0-9a-f]{64}$",
             )
 
+    def test_filesystem_fallback_prunes_digest_excluded_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src/nested").mkdir(parents=True)
+            (root / "src/node_modules/package").mkdir(parents=True)
+            (root / "src/build").mkdir()
+            (root / "src/service.py").write_text("return 1\n", encoding="utf-8")
+            (root / "src/nested/helper.py").write_text("return 2\n", encoding="utf-8")
+            (root / "src/node_modules/package/generated.js").write_text(
+                "generated\n", encoding="utf-8"
+            )
+            (root / "src/build/output.py").write_text("generated\n", encoding="utf-8")
+
+            files = check_stale_module._source_files(root, "src", use_git=False)
+
+            self.assertEqual(
+                {path.relative_to(root).as_posix() for path in files},
+                {"src/service.py", "src/nested/helper.py"},
+            )
+
     def test_dirty_source_is_reported_as_stale(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
