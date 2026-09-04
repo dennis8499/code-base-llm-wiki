@@ -13,14 +13,14 @@ REPO_ROOT = Path(__file__).parents[1]
 
 
 class ContractTests(unittest.TestCase):
-    def test_capability_manifest_declares_installer_contract_v3(self) -> None:
+    def test_capability_manifest_declares_installer_contract_v4(self) -> None:
         manifest = json.loads(
             (REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "capabilities.json").read_text(
                 encoding="utf-8"
             )
         )
 
-        self.assertEqual(manifest["contract_version"], 3)
+        self.assertEqual(manifest["contract_version"], 4)
         self.assertEqual(manifest["guard_modes"]["default"], "wiki-only")
         self.assertEqual(manifest["guard_modes"]["installed"], ["wiki-only", "coexist"])
         self.assertEqual(manifest["surfaces"], ["copilot", "codex"])
@@ -40,8 +40,8 @@ class ContractTests(unittest.TestCase):
             manifest["intents"]["notebooklm_export"]["audience"],
             "business-analyst",
         )
-        self.assertEqual(len(manifest["intents"]), 11)
-        self.assertEqual(len(manifest["intent_groups"]), 10)
+        self.assertEqual(len(manifest["intents"]), 13)
+        self.assertEqual(len(manifest["intent_groups"]), 12)
         grouped = [
             operation
             for operations in manifest["intent_groups"].values()
@@ -49,7 +49,14 @@ class ContractTests(unittest.TestCase):
         ]
         self.assertEqual(len(grouped), len(set(grouped)))
         self.assertEqual(set(grouped), set(manifest["intents"]))
-        for operation in ("adr", "guide", "synthesis", "system_analysis"):
+        for operation in (
+            "adr",
+            "guide",
+            "synthesis",
+            "business_analysis",
+            "system_analysis",
+            "system_design",
+        ):
             self.assertTrue(manifest["intents"][operation]["writes_by_default"])
             self.assertFalse(manifest["intents"][operation]["requires_confirmation"])
             self.assertEqual(
@@ -60,6 +67,213 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(set(manifest["cli"]), {"install", "upgrade"})
         self.assertIn("install-framework.py install", manifest["cli"]["install"])
         self.assertIn("install-framework.py upgrade", manifest["cli"]["upgrade"])
+
+    def test_ba_sa_sd_standard_aligned_document_contract(self) -> None:
+        skill_root = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"
+        standards = (skill_root / "references/analysis-document-standards.md").read_text(
+            encoding="utf-8"
+        )
+        for token in (
+            "business-analysis-aligned-v1",
+            "system-analysis-aligned-v1",
+            "system-design-aligned-v1",
+            "ISO/IEC/IEEE 29148:2018",
+            "IIBA Business Analysis Standard v2.0",
+            "ISO/IEC/IEEE 15288:2023",
+            "ISO/IEC 25010:2023",
+            "ISO/IEC/IEEE 42010:2022",
+            "IEEE 1016-2009",
+            "informative",
+            "standard-aligned",
+            "不代表 conformance",
+        ):
+            with self.subTest(resource="standards", token=token):
+                self.assertIn(token, standards)
+
+        documents = {
+            "business-analysis": {
+                "profile": "business-analysis-aligned-v1",
+                "default": "wiki/synthesis/business-analysis.md",
+                "ids": ("cap-*", "fr-*", "bp-*", "br-*", "AC-*"),
+                "mermaid": ("業務流程", "現況／目標"),
+                "role": "notebooklm_role: business",
+                "sections": (
+                    "## 文件控制",
+                    "## 標準對照矩陣",
+                    "## Coverage Map",
+                    "## 業務脈絡、問題與機會",
+                    "## 現況／目標狀態",
+                    "## 利害關係人與 Needs",
+                    "## 能力、需求與驗收",
+                    "## 業務流程與規則",
+                    "## Business Information 與詞彙",
+                    "## 成功指標與驗收方法",
+                    "## 變更影響與 Transition Needs",
+                    "## BA → SA 追溯矩陣",
+                    "## Gap Register",
+                    "## 來源附錄",
+                ),
+            },
+            "system-analysis": {
+                "profile": "system-analysis-aligned-v1",
+                "default": "wiki/synthesis/system-analysis.md",
+                "ids": ("SR-{SCOPE}-NNN", "NFR-{SCOPE}-NNN", "IF-{SCOPE}-NNN"),
+                "mermaid": ("系統脈絡", "主要情境"),
+                "role": "notebooklm_role: traceability",
+                "sections": (
+                    "## 文件控制",
+                    "## 標準對照矩陣",
+                    "## Coverage Map",
+                    "## Stakeholders、Actors 與 Needs",
+                    "## 系統邊界與 Context",
+                    "## Use Cases 與 Operational Scenarios",
+                    "## Functional System Requirements",
+                    "## External Interface Requirements",
+                    "## Quality Requirements",
+                    "## Conceptual Information Model and Flow",
+                    "## Failure and Exceptional Behavior",
+                    "## Verification and Validation Needs",
+                    "## BA → SA 追溯矩陣",
+                    "## Gap Register",
+                    "## 來源附錄",
+                ),
+            },
+            "system-design": {
+                "profile": "system-design-aligned-v1",
+                "default": "wiki/synthesis/system-design.md",
+                "ids": ("DE-{SCOPE}-NNN", "VIEW-{SCOPE}-{SLUG}", "ADR"),
+                "mermaid": ("元件", "runtime", "資料", "部署", "安全"),
+                "role": "notebooklm_role: traceability",
+                "sections": (
+                    "## 文件控制",
+                    "## 標準對照矩陣",
+                    "## Coverage Map",
+                    "## Stakeholders and Concerns",
+                    "## Viewpoint and View Catalog",
+                    "## Architecture and Design Decisions",
+                    "## Component／Static View",
+                    "## Runtime View",
+                    "## Data View",
+                    "## Interface Design",
+                    "## Deployment and Operations View",
+                    "## Security View",
+                    "## Quality Strategy",
+                    "## Cross-view Correspondences and Consistency",
+                    "## SA → SD 追溯矩陣",
+                    "## Risks、Technical Debt 與 Gap Register",
+                    "## 來源附錄",
+                ),
+            },
+        }
+        for name, expected in documents.items():
+            workflow = (skill_root / f"references/{name}-workflow.md").read_text(
+                encoding="utf-8"
+            )
+            template = (skill_root / f"assets/{name}-template.md").read_text(
+                encoding="utf-8"
+            )
+            prompt = (REPO_ROOT / f".github/prompts/{name}-doc.prompt.md").read_text(
+                encoding="utf-8"
+            )
+            combined = "\n".join((workflow, template, prompt))
+            for token in (
+                expected["profile"],
+                expected["default"],
+                "coverage_status",
+                "covered",
+                "partial",
+                "gap",
+                "Gap",
+                "codebase-wiki:managed:start",
+                "codebase-wiki:user-notes:start",
+                "notebooklm:local-only:start",
+                *expected["ids"],
+                *expected["mermaid"],
+            ):
+                with self.subTest(document=name, token=token):
+                    self.assertIn(token, combined)
+            self.assertIn(expected["role"], template)
+            self.assertIn(f"{{kebab-scope}}-{name}.md", workflow)
+            for section in expected["sections"]:
+                with self.subTest(document=name, section=section):
+                    self.assertIn(section, template)
+            for marker in (
+                "codebase-wiki:managed:start",
+                "codebase-wiki:managed:end",
+                "codebase-wiki:user-notes:start",
+                "codebase-wiki:user-notes:end",
+                "notebooklm:local-only:start",
+                "notebooklm:local-only:end",
+            ):
+                with self.subTest(document=name, marker=marker):
+                    self.assertEqual(template.count(marker), 1)
+
+        sa_workflow = (skill_root / "references/system-analysis-workflow.md").read_text(
+            encoding="utf-8"
+        )
+        for token in (
+            "solution-neutral",
+            "不得包含技術選型",
+            "不得包含部署設計",
+            "legacy",
+            "原正文",
+            "user-notes",
+        ):
+            self.assertIn(token, sa_workflow)
+
+        intent_routing = (skill_root / "references/intent-routing.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("BA文件", intent_routing)
+        self.assertIn("只有裸稱 `BA`", intent_routing)
+        self.assertIn("NotebookLM", intent_routing)
+        self.assertIn("source pack", intent_routing)
+
+    def test_framework_ba_sa_sd_documents_preserve_layering_and_traceability(self) -> None:
+        synthesis_root = REPO_ROOT / "wiki" / "synthesis"
+        ba = (synthesis_root / "business-analysis.md").read_text(encoding="utf-8")
+        sa = (synthesis_root / "system-analysis.md").read_text(encoding="utf-8")
+        sd = (synthesis_root / "system-design.md").read_text(encoding="utf-8")
+
+        for text, profile, role in (
+            (ba, "business-analysis-aligned-v1", "notebooklm_role: business"),
+            (sa, "system-analysis-aligned-v1", "notebooklm_role: traceability"),
+            (sd, "system-design-aligned-v1", "notebooklm_role: traceability"),
+        ):
+            with self.subTest(profile=profile):
+                self.assertIn(f"standards_profile: {profile}", text)
+                self.assertRegex(text, r"(?m)^coverage_status: (?:covered|partial|gap)$")
+                self.assertIn(role, text)
+                for marker in (
+                    "codebase-wiki:managed:start",
+                    "codebase-wiki:managed:end",
+                    "codebase-wiki:user-notes:start",
+                    "codebase-wiki:user-notes:end",
+                    "notebooklm:local-only:start",
+                    "notebooklm:local-only:end",
+                ):
+                    self.assertEqual(text.count(marker), 1)
+                self.assertIn("gap-analysis-doc-", text)
+
+        for upstream in (
+            "fr-analysis-business-analysis-document",
+            "fr-analysis-system-analysis-document",
+            "fr-analysis-system-design-document",
+        ):
+            self.assertIn(upstream, ba)
+            self.assertIn(upstream, sa)
+        for requirement in ("SR-DOC-001", "NFR-DOC-001", "IF-DOC-001"):
+            self.assertIn(requirement, sa)
+            self.assertIn(requirement, sd)
+        for design_id in ("DE-DOC-001", "VIEW-DOC-COMPONENT"):
+            self.assertIn(design_id, sd)
+
+        sa_managed = sa.split("<!-- codebase-wiki:user-notes:start -->", 1)[0]
+        self.assertNotIn("## 架構與元件", sa_managed)
+        self.assertNotIn("## 設定 / 部署 / 維運", sa_managed)
+        self.assertIn("## Legacy SA snapshot — non-normative", sa)
+        self.assertIn("## Component／Static View", sd)
+        self.assertIn("## Deployment and Operations View", sd)
 
     def test_high_frequency_instruction_budgets(self) -> None:
         budgets = {
@@ -89,10 +303,14 @@ class ContractTests(unittest.TestCase):
             ".agents/skills/codebase-wiki/references/intent-routing.md",
             ".agents/skills/codebase-wiki/references/query-workflow.md",
             ".agents/skills/codebase-wiki/references/synthesis-workflow.md",
+            ".agents/skills/codebase-wiki/references/business-analysis-workflow.md",
             ".agents/skills/codebase-wiki/references/system-analysis-workflow.md",
+            ".agents/skills/codebase-wiki/references/system-design-workflow.md",
             ".github/agents/wiki-query.agent.md",
             ".github/prompts/query-wiki.prompt.md",
+            ".github/prompts/business-analysis-doc.prompt.md",
             ".github/prompts/system-analysis-doc.prompt.md",
+            ".github/prompts/system-design-doc.prompt.md",
             ".codex/agents/wiki-query.toml",
             "AGENTS.md",
             "Codex.md",
@@ -102,7 +320,9 @@ class ContractTests(unittest.TestCase):
             "docs/workflows/README.md",
             "wiki/guides/framework-introduction.md",
             "wiki/synthesis/project-function-catalog.md",
+            "wiki/synthesis/business-analysis.md",
             "wiki/synthesis/system-analysis.md",
+            "wiki/synthesis/system-design.md",
         )
         enablement_tokens = (
             "mssql",
@@ -153,7 +373,9 @@ class ContractTests(unittest.TestCase):
             "adr-workflow.md",
             "guide-workflow.md",
             "synthesis-workflow.md",
+            "business-analysis-workflow.md",
             "system-analysis-workflow.md",
+            "system-design-workflow.md",
             "code-archaeology-workflow.md",
             "notebooklm-export-workflow.md",
         ):
@@ -345,9 +567,21 @@ class ContractTests(unittest.TestCase):
                 "wiki/index.md",
                 "wiki/log.md",
             ),
+            "business-analysis-doc.prompt.md": (
+                "references/business-analysis-workflow.md",
+                "assets/business-analysis-template.md",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
             "system-analysis-doc.prompt.md": (
                 "references/system-analysis-workflow.md",
                 "assets/system-analysis-template.md",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
+            "system-design-doc.prompt.md": (
+                "references/system-design-workflow.md",
+                "assets/system-design-template.md",
                 "wiki/index.md",
                 "wiki/log.md",
             ),

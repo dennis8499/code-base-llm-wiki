@@ -48,6 +48,7 @@ ALLOWED_EVIDENCE_STATES = {
     "gap",
 }
 NOTEBOOKLM_GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+STANDARDS_PROFILE_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SOURCE_DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 DERIVED_FROM_PATTERN = re.compile(r"^\[\[[^\[\]]+\]\]$")
 
@@ -172,6 +173,23 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
     if notebooklm_role == "business" and notebooklm_terms is None:
         errors.append(f"{rel}: business NotebookLM pages require notebooklm_terms")
 
+    standards_profile = fm.get("standards_profile")
+    if standards_profile is not None and (
+        not isinstance(standards_profile, str)
+        or not STANDARDS_PROFILE_PATTERN.fullmatch(standards_profile)
+    ):
+        errors.append(f"{rel}: standards_profile must be a non-empty kebab-case string")
+
+    coverage_status = fm.get("coverage_status")
+    if coverage_status is not None and (
+        not isinstance(coverage_status, str)
+        or coverage_status not in ALLOWED_COVERAGE_STATUS
+    ):
+        errors.append(
+            f"{rel}: coverage_status must be one of "
+            f"{', '.join(sorted(ALLOWED_COVERAGE_STATUS))}; got {coverage_status!r}"
+        )
+
     summary = fm.get("summary")
     if summary is not None and not is_non_empty_string(summary):
         errors.append(f"{rel}: summary must be a non-empty string when present")
@@ -223,11 +241,9 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
         actors = fm.get("actors")
         if not is_non_empty_string_list(actors, allow_empty=True):
             errors.append(f"{rel}: business-process pages require an actors array")
-        coverage_status = fm.get("coverage_status")
-        if coverage_status not in ALLOWED_COVERAGE_STATUS:
+        if coverage_status is None:
             errors.append(
-                f"{rel}: coverage_status must be one of "
-                f"{', '.join(sorted(ALLOWED_COVERAGE_STATUS))}; got {coverage_status!r}"
+                f"{rel}: business-process pages require coverage_status"
             )
 
     if page_type == "business-requirement":

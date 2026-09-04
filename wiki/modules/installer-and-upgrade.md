@@ -1,7 +1,7 @@
 ---
 title: Installer 與 Upgrade
 type: module
-summary: Installer v3 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架
+summary: Installer v4 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD 資源
 notebooklm_group: function-install-upgrade
 notebooklm_role: traceability
 sources:
@@ -10,7 +10,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_install_framework.py
-source_digest: sha256:f7b986e96e8d4ac35d8d62a38e8640e31f04b7254598cbedf64e7db75a023fc1
+source_digest: sha256:6370f04049be0c4172bb982671c1cda49cce8adc8fb60264f22f35e36a72d6ea
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-04
 tags: [module, installer, upgrade, atomicity]
@@ -36,6 +36,8 @@ status: active
 - Installer source tree 若包含 symlink 或 Windows junction/reparse point 也會 fail closed，避免 framework source 讀取 repo 外內容。
 - Copilot surface 直接枚舉目前 `.github/` 內容；Repo 不再含 workflows，因此 installer
   不需要 CI/release workflow 特例，也不會把 workflow YAML 安裝到目標。
+- v4 隨共用 Skill 安裝三份 standards-aligned templates/workflows，Copilot surface 另取得
+  BA／SA／SD 薄 prompt adapters；upgrade 仍不改寫目標 `wiki/`。
 
 ## 對外介面
 
@@ -48,7 +50,7 @@ install-framework.py install|upgrade
   [--format json|text]
 ```
 
-JSON contract version 為 3，包含 `managed`、`changes`、`preserved`、
+JSON contract version 為 4，包含 `managed`、`changes`、`preserved`、
 `conflicts` 與 `obsolete_paths`。沒有 `--apply` 時不修改目標 Repo；存在 conflict
 時即使指定 apply 也不套用。
 
@@ -86,7 +88,7 @@ JSON contract version 為 3，包含 `managed`、`changes`、`preserved`、
 ## Contradictions
 
 - v0.1 對任意既有 `AGENTS.md` 直接報 conflict；v0.2 將框架區段合併進 managed block。
-- 沒有 v3 manifest 的舊目標無法安全推定兩側基線，非 managed file 的差異仍會報 conflict。
+- 沒有相容 manifest baseline 的舊目標無法安全推定兩側基線，非 managed file 的差異仍會報 conflict。
 
 ## Inferences
 
@@ -103,4 +105,6 @@ JSON contract version 為 3，包含 `managed`、`changes`、`preserved`、
 - [[framework-introduction]]
 - [[platform-hooks-and-guards]]
 - [[platform-adapters-and-release]]
+- [[business-analysis]]
 - [[system-analysis]]
+- [[system-design]]

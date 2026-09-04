@@ -522,3 +522,10 @@ status: active
 - Wiki Query 不再連線即時資料庫或呼叫 SQL Server／MSSQL 工具、MCP、app 與 CLI fallback；需要目前資料庫狀態的問題改列為未驗證 gap。
 - 新安裝不再包含舊規則檔，升級透過 `obsolete_paths` 回報並保留既有檔案；靜態 `.sql`、migration 與 schema source evidence 維持支援。
 - 受影響頁面：[[index]]、[[framework-introduction]]、[[project-function-catalog]]、[[system-analysis]]
+
+## [2026-09-04] update | BA／SA／SD 標準對齊文件工作流
+
+- 新增獨立 BA 與 SD workflows/templates/adapters，將既有 SA 收斂為 solution-neutral 分析；三層以 versioned standards profiles、stable IDs、coverage、Gap 與 evidence-gated Mermaid 建立追溯。
+- Capability／installer contract 升級至 v4（13 operations／12 intent groups），frontmatter 新欄位維持 legacy 相容；standalone BA 是可選 NotebookLM business source，SA／SD 不上傳且 schema v5 required documents 不變。
+- 框架 Wiki 實際建立 BA、重整並保存 legacy SA 原正文、建立 SD，同步功能需求、共用流程、規則、catalog、glossary、coverage ledger、架構／操作指南與來源摘要。
+- 受影響頁面：[[index]]、[[overview]]、[[business-analysis-document]]、[[system-analysis-document]]、[[system-design-document]]、[[generate-analysis-document]]、[[standards-alignment-not-conformance]]、[[missing-evidence-remains-gap]]、[[business-analysis]]、[[system-analysis]]、[[system-design]]、[[functional-requirement-catalog]]、[[business-process-catalog]]、[[business-rule-catalog]]、[[business-glossary]]、[[business-knowledge-gaps]]、[[codebase-functional-coverage]]、[[project-function-catalog]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[wiki-quality-and-provenance]]、[[framework-introduction]]、[[notebooklm-ba-functional-export]]、[[notebooklm-ba-knowledge-export]]、[[ba-knowledge-precedes-traceability]]、[[readiness-preflight-required]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[release-and-update]]

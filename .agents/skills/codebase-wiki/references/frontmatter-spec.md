@@ -22,6 +22,8 @@
 | `summary` | string | 一句話結論；新增或重大更新的 evidence-backed 頁面必填。 |
 | `derived_from` | string[] | Wiki 衍生證據，使用 `[[page-name]]`；不得放入 `sources`。 |
 | `source_digest` | string | `sha256:<64 lowercase hex>`；新增或重大更新且 `sources` 非空的頁面必填。 |
+| `standards_profile` | string | 選填、kebab-case；新 BA／SA／SD 工作流必填，legacy SA 缺少時仍相容。 |
+| `coverage_status` | enum | 選填 `covered` / `partial` / `gap`；新 BA／SA／SD 與 business-process 必填。 |
 
 `source_digest` 對排序後的 `repo-relative-path + NUL + file-sha256` records
 再做 SHA-256。目錄來源展開 Git tracked 與 non-ignored untracked files，並排除
@@ -40,6 +42,18 @@ Lint 先回報 Info，不作為 schema failure。
 BA 高階頁面使用 `business-core`，流程／規則與其追溯頁面共用
 `business-{capability}`。缺少 `notebooklm_role` 的舊頁面不會自動成為 BA source；
 exporter 會省略並回報 warning。
+
+### Standard-aligned synthesis metadata（選填、增量採用）
+
+新產出的 BA／SA／SD synthesis 必須分別使用
+`business-analysis-aligned-v1`、`system-analysis-aligned-v1`、
+`system-design-aligned-v1`，並填寫 `coverage_status`。兩欄在共用 validator
+維持選填，讓尚未重跑的 legacy SA 與一般 synthesis 繼續相容；工作流與模板負責
+要求新文件填寫。Profile 的標準版本、coverage 語意與 traceability contract 見
+`analysis-document-standards.md`。
+
+`status: active` 只代表 Wiki freshness；`coverage_status` 描述文件證據是否完整，
+兩者不得互相代替。
 
 ### `type` 允許值
 
@@ -213,3 +227,6 @@ page-shape source of truth.
 15. `source_digest` 若存在，必須符合 `sha256:<64 lowercase hex>`。
 16. `notebooklm_role` 與 `notebooklm_terms` 必須符合上述角色契約。
 17. Business Requirement/Process/Rule 頁面必須位於指定目錄且通過其 type-specific 驗證。
+18. `standards_profile` 若存在，必須是非空 kebab-case 字串。
+19. `coverage_status` 若存在，必須是 `covered` / `partial` / `gap`；
+    business-process 仍強制必填，新 BA／SA／SD 由工作流契約強制必填。

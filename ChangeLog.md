@@ -8,6 +8,14 @@
 
 ### Added
 
+- **BA／SD standard-aligned 文件工作流**：新增獨立 Business Analysis 與 System
+  Design workflows、templates、Copilot prompt adapters 與 Codex recipes；以版本化
+  profiles 對齊 ISO/IEC/IEEE 29148:2018、42010:2022、ISO/IEC 25010:2023、
+  IIBA Business Analysis Standard v2.0，並把 IEEE 1016-2009 限定為 informative
+  歷史組織參考。
+- **BA → SA → SD 追溯與 Gap 契約**：新增 standards/coverage/traceability matrices、
+  穩定 `SR/NFR/IF`、`DE/VIEW/ADR` IDs、證據閘門 Mermaid 槽位，以及
+  managed/user-notes/local-only markers；缺少上游或證據時仍產出並建立具體 Gap。
 - **BA 功能需求與完整覆蓋 schema**：新增 `business-requirement` page type、`fr-*`／
   `cap-*`／stable `AC-*` 契約、functional requirement catalog、managed/user-notes/local-only
   markers，以及 local-only codebase functional coverage ledger。
@@ -15,6 +23,13 @@
 
 ### Changed
 
+- **SA 改為 solution-neutral 分析**：保留 `/system-analysis-doc` 與既有路徑，移除
+  技術選型、元件配置與部署設計責任，改由 SD 承接；首次重跑無 markers 的 legacy
+  SA 時，完整原正文會先保存在 user-notes legacy 區塊。
+- **Capability／frontmatter contract v4**：能力面擴充為 13 operations／12 intent
+  groups；`standards_profile` 與 `coverage_status` 為向後相容的選填 schema，新工作流
+  強制填寫。BA 是可選 NotebookLM business source，SA／SD 維持 traceability，schema
+  v5 與 required documents 不變。
 - **Copilot/Codex 六流程契約與驗收邊界**：Copilot custom agents 新增
   `disable-model-invocation: true`／`user-invocable: true`，六個高頻 prompts 收斂為連結
   canonical workflow 的薄 adapter；parity 與 tests 固定 metadata、agent reference、

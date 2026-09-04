@@ -1,23 +1,244 @@
 ---
 title: Codebase LLM Wiki System Analysis
 type: synthesis
-summary: 對框架目的、BA-first NotebookLM contract、介面、安全、維運、風險與證據缺口的技術追溯分析
-notebooklm_group: system-analysis
+summary: 以 solution-neutral 系統邊界、stakeholder needs、SR/NFR/IF 與驗證需求描述 BA／SA／SD 文件能力
+standards_profile: system-analysis-aligned-v1
+coverage_status: partial
+notebooklm_group: analysis-doc-system-analysis
 notebooklm_role: traceability
 sources:
-  - README.md
+  - .agents/skills/codebase-wiki/references/analysis-document-standards.md
+  - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
-  - .agents/skills/codebase-wiki/scripts/install-framework.py
-  - .agents/skills/codebase-wiki/scripts/lint-wiki.py
-  - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-  - tests/test_export_notebooklm.py
-  - tests/test_wiki_scale.py
-source_digest: sha256:40c30479667c4062c23d3efd0735f07200daa745858f47c8023a785050266c22
-derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
+  - tests/test_contracts.py
+  - tests/test_wiki_lint.py
+source_digest: sha256:8042dc9aeb79ca1f8070da18dadac905a8448da35ba50d74826f2e7b3dae52dd
+derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
 last_updated: 2026-09-04
-tags: [synthesis, system-analysis, notebooklm]
+tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
+
+# Codebase LLM Wiki System Analysis
+
+<!-- codebase-wiki:managed:start -->
+
+## 文件控制
+
+| 欄位 | 值 |
+| --- | --- |
+| 文件 ID／版本 | SA-CODEBASE-WIKI-001 / v1 |
+| 系統／範圍 | Codebase LLM Wiki 的 BA／SA／SD 文件產出能力 |
+| 產出日期／證據基準日 | 2026-09-04 / 2026-09-04 |
+| Owner／Reviewer | Project owner（待具名）／framework maintainer |
+| 標準 Profile | `system-analysis-aligned-v1` |
+| 文件狀態／Coverage | active / partial |
+| 變更摘要 | 把 SA 收斂為 solution-neutral needs、requirements、interfaces、quality 與 V&V analysis |
+
+> 本文件為 standard-aligned，不代表 conformance。技術選型、元件配置、protocol、
+> storage 與部署 topology 屬於 [[system-design]] 或 ADR，不是本 managed baseline。
+
+## 摘要與分析範圍
+
+本系統能力接受使用者對整體系統或 scope 的 BA／SA／SD 文件請求，從 Wiki-first
+evidence 建立繁中 Markdown、coverage、stable IDs、traceability 與 Gap；若 evidence
+不足仍回傳可審查文件，不填入未證實內容。BA、SA、SD 可獨立產出，存在上游時才建立
+實際 ID link。
+
+### In scope
+
+- 明確文件請求、文件類型與 scope 的辨識；
+- Wiki 與必要 raw evidence 的讀取邊界；
+- 固定路徑、frontmatter、coverage、traceability、Gap、markers 與 Mermaid evidence gate；
+- index、append-only log 與 deterministic validation；
+- legacy SA 首次重跑的原正文保存。
+
+### Out of scope
+
+- 實作所選 framework、module allocation、data storage、network protocol 或 deployment design；
+- PDF/DOCX、雲端上傳、外部 standards 更新或正式 conformance assessment。
+
+## 標準對照矩陣
+
+| Profile reference | 對齊主題 | 本文件章節 | Coverage | Evidence／Gap |
+| --- | --- | --- | --- | --- |
+| ISO/IEC/IEEE 29148:2018 | stakeholder/system requirements、quality attributes、traceability | Needs、SR/NFR/IF、追溯 | partial | requirement contract 已建立；owner approval 待補 |
+| ISO/IEC/IEEE 15288:2023 | stakeholder needs、system requirements、verification/validation concerns | Scenarios、requirements、V&V | partial | deterministic verification 可觀察；host validation 待補 |
+| ISO/IEC 25010:2023 | product quality characteristics | Quality Requirements | partial | correctness/compatibility/confidentiality/maintainability 可驗證；runtime targets 未核准 |
+
+## Coverage Map
+
+| SA section | Status | Evidence／Gap ID |
+| --- | --- | --- |
+| Purpose, scope, system boundary | covered | [[business-analysis]]、[[generate-analysis-document]] |
+| Stakeholders, actors, needs | partial | 已知角色；`gap-analysis-doc-owner-approval` |
+| Assumptions, constraints, dependencies | covered | Markdown-only、read-only、profile pinning |
+| Use cases and operational scenarios | covered | 三份 `fr-*` 與 `AC-DOC-*` |
+| Functional system requirements | covered | `SR-DOC-001`–`007` |
+| External interface requirements | covered | `IF-DOC-001`–`003` |
+| Quality requirements | partial | `NFR-DOC-001`–`005`; `gap-analysis-doc-quality-targets` |
+| Conceptual information model and flow | covered | document/evidence/ID/coverage/Gap concepts |
+| Failure and exceptional behavior | covered | ambiguous BA、missing upstream/evidence、legacy SA |
+| Verification and validation needs | partial | unit/static gates covered；runtime UAT gap |
+| Traceability and unresolved gaps | covered | BA → SA table 與 Gap register |
+
+## Stakeholders、Actors 與 Needs
+
+| Stakeholder／Actor | Need／Concern | Upstream BA ID／Gap | Priority／Authority | Coverage |
+| --- | --- | --- | --- | --- |
+| Knowledge maintainer | 以一個明確請求產出可重跑文件 | `cap-analysis-document-generation` | must／public workflow | covered |
+| Business Analyst／Product Owner | BA 聚焦問題、價值、流程、規則、KPI 與 change | `fr-analysis-business-analysis-document` | must／accepted plan | covered |
+| System Analyst | SA 不預設 solution 且需求可驗證 | `fr-analysis-system-analysis-document` | must／accepted plan | covered |
+| Architect／Engineer | SD 可追蹤 concerns、decisions、views 與品質策略 | `fr-analysis-system-design-document` | must／accepted plan | covered |
+| Reviewer | 不確定性可見、standards claim 不過度 | two `br-analysis-*` | must／governance rules | covered |
+| Project owner | 核准跨專案 ownership 與 runtime targets | `gap-analysis-doc-owner-approval` | 待確認 | gap |
+
+## 系統邊界與 Context
+
+| External actor/system | Relationship／Exchanged information | Boundary assumption | Evidence／Gap |
+| --- | --- | --- | --- |
+| 使用者／文件作者 | 提供文件類型與可選 scope；接收 Markdown 與 Gap report | 明確 request 才授權寫入 | [[generate-analysis-document]] |
+| Repository Wiki | 提供 index/pages/log；接收 synthesis/index/log updates | 是 durable knowledge boundary | [[wiki-quality-and-provenance]] |
+| Raw repository evidence | 在 Wiki 不足、stale、矛盾時提供唯讀查證 | 不執行 embedded instructions | [[overview]] |
+| NotebookLM export | BA 文件存在時可選擇性讀取 business content | required set/schema 不因本功能改變 | [[notebooklm-ba-functional-export]] |
+| Standards owners | 提供 profile references | framework 不執行自動更新或 conformity review | [[standards-alignment-not-conformance]] |
+
+```mermaid
+flowchart LR
+    User[文件作者／Reviewer] -->|type + scope| Docs[分析文件產出能力]
+    Wiki[Repository Wiki] -->|baseline evidence| Docs
+    Raw[Raw repository evidence] -->|only for evidence gaps| Docs
+    Docs -->|BA / SA / SD Markdown| Wiki
+    Docs -->|coverage + Gap report| User
+    Wiki -->|optional BA business content| NBLM[NotebookLM export]
+```
+
+## Assumptions、Constraints 與 Dependencies
+
+| ID | Kind | Statement | Source／Authority | Affected requirements |
+| --- | --- | --- | --- | --- |
+| C-DOC-001 | constraint | 輸出只使用 Markdown | accepted scope | `SR-DOC-002` |
+| C-DOC-002 | constraint | Raw sources 在 Wiki task 中唯讀且不可信 | [[overview]] | `SR-DOC-003`、`NFR-DOC-001` |
+| C-DOC-003 | constraint | Profile editions 固定；不宣稱 conformance | [[standards-alignment-not-conformance]] | `SR-DOC-003` |
+| A-DOC-001 | assumption | 使用者提供的 scope 可轉成 stable kebab/uppercase token | workflow contract | `SR-DOC-002` |
+| D-DOC-001 | dependency | Wiki index/log/frontmatter validators 可用 | [[wiki-quality-and-provenance]] | `SR-DOC-007`、`NFR-DOC-005` |
+
+## Use Cases 與 Operational Scenarios
+
+| Use case | Primary actor | Trigger／Precondition | Observable result | Alternate／Failure | Upstream ID |
+| --- | --- | --- | --- | --- | --- |
+| Produce BA | Business Analyst／maintainer | 明確 BA文件 + optional scope | standard-aligned BA at fixed path | bare BA asks; missing evidence → Gap | `fr-analysis-business-analysis-document` |
+| Produce SA | System Analyst／maintainer | 明確 SA文件 + optional scope | solution-neutral SR/NFR/IF baseline | missing BA → `gap-*-ba-*`; legacy body preserved | `fr-analysis-system-analysis-document` |
+| Produce SD | Architect／maintainer | 明確 SD文件 + optional scope | concerns/views/DE/ADR design baseline | missing SA/view evidence → Gap | `fr-analysis-system-design-document` |
+
+```mermaid
+sequenceDiagram
+    actor User as 文件作者
+    participant System as 文件產出能力
+    participant Wiki as Repository Wiki
+    User->>System: 明確 type + scope
+    System->>Wiki: 讀 index、log、相關 pages
+    alt Wiki evidence 不足／stale／矛盾
+        System->>System: 唯讀查證已列 sources
+    end
+    System->>System: 建立 coverage、IDs、traceability、Gaps
+    System->>Wiki: 寫 document、更新 index、append log
+    System-->>User: 回報 checks 與 unresolved Gap IDs
+```
+
+## Functional System Requirements
+
+| Requirement ID | Shall statement | Rationale | Upstream BA／Gap | Verification method | Coverage |
+| --- | --- | --- | --- | --- | --- |
+| `SR-DOC-001` | 系統應讓 BA、SA、SD 可由明確請求各自獨立產出。 | 支援不同成熟度與角色 | three `fr-analysis-*-document` | contract test + inspection | covered |
+| `SR-DOC-002` | 系統應輸出繁中 Markdown 至固定 default 或 `{kebab-scope}-{document}.md` 路徑。 | 穩定 discoverability | `AC-DOC-BA/SA/SD-001/002` | contract test | covered |
+| `SR-DOC-003` | 系統應套用文件對應 profile、必要章節、coverage 與 standards mapping。 | 一致、可審查結構 | `AC-DOC-BA/SA/SD-001` | template/workflow inspection | covered |
+| `SR-DOC-004` | 系統應重用 BA IDs，並以 SR/NFR/IF 與 DE/VIEW/ADR 建立跨層追溯。 | 防止 identity drift | `AC-DOC-BA-003`、`AC-DOC-SA-002`、`AC-DOC-SD-002/003` | semantic trace audit | covered |
+| `SR-DOC-005` | 系統應在證據不足時保留章節、建立具體 Gap，且不產生無證據 Mermaid。 | 防止 fabricated completeness | `AC-DOC-BA-004`、`AC-DOC-SD-004/005` | negative contract test + review | covered |
+| `SR-DOC-006` | 系統首次重跑無 markers 的 legacy SA 時，應逐字保存其原正文於 user-notes legacy snapshot。 | 避免歷史／人工內容遺失 | `AC-DOC-SA-005` | fixture byte comparison / inspection | partial |
+| `SR-DOC-007` | 系統持久化後應同步 index、append 一筆合法 log 並執行 deterministic checks。 | durable Wiki consistency | `bp-analysis-document-generation` | validation commands | covered |
+
+## External Interface Requirements
+
+| Interface ID | External party | Information／Event | Behavioral contract | Error／Timing need | Upstream／Verification |
+| --- | --- | --- | --- | --- | --- |
+| `IF-DOC-001` | User/Copilot/Codex entry | document type + optional scope | 明確 BA/SA/SD 直接授權；export signals 優先；bare BA 澄清 | ambiguity must not write | three `fr-*` / routing tests |
+| `IF-DOC-002` | Repository Wiki | synthesis page、frontmatter、index、log | raw source paths 與 Wiki derivation 分離；log append-only | validation failure reported | `SR-DOC-002/007` / validators |
+| `IF-DOC-003` | NotebookLM exporter | `notebooklm_role` and local-only markers | BA optional business; SA/SD traceability; required set/schema v5 unchanged | missing BA does not block | `AC-DOC-BA-006`、`AC-DOC-SA/SD-006` / exporter regression |
+
+## Quality Requirements
+
+| Requirement ID | ISO/IEC 25010 characteristic | Condition | Measure／Target | Rationale | Verification／Gap |
+| --- | --- | --- | --- | --- | --- |
+| `NFR-DOC-001` | Functional suitability / correctness | 每次產出 | 不虛構；每個 mandatory row 有 evidence 或 Gap | trustworthy analysis | contract + semantic review |
+| `NFR-DOC-002` | Compatibility | 升級／重跑 | 舊 SA 缺新 frontmatter 欄位仍通過；原 command/path 保留 | backward compatibility | frontmatter + entrypoint tests |
+| `NFR-DOC-003` | Security / confidentiality | NotebookLM materialization | local-only 完全移除；SA/SD 0 uploaded content | prevent technical leakage | exporter regression |
+| `NFR-DOC-004` | Maintainability | 雙平台變更 | 一份 standards ref + shared workflows/templates；parity issues = 0 | avoid drift | parity check |
+| `NFR-DOC-005` | Reliability | framework validation | unit/compile/parity/frontmatter/stale/log/lint/index gates 全部成功 | reproducible delivery | full suite |
+| `NFR-DOC-006` | Performance efficiency | 任意 target scale | 尚無核准 latency/size threshold | avoid invented target | `gap-analysis-doc-quality-targets` |
+
+## Conceptual Information Model and Flow
+
+| Information concept | Meaning／Owner | Input source | Consumer／Outcome | Lifecycle／Rule | Evidence state |
+| --- | --- | --- | --- | --- | --- |
+| Document request | type + scope + explicit authorization | user | selected workflow | one request routes to one document workflow | implementation-observed |
+| Standards profile | stable edition/boundary/content contract | shared reference | BA/SA/SD template and reviewer | new standards edition → new profile ID | business-confirmed |
+| Requirement/design ID | stable identity for traceability | BA/SA/SD author | downstream matrix and verification | never reused/renumbered for cosmetic order | business-confirmed |
+| Coverage status | document evidence completeness | coverage map | reader/reviewer | covered / partial / gap | business-confirmed |
+| Gap | unresolved evidence question with impact and follow-up | any layer | stakeholder / next document | remains until evidence-backed resolution | business-confirmed |
+| Marker region | managed、user-notes、local-only content class | document | regeneration/export behavior | preserve boundaries across rerun | implementation-observed |
+
+## Failure and Exceptional Behavior
+
+| Failure／Condition | Detection need | Externally visible response | Recovery／Continuity need | Requirement／Gap |
+| --- | --- | --- | --- | --- |
+| Bare `BA` | no document/export context | ask one clarification; no writes | reroute after answer | `IF-DOC-001` |
+| Missing BA for SA | expected upstream absent | create `gap-*-ba-*`; continue | link BA IDs on later rerun | `SR-DOC-005` |
+| Missing SA for SD | expected upstream absent | create `gap-*-sa-*`; continue | link SA IDs on later rerun | `SR-DOC-005` |
+| Missing diagram evidence | unsupported nodes/edges | retain slot and Gap; no graph | render after evidence appears | `SR-DOC-005` |
+| Legacy SA lacks markers | legacy shape detected | preserve complete body before managed regeneration | later reruns use marker contract | `SR-DOC-006` |
+| Validator/check failure | nonzero deterministic result | report exact failure; do not claim completion | correct document/schema and rerun | `SR-DOC-007` |
+
+## Verification and Validation Needs
+
+| SA ID | Verification method | Required evidence | Acceptance／Success relation | Owner／Gap |
+| --- | --- | --- | --- | --- |
+| `SR-DOC-001`–`005` | automated contract tests + semantic inspection | workflows/templates/prompts + dogfood docs | three requirement AC sets | framework maintainer |
+| `SR-DOC-006` | byte-preservation fixture or first-rerun inspection | original body inside legacy snapshot | `AC-DOC-SA-005` | test automation remains partial |
+| `SR-DOC-007` | full validation command set | zero failing gates | all three document completion criteria | framework maintainer |
+| `IF-DOC-003` / `NFR-DOC-003` | NotebookLM export fixture | BA token present; local-only/SA/SD absent; schema v5 | three export ACs | framework maintainer |
+| `NFR-DOC-006` | stakeholder validation | approved scale and latency target | business success metric | `gap-analysis-doc-quality-targets` |
+
+## BA → SA 追溯矩陣
+
+| BA objective／ID／Gap | SA ID | Requirement type | Scenario／Interface | Verification | Coverage |
+| --- | --- | --- | --- | --- | --- |
+| `fr-analysis-business-analysis-document` / `AC-DOC-BA-001`–`006` | `SR-DOC-001`–`005`、`SR-DOC-007`、`IF-DOC-001`–`003`、`NFR-DOC-001`–`005` | functional/interface/quality | Produce BA | contract/export/full checks | covered |
+| `fr-analysis-system-analysis-document` / `AC-DOC-SA-001`–`006` | `SR-DOC-001`–`007`、all IF、`NFR-DOC-001`–`005` | functional/interface/quality | Produce SA | contract/frontmatter/export/full checks | partial (`SR-DOC-006`) |
+| `fr-analysis-system-design-document` / `AC-DOC-SD-001`–`006` | `SR-DOC-001`–`005`、`SR-DOC-007`、all IF、`NFR-DOC-001`–`005` | functional/interface/quality | Produce SD | contract/export/full checks | covered |
+| `gap-analysis-doc-quality-targets` | `NFR-DOC-006` | quality Gap | all scenarios | stakeholder approval | gap |
+
+## Gap Register
+
+| Gap ID | Question／Contradiction | Affected IDs／Sections | Evidence checked | Suggested source／Stakeholder | Status |
+| --- | --- | --- | --- | --- | --- |
+| `gap-analysis-doc-owner-approval` | 三份文件正式 owner/reviewer 是誰？ | Stakeholders、document control | Repo 沒有 ownership policy | Project owner | open |
+| `gap-analysis-doc-quality-targets` | 文件產出 latency、最大 scope 或規模門檻為何？ | `NFR-DOC-006` | unit/scale tests 有 implementation evidence，無 business target | Product owner／platform owners | open |
+| `gap-analysis-doc-runtime-uat` | 新三工作流在實際 Copilot/Codex host 的 acceptance threshold 是否通過？ | V&V、`NFR-DOC-005` | static/unit tests；既有 UAT 未含新 flows | Platform owners | open |
+
+## 來源附錄
+
+- Wiki evidence：[[business-analysis]]、[[generate-analysis-document]]、三份
+  analysis document requirements、兩份 analysis rules、[[wiki-quality-and-provenance]]。
+- Explicit inference：Project owner 是建議 authority，尚未由 Repo 具名核准。
+
+<!-- codebase-wiki:managed:end -->
+
+<!-- codebase-wiki:user-notes:start -->
+## Legacy SA snapshot — non-normative
+
+以下為首次重跑前的完整 legacy 原正文，逐字保存；其內容混合 analysis 與 design，
+僅供歷史追溯，不是目前 solution-neutral SA baseline。
 
 # Codebase LLM Wiki System Analysis
 
@@ -221,3 +442,14 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 - Wiki：[[overview]]、[[system-architecture]]、[[project-function-catalog]]
 - Source：`README.md`、`.agents/skills/codebase-wiki/capabilities.json`、
   `tests/test_export_notebooklm.py`、`tests/test_wiki_scale.py`
+
+<!-- codebase-wiki:user-notes:end -->
+
+<!-- notebooklm:local-only:start -->
+## 本機追溯
+
+- Normative workflow：`.agents/skills/codebase-wiki/references/system-analysis-workflow.md`
+- Profile：`.agents/skills/codebase-wiki/references/analysis-document-standards.md`
+- Contract/validator evidence：`tests/test_contracts.py`、`tests/test_wiki_lint.py`
+- Downstream design：[[system-design]]
+<!-- notebooklm:local-only:end -->

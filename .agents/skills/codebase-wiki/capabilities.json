@@ -1,5 +1,5 @@
 {
-  "contract_version": 3,
+  "contract_version": 4,
   "surfaces": ["copilot", "codex"],
   "guard_modes": {
     "default": "wiki-only",
@@ -48,7 +48,17 @@
       "requires_confirmation": false,
       "authorization_policy": "explicit_request"
     },
+    "business_analysis": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
+    },
     "system_analysis": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
+    },
+    "system_design": {
       "writes_by_default": true,
       "requires_confirmation": false,
       "authorization_policy": "explicit_request"
@@ -74,7 +84,9 @@
     "lint": ["lint"],
     "adr": ["adr"],
     "synthesis_guide": ["synthesis", "guide"],
+    "business_analysis": ["business_analysis"],
     "system_analysis": ["system_analysis"],
+    "system_design": ["system_design"],
     "notebooklm_export": ["notebooklm_export"],
     "archaeology": ["archaeology"],
     "delegation": ["delegation"]
@@ -89,7 +101,9 @@
       "adr": ["new-adr.prompt.md"],
       "guide": ["save-guide.prompt.md", "onboarding-guide.prompt.md"],
       "synthesis": ["save-synthesis.prompt.md"],
+      "business_analysis": ["business-analysis-doc.prompt.md"],
       "system_analysis": ["system-analysis-doc.prompt.md"],
+      "system_design": ["system-design-doc.prompt.md"],
       "notebooklm_export": ["export-notebooklm.prompt.md"],
       "delegation": []
     },

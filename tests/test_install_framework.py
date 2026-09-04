@@ -48,7 +48,7 @@ class FrameworkInstallerTests(unittest.TestCase):
             )
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(payload["contract_version"], 3)
+            self.assertEqual(payload["contract_version"], 4)
             self.assertEqual(payload["framework_version"], "0.2.0")
             self.assertEqual(payload["action"], "install")
             self.assertEqual(payload["surface"], "codex")
@@ -104,6 +104,7 @@ class FrameworkInstallerTests(unittest.TestCase):
                 ).exists()
             )
             for template in (
+                "business-analysis-template.md",
                 "business-process-template.md",
                 "business-requirement-template.md",
                 "business-rule-template.md",
@@ -113,6 +114,8 @@ class FrameworkInstallerTests(unittest.TestCase):
                 "business-glossary-template.md",
                 "business-knowledge-gaps-template.md",
                 "codebase-functional-coverage-template.md",
+                "system-analysis-template.md",
+                "system-design-template.md",
             ):
                 self.assertTrue(
                     (
@@ -134,6 +137,22 @@ class FrameworkInstallerTests(unittest.TestCase):
                     / "notebooklm-export-workflow.md"
                 ).exists()
             )
+            for reference in (
+                "analysis-document-standards.md",
+                "business-analysis-workflow.md",
+                "system-analysis-workflow.md",
+                "system-design-workflow.md",
+            ):
+                self.assertTrue(
+                    (
+                        target
+                        / ".agents"
+                        / "skills"
+                        / "codebase-wiki"
+                        / "references"
+                        / reference
+                    ).exists()
+                )
             self.assertFalse((target / REMOVED_LIVE_DB_REFERENCE).exists())
             self.assertEqual(
                 (target / ".agents" / "skills" / "codebase-wiki" / "VERSION").read_text(
@@ -234,6 +253,12 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue(payload["applied"])
             self.assertTrue((target / ".github" / "copilot-instructions.md").exists())
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
+            for prompt in (
+                "business-analysis-doc.prompt.md",
+                "system-analysis-doc.prompt.md",
+                "system-design-doc.prompt.md",
+            ):
+                self.assertTrue((target / ".github" / "prompts" / prompt).exists())
             self.assertFalse((target / REMOVED_LIVE_DB_REFERENCE).exists())
             self.assertFalse((target / ".codex").exists())
             self.assertFalse((target / "Codex.md").exists())

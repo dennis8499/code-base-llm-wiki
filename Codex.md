@@ -60,7 +60,9 @@ remain explicit unverified gaps.
 | `/save-guide {topic}`          | `請把目前分析整理成 wiki/guides/{topic} 指南，標示來源、gap 與步驟，並更新 index 與 log。`                             |
 | `/save-synthesis {topic}`      | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。`                                        |
 | `/code-archaeology {target}`   | `請依 code archaeology 流程追蹤 {target} 的目前行為與 git history，清楚區分證據、推測與不確定性。`                     |
-| `/system-analysis-doc {scope}` | `請基於目前 wiki 內容產出 {scope} 的 SA 系統分析文件，寫入 wiki/synthesis/，標示 coverage gaps，並更新 index 與 log。` |
+| `/business-analysis-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned BA 文件，保留人工 notes、明列 Gap，並更新 index 與 log。` |
+| `/system-analysis-doc {scope}` | `請基於目前 wiki 產出 {scope} 的 solution-neutral SA 文件，以 SR/NFR/IF 建立需求與驗證追溯，並更新 index 與 log。` |
+| `/system-design-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned SD 文件，建立 concerns、views、DE/ADR 與 SA 追溯，並更新 index 與 log。` |
 | `/export-notebooklm`          | `請使用 BA-first NotebookLM export：先預覽流程、規則、詞彙、證據與 gaps，確認後更新繁中 BA Wiki；再做 readiness preflight，第二次確認後產生 query-index 與 .notebooklm pack。` |
 | `/update-index`                | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。`                                   |
 
@@ -113,10 +115,22 @@ Durable guide:
 請使用 $codebase-wiki，把這次排查流程整理成 wiki/guides/refund-debugging.md，寫清楚目標讀者、前置條件、步驟、常見問題與 gap，並更新 index 與 log。
 ```
 
+Business analysis document:
+
+```text
+請使用 $codebase-wiki，基於目前 Wiki 產出整體系統的 BA 業務分析文件，寫入 wiki/synthesis/business-analysis.md；依 business-analysis-aligned-v1 建立 coverage、BA IDs 與 gaps，並保留 user notes。
+```
+
 System analysis document:
 
 ```text
-請使用 $codebase-wiki，基於目前 wiki 內容產出整體系統的 SA 系統分析文件，寫入 wiki/synthesis/system-analysis.md，標示 coverage gaps，並更新 index 與 log。
+請使用 $codebase-wiki，基於 BA 與目前 Wiki 產出整體系統的 solution-neutral SA 文件，寫入 wiki/synthesis/system-analysis.md；以 SR/NFR/IF 建立可驗證需求，不放技術選型或部署設計。
+```
+
+System design document:
+
+```text
+請使用 $codebase-wiki，基於 SA 與目前 Wiki 產出整體系統的 SD 文件，寫入 wiki/synthesis/system-design.md；依 system-design-aligned-v1 建立 stakeholder concerns、VIEW/DE/ADR、元件/runtime/資料/部署/安全視圖與 gaps。
 ```
 
 NotebookLM Enterprise export:

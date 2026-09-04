@@ -310,6 +310,51 @@ notebooklm_terms: [cancel order, acceptance]
                 "\n".join(VALIDATE.validate_page(invalid, wiki)),
             )
 
+    def test_analysis_document_optional_frontmatter_is_validated_without_breaking_legacy_sa(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            synthesis = wiki / "synthesis"
+            synthesis.mkdir(parents=True)
+            legacy = synthesis / "legacy-system-analysis.md"
+            legacy.write_text(
+                page("Legacy System Analysis", "synthesis"), encoding="utf-8"
+            )
+            current = synthesis / "business-analysis.md"
+            current.write_text(
+                page("Business Analysis", "synthesis").replace(
+                    "sources: []",
+                    "standards_profile: business-analysis-aligned-v1\n"
+                    "coverage_status: partial\n"
+                    "sources: []",
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertEqual(VALIDATE.validate_page(legacy, wiki), [])
+            self.assertEqual(VALIDATE.validate_page(current, wiki), [])
+
+            current.write_text(
+                current.read_text(encoding="utf-8")
+                .replace(
+                    "standards_profile: business-analysis-aligned-v1",
+                    "standards_profile: Business Analysis v1",
+                )
+                .replace("coverage_status: partial", "coverage_status: unknown"),
+                encoding="utf-8",
+            )
+            errors = "\n".join(VALIDATE.validate_page(current, wiki))
+            self.assertIn("standards_profile must be a non-empty kebab-case string", errors)
+            self.assertIn("coverage_status must be one of covered, gap, partial", errors)
+
+            current.write_text(
+                current.read_text(encoding="utf-8").replace(
+                    "coverage_status: unknown", "coverage_status: [partial]"
+                ),
+                encoding="utf-8",
+            )
+            errors = "\n".join(VALIDATE.validate_page(current, wiki))
+            self.assertIn("coverage_status must be one of covered, gap, partial", errors)
+
     def test_cli_exit_code_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             wiki = Path(directory)

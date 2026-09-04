@@ -1,12 +1,12 @@
 ---
 title: Codebase Functional Coverage
 type: synthesis
-summary: 本機完整性 gate，將 framework scan profile 的每個安全檔案歸屬到功能需求或無可觀察行為
+summary: 本機完整性 gate，將 framework scan profile 的每個安全檔案歸屬到 NotebookLM 與 BA／SA／SD 文件功能需求或無可觀察行為
 notebooklm_group: local-governance
 notebooklm_role: exclude
 sources: []
-derived_from: ["[[functional-requirement-catalog]]", "[[notebooklm-ba-functional-export]]"]
-last_updated: 2026-08-26
+derived_from: ["[[functional-requirement-catalog]]", "[[notebooklm-ba-functional-export]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]"]
+last_updated: 2026-09-04
 tags: [synthesis, coverage, notebooklm, local-only]
 status: active
 ---
@@ -18,24 +18,25 @@ status: active
 <!-- codebase-wiki:managed:start -->
 ## Disposition Ledger
 
-以下 prefix 使用 most-specific match。框架 schema、adapters、tests、文件與 release
-surface 共同實作或驗證 [[notebooklm-ba-functional-export]]；repository metadata 檔案不產生
+以下 prefix 使用 most-specific match。框架 schema、adapters、tests 與文件共同實作或
+驗證 [[notebooklm-ba-functional-export]]、[[business-analysis-document]]、
+[[system-analysis-document]]、[[system-design-document]]；repository metadata 檔案不產生
 獨立可觀察行為。
 
 | Path or prefix | Disposition | Functional requirements |
 | --- | --- | --- |
-| `.agents/skills/codebase-wiki/` | functional-evidence | [[notebooklm-ba-functional-export]] |
-| `.codex/` | supporting-technical | [[notebooklm-ba-functional-export]] |
-| `.github/` | supporting-technical | [[notebooklm-ba-functional-export]] |
-| `docs/` | supporting-technical | [[notebooklm-ba-functional-export]] |
-| `tests/` | supporting-technical | [[notebooklm-ba-functional-export]] |
+| `.agents/skills/codebase-wiki/` | functional-evidence | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `.codex/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `.github/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `docs/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `tests/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `tools/` | supporting-technical | [[notebooklm-ba-functional-export]] |
 | `.gitattributes` | no-observable-behavior | |
 | `.gitignore` | no-observable-behavior | |
-| `AGENTS.md` | supporting-technical | [[notebooklm-ba-functional-export]] |
-| `ChangeLog.md` | supporting-technical | [[notebooklm-ba-functional-export]] |
-| `Codex.md` | supporting-technical | [[notebooklm-ba-functional-export]] |
-| `README.md` | supporting-technical | [[notebooklm-ba-functional-export]] |
+| `AGENTS.md` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `ChangeLog.md` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `Codex.md` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `README.md` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `VERSION` | no-observable-behavior | |
 | `notebooklm.toml` | functional-evidence | [[notebooklm-ba-functional-export]] |
 

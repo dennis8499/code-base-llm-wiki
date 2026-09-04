@@ -9,8 +9,8 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:b8954e5613b1879d22a30d3dbb99c0a495844745d5099dedf7916cf63e87a9d3
-derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[notebooklm-exporter]]"]
+source_digest: sha256:d02edd4ed4deebbe927988b61de6b906fc1a7a737006899c84ad680b9af47b1a
+derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[notebooklm-exporter]]", "[[business-analysis]]"]
 last_updated: 2026-09-04
 tags: [guide, notebooklm, export, ba-first, enterprise]
 status: active
@@ -66,6 +66,10 @@ Discovery 尚未具備 BA 文件時，`ready_to_export=false` 是正常訊號；
 - 每個可獨立驗收能力的 `wiki/requirements/*.md`；
 - 每個端到端流程的 `wiki/processes/*.md`；
 - 每條可獨立詢問規則的 `wiki/rules/*.md`。
+
+Standalone `wiki/synthesis/business-analysis.md` 存在且為 active/business role 時會自動
+進入 pack，但它不是 required document，缺少時不阻擋 readiness。SA／SD 固定為
+`notebooklm_role: traceability`，不會上傳。
 
 BA pages 使用 `notebooklm_role: business`、穩定 `notebooklm_group` 與非空
 `notebooklm_terms`。Requirement/process/rule IDs 必須唯一；requirement 與 rule 的
@@ -141,3 +145,6 @@ dlp_profile = "notebooklm-enterprise-ba-mask-v1"
 - [[business-glossary]]
 - [[business-knowledge-gaps]]
 - [[notebooklm-exporter]]
+- [[business-analysis]]
+- [[system-analysis]]
+- [[system-design]]

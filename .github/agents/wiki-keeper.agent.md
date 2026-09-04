@@ -1,8 +1,8 @@
 ---
 name: wiki-keeper
 description: >
-  Explicit delegation only. Coordinate Wiki routing, ADR, Guide, Synthesis, SA,
-  or cross-workflow quality using the shared references.
+  Explicit delegation only. Coordinate Wiki routing, ADR, Guide, Synthesis,
+  BA, SA, SD, or cross-workflow quality using the shared references.
 disable-model-invocation: true
 user-invocable: true
 tools: [execute, read, agent, edit, search]

@@ -1,20 +1,21 @@
 ---
 title: Codebase LLM Wiki — 業務總覽
 type: overview
-summary: 讓知識維護者把完整安全 codebase 重新萃取成功能需求、驗收條件、流程、規則與缺口
+summary: 讓團隊把 codebase 建成可追溯 Wiki，並產出標準對齊 BA／SA／SD 與 BA-only NotebookLM 知識包
 sources:
   - README.md
   - AGENTS.md
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:62e1664e197fce2820e60a69d9e986922a24bc8bcb291631e5a56a6fb42c23a0
+  - .agents/skills/codebase-wiki/references/analysis-document-standards.md
+source_digest: sha256:7f79323b0ce6a8e7c571911e55279856660889ddc3cb3ef3d4f2b5d468db624e
 derived_from: []
 last_updated: 2026-09-04
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
 notebooklm_role: business
-notebooklm_terms: [Codebase LLM Wiki, 功能需求, 驗收條件, Business Analyst, NotebookLM, 完整覆蓋, DLP 遮罩]
+notebooklm_terms: [Codebase LLM Wiki, 功能需求, 驗收條件, Business Analyst, NotebookLM, 完整覆蓋, DLP 遮罩, BA文件, SA文件, SD文件, 標準對齊]
 ---
 
 # Codebase LLM Wiki — 業務總覽
@@ -24,9 +25,11 @@ notebooklm_terms: [Codebase LLM Wiki, 功能需求, 驗收條件, Business Analy
 ## 業務目的
 
 Codebase LLM Wiki 讓團隊把散落在程式、設定、既有文件與人員理解中的系統知識，整理成
-可閱讀、可版本控制、可追溯的 Markdown Wiki。Business Analyst 不必先知道 class、API、
-資料表或 repository 路徑，便能從功能需求、驗收條件、角色、流程、規則、詞彙與已知缺口
-開始理解系統。
+可閱讀、可版本控制、可追溯的 Markdown Wiki。團隊可進一步從同一份 evidence 獨立
+產出 Business Analysis、solution-neutral System Analysis 與 System Design，分開回答
+「為何改／要什麼／如何設計」，並以 stable IDs 和 Gap 連結。Business Analyst 不必先
+知道 class、API、資料表或 repository 路徑，便能從功能需求、驗收條件、角色、流程、
+規則、詞彙與已知缺口開始理解系統。
 
 NotebookLM Exporter 進一步把這份持久 Wiki 整理成離線 BA source pack。它不是 RAG，也不會
 自行上傳或修改 NotebookLM；交付者先審查本地 pack，再依 upload plan 手動更新 Notebook。
@@ -37,6 +40,8 @@ NotebookLM Exporter 進一步把這份持久 Wiki 整理成離線 BA source pack
 | --- | --- | --- |
 | Business Analyst | 理解系統如何支援業務、找出規則與例外 | 可直接詢問的功能需求、驗收條件、流程、規則與 gaps |
 | Product Owner／領域擁有者 | 確認政策、邊界與優先順序 | 清楚區分已確認政策、目前實作與待確認事項 |
+| System Analyst | 把 stakeholder needs 轉成 solution-neutral 系統／介面／品質需求 | `SR-*`／`IF-*`／`NFR-*` 與 verification needs |
+| Architect／Engineer | 把 SA drivers 轉成可審查 solution design | `DE-*`／`VIEW-*`／ADR、五種 views 與品質策略 |
 | 知識維護者 | 將來源證據整理成 durable knowledge | 可增量更新的 Wiki、index 與 append-only log |
 | 工程／稽核角色 | 在本機 Wiki 追查 BA 說明對應的實作或設定 | 不會上傳的 local-only provenance |
 
@@ -48,6 +53,8 @@ NotebookLM Exporter 進一步把這份持久 Wiki 整理成離線 BA source pack
 - 從 [[business-rule-catalog]] 查明條件、決策、例外、適用流程與證據狀態。
 - 從 [[business-glossary]] 對齊名詞、別名與容易混淆的語意邊界。
 - 從 [[business-knowledge-gaps]] 看見無可靠證據、需要 stakeholder 確認或 v1 尚不支援的內容。
+- 從 [[business-analysis]]、[[system-analysis]]、[[system-design]] 依序追查 business
+  objective／BA IDs、SR/NFR/IF、DE/VIEW/ADR 與 verification strategy。
 - 技術 provenance 只留在本機 Wiki，不進入 NotebookLM upload sources。
 
 ## 知識與證據狀態
@@ -61,15 +68,20 @@ NotebookLM Exporter 進一步把這份持久 Wiki 整理成離線 BA source pack
 
 ## 主要業務能力
 
-目前與 NotebookLM 交付直接相關的功能需求是 [[notebooklm-ba-functional-export]]，其端到端
-流程是 [[notebooklm-ba-knowledge-export]]：
+標準對齊文件能力由 [[business-analysis-document]]、[[system-analysis-document]]、
+[[system-design-document]] 與共用流程 [[generate-analysis-document]] 定義；三份文件可
+獨立產出，上游不足以具體 Gap 降級。[[standards-alignment-not-conformance]] 限制宣稱，
+[[missing-evidence-remains-gap]] 防止以推測補滿。
+
+NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到端流程是
+[[notebooklm-ba-knowledge-export]]：
 知識維護者先完成 discovery preflight 與文件計畫確認，補齊 BA 知識後再完成 readiness
 preflight 與第二次確認，最後產生本地 pack。相關約束見
 [[ba-knowledge-precedes-traceability]] 與 [[readiness-preflight-required]]。
 
-框架也支援一般 Ingest、Query、Lint、Archaeology、ADR、Synthesis、Guide 與 System
-Analysis；這些能力的工程入口與治理細節保留在 [[project-function-catalog]]、
-[[framework-introduction]] 與 [[system-analysis]]，不作為 BA 問答的主要敘事。Query
+框架也支援一般 Ingest、Query、Lint、Archaeology、ADR、Synthesis 與 Guide；這些
+能力的工程入口與治理細節保留在 [[project-function-catalog]] 與
+[[framework-introduction]]。Query
 只使用 Wiki 與 Repo source evidence，不連線即時資料庫或呼叫資料庫工具 fallback。
 
 ## 範圍與邊界
@@ -80,6 +92,8 @@ Analysis；這些能力的工程入口與治理細節保留在 [[project-functio
 - GitHub Copilot 與 OpenAI Codex 共用的 Wiki 工作流契約；
 - BA-only NotebookLM source pack、schema-v5 manifest 與手動 upload plan；
 - 可審查的安全排除、DLP、容量與 migration 狀態。
+- Versioned standards profiles、coverage、markers、evidence-gated Mermaid 與
+  BA → SA → SD traceability。
 
 ### 不包含
 
@@ -87,6 +101,7 @@ Analysis；這些能力的工程入口與治理細節保留在 [[project-functio
 - 向量資料庫、常駐搜尋服務或 deterministic NotebookLM 回答保證；
 - 將未轉成 UTF-8 repo text 的 PDF、Office、圖片或訪談內容自動視為證據；
 - 自動把實作行為提升為已核准業務政策。
+- 正式 ISO／IEEE／IIBA conformance、認證或稽核，以及付費標準全文複製。
 
 ## 已知缺口
 
@@ -110,4 +125,6 @@ readiness preflight。
 - [[system-architecture]] — 框架元件、資料流與安全邊界
 - [[wiki-quality-and-provenance]] — frontmatter、digest、index、log 與 lint
 - [[system-analysis]] — 跨模組風險與非功能需求
+- [[business-analysis]] — 文件能力的業務脈絡、需求、成功指標與 change impact
+- [[system-design]] — profiles、workflows、adapters、validators、installer 與 exporter views
 <!-- notebooklm:local-only:end -->

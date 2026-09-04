@@ -10,9 +10,9 @@ notebooklm_role: business
 notebooklm_terms: [readiness preflight, preflight ID, 第二次確認, ready to export]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:5106684498c329561f25e419d8dd19e52a4d227c2ae958aee26dd06c42bafce8
+source_digest: sha256:9c5c8fca9fb204a52af15e5c126f8336980a6bc5536b6922bbb200b8e230c2ee
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-04
 tags: [business-rule, notebooklm, readiness]
 status: active
 ---
@@ -37,6 +37,7 @@ migration 與 gaps，取得第二次確認，
 | Final payload DLP 遮罩後仍有 finding | 阻擋 commit 並保留舊 pack | 無 allowlist | business-confirmed |
 | readiness 後 Wiki、inventory、設定或 output 改變 | 舊 ID 失效，重跑 preflight 與確認 | 無 | business-confirmed |
 | readiness 成功且第二次確認完成 | 可原子產生 pack | 寫入失敗仍保留上一份有效 pack | business-confirmed |
+| Standalone BA 缺少 | required-document gate 維持可通過 | BA 存在時仍須是 active/business role | business-confirmed |
 
 ## 適用流程
 

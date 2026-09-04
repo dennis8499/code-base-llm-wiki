@@ -3,7 +3,8 @@ name: codebase-wiki
 description: >
   Operate a persistent, wiki-first Markdown knowledge base. Use for framework
   install or maintenance, ingest, query, lint, ADR, guide, synthesis, system
-  analysis, code archaeology, or explicit wiki delegation.
+  analysis, business analysis, system design, code archaeology, or explicit
+  wiki delegation.
 ---
 
 # Codebase LLM Wiki
@@ -36,7 +37,10 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | ADR creation and numbering | `references/adr-workflow.md` |
 | Durable guide creation | `references/guide-workflow.md` |
 | Durable synthesis creation | `references/synthesis-workflow.md` |
-| SA document generation, coverage map, gap handling | `references/system-analysis-workflow.md` |
+| BA document generation, business coverage, gap handling | `references/business-analysis-workflow.md` |
+| Solution-neutral SA requirements and verification needs | `references/system-analysis-workflow.md` |
+| SD architecture views, decisions, and quality strategy | `references/system-design-workflow.md` |
+| BA／SA／SD standards profiles and traceability | `references/analysis-document-standards.md` |
 | Code archaeology and git-history evidence | `references/code-archaeology-workflow.md` |
 | Hook trigger, I/O, and guard-mode contract | `references/hooks-specification.md` |
 | New page starting points | Matching template under `assets/` |
@@ -82,7 +86,7 @@ append one operation from `references/log-operations.md`.
 - explicit batch ingest: scoped Wiki writes authorized;
 - query and default archaeology: read-only;
 - lint: report, then confirm repairs;
-- ADR, guide, synthesis, and SA: explicit creation request authorizes output;
+- ADR, guide, synthesis, BA, SA, and SD: explicit creation request authorizes output;
 - delegation: explicit request only.
 
 ## Verification

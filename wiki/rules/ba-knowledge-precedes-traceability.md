@@ -10,9 +10,9 @@ notebooklm_role: business
 notebooklm_terms: [BA-only, functional requirement, acceptance criteria, raw code exclusion]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:5106684498c329561f25e419d8dd19e52a4d227c2ae958aee26dd06c42bafce8
+source_digest: sha256:9c5c8fca9fb204a52af15e5c126f8336980a6bc5536b6922bbb200b8e230c2ee
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-04
 tags: [business-rule, notebooklm, evidence]
 status: active
 ---
@@ -34,6 +34,8 @@ table、repository path 與 technical traceability appendix 均不得成為 uplo
 | BA 文件超過 source budget | deterministic compaction／splitting 後仍超限就整體失敗 | 保留上一份 pack，不可省略功能需求 | business-confirmed |
 | 問題詢問正式政策 | 優先引用 business-confirmed evidence | 只有 implementation observation 時必須如此標示 | business-confirmed |
 | Raw source 含敏感 pattern | 分析副本與 final payload 先遮罩 | 遮罩後仍有殘留即阻擋 commit | business-confirmed |
+| Standalone BA 存在 | 依 business role 納入並移除 local-only | 它不是 required document；缺少時不阻擋 | business-confirmed |
+| SA／SD 存在 | 保留本機 traceability，不 materialize | 無 | business-confirmed |
 
 ## 適用流程
 

@@ -1,13 +1,13 @@
 ---
 title: 業務流程目錄
 type: synthesis
-summary: 框架可供 BA 查詢的業務能力、角色、觸發、結果與文件覆蓋
+summary: 框架可供 BA 查詢的 NotebookLM 交付與 BA／SA／SD 文件產出流程、角色、觸發、結果與覆蓋
 notebooklm_group: business-core
 notebooklm_role: business
-notebooklm_terms: [業務流程, 業務能力, 知識包, Business Analyst, NotebookLM 匯出]
+notebooklm_terms: [業務流程, 業務能力, 知識包, Business Analyst, NotebookLM 匯出, BA文件, SA文件, SD文件]
 sources: []
-derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-08-26
+derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[generate-analysis-document]]"]
+last_updated: 2026-09-04
 tags: [synthesis, business-process-catalog, notebooklm]
 status: active
 ---
@@ -20,18 +20,21 @@ status: active
 
 本目錄只列出有獨立 BA 流程頁、穩定 process ID、actors、trigger、outcome 與 coverage
 狀態的端到端流程。一般 Ingest／Query／Lint 等框架功能目前保留在技術功能目錄，尚未
-全部轉成 BA process pages，並已列入 [[business-knowledge-gaps]]。
+全部轉成 BA process pages，並已列入 [[business-knowledge-gaps]]；分析文件產出則由
+[[generate-analysis-document]] 統一描述三種可獨立工作流。
 
 ## 業務流程覆蓋矩陣
 
 | 業務能力 | 功能需求 | 流程 ID | 流程 | 主要角色 | 觸發 | 業務結果 | 覆蓋狀態 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | BA 功能知識交付 | [[notebooklm-ba-functional-export]] | `bp-notebooklm-ba-knowledge-export` | [[notebooklm-ba-knowledge-export]] | 知識維護者、BA、業務擁有者 | 明確要求建立／更新 NotebookLM pack | 經全量覆蓋與兩次確認的 BA-only source pack | covered |
+| 標準對齊分析文件 | [[business-analysis-document]]、[[system-analysis-document]]、[[system-design-document]] | `bp-analysis-document-generation` | [[generate-analysis-document]] | 知識維護者、BA、System Analyst、Architect、Reviewer | 明確要求 BA文件／SA文件／SD文件 | 可獨立、可重產、Gap-visible 且可跨層追溯的 Markdown | partial |
 
 ## 跨流程關係
 
-NotebookLM BA export 會使用一般 Wiki Ingest、index、log、lint 與 source provenance 能力，
-但這些是支援活動，不另宣稱為已完整建模的 BA 端到端流程。
+兩個流程都使用一般 Wiki Ingest、index、log、lint 與 source provenance 能力，但這些
+是支援活動，不另宣稱為已完整建模的 BA 端到端流程。Standalone BA 可選擇性成為
+NotebookLM business content；SA／SD 不進入 upload payload。
 
 ## 未覆蓋與明確排除
 

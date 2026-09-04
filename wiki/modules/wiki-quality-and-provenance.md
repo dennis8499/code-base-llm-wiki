@@ -10,9 +10,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-log.py
   - tests/test_stale.py
   - tests/test_wiki_lint.py
-source_digest: sha256:eed24d3f759ab9d252cab64034bf08b4cf7589d0aba574dc4e3cbefb1d7061cb
+source_digest: sha256:57319d0b41b2877e191bd404455bd12220a0f57bcd18818fa3b669c97eb7ed4b
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [module, lint, provenance, frontmatter, freshness]
 status: active
 ---
@@ -26,6 +26,8 @@ status: active
   `AC-*`，`business-process` 驗證 process/actors/coverage，`business-rule` 驗證 rule/applies_to。
 - 驗證 NotebookLM `business|traceability|exclude` roles、穩定 group，並要求 business pages
   提供非空 `notebooklm_terms`。
+- `synthesis` 可選用 `standards_profile` 與 `coverage_status: covered|partial|gap`；新
+  BA／SA／SD workflow 強制填寫，但未重跑的 legacy SA 缺少欄位仍保持 validator 相容。
 - 分離 raw `sources` 與 Wiki `derived_from`，並以 `source_digest` 偵測內容變更。
 - 檢查 missing/stale sources、broken/ambiguous wikilinks、真正 orphan 與 index completeness。
 - 檢查 `sources` 的實際解析路徑仍位於 repo root 內，拒絕 drive-qualified path 或逃逸到
@@ -54,7 +56,7 @@ completeness 是兩個獨立判定。持久化 archaeology page 還必須由相�
 ## Evidence
 
 - `validate-frontmatter.py` 驗證 `summary`、`derived_from`、digest、BA page types 與
-  NotebookLM role/term 契約。
+  NotebookLM role/term 契約，以及 standards profile/coverage 的合法值。
 - `check-stale.py` 對排序後 path/file hash records 建立 aggregate SHA-256。
 - `check-stale.py` 在 existence/digest 判定前驗證 source symlink containment。
 - Filesystem fallback 在做 repo-relative 比較前，同時 resolve root 與 candidate，避免

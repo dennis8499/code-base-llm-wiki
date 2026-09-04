@@ -24,7 +24,9 @@ field validity lives in `frontmatter-spec.md`.
 | `synthesis` (business rule catalog) | BA-facing rule coverage and evidence states | `assets/business-rule-catalog-template.md` | tags include `business-rule-catalog` |
 | `synthesis` (business glossary) | Canonical business terms, aliases, and state meanings | `assets/business-glossary-template.md` | tags include `business-glossary` |
 | `synthesis` (business gaps) | Explicit unresolved business questions | `assets/business-knowledge-gaps-template.md` | tags include `business-knowledge-gaps` |
-| `synthesis` (SA) | System Analysis document | `assets/system-analysis-template.md` | tags include `system-analysis` |
+| `synthesis` (BA) | Standard-aligned Business Analysis document | `assets/business-analysis-template.md` | `standards_profile: business-analysis-aligned-v1`; `coverage_status`; tags include `business-analysis` |
+| `synthesis` (SA) | Solution-neutral System Analysis document | `assets/system-analysis-template.md` | `standards_profile: system-analysis-aligned-v1`; `coverage_status`; tags include `system-analysis` |
+| `synthesis` (SD) | Standard-aligned System Design document | `assets/system-design-template.md` | `standards_profile: system-design-aligned-v1`; `coverage_status`; tags include `system-design` |
 | `index` | Wiki navigation root | `assets/index-template.md` | `sources: []`, `tags: [index]` |
 | `log` | Append-only activity history | `assets/log-template.md` | `sources: []`, `tags: [log]` |
 

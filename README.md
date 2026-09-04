@@ -74,7 +74,7 @@ code-base-llm-wiki/
 flowchart LR
     Source[Raw Sources\n唯讀] -->|必要時查證| Agent[Copilot / Codex\nWiki workflows]
     Wiki[wiki/\n持久 Markdown] -->|Wiki-first| Agent
-    Agent -->|Ingest / ADR / Guide / SA| Wiki
+    Agent -->|Ingest / ADR / Guide / BA / SA / SD| Wiki
     Agent -->|NotebookLM export| Pack[.notebooklm/\nlocal source pack]
     Schema[Schema\nRules + Skills + Hooks] --> Agent
 ```
@@ -90,7 +90,7 @@ flowchart LR
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 | 輸出 | `wiki/` | `wiki/` |
 
-兩個入口維持十個使用者意圖群組、十一個 machine operations 與相同安全邊界。日常任務由目前 Agent 處理；只有使用者明確要求 subagents、parallel 或 delegation 時才使用自訂代理。
+兩個入口維持十二個使用者意圖群組、十三個 machine operations 與相同安全邊界。日常任務由目前 Agent 處理；只有使用者明確要求 subagents、parallel 或 delegation 時才使用自訂代理。
 
 Copilot prompt files 是 VS Code 本機 Agent 入口，不是 GitHub Copilot coding agent
 或其他 hosts 的通用入口；其他 hosts 直接使用 `.agents/skills/codebase-wiki/`。
@@ -113,7 +113,9 @@ Custom agents 設為 `user-invocable: true` 與 `disable-model-invocation: true`
 | Archaeology | 追蹤程式路徑與 Git 歷史 | 否 |
 | ADR | 保存架構決策 | 是 |
 | Synthesis / Guide | 保存長期分析或操作指南 | 是 |
-| System Analysis / SA | 產生標示 coverage gaps 的 SA 文件 | 是 |
+| Business Analysis / BA | 依 29148 與 IIBA profile 產生業務需求、流程、規則、指標與變更影響文件 | 是 |
+| System Analysis / SA | 依 29148／15288／25010 profile 產生 solution-neutral 系統需求與驗證分析 | 是 |
+| System Design / SD | 依 42010／25010 profile 產生 concerns、views、決策與品質策略 | 是 |
 | NotebookLM export | 把流程、規則、詞彙、證據與缺口整理成 BA 可問答的本地 Markdown source pack | 兩次預覽後更新 `wiki/` 與 `.notebooklm/` |
 | Delegation | 明確要求時分派專業代理 | 視任務而定 |
 
@@ -128,15 +130,18 @@ Custom agents 設為 `user-invocable: true` 與 `disable-model-invocation: true`
   `source_digest` 偵測同日內容變更。
 - **增量維護**：透過 `wiki/index.md`、wikilinks 與 append-only `wiki/log.md` 累積知識。
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
+- **BA → SA → SD 標準對齊文件**：三份繁中 Markdown 可獨立產出，以穩定 ID
+  建立追溯；證據不足仍保留章節與具體 Gap，不宣稱 ISO／IEEE conformance。
 - **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、Guide、重新 Ingest 或 Lint；不會自動寫入或 Hand-Off。
 - **安全邊界**：`wiki-only` 安全專用、`coexist` 一般開發共存、`framework`
   框架維護；舊 `target` 是 `wiki-only` alias。
-- **零第三方依賴 installer**：contract v3 提供 managed blocks、fingerprint
+- **零第三方依賴 installer**：contract v4 提供 managed blocks、fingerprint
   manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
 - **NotebookLM BA-first 知識包**：固定 Business Analyst audience；以流程、規則、詞彙、
-  evidence state 與 knowledge gaps 為主文件，技術細節只作可選 traceability appendix；
-  透過 discovery/readiness 兩次 preflight、Basic DLP 與 stable source IDs 保持可驗證。
+  evidence state 與 knowledge gaps 為主文件；standalone BA 存在時可選納入，SA／SD 與
+  技術追溯不會上傳；透過 discovery/readiness 兩次 preflight、DLP masking 與 stable
+  source IDs 保持可驗證。
 - **可驗證**：以 Python 3.11/3.14 在隔離 worktree 手動執行 unit、compile、
   parity、frontmatter、digest freshness、log/index 與唯讀 lint；本 Repo 不配置
   GitHub Actions。
@@ -179,7 +184,7 @@ Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的�
 ## 版本與下載
 
 產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.2.0`。Installer 會把目前版本保存到目標 Repo 的
-`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 3` 維持為獨立的
+`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 4` 維持為獨立的
 installer contract 版本。
 
 本 Repo 尚未由擁有者選定 LICENSE，因此 release validate/build 會刻意阻擋新的
@@ -230,14 +235,14 @@ NotebookLM Enterprise 匯出：
 請使用 $codebase-wiki 執行 BA-first NotebookLM export：先做 discovery preflight，盤點業務流程、
 規則、詞彙、證據狀態與知識缺口，列出納入/排除、BA coverage、文件計畫與容量後等待我確認。
 確認後補齊繁中 BA Wiki，再做 readiness preflight 並再次等待確認；最後產生 query-index、
-project-map 與 .notebooklm source pack，技術內容只放獨立 traceability appendix。
+project-map 與 .notebooklm source pack；standalone BA 存在時納入，SA／SD 與技術追溯不會上傳。
 ```
 
 預覽使用 `export-notebooklm.py --preflight`，以 `--root` 指定的檔案系統目錄為掃描
 邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。第一次 ID 只
 用於 discovery；BA 文件更新後必須重跑，並以第二次 readiness `preflight_id` 執行
-`--apply`。Exporter 僅讀 UTF-8 repo text，不會呼叫雲端 API 或自動上傳；未 allowlist 的
-Basic DLP finding 會阻擋 apply。
+`--apply`。Exporter 僅讀 UTF-8 repo text，不會呼叫雲端 API 或自動上傳；DLP finding
+先遮罩，final payload 仍有殘留才阻擋 apply，且沒有 allowlist。
 
 ---
 
@@ -256,7 +261,7 @@ Basic DLP finding 會阻擋 apply。
 | [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
 | [架構與資料流](docs/architecture/README.md) | 三層模型、雙入口、Agents、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/workflows/README.md) | 十類意圖、12 個操作情境、平台對照與輸出契約 |
+| [工作流手冊](docs/workflows/README.md) | 十二類意圖、14 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |

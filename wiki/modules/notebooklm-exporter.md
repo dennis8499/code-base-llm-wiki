@@ -11,9 +11,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:1a3c610c3d581c3bc262b9d9f7f7e244b5812c9e6c826267636c2974f6ed1892
-derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
-last_updated: 2026-09-03
+source_digest: sha256:2704589aa7d7b19990daf266f7d59d8aae799e9650dd3ae32a89158f79149114
+derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
+last_updated: 2026-09-04
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
@@ -31,7 +31,7 @@ NotebookLM API、不修改 raw sources，也不 materialize raw evidence 或技�
 
 | 類別 | 來源 | Pack 行為 |
 | --- | --- | --- |
-| BA documents | `notebooklm_role: business` 的 overview、requirement/process/rule catalogs、glossary、gaps 與 FR/BP/BR pages | 唯一可 materialize 的知識 |
+| BA documents | `notebooklm_role: business` 的 required BA set、FR/BP/BR pages，以及存在時的 standalone [[business-analysis]] | 唯一可 materialize 的知識；standalone BA 是 optional |
 | Analysis inputs | Safe runtime source/config/schema/docs/tests、`business_source_paths`、`extra_paths` | 本機讀取、DLP masking、coverage 驗證；不匯出 |
 | Local governance | coverage ledger 與 `notebooklm_role: exclude` pages | readiness evidence；不匯出 |
 | Safety exclusions | sensitive、binary/generated/dependency、CI/IaC、Wiki/output 等 | 不讀內容或不匯出 |
@@ -39,6 +39,8 @@ NotebookLM API、不修改 raw sources，也不 materialize raw evidence 或技�
 `business_source_paths` 只可覆蓋 dev-tooling 的 scope 分類，不能覆蓋 sensitive、
 generated/dependency、CI/IaC、configured exclusion、Wiki/output 或 symlink/reparse boundary。
 未指定角色的舊 Wiki 頁不會自動成為 BA source，preflight 會列出 warning。
+[[system-analysis]] 與 [[system-design]] 固定使用 `traceability`，因此不會進入上傳內容；
+standalone BA 不存在也不會使 required-document gate 失敗。
 
 ## BA 結構閘門
 
@@ -47,6 +49,7 @@ Preflight 的 `business_coverage` 驗證：
 - overview、functional requirement catalog、business process/rule catalogs、glossary、gaps 與
   local coverage ledger 都存在、active；前六份 BA documents 是 `notebooklm_role: business`；
 - coverage ledger 固定 `notebooklm_role: exclude`；
+- standalone BA 若存在則依 `business` role 納入並移除 local-only block，但不列入 required documents；
 - 至少一個 active requirement/process，每個 requirement/process/rule ID 唯一；
 - requirement/process/rule catalogs 實際連到對應頁；
 - requirement 與 rule 的 `applies_to` 指向存在的 process；
@@ -120,3 +123,6 @@ dispositions、source policy、input/output hashes、limits、DLP phases 與 upl
 - [[readiness-preflight-required]]
 - [[notebooklm-export]]
 - [[business-knowledge-gaps]]
+- [[business-analysis]]
+- [[system-analysis]]
+- [[system-design]]

@@ -107,6 +107,11 @@ findings, and the exact post-mask payload fits the configured limits.
    - one `wiki/requirements/` page per independently testable capability;
    - one `wiki/processes/` page per cataloged end-to-end process;
    - one `wiki/rules/` page per independently queryable business rule.
+   A standalone `wiki/synthesis/business-analysis.md`, when present and active
+   with `notebooklm_role: business`, is included by the normal role-based
+   selection but remains optional and is not added to the required-document
+   gate. System Analysis and System Design use `notebooklm_role: traceability`
+   and are never upload candidates.
 7. Each requirement uses stable `fr-*` and `cap-*` IDs, links at least one
    process, and contains `## 驗收條件` with stable `AC-*` IDs. Use stable
    `business-{capability}` `notebooklm_group` values. Only BA pages use `notebooklm_role: business`;

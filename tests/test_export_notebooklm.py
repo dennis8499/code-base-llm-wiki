@@ -624,6 +624,97 @@ Evidence path: `src/service.py`
                 "passed_with_masking",
             )
 
+    def test_standalone_ba_is_optional_business_content_while_sa_and_sd_are_excluded(self) -> None:
+        module = load_exporter()
+        canonical = load_canonical_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            synthesis = root / "wiki/synthesis"
+            documents = {
+                "business-analysis.md": (
+                    "Business Analysis",
+                    "business-analysis-aligned-v1",
+                    "business-core",
+                    "business",
+                    "BA_WORKFLOW_VISIBLE_9F1",
+                ),
+                "system-analysis.md": (
+                    "System Analysis",
+                    "system-analysis-aligned-v1",
+                    "system-analysis",
+                    "traceability",
+                    "SA_TRACEABILITY_HIDDEN_9F1",
+                ),
+                "system-design.md": (
+                    "System Design",
+                    "system-design-aligned-v1",
+                    "system-design",
+                    "traceability",
+                    "SD_TRACEABILITY_HIDDEN_9F1",
+                ),
+            }
+            for filename, (title, profile, group, role, token) in documents.items():
+                (synthesis / filename).write_text(
+                    "---\n"
+                    f"title: {title}\n"
+                    "type: synthesis\n"
+                    f"standards_profile: {profile}\n"
+                    "coverage_status: partial\n"
+                    f"notebooklm_group: {group}\n"
+                    f"notebooklm_role: {role}\n"
+                    + ("notebooklm_terms: [business analysis, requirements]\n" if role == "business" else "")
+                    + "sources: []\n"
+                    "derived_from: [\"[[overview]]\"]\n"
+                    "last_updated: 2026-09-04\n"
+                    f"tags: [synthesis, {filename.removesuffix('.md')}]\n"
+                    "status: active\n"
+                    "---\n\n"
+                    f"# {title}\n\n{token}\n\n"
+                    "<!-- notebooklm:local-only:start -->\n"
+                    f"LOCAL_ONLY_HIDDEN_{filename}\n"
+                    "<!-- notebooklm:local-only:end -->\n",
+                    encoding="utf-8",
+                )
+            add_index_links(root, "business-analysis", "system-analysis", "system-design")
+
+            code, result = self.run_export(module, root, root / ".notebooklm")
+
+            self.assertEqual(code, 0)
+            self.assertEqual(result["manifest"]["schema_version"], 5)
+            self.assertEqual(
+                canonical.REQUIRED_BA_DOCUMENTS,
+                (
+                    "wiki/overview.md",
+                    "wiki/synthesis/functional-requirement-catalog.md",
+                    "wiki/synthesis/business-process-catalog.md",
+                    "wiki/synthesis/business-rule-catalog.md",
+                    "wiki/synthesis/business-glossary.md",
+                    "wiki/synthesis/business-knowledge-gaps.md",
+                ),
+            )
+            exported = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (root / ".notebooklm/sources").glob("*.md")
+            )
+            self.assertIn("BA_WORKFLOW_VISIBLE_9F1", exported)
+            self.assertNotIn("SA_TRACEABILITY_HIDDEN_9F1", exported)
+            self.assertNotIn("SD_TRACEABILITY_HIDDEN_9F1", exported)
+            self.assertNotIn("LOCAL_ONLY_HIDDEN_", exported)
+
+            (synthesis / "business-analysis.md").unlink()
+            index = root / "wiki/index.md"
+            index.write_text(
+                index.read_text(encoding="utf-8").replace(
+                    "[[business-analysis]]\n", ""
+                ),
+                encoding="utf-8",
+            )
+            preflight_code, without_standalone_ba = self.run_preflight(module, root)
+            self.assertEqual(preflight_code, 0)
+            self.assertTrue(without_standalone_ba["ready_to_export"])
+            self.assertEqual(without_standalone_ba["preflight_schema_version"], 5)
+
     def test_preflight_pack_plan_matches_committed_source_hashes(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:

@@ -1,93 +1,143 @@
 # System Analysis Document Workflow
 
 Use this workflow when the user asks for an SA document, system analysis
-document, SAD, `SA文件`, or `系統分析文件` generated from Codebase LLM Wiki
-content.
+document, SAD, `SA文件`, `系統分析文件`, or
+`/system-analysis-doc {scope}`. The existing command and default path are
+preserved. An explicit request authorizes the scoped Wiki output.
 
-## Output
+Load `analysis-document-standards.md` completely and apply
+`system-analysis-aligned-v1`: ISO/IEC/IEEE 29148:2018 and
+ISO/IEC/IEEE 15288:2023 organize stakeholder needs and system requirements;
+ISO/IEC 25010:2023 classifies measurable quality requirements.
+
+## Output Contract
 
 - Default path: `wiki/synthesis/system-analysis.md`.
 - Scoped path: `wiki/synthesis/{kebab-scope}-system-analysis.md`.
-- Frontmatter type: `synthesis`.
-- Required tags: `synthesis` and `system-analysis`.
-- Default format: Markdown. Do not generate Word or PDF unless the user asks
-  for that as a separate task.
+- Frontmatter: `type: synthesis`,
+  `standards_profile: system-analysis-aligned-v1`, and
+  `coverage_status: covered | partial | gap`.
+- Required tags: `synthesis`, `system-analysis`, `standards-aligned`.
+- NotebookLM: `notebooklm_role: traceability`; SA never enters the BA upload
+  payload.
+- Format: Traditional Chinese Markdown. Do not generate PDF or DOCX.
+
+## Analysis Boundary
+
+SA is `solution-neutral`. It defines what observable behavior, information,
+interface, quality, failure handling, and verification the system needs. It
+不得包含技術選型，亦不得包含部署設計。Do not prescribe frameworks,
+libraries, component allocation, protocols, storage engines, runtime topology,
+cloud products, or implementation mechanisms. Route those decisions to SD or
+an ADR.
+
+Existing implementation may prove current behavior or expose a constraint; it
+does not by itself make that implementation the required solution. Separate
+stakeholder need, requirement, observed behavior, inference, and Gap.
 
 ## Source Order
 
 1. Read `wiki/index.md` and recent `wiki/log.md`.
-2. Read `wiki/overview.md` when present.
-3. Read relevant pages from:
-   - `wiki/architecture/`
-   - `wiki/modules/`
-   - `wiki/entities/`
-   - `wiki/patterns/`
-   - `wiki/dependencies/`
-   - `wiki/decisions/`
-   - `wiki/synthesis/`
-4. Inspect raw sources only when wiki content is missing, stale,
-   contradictory, or too vague for a required SA section.
+2. Read the scoped BA document when present, then relevant overview,
+   requirement, process, rule, glossary, gap, and decision pages.
+3. Read existing architecture/module/entity pages only to establish observed
+   system boundary, actors, external interactions, and constraints—not to copy
+   their design into requirements.
+4. Inspect raw sources only when Wiki evidence is missing, stale,
+   contradictory, or too vague for a testable requirement.
+
+An absent BA does not block SA. Create stable `gap-{scope}-ba-*` records for
+missing business objectives, actors, policies, or success criteria and proceed
+with the evidence that exists.
 
 ## Coverage Map
 
-Before writing, build a short coverage map for these sections:
-
-| SA section | Typical evidence |
+| SA section | Expected evidence |
 | --- | --- |
-| Purpose and scope | overview, README, guides |
-| Stakeholders and readers | docs, inferred audience from wiki |
-| System overview and context | overview, architecture |
-| Architecture and components | architecture, modules, dependencies |
-| Module responsibilities | modules, entities |
-| Main flows and use cases | modules, synthesis, source call paths |
-| APIs and interfaces | entities, controllers, routes, public exports |
-| Data model and data flow | entities, dependencies, source schemas |
-| External integrations | dependencies, config, integration modules |
-| Security and permissions | auth modules, config, middleware |
-| Deployment and operations | architecture, config, scripts, docs |
-| Non-functional requirements | docs, config, observed operational patterns |
-| Errors and failure modes | services, handlers, logs, synthesis |
-| Risks and technical debt | synthesis, lint findings, archaeology |
+| Purpose, scope, and system boundary | BA scope, overview, context evidence |
+| Stakeholders, actors, and needs | BA stakeholders/needs or explicit Gap |
+| Assumptions, constraints, dependencies | approved constraints, rules, external systems |
+| Use cases and operational scenarios | `bp-*`, `fr-*`, `AC-*`, observed entry/exit behavior |
+| Functional system requirements | testable response/state/result statements |
+| External interface requirements | actors/systems, exchanged information, timing/error semantics |
+| Quality requirements | measurable ISO/IEC 25010 characteristic, condition, measure, target |
+| Conceptual information model and flow | business concepts, ownership, lifecycle, input/output—not storage design |
+| Failure and exceptional behavior | detection, externally visible response, recovery need |
+| Verification and validation needs | method and evidence needed for each requirement |
+| Traceability and unresolved gaps | upstream BA IDs/Gaps to SA IDs and verification |
 
-Mark each row as:
+Mark each row `covered`, `partial`, or `gap` using the common profile. A section
+can be partial even when observed behavior exists if stakeholder approval or a
+measurable target is missing.
 
-- `covered`: enough wiki/source evidence exists.
-- `partial`: some evidence exists, but follow-up ingest would improve it.
-- `gap`: no reliable evidence found.
+## Stable Requirements and Traceability
 
-## Writing Rules
+- Functional/system requirement: `SR-{SCOPE}-NNN`.
+- Quality requirement: `NFR-{SCOPE}-NNN`.
+- External interface requirement: `IF-{SCOPE}-NNN`.
+- Missing evidence: `gap-{scope}-{topic}`.
 
-- Use the local `assets/system-analysis-template.md` next to this skill as the
-  starting structure.
-- Preserve all standard SA sections. If evidence is missing, keep the section
-  and write `待補` / `Gap` with a concrete follow-up ingest target.
-- Prefer `[[wiki-page]]` links for wiki evidence and source paths in backticks
-  for raw source evidence.
-- Distinguish evidence-backed facts, inference, and speculation.
-- Do not invent APIs, flows, actors, non-functional requirements, database
-  fields, or deployment behavior.
+Each requirement is atomic, necessary, feasible as far as evidence shows,
+unambiguous, externally verifiable, and solution-neutral. Record rationale,
+source/upstream ID, verification method, and coverage state. Minimum chain:
+
+`BA cap-* / fr-* / bp-* / br-* / AC-* or Gap → SR/NFR/IF → verification need`
+
+Do not invent a requirement to make traceability complete. Use a Gap row and
+name the stakeholder or source needed to resolve it.
+
+## Required Mermaid Slots
+
+- 系統脈絡：actors and external systems around the system boundary.
+- 主要情境：one evidence-backed use-case sequence expressed without internal
+  component or technology design.
+
+Render Mermaid only when participants and relationships are supported. If
+evidence is insufficient, retain the slot and write a concrete `Gap`; do not
+emit a guessed graph.
+
+## Regeneration and Legacy Preservation
+
+Start from `assets/system-analysis-template.md`.
+
+For a current document with all three marker pairs, regenerate only the
+`codebase-wiki:managed` block, preserve `codebase-wiki:user-notes`, and keep
+reviewer-only provenance inside `notebooklm:local-only`.
+
+For a legacy SA that has no managed/user-notes/local-only markers:
+
+1. Read and retain its frontmatter separately.
+2. Copy the complete legacy 原正文 (every byte after the closing frontmatter)
+   verbatim into a clearly labeled `Legacy SA snapshot — non-normative` section
+   inside the new `codebase-wiki:user-notes` block.
+3. Generate the new solution-neutral managed content before that preserved
+   snapshot and add the local-only block.
+4. Never summarize, normalize, or silently discard the legacy body on this
+   first rerun.
+
+Installer and upgrade never apply this conversion and never rewrite a target
+Wiki. Conversion occurs only when the user explicitly reruns the SA workflow.
 
 ## Persistence Steps
 
-1. Choose the output path.
-2. Write or update the SA document under `wiki/synthesis/`.
-3. Start from `assets/system-analysis-template.md`.
-4. Put only real repo-relative raw evidence in `sources`. Record Wiki evidence
-   in `derived_from` using `[[wikilinks]]`; use `sources: []` when no raw source
-   was inspected. Populate `summary` and refresh `source_digest` when sources
-   are non-empty.
-5. Update `wiki/index.md`.
-6. Append `wiki/log.md` with operation `synthesis`.
-7. Report coverage gaps and verification commands.
+1. Choose the default or exact scoped path.
+2. Build the coverage map and requirement inventory before writing.
+3. Merge the template using the marker/legacy rules.
+4. Put only real repo-relative raw evidence in `sources`; record Wiki evidence
+   in `derived_from`; refresh `source_digest` when sources are non-empty.
+5. Update `wiki/index.md` and append exactly one standalone `synthesis` entry
+   to `wiki/log.md`.
+6. Run frontmatter, stale, link/index, log, and Wiki lint checks; report Gap IDs
+   and any requirement that lacks validation/verification evidence.
 
-When System Analysis is produced inside a confirmed NotebookLM full-project
-preparation, the composite workflow records all affected pages in its single
-`ingest` log entry. Standalone SA requests continue to use `synthesis`.
+Framework maintenance may include SA with other framework Wiki changes in its
+single `update` log entry.
 
 ## Completion Criterion
 
-The SA document is complete when every coverage-map row and every standard
-section is marked `covered`, `partial`, or `gap`; evidence and inference are
-separated; frontmatter and links validate; the index links the document; one
-append-only `synthesis` entry records it; and all follow-up ingest targets are
-concrete repo paths or Wiki pages.
+The SA document is complete when it uses `system-analysis-aligned-v1`, remains
+solution-neutral, every coverage row and required section has a state, every
+SR/NFR/IF traces to upstream evidence or a concrete Gap and a verification need,
+both Mermaid slots contain supported diagrams or Gaps, a first-rerun legacy 原正文
+is preserved verbatim in user-notes, markers/frontmatter/links validate, and
+index plus append-only log coupling is complete.

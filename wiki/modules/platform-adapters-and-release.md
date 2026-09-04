@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與手動 Release
 type: module
-summary: 以 Copilot 靜態契約、Codex 六流程 3/3 實機驗收、本機 parity 與手動發版維持雙平台框架
+summary: 以 contract v4、Copilot 薄 adapters、Codex 既有實機證據、本機 parity 與手動發版維持雙平台框架
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -10,7 +10,7 @@ sources:
   - tests/test_contracts.py
   - tools/release.py
   - docs/releases/README.md
-source_digest: sha256:56e4f8c4103dfd71884f1ebe05fc81dcfdeba6e85ef09065c5311c04da7fc613
+source_digest: sha256:5106c3128e433445f5e562400ec5e46e6c95d5d039b0f39c70983e537082d184
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-04
 tags: [module, adapters, validation, release, parity]
@@ -23,7 +23,8 @@ status: active
 
 - 維持 Copilot prompts/agents/hooks 與 Codex recipes/agents/hooks 的共同 intent、
   authorization 與 completion contract。
-- 以 `capabilities.json` contract version 3 描述十一個 operations；六項核心流程的
+- 以 `capabilities.json` contract version 4 描述十三個 operations／十二個 intent groups；
+  BA／SA／SD 與既有操作的
   名稱與 authorization policy 不因平台 adapter 改變。
 - 將 Copilot `.github/prompts/` 限定為 VS Code 本機 Agent 入口；其他 Copilot
   hosts 直接使用 `.agents/skills/codebase-wiki/`。
@@ -40,10 +41,11 @@ status: active
 
 ## Evidence
 
-- `parity-check.py` 驗證 contract 3、六項 prompt coupling、prompt metadata、agent
+- `parity-check.py` 驗證 contract 4、十三項 operation mapping、prompt coupling、prompt metadata、agent
   reference、手動委派旗標、最小工具權限、即時資料庫能力保持移除、Codex
   root-resolved hooks，並要求 Repo 不含 GitHub workflow YAML。
-- 六個 Copilot prompts 是連結 authoritative workflow 的薄 adapter，不複製完整規則；
+- Copilot prompts（含新增 BA／SD 與保留 SA 入口）是連結 authoritative workflow 的薄
+  adapter，不複製完整規則；
   Interactive/Batch authorization 與 Query/Lint/Archaeology/Guide completion coupling
   都由 `tests/test_contracts.py` 固定。
 - Codex 的 18 個有效 Task Tracker fixture runs 保存 JSONL tool events、前後 hashes、
@@ -79,4 +81,6 @@ status: active
 - [[release-and-update]]
 - [[platform-hooks-and-guards]]
 - [[wiki-quality-and-provenance]]
+- [[business-analysis]]
 - [[system-analysis]]
+- [[system-design]]

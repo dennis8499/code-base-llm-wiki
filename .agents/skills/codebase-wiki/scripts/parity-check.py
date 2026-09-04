@@ -20,7 +20,9 @@ EXPECTED_OPERATIONS = {
     "adr",
     "guide",
     "synthesis",
+    "business_analysis",
     "system_analysis",
+    "system_design",
     "notebooklm_export",
     "delegation",
 }
@@ -33,7 +35,9 @@ EXPECTED_INTENT_CONTRACT = {
     "adr": (True, False, "explicit_request"),
     "guide": (True, False, "explicit_request"),
     "synthesis": (True, False, "explicit_request"),
+    "business_analysis": (True, False, "explicit_request"),
     "system_analysis": (True, False, "explicit_request"),
+    "system_design": (True, False, "explicit_request"),
     "notebooklm_export": (False, True, "preview_then_confirm"),
     "delegation": (False, False, "explicit_delegation"),
 }
@@ -44,7 +48,9 @@ EXPECTED_GROUPS = {
     "lint": ["lint"],
     "adr": ["adr"],
     "synthesis_guide": ["synthesis", "guide"],
+    "business_analysis": ["business_analysis"],
     "system_analysis": ["system_analysis"],
+    "system_design": ["system_design"],
     "notebooklm_export": ["notebooklm_export"],
     "archaeology": ["archaeology"],
     "delegation": ["delegation"],
@@ -69,10 +75,14 @@ LIVE_DATABASE_CONTRACT_PATHS = (
     ".agents/skills/codebase-wiki/references/intent-routing.md",
     ".agents/skills/codebase-wiki/references/query-workflow.md",
     ".agents/skills/codebase-wiki/references/synthesis-workflow.md",
+    ".agents/skills/codebase-wiki/references/business-analysis-workflow.md",
     ".agents/skills/codebase-wiki/references/system-analysis-workflow.md",
+    ".agents/skills/codebase-wiki/references/system-design-workflow.md",
     ".github/agents/wiki-query.agent.md",
     ".github/prompts/query-wiki.prompt.md",
+    ".github/prompts/business-analysis-doc.prompt.md",
     ".github/prompts/system-analysis-doc.prompt.md",
+    ".github/prompts/system-design-doc.prompt.md",
     ".codex/agents/wiki-query.toml",
 )
 LIVE_DATABASE_ENABLEMENT_TOKENS = (
@@ -157,6 +167,28 @@ COPILOT_PROMPT_CONTRACT = {
         "wiki/index.md",
         "guide log",
     ),
+    "business-analysis-doc.prompt.md": (
+        "references/business-analysis-workflow.md",
+        "assets/business-analysis-template.md",
+        "business-analysis-aligned-v1",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
+    "system-analysis-doc.prompt.md": (
+        "references/system-analysis-workflow.md",
+        "assets/system-analysis-template.md",
+        "system-analysis-aligned-v1",
+        "solution-neutral",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
+    "system-design-doc.prompt.md": (
+        "references/system-design-workflow.md",
+        "assets/system-design-template.md",
+        "system-design-aligned-v1",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
 }
 
 
@@ -224,8 +256,8 @@ def main() -> int:
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
             issues.append(f"manifest missing surface: {surface}")
-    if manifest.get("contract_version") != 3:
-        issues.append("manifest contract_version must be 3")
+    if manifest.get("contract_version") != 4:
+        issues.append("manifest contract_version must be 4")
     guard_modes = manifest.get("guard_modes", {})
     if guard_modes.get("default") != "wiki-only" or guard_modes.get("installed") != [
         "wiki-only",
@@ -235,7 +267,7 @@ def main() -> int:
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
-        issues.append("manifest intents must define the eleven canonical operations")
+        issues.append("manifest intents must define the thirteen canonical operations")
         intents = {}
     for operation, expected in EXPECTED_INTENT_CONTRACT.items():
         contract = intents.get(operation, {})
@@ -249,7 +281,7 @@ def main() -> int:
 
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
-        issues.append("manifest must define the exact ten user-facing intent groups")
+        issues.append("manifest must define the exact twelve user-facing intent groups")
         groups = {}
     grouped = [operation for values in groups.values() if isinstance(values, list) for operation in values]
     if len(grouped) != len(set(grouped)) or set(grouped) != EXPECTED_OPERATIONS:

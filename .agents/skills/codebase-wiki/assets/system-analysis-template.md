@@ -1,112 +1,175 @@
 ---
-title: System Analysis Document
+title: "{scope} System Analysis"
 type: synthesis
-summary: 系統目的、架構、流程、介面、風險與證據缺口的整體分析
-notebooklm_group: system-analysis
+summary: "{系統邊界、stakeholder needs、可驗證需求與主要 Gap 的一句話摘要}"
+standards_profile: system-analysis-aligned-v1
+coverage_status: partial
+notebooklm_group: "{scope-slug}-system-analysis"
 notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]"]
 last_updated: YYYY-MM-DD
-tags: [synthesis, system-analysis]
+tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
 
-# System Analysis Document
+# {scope} System Analysis
 
-## 文件資訊
+<!-- codebase-wiki:managed:start -->
 
-| 項目 | 內容 |
+## 文件控制
+
+| 欄位 | 值 |
 | --- | --- |
-| 系統 / 範圍 | {system-or-scope} |
-| 產出日期 | YYYY-MM-DD |
-| 來源基準 | Codebase LLM Wiki + verified sources |
-| 文件狀態 | active / partial |
+| 文件 ID／版本 | SA-{SCOPE}-001 / v1 |
+| 系統／範圍 | {scope} |
+| 產出日期／證據基準日 | YYYY-MM-DD / YYYY-MM-DD |
+| Owner／Reviewer | {owner-or-gap} / {reviewer-or-gap} |
+| 標準 Profile | `system-analysis-aligned-v1` |
+| 文件狀態／Coverage | active / covered · partial · gap |
+| 變更摘要 | {change-summary} |
 
-## 目的與範圍
+> 本文件為 standard-aligned，不代表 conformance。SA 是
+> solution-neutral；技術選型與部署設計屬於 SD／ADR。
 
-{Describe why this SA document exists and what is in/out of scope.}
+## 摘要與分析範圍
 
-## 讀者與利害關係人
+{System purpose, analysis boundary, principal stakeholder need, and key Gap.}
 
-{Describe intended readers, maintainers, operators, product owners, or unknown gaps.}
+### In scope
 
-## 系統總覽
+- {externally observable system behavior or information boundary}
 
-{Summarize the system in evidence-backed prose. Link to [[overview]] or relevant pages.}
+### Out of scope
 
-## 系統脈絡
+- {solution component, technology, or deployment decision}
 
-{Describe upstream/downstream systems, users, external dependencies, and boundaries.}
+## 標準對照矩陣
 
-## 架構與元件
+| Profile reference | 對齊主題 | 本文件章節 | Coverage | Evidence／Gap |
+| --- | --- | --- | --- | --- |
+| ISO/IEC/IEEE 29148:2018 | stakeholder/system requirements and traceability | Needs、SR/NFR/IF、追溯 | partial | {evidence-or-gap} |
+| ISO/IEC/IEEE 15288:2023 | stakeholder needs, system requirements, V&V concerns | 情境、需求、驗證需求 | partial | {evidence-or-gap} |
+| ISO/IEC 25010:2023 | product quality model | Quality requirements | partial | {evidence-or-gap} |
 
-| 元件 | 職責 | 主要來源 |
+## Coverage Map
+
+| SA section | Status | Evidence／Gap ID |
 | --- | --- | --- |
-| {component} | {responsibility} | [[page-name]] / `path/to/source` |
+| Purpose, scope, system boundary | partial | {evidence-or-gap} |
+| Stakeholders, actors, needs | partial | {evidence-or-gap} |
+| Assumptions, constraints, dependencies | partial | {evidence-or-gap} |
+| Use cases and operational scenarios | partial | {evidence-or-gap} |
+| Functional system requirements | partial | {SR-or-gap} |
+| External interface requirements | partial | {IF-or-gap} |
+| Quality requirements | gap | `gap-{scope}-quality-targets` |
+| Conceptual information model and flow | partial | {evidence-or-gap} |
+| Failure and exceptional behavior | partial | {evidence-or-gap} |
+| Verification and validation needs | partial | {evidence-or-gap} |
+| Traceability and unresolved gaps | partial | {evidence-or-gap} |
 
-## 模組職責
+## Stakeholders、Actors 與 Needs
 
-| 模組 | 職責 | 關聯頁面 |
-| --- | --- | --- |
-| {module} | {responsibility} | [[module-page]] |
+| Stakeholder／Actor | Need／Concern | Upstream BA ID／Gap | Priority／Authority | Coverage |
+| --- | --- | --- | --- | --- |
+| {actor} | {need} | `cap-*` / `fr-*` / `gap-*` | {evidence-or-gap} | covered / partial / gap |
 
-## 主要流程 / Use Cases
+## 系統邊界與 Context
 
-### {flow-name}
-
-- 入口：{entrypoint}
-- 主要步驟：{steps}
-- 輸入 / 輸出：{io}
-- 來源：[[page-name]] / `path/to/source`
-
-## API / 介面
-
-| 介面 | 方法 / 事件 | 用途 | 來源 |
+| External actor/system | Relationship／Exchanged information | Boundary assumption | Evidence／Gap |
 | --- | --- | --- | --- |
-| {api-or-interface} | {method} | {purpose} | [[entity-page]] / `path/to/source` |
+| {external-party} | {interaction} | {assumption} | {evidence-or-gap} |
 
-## 資料模型與資料流
+### Mermaid 槽位：系統脈絡
 
-{Describe key entities, storage, message payloads, transformations, and data ownership.}
+> Gap: `gap-{scope}-context-diagram` — evidence insufficient; do not invent
+> actors, external systems, or relationships.
 
-## 外部整合
+## Assumptions、Constraints 與 Dependencies
 
-| 系統 / 套件 | 整合方式 | 風險 / 注意事項 | 來源 |
-| --- | --- | --- | --- |
-| {dependency} | {integration} | {risk} | [[dependency-page]] |
+| ID | Kind | Statement | Source／Authority | Affected requirements |
+| --- | --- | --- | --- | --- |
+| {id} | assumption / constraint / dependency | {statement} | {evidence-or-gap} | {SR/NFR/IF-or-gap} |
 
-## 權限與安全
+## Use Cases 與 Operational Scenarios
 
-{Describe authentication, authorization, secrets, audit/logging, input validation, or mark gaps.}
+| Use case | Primary actor | Trigger／Precondition | Observable result | Alternate／Failure | Upstream ID |
+| --- | --- | --- | --- | --- | --- |
+| {use-case} | {actor} | {trigger/precondition} | {result} | {alternate/failure} | `bp-*` / `fr-*` / `AC-*` |
 
-## 設定 / 部署 / 維運
+### Mermaid 槽位：主要情境
 
-{Describe config files, environments, deployment assumptions, jobs, observability, or mark gaps.}
+> Gap: `gap-{scope}-scenario-diagram` — evidence insufficient; do not invent
+> participants, messages, or branches.
 
-## 非功能需求
+## Functional System Requirements
 
-| 類別 | 目前證據 | 缺口 |
-| --- | --- | --- |
-| 效能 | {evidence} | {gap} |
-| 可用性 | {evidence} | {gap} |
-| 可維護性 | {evidence} | {gap} |
-| 安全性 | {evidence} | {gap} |
+| Requirement ID | Shall statement | Rationale | Upstream BA／Gap | Verification method | Coverage |
+| --- | --- | --- | --- | --- | --- |
+| `SR-{SCOPE}-NNN` | The system shall {observable behavior}. | {why} | `fr-*` / `AC-*` / `gap-*` | test / analysis / inspection / demonstration | covered / partial / gap |
 
-## 錯誤與失敗模式
+## External Interface Requirements
 
-{Describe known errors, retries, exception boundaries, fallback behavior, and unknowns.}
+| Interface ID | External party | Information／Event | Behavioral contract | Error／Timing need | Upstream／Verification |
+| --- | --- | --- | --- | --- | --- |
+| `IF-{SCOPE}-NNN` | {party} | {input/output} | {solution-neutral semantics} | {need-or-gap} | {BA-ID-or-gap} / {method} |
 
-## 風險 / 技術債
+## Quality Requirements
 
-| 風險 | 影響 | 建議 |
-| --- | --- | --- |
-| {risk} | {impact} | {recommendation} |
+| Requirement ID | ISO/IEC 25010 characteristic | Condition | Measure／Target | Rationale | Verification／Gap |
+| --- | --- | --- | --- | --- | --- |
+| `NFR-{SCOPE}-NNN` | {quality-characteristic} | {condition} | {measurable-target-or-gap} | {why} | {method-or-gap} |
 
-## 待確認事項
+## Conceptual Information Model and Flow
 
-- [ ] {gap or question, with suggested wiki/source target}
+| Information concept | Meaning／Owner | Input source | Consumer／Outcome | Lifecycle／Rule | Evidence state |
+| --- | --- | --- | --- | --- | --- |
+| {concept} | {business meaning/owner} | {source} | {consumer/outcome} | {lifecycle/rule} | confirmed / observed / inference / gap |
+
+> Describe concepts and observable information movement only. Storage engines,
+> schemas, partitions, and physical models belong to SD.
+
+## Failure and Exceptional Behavior
+
+| Failure／Condition | Detection need | Externally visible response | Recovery／Continuity need | Requirement／Gap |
+| --- | --- | --- | --- | --- |
+| {failure} | {detection} | {response} | {recovery-need} | {SR/NFR/IF-or-gap} |
+
+## Verification and Validation Needs
+
+| SA ID | Verification method | Required evidence | Acceptance／Success relation | Owner／Gap |
+| --- | --- | --- | --- | --- |
+| `SR/NFR/IF-{SCOPE}-NNN` | test / analysis / inspection / demonstration | {evidence} | `AC-*` / {business outcome} | {owner-or-gap} |
+
+## BA → SA 追溯矩陣
+
+| BA objective／ID／Gap | SA ID | Requirement type | Scenario／Interface | Verification | Coverage |
+| --- | --- | --- | --- | --- | --- |
+| `cap-*` / `fr-*` / `bp-*` / `br-*` / `AC-*` / `gap-*` | `SR/NFR/IF-{SCOPE}-NNN` | functional / quality / interface | {scenario/interface} | {method} | covered / partial / gap |
+
+## Gap Register
+
+| Gap ID | Question／Contradiction | Affected IDs／Sections | Evidence checked | Suggested source／Stakeholder | Status |
+| --- | --- | --- | --- | --- | --- |
+| `gap-{scope}-{topic}` | {question} | {ids/sections} | {checked} | {target} | open |
 
 ## 來源附錄
 
-- Wiki: [[page-name]]
-- Source: `path/to/source`
+- Wiki evidence: [[business-analysis]], [[overview]]
+- Raw evidence: `{repo-relative-path}` or `Gap` when none was inspected
+- Explicit inferences: {list-or-none}
+
+<!-- codebase-wiki:managed:end -->
+
+<!-- codebase-wiki:user-notes:start -->
+## SA 人工補充
+
+<!-- 重新產出時保留本區。首次重跑 legacy SA 時，把完整原正文逐字放在本區。 -->
+<!-- codebase-wiki:user-notes:end -->
+
+<!-- notebooklm:local-only:start -->
+## 本機追溯
+
+- Reviewer paths／symbols: `{repo-relative-path-or-gap}`
+- Downstream design handoff: [[system-design]]
+<!-- notebooklm:local-only:end -->

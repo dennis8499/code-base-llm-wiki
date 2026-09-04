@@ -14,9 +14,9 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - tests/test_export_notebooklm.py
-source_digest: sha256:3f57332396c9a618443114db603e2f675e89d51e1ba3994322424515955392d3
+source_digest: sha256:efb9eaaf56a6b2be8fd11834338c59dda36cd3bc3b1b338bfbd8c948b1d9d35e
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-04
 tags: [business-requirement, notebooklm, export, dlp]
 status: active
 ---
@@ -54,6 +54,7 @@ status: active
 | 完整性檢核 | 以 coverage ledger 分類每個安全檔案 | uncovered、analysis-gap 或 dangling requirement 會阻擋匯出 | implementation-observed |
 | DLP 命中 | 在分析副本與最終 payload 以規則名稱遮罩 | 原始敏感值不進入 BA source，raw file 不被修改 | implementation-observed |
 | 產生 pack | 只 materialize BA Wiki、query index 與 project map | source pack 不含 raw code、raw config 或 technical traceability | implementation-observed |
+| Standalone BA | 存在且為 active/business role 時納入；不存在時不列 required gap | BA 可加入 pack，SA／SD traceability 始終排除 | implementation-observed |
 | 容量檢核 | 依 Enterprise hard limits 與保守 local limits 分割／壓縮 | 超限時在 atomic commit 前失敗並保留舊 pack | implementation-observed |
 
 ## 業務規則與例外
@@ -85,6 +86,7 @@ status: active
 - `AC-NBLM-008`：Given Enterprise 設定，When 驗證容量，Then hard limits 為 300 sources、500 MB/source、500,000 words/source，超限設定 fail closed。
 - `AC-NBLM-009`：Given Wiki、inventory、設定或 output identity 在 preflight 後改變，When 使用舊 ID apply，Then apply 被拒絕並要求新 preflight。
 - `AC-NBLM-010`：Given schema v1–v4 的既有 pack，When 產生 schema v5，Then upload plan 要求在同一本 Notebook 移除所有舊 static sources 後完整上傳新 sources。
+- `AC-NBLM-011`：Given standalone BA 存在，When 產生 pack，Then BA 內容會納入且 local-only 區塊移除；Given BA 不存在，Then required documents 與 schema v5 不變；SA／SD 均不會上傳。
 
 ## 關聯流程
 

@@ -10,9 +10,9 @@ notebooklm_role: business
 notebooklm_terms: [NotebookLM 匯出, 全量萃取, readiness preflight, BA-only source pack, Business Analyst]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:5106684498c329561f25e419d8dd19e52a4d227c2ae958aee26dd06c42bafce8
+source_digest: sha256:9c5c8fca9fb204a52af15e5c126f8336980a6bc5536b6922bbb200b8e230c2ee
 derived_from: ["[[overview]]", "[[notebooklm-export]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-04
 tags: [business-process, notebooklm, export]
 status: active
 ---
@@ -50,7 +50,7 @@ status: active
 | 3 | 知識維護者 | 全量重新萃取 managed BA sections、保留 user notes、完成 file disposition | 形成可審查且完整的持久功能需求 | business-confirmed |
 | 4 | 知識維護者 | 執行第二次 readiness preflight | 取得與最新 Wiki／inventory／設定綁定的新 ID | business-confirmed |
 | 5 | BA／業務擁有者 | 審查 readiness gates、容量、DLP、migration 與 gaps | 第二次確認或退回修正 | business-confirmed |
-| 6 | 知識維護者 | 以第二次 ID 原子產生 pack | 取得 BA-only sources、schema v5 manifest 與 upload plan | business-confirmed |
+| 6 | 知識維護者 | 以第二次 ID 原子產生 pack；存在時納入 standalone BA | 取得 BA-only sources、schema v5 manifest 與 upload plan | business-confirmed |
 | 7 | 交付者 | 依 upload plan 在同一本 Notebook 更新 static sources | 完成功能需求導向的 BA 問答資料集 | business-confirmed |
 
 ## 替代與例外流程
@@ -60,6 +60,8 @@ status: active
 - 若 Wiki、inventory、設定或 retrieval contract 在 preflight 後改變，舊 ID 失效。
 - DLP finding 先遮罩；若 exact final payload 仍有殘留、必要內容超過容量，或 output boundary 不安全，保留上一份 pack。
 - 若上一份 manifest 是 schema v1–v4 或非 `business-only-ba-v2`，採 full rebuild，不混用舊來源。
+- Standalone BA 不存在不影響 required-document gate；存在時依 business role 納入並移除
+  local-only。SA／SD 的 traceability role 永不進入 upload sources。
 
 ## 業務規則
 
@@ -112,3 +114,4 @@ BA 能以功能需求 ID 與驗收條件回答目的、角色、流程、規則�
 - [[business-rule-catalog]]
 - [[business-glossary]]
 - [[business-knowledge-gaps]]
+- [[business-analysis]]

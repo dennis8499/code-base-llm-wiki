@@ -1,11 +1,11 @@
 ---
 title: Codebase LLM Wiki 專案功能目錄
 type: synthesis
-summary: 將安裝、Wiki 品質、Hooks、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋
+summary: 將安裝、Wiki 品質、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋
 notebooklm_group: project
 notebooklm_role: traceability
 sources: []
-derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]"]
+derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]"]
 last_updated: 2026-09-04
 tags: [synthesis, function-catalog, notebooklm]
 status: active
@@ -27,6 +27,7 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 | 安裝與升級 | 安裝 Codex/Copilot surface、安全升級 | `install-framework.py` | install state、file fingerprints | [[installer-and-upgrade]] | covered |
 | Wiki 攝取與品質 | 建立可追溯頁面、偵測 stale/link/index/log 問題 | `$codebase-wiki`、quality CLIs | frontmatter、digest、wikilinks、log entries | [[wiki-quality-and-provenance]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
+| 分析／設計文件 | 獨立產出 standard-aligned BA、solution-neutral SA 與 SD，建立 Gap-visible 三層追溯 | BA／SA／SD prompt/recipe + shared workflows | profiles、coverage、BA/SR/NFR/IF/DE/VIEW/ADR IDs、markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] | partial |
 | NotebookLM 準備 | 建立 BA 流程、規則、詞彙與 gaps，經兩次確認後產生離線 pack | `export-notebooklm.py` | BA coverage、兩階段 preflight ID、business-first retrieval contract、DLP、manifest v5 | [[notebooklm-exporter]] | covered |
 | 平台與發布 | 驗證 Copilot/Codex 契約、建立版本資產 | parity、本機 UAT、`release.py`、`gh` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
@@ -39,7 +40,7 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 | --- | --- | --- | --- |
 | Raw-source read-only | 所有 Wiki intents | `AGENTS.md`、`SKILL.md` | covered |
 | Untrusted evidence | Ingest、Query、NotebookLM、SA | `SKILL.md`、`ingest-workflow.md` | covered |
-| 明確授權 | 十一個 machine operations | `capabilities.json` | covered |
+| 明確授權 | 十三個 machine operations／十二個 intent groups | `capabilities.json` | covered |
 | 原子交付 | Installer、NotebookLM exporter | 兩個 canonical Python modules | covered |
 | 跨平台 parity | Copilot、Codex | `parity-check.py` | covered |
 
@@ -71,3 +72,5 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 - [[overview]]
 - [[system-architecture]]
 - [[system-analysis]]
+- [[business-analysis]]
+- [[system-design]]

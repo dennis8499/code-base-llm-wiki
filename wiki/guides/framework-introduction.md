@@ -8,7 +8,7 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:5c71191b8b33ece24baa966a263c7ae80f9c5eb4c2c98ca481f0ee8ddf47be4b
+source_digest: sha256:77036f6bff9a42092f6e47666d70b102a9581856264eb61e05ecad78429aa485
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-09-04
 tags: [guide, onboarding, framework, copilot, codex]
@@ -111,7 +111,9 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | ADR | 保存架構選擇 | decision + index + `adr` log |
 | Synthesis | 保存跨模組分析 | synthesis + index + log |
 | Guide | 保存 setup/runbook/onboarding | guide + index + log |
-| System Analysis / SA | 系統級文件與 gaps | synthesis + index + log |
+| Business Analysis / BA | 業務問題、現況／目標、能力、流程、規則、成功指標與 change impact | synthesis + index + log |
+| System Analysis / SA | solution-neutral 邊界、needs、SR/NFR/IF 與 verification needs | synthesis + index + log |
+| System Design / SD | concerns/viewpoints、決策、元件、runtime、資料、介面、部署、安全與品質策略 | synthesis + index + log |
 | NotebookLM export | 全量盤點 codebase 並重建 FR/AC、流程、規則、詞彙與 gaps | BA-only 文件、`.notebooklm/`、schema v5 manifest、upload plan；不自動上傳 |
 | Delegation | 使用者明確要求專業代理 | 不擴張原任務權限 |
 
@@ -224,6 +226,8 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 ## 相關頁面
 
 - [[overview]] — 框架定位、產品結構與核心設計
-- [[installer-and-upgrade]] — v3 managed blocks、manifest 與 atomic apply
+- [[installer-and-upgrade]] — v4 managed blocks、manifest 與 atomic apply
 - [[platform-hooks-and-guards]] — 三種 guard mode 與跨平台 hook contract
-- [[system-analysis]] — 完整系統分析與 gap
+- [[business-analysis]] — 業務分析與 BA traceability
+- [[system-analysis]] — solution-neutral 系統分析與 verification needs
+- [[system-design]] — 架構與設計 views、決策及品質策略

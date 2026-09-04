@@ -1,8 +1,8 @@
 # Codebase LLM Wiki
 
 Use `$codebase-wiki` at `.agents/skills/codebase-wiki/` for install, ingest,
-query, lint, ADR, guide, synthesis, system analysis, NotebookLM export,
-archaeology, or Wiki maintenance. Load its `SKILL.md`, classify the request with
+query, lint, ADR, guide, synthesis, business analysis, solution-neutral system
+analysis, system design, NotebookLM export, archaeology, or Wiki maintenance. Load its `SKILL.md`, classify the request with
 `references/intent-routing.md`, and read the selected workflow completely.
 
 During Wiki tasks, application source code, configuration, existing documents,

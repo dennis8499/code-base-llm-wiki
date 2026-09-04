@@ -56,6 +56,27 @@ python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
 - Repo 內 raw-source symlink 可追蹤 resolved target digest，逃逸 Repo 的
   symlink/reparse source 會被拒絕；installer 則拒絕所有 framework-source symlink/reparse。
 
+## BA／SA／SD 文件契約驗收
+
+Contract tests 另固定驗證：
+
+- capability manifest 為 v4、13 operations／12 intent groups，BA／SA／SD 都採
+  `explicit_request`；
+- 共用 standards reference 鎖定 29148:2018、15288:2023、25010:2023、
+  42010:2022 與 IIBA v2.0，IEEE 1016-2009 僅是 informative 歷史參考；
+- 三份模板具有正確 `standards_profile`、`coverage_status`、必要章節、穩定 ID、
+  coverage/traceability/Gap、Mermaid 槽位及 managed/user-notes/local-only markers；
+- SA 是 solution-neutral，首次重跑 legacy SA 的完整原正文保存在 user-notes；
+- frontmatter 接受新欄位的合法值、拒絕非法值，同時允許缺少兩欄的 legacy SA；
+- NotebookLM schema 維持 v5、required-document 清單不變；BA 存在時納入 business
+  content 並移除 local-only，缺席時不阻擋，SA／SD traceability 永不上傳；
+- Codex 與 Copilot installer 都取得共用 references/templates，Copilot 取得三個薄
+  prompt adapters，upgrade 不改寫目標 Wiki。
+
+人工語意驗收另逐項確認 `cap/fr/bp/br/AC → SR/NFR/IF → DE/VIEW/ADR` 追溯、
+設計內容已由 SA 移到 SD、上游缺失會建立具體 Gap 而不是中止或臆造，以及人工
+notes 在重產後保留。
+
 ## 六項驗收矩陣
 
 先依 [Task Tracker 樣例](../../samples/README.md) 把 `samples/task-tracker/`
@@ -94,6 +115,7 @@ session；Batch、Query 與 Guide 使用明確單次授權。測試證據只放�
 - [ ] `.github/workflows/` 沒有 workflow YAML。
 - [ ] `wiki/index.md` 已同步，`wiki/log.md` 只追加一筆本次 framework update。
 - [ ] ChangeLog 已記錄 durable behavior change。
+- [ ] BA／SA／SD contract、frontmatter、NotebookLM、installer 與語意驗收均通過。
 - [ ] `VERSION` 是穩定 `X.Y.Z`，發版 tag 嚴格對應 `vX.Y.Z`。
 - [ ] 專案擁有者已加入明確 LICENSE；缺少時 release readiness gate 必須阻擋。
 - [ ] Release builder 僅先用 fixture 驗證，正式資產通過 manifest 與 SHA-256 檢查。
