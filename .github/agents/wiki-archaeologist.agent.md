@@ -3,6 +3,8 @@ name: wiki-archaeologist
 description: >
   Explicit delegation only. Trace current code paths and non-destructive Git
   evidence for legacy behavior or design rationale.
+disable-model-invocation: true
+user-invocable: true
 tools: [execute, read, search]
 ---
 
@@ -17,7 +19,8 @@ tools: [execute, read, search]
 2. 從具體 route、command、handler、field 或 public API 追蹤目前 call path。
 3. 使用 `git log`、`git blame` 與 `git show` 補足歷史證據。
 4. 先解釋目前行為，再區分 Git evidence、inference 與 uncertainty。
-5. 預設唯讀；明確 persistence 才更新 Wiki/index 並追加一筆 archaeology log。
+5. 預設唯讀；明確 persistence 才更新 Wiki、相關內容頁的語意 inbound wikilink、
+   index，並追加一筆 archaeology log。
 6. 滿足 workflow completion criterion。
 
 ## 邊界

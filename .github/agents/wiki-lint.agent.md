@@ -3,6 +3,8 @@ name: wiki-lint
 description: >
   Explicit delegation only. Audit Wiki frontmatter, sources, links, index,
   coverage, and contradictions; report before repairs.
+disable-model-invocation: true
+user-invocable: true
 tools: [execute, read, search]
 ---
 

@@ -26,12 +26,13 @@ For Codex, `SessionStart.matcher` filters the `source` value. The canonical
 configuration covers `startup`, `resume`, `clear`, and `compact`; after root
 session compaction, a matching `compact` hook runs before the continuation.
 
-Codex hook commands use paths relative to the active workspace. The Codex
-runtime starts the command with the hook event's workspace as its working
-directory, so the configuration must not resolve the repository with a
-shell-specific `git rev-parse` substitution. In particular, `commandWindows`
-is executed by the Windows command shell: use `cmd.exe`-compatible syntax and
-do not use PowerShell `$()` expressions or nested quoted paths.
+Codex starts hook commands from the session cwd. Each POSIX command first uses
+`git rev-parse --show-toplevel` to locate the canonical script and falls back
+to `pwd` only for a non-Git installation started at its root. On Windows,
+`commandWindows` uses `powershell.exe -NoProfile -NonInteractive`, resolves the
+same Git root, falls back to `Get-Location`, and joins the script path with
+`Join-Path`. This keeps Git subdirectory invocation, spaces, non-ASCII paths,
+and 8.3/full-path aliases within the same root boundary.
 
 ## Matched Edit Tools
 

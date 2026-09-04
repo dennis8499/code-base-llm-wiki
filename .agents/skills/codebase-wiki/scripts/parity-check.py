@@ -69,6 +69,70 @@ COPILOT_READ_ONLY_TOOL_POLICY = {
         {"agent", "edit"},
     ),
 }
+COPILOT_PROMPT_CONTRACT = {
+    "ingest-module.prompt.md": (
+        "references/ingest-workflow.md",
+        "等待確認",
+        "確認前不得寫檔",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
+    "ingest-batch.prompt.md": (
+        "references/ingest-workflow.md",
+        "明確授權",
+        "不需要再次要求",
+        "指定 scope",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
+    "query-wiki.prompt.md": (
+        "references/query-workflow.md",
+        "1–5",
+        "零寫入",
+        "零委派",
+    ),
+    "lint-wiki.prompt.md": (
+        "references/lint-checklist.md",
+        "references/follow-up-actions.md",
+        "先回報",
+        "未經確認不得修復",
+        "一筆 lint log",
+    ),
+    "code-archaeology.prompt.md": (
+        "references/code-archaeology-workflow.md",
+        "Git evidence",
+        "預設零寫入",
+        "明確要求保存",
+        "語意 inbound",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
+    "save-guide.prompt.md": (
+        "references/guide-workflow.md",
+        "目標讀者",
+        "前置條件",
+        "常見陷阱",
+        "gaps",
+        "sources",
+        "derived_from",
+        "wiki/index.md",
+        "guide log",
+    ),
+}
+
+
+def markdown_frontmatter(text: str) -> dict[str, str] | None:
+    """Parse scalar values from the small Markdown frontmatter adapters."""
+
+    match = re.match(r"\A---\s*\n(.*?)\n---\s*\n", text, flags=re.DOTALL)
+    if not match:
+        return None
+    values: dict[str, str] = {}
+    for line in match.group(1).splitlines():
+        field = re.match(r"^([A-Za-z][A-Za-z0-9_-]*):\s*(.*?)\s*$", line)
+        if field and field.group(2):
+            values[field.group(1)] = field.group(2).strip().strip("\"'")
+    return values
 
 
 def copilot_agent_tools(text: str) -> set[str] | None:
@@ -142,6 +206,33 @@ def main() -> int:
             for filename in filenames:
                 if not (root / ".github" / "prompts" / filename).is_file():
                     issues.append(f"missing Copilot prompt: {filename}")
+    copilot_agent_names: set[str] = set()
+    for path in (root / ".github" / "agents").glob("*.agent.md"):
+        frontmatter = markdown_frontmatter(path.read_text(encoding="utf-8"))
+        if frontmatter and frontmatter.get("name"):
+            copilot_agent_names.add(frontmatter["name"])
+    for path in (root / ".github" / "prompts").glob("*.prompt.md"):
+        relative = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8")
+        frontmatter = markdown_frontmatter(text)
+        if frontmatter is None:
+            issues.append(f"Copilot prompt has no parseable frontmatter: {relative}")
+            continue
+        expected_name = path.name.removesuffix(".prompt.md")
+        if frontmatter.get("name") != expected_name:
+            issues.append(f"Copilot prompt name must match filename: {relative}")
+        for field in ("description", "agent", "argument-hint"):
+            if not frontmatter.get(field):
+                issues.append(f"Copilot prompt missing {field}: {relative}")
+        agent = frontmatter.get("agent", "")
+        if agent and agent not in copilot_agent_names:
+            issues.append(f"Copilot prompt references missing agent {agent}: {relative}")
+    for filename, required_tokens in COPILOT_PROMPT_CONTRACT.items():
+        path = root / ".github" / "prompts" / filename
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        for token in required_tokens:
+            if token not in text:
+                issues.append(f"Copilot workflow contract missing {token}: {filename}")
     recipe_document = entrypoints.get("codex", {}).get("recipe_document", "")
     if recipe_document != "Codex.md" or not (root / recipe_document).is_file():
         issues.append("Codex recipe document must be Codex.md")
@@ -207,22 +298,32 @@ def main() -> int:
             for group in groups:
                 for handler in group.get("hooks", []):
                     command = handler.get("command", "")
-                    if not command.startswith("python .agents/skills/codebase-wiki/scripts/hooks/"):
+                    if not command.startswith('python "$(git rev-parse --show-toplevel'):
                         issues.append(
-                            f"Codex {event_name} command must use a workspace-relative hook path"
+                            f"Codex {event_name} command must resolve the Git root"
                         )
+                    if "2>/dev/null || pwd" not in command:
+                        issues.append(f"Codex {event_name} command must fall back to pwd")
                     command_windows = handler.get("commandWindows", "")
-                    if "$(" in command_windows or "git rev-parse" in command_windows:
+                    if not command_windows.startswith(
+                        "powershell.exe -NoProfile -NonInteractive -Command"
+                    ):
                         issues.append(
-                            f"Codex {event_name} commandWindows must not use shell substitution"
+                            f"Codex {event_name} commandWindows must use the PowerShell wrapper"
                         )
-                    if '"' in command_windows:
+                    for token in (
+                        "$wikiRoot",
+                        "git rev-parse --show-toplevel",
+                        "Get-Location",
+                        "Join-Path",
+                    ):
+                        if token not in command_windows:
+                            issues.append(
+                                f"Codex {event_name} commandWindows missing root resolver: {token}"
+                            )
+                    if CANONICAL_HOOK_ROOT not in command_windows.replace("\\", "/"):
                         issues.append(
-                            f"Codex {event_name} commandWindows must avoid nested quoted paths"
-                        )
-                    if not command_windows.startswith("python .agents\\skills\\codebase-wiki\\scripts\\hooks\\"):
-                        issues.append(
-                            f"Codex {event_name} commandWindows must use a workspace-relative hook path"
+                            f"Codex {event_name} commandWindows must use the canonical hook"
                         )
         session_groups = codex_hooks.get("hooks", {}).get("SessionStart", [])
         session_matchers = {str(group.get("matcher", "")) for group in session_groups}
@@ -259,10 +360,22 @@ def main() -> int:
 
     for directory in (root / ".codex" / "agents", root / ".github" / "agents"):
         for path in directory.iterdir() if directory.is_dir() else ():
-            if path.is_file() and "Explicit delegation only." not in path.read_text(
-                encoding="utf-8"
-            ):
-                issues.append(f"agent is missing explicit-delegation marker: {path.relative_to(root)}")
+            if path.is_file():
+                text = path.read_text(encoding="utf-8")
+                if "Explicit delegation only." not in text:
+                    issues.append(
+                        f"agent is missing explicit-delegation marker: {path.relative_to(root)}"
+                    )
+                if directory.name == "agents" and directory.parent.name == ".github":
+                    frontmatter = markdown_frontmatter(text) or {}
+                    if frontmatter.get("disable-model-invocation") != "true":
+                        issues.append(
+                            f"Copilot agent must disable model invocation: {path.relative_to(root)}"
+                        )
+                    if frontmatter.get("user-invocable") != "true":
+                        issues.append(
+                            f"Copilot agent must remain user invocable: {path.relative_to(root)}"
+                        )
 
     for filename, (required, forbidden) in COPILOT_READ_ONLY_TOOL_POLICY.items():
         path = root / ".github" / "agents" / filename
@@ -313,6 +426,14 @@ def main() -> int:
                 text = path.read_text(encoding="utf-8", errors="replace")
                 if ".github/skills" in text or ".github\\skills" in text:
                     issues.append(f"stale mirrored skill reference: {path.relative_to(root).as_posix()}")
+    workflow_root = root / ".github" / "workflows"
+    workflows = sorted(
+        path.relative_to(root).as_posix()
+        for suffix in ("*.yml", "*.yaml")
+        for path in workflow_root.glob(suffix)
+    )
+    if workflows:
+        issues.append("GitHub workflow files must be absent: " + ", ".join(workflows))
     payload = {"ok": not issues, "contract_version": manifest.get("contract_version", 0), "issues": issues}
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0 if not issues else 1

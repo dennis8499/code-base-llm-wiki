@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py --platform codex",
-            "commandWindows": "python .agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-session-init.py --platform codex",
+            "command": "python \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py\" --platform codex",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -Command \"$wikiRoot = git rev-parse --show-toplevel 2>$null; if (-not $wikiRoot) { $wikiRoot = (Get-Location).Path }; python (Join-Path $wikiRoot '.agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py') --platform codex\"",
             "timeout": 10,
             "statusMessage": "Loading wiki state"
           }
@@ -20,8 +20,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py --platform codex",
-            "commandWindows": "python .agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-write-guard.py --platform codex",
+            "command": "python \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py\" --platform codex",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -Command \"$wikiRoot = git rev-parse --show-toplevel 2>$null; if (-not $wikiRoot) { $wikiRoot = (Get-Location).Path }; python (Join-Path $wikiRoot '.agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py') --platform codex\"",
             "timeout": 10,
             "statusMessage": "Checking wiki write boundary"
           }
@@ -34,8 +34,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .agents/skills/codebase-wiki/scripts/hooks/wiki-log-reminder.py --platform codex",
-            "commandWindows": "python .agents\\skills\\codebase-wiki\\scripts\\hooks\\wiki-log-reminder.py --platform codex",
+            "command": "python \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.agents/skills/codebase-wiki/scripts/hooks/wiki-log-reminder.py\" --platform codex",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -Command \"$wikiRoot = git rev-parse --show-toplevel 2>$null; if (-not $wikiRoot) { $wikiRoot = (Get-Location).Path }; python (Join-Path $wikiRoot '.agents/skills/codebase-wiki/scripts/hooks/wiki-log-reminder.py') --platform codex\"",
             "timeout": 10,
             "statusMessage": "Checking wiki log reminder"
           }

@@ -33,7 +33,9 @@ workflow、schema、template 與 hook logic 的共同來源。
 
 ## Copilot Adapter
 
-- Prompts：`.github/prompts/`
+- VS Code local Agent prompts：`.github/prompts/`；它們不是其他 Copilot hosts
+  的通用入口。
+- 其他 Copilot hosts：直接以自然語言使用 `.agents/skills/codebase-wiki/`。
 - Explicit-delegation agents：`.github/agents/`
 - Hook configuration：`.github/hooks/`
 - Canonical hook logic：`.agents/skills/codebase-wiki/scripts/hooks/`
@@ -41,3 +43,8 @@ workflow、schema、template 與 hook logic 的共同來源。
 
 只有 workflow completion criterion、deterministic checks、index coupling 與
 append-only log coupling 全部完成後，才回報 durable task 完成。
+
+目前 Copilot 驗收標籤為 `static-compatible / runtime-unverified`：parity 驗證
+metadata、最小 tools、authorization 與 completion coupling，但不冒稱 host runtime
+已執行。框架 Repo 不使用 GitHub Actions；維護時依 `docs/validation/README.md`
+執行本機 checks。

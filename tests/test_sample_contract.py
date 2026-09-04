@@ -56,7 +56,7 @@ class SampleContractTests(unittest.TestCase):
     def test_both_surfaces_install_without_changing_raw_sample_sources(self) -> None:
         installer = load_installer()
         with tempfile.TemporaryDirectory() as temp_dir:
-            temp_root = Path(temp_dir)
+            temp_root = Path(temp_dir).resolve()
             for surface in ("copilot", "codex"):
                 with self.subTest(surface=surface):
                     target = temp_root / surface
@@ -219,13 +219,22 @@ class SampleContractTests(unittest.TestCase):
                             handler = hooks_config["hooks"][event_name][0]["hooks"][0]
                             command = handler["command"]
                             command_windows = handler["commandWindows"]
-                            self.assertNotIn("$(", command)
-                            self.assertNotIn("git rev-parse", command)
-                            self.assertNotIn("$(", command_windows)
-                            self.assertNotIn("git rev-parse", command_windows)
-                            self.assertNotIn('"', command_windows)
+                            self.assertIn("git rev-parse --show-toplevel", command)
+                            self.assertIn("2>/dev/null || pwd", command)
+                            self.assertIn("git rev-parse --show-toplevel", command_windows)
+                            self.assertIn("Get-Location", command_windows)
+                            self.assertIn("Join-Path", command_windows)
                             if os.name == "nt":
-                                command = ["cmd.exe", "/d", "/s", "/c", command_windows]
+                                prefix = 'powershell.exe -NoProfile -NonInteractive -Command "'
+                                self.assertTrue(command_windows.startswith(prefix))
+                                self.assertTrue(command_windows.endswith('"'))
+                                command = [
+                                    "powershell.exe",
+                                    "-NoProfile",
+                                    "-NonInteractive",
+                                    "-Command",
+                                    command_windows[len(prefix) : -1],
+                                ]
                             else:
                                 command = ["/bin/sh", "-lc", handler["command"]]
                             command_result = subprocess.run(

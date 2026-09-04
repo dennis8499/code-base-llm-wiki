@@ -1,52 +1,60 @@
-# 版本、發佈與更新契約
+# 版本、手動發佈與更新契約
 
-## 版本來源
+## 版本來源與 readiness gate
 
-產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer：
-`MAJOR.MINOR.PATCH`，目前版號為 `0.2.0`。Git tag 必須使用
-`vX.Y.Z`，例如 `VERSION=0.2.0` 對應 `v0.2.0`。
+產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer
+`MAJOR.MINOR.PATCH`；目前版號是 `0.2.0`。Git tag 必須是完全對應的
+`vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
+的本地版本標記；`contract_version: 3` 則是獨立的 installer/API contract。
 
-`.agents/skills/codebase-wiki/VERSION` 是 installer 寫入目標 Repo 的本地版本
-標記。它由框架的 `VERSION` 產生，不應由使用者手動維護。
+公開 Release 前，專案擁有者必須選定並加入明確 `LICENSE`。目前尚未作出
+授權選擇，因此 `tools/release.py validate` 與 `build` 會刻意阻擋本 Repo 的
+正式資產。不得用參數或修改 fixture 以外的資料繞過此 readiness gate。
 
-`contract_version: 3` 是 installer/API contract 版本，與產品版號獨立，不能
-用產品版號取代。
+## 手動建立 GitHub Release
 
-公開 Release 必須先由專案擁有者選定並加入明確 `LICENSE`。目前尚未作出
-授權選擇，因此 `tools/release.py validate` 與 `build` 會刻意拒絕公開發佈；
-實作者不得自行代替擁有者選擇授權條款。
+本 Repo 沒有 GitHub Actions 發版流程。維護者須在乾淨、隔離的 worktree
+依序完成下列步驟。
 
-## 建立 Release
-
-發佈前先在目前分支更新 `VERSION` 與 `ChangeLog.md`，再執行：
+1. 更新 `VERSION` 與 `ChangeLog.md`，並確認 LICENSE readiness。
+2. 依 [本機驗證手冊](../validation/README.md) 以 Python 3.11 與 3.14 執行完整
+   unit、compile、parity、frontmatter、stale、log、stats、lint 與 index checks。
+3. 驗證版本/tag 契約並建置四個資產：
 
 ```powershell
-python tools\release.py validate --tag v0.2.0
-python tools\release.py build --output dist --repository dennis8499/code-base-llm-wiki
+python tools/release.py validate --tag v0.2.0
+python tools/release.py build --output dist --repository dennis8499/code-base-llm-wiki
 ```
 
-確認測試通過後，提交並推送版本 tag：
+4. 確認 `dist/` 只包含並正確描述以下資產：
+
+- `dist/codebase-llm-wiki.zip`
+- `dist/codebase-llm-wiki.tar.gz`
+- `dist/update-manifest.json`
+- `dist/SHA256SUMS`
+
+5. 提交核准的變更，建立並推送與 `VERSION` 完全相符的 tag：
 
 ```powershell
 git tag v0.2.0
 git push origin v0.2.0
 ```
 
-`.github/workflows/release.yml` 只接受與 `VERSION` 完全相符的 `vX.Y.Z` tag，
-通過 framework checks 後建立 GitHub Release。每個 Release 會附帶：
+6. 明列四個資產，手動建立 GitHub Release：
 
-- `codebase-llm-wiki.zip`
-- `codebase-llm-wiki.tar.gz`
-- `update-manifest.json`
-- `SHA256SUMS`
+```powershell
+gh release create v0.2.0 dist/codebase-llm-wiki.zip dist/codebase-llm-wiki.tar.gz dist/update-manifest.json dist/SHA256SUMS --verify-tag --title "Codebase LLM Wiki v0.2.0" --generate-notes
+```
 
-套件包含完整框架 Repo；安裝時仍使用既有 installer 的 `--surface copilot` 或
-`--surface codex` 選擇平台入口。
+不得以 `dist/*` 取代明列資產；這可避免把額外暫存檔誤發佈。完成後從 GitHub
+下載四個資產，重新核對 `SHA256SUMS` 與 manifest URL。本次框架維護不會選擇
+LICENSE、不改 `VERSION`、不建立 tag，也不執行上述實際發佈命令。
 
-Release builder 會排除產生物（包含 `.mypy_cache/` 與 `.ruff_cache/`）、本機 NotebookLM/hook state、transaction journal/lock、
-stage/backup/temp siblings、`.env`、credentials/secrets 與 private-key path。若輸出目錄位於
-repo 內，該目錄及既有產物也不會再次進入 archive；
-非排除路徑的 symlink 會直接讓建置失敗。
+套件包含完整框架 Repo；安裝時仍以 installer 的 `--surface copilot` 或
+`--surface codex` 選擇平台入口。Release builder 會排除 generated/cache、
+本機 NotebookLM/hook state、transaction journal/lock、stage/backup/temp siblings、
+`.env`、credentials/secrets 與 private-key paths。輸出目錄若在 Repo 內，也不會
+被重新收入 archive；非排除路徑的 symlink/reparse source 會讓建置失敗。
 
 ## Update manifest
 
@@ -54,7 +62,7 @@ repo 內，該目錄及既有產物也不會再次進入 archive；
 
 `https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/update-manifest.json`
 
-其最小契約如下：
+最小契約如下：
 
 ```json
 {
@@ -76,15 +84,16 @@ repo 內，該目錄及既有產物也不會再次進入 archive；
 }
 ```
 
-未來 Extension 應讀取本地 `.agents/skills/codebase-wiki/VERSION`，再讀取
-manifest 的 `version` 並以 SemVer 比較；版本較新時下載對應 asset、驗證
-`sha256`，最後呼叫既有 conflict-safe `upgrade` 流程。本專案目前只提供
-manifest 與版本標記，不自動執行 Extension 更新。
+未來 Extension 應讀取本地 `.agents/skills/codebase-wiki/VERSION`，比較 manifest
+的 SemVer，下載對應 asset、驗證 `sha256`，最後呼叫 conflict-safe `upgrade`。
+本專案目前只提供 manifest 與版本標記，不自動執行更新。
 
 ## 常見錯誤
 
-- `VERSION` 不是三段數字時，release builder 會拒絕建立資產。
-- tag 不是 `v` 加上 `VERSION` 時，GitHub workflow 會在建立 Release 前失敗。
+- 缺少 LICENSE、`VERSION` 不是三段數字，或 tag 不等於 `v` 加上 `VERSION` 時，
+  `release.py` 會在建立資產前失敗。
+- 任一 deterministic check 或六項 Codex UAT 未達 3/3 時，不得發版。
+- `gh release create` 前若 tag 未推送，`--verify-tag` 會拒絕發布。
 - 下載後應先驗證 `SHA256SUMS`，再執行 installer。
 - `upgrade` 發現目標檔案有人工修改時會回報 conflict，不會覆寫 Wiki 或其他
   使用者內容。

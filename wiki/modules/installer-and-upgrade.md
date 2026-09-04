@@ -10,9 +10,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_install_framework.py
-source_digest: sha256:54d077f7b8bc01d7ba1ef70ae09eb0615c69b7c9dd1cdada52ab0ac2e02203a6
+source_digest: sha256:49355a65f02ec46b13b6ebbf42517b0f94d95debf145898c3853ce4e1ce37114
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-08-24
+last_updated: 2026-09-03
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -27,11 +27,15 @@ status: active
 - 將 root instructions 放入 managed marker block，保留 marker 外的專案規則。
 - 透過 `install-state.json` 分辨 upstream-only、user-only 與 two-sided changes。
 - 將所有輸出 staging 後原子替換，失敗時回復原檔。
+- Windows stage 以安全隨機 sibling directory 繼承 target parent ACL，避免 Python
+  3.13+ `mkdtemp()` 的 owner-only DACL 隨 staged files 移入安裝目標。
 - 以 sibling transaction lock 序列化同一 target 的 apply；已有寫入者時後來的程序 fail closed。
 - crash recovery 的 journal、lock、stage/backup 與 temporary sibling artifacts 不會進 Git 或
   release archive。
 - 套用前拒絕會沿 target symlink/reparse point 解析到選定 target root 外的路徑，避免把框架檔案寫入外部目錄。
 - Installer source tree 若包含 symlink 或 Windows junction/reparse point 也會 fail closed，避免 framework source 讀取 repo 外內容。
+- Copilot surface 直接枚舉目前 `.github/` 內容；Repo 不再含 workflows，因此 installer
+  不需要 CI/release workflow 特例，也不會把 workflow YAML 安裝到目標。
 
 ## 對外介面
 
@@ -52,6 +56,9 @@ JSON contract version 為 3，包含 `managed`、`changes`、`preserved`、
 
 - `_prepare_plan()` 以 manifest baseline 比較目標與新 framework fingerprints。
 - `_atomic_write()` 先建立 stage/backup，再使用 `os.replace()` 套用及回復。
+- `_create_stage_directory()` 在 Windows 使用原子 `mkdir` 建立 stage；
+  `test_windows_installed_files_inherit_target_permissions` 以 `icacls` 驗證安裝檔含
+  inherited ACE，使 Codex sandbox account 可讀取 framework surface。
 - `_atomic_write()` 建立 active/committed transaction journal；下一次 apply 可在程序終止
   後恢復原檔並清理 stage/backup。
 - `_TransactionLock` 以 Windows `msvcrt` 或 POSIX `fcntl` 保護同一 target 的整段

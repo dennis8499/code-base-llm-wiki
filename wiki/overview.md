@@ -7,9 +7,9 @@ sources:
   - AGENTS.md
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:6bb88a4c12b56f0a8979f6b511102525bbca70417faf5c5b1866cb377e930207
+source_digest: sha256:7fdce12d02abe1042eb150f5c963e55ccea542af27ea9d814d8532ba811f1084
 derived_from: []
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core

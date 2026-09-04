@@ -34,13 +34,13 @@ Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent
 code-base-llm-wiki/
 ├── .agents/skills/codebase-wiki/  # Copilot/Codex 共用 Skill、規格、模板與腳本
 ├── .codex/                        # Codex hooks、設定與明確委派時使用的 agents
-├── .github/                       # Copilot agents、prompts、hooks、instructions 與 CI
+├── .github/                       # Copilot agents、VS Code prompts、hooks 與 instructions
 ├── docs/                          # 文件總覽、架構、工作流、驗證、發布與歷史
 │   ├── README.md                  # 文件入口與建議閱讀順序
 │   ├── architecture/              # 元件、資料流與安全邊界
 │   ├── setup/                     # 安裝、升級與平台設定
 │   ├── workflows/                 # 使用者意圖與工作流契約
-│   ├── validation/                # 自動檢查與 E2E 驗收
+│   ├── validation/                # 本機 deterministic checks 與 E2E 驗收
 │   ├── releases/                  # 版本、發布資產與更新契約
 │   └── history/                   # 上游概念 attribution 與歷史材料
 ├── samples/task-tracker/          # 可操作的無第三方依賴 E2E 樣例
@@ -86,11 +86,21 @@ flowchart LR
 | 全域規則 | `.github/copilot-instructions.md` | `AGENTS.md` |
 | 共用流程 | `.agents/skills/codebase-wiki/` | `.agents/skills/codebase-wiki/` |
 | 專業代理 | `.github/agents/*.agent.md` | `.codex/agents/*.toml` |
-| 使用者入口 | `.github/prompts/*.prompt.md` | `Codex.md` 自然語言 recipes |
+| 使用者入口 | VS Code：`.github/prompts/*.prompt.md`；其他 hosts：共用 Skill／自然語言 | `Codex.md` 自然語言 recipes |
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 | 輸出 | `wiki/` | `wiki/` |
 
 兩個入口維持十個使用者意圖群組、十一個 machine operations 與相同安全邊界。日常任務由目前 Agent 處理；只有使用者明確要求 subagents、parallel 或 delegation 時才使用自訂代理。
+
+Copilot prompt files 是 VS Code 本機 Agent 入口，不是 GitHub Copilot coding agent
+或其他 hosts 的通用入口；其他 hosts 直接使用 `.agents/skills/codebase-wiki/`。
+Custom agents 設為 `user-invocable: true` 與 `disable-model-invocation: true`，因此只供
+使用者明確委派。這個 Copilot surface 的驗收狀態是
+`static-compatible / runtime-unverified`。Codex 已在 2026-09-03 以 Codex CLI 0.152.1
+完成六項情境各 3/3，狀態為 `runtime-verified`。平台範圍參考
+[VS Code prompt files](https://code.visualstudio.com/docs/agent-customization/prompt-files)、
+[Copilot custom agents](https://docs.github.com/en/copilot/reference/custom-agents-configuration)
+與 [Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)。
 
 ### Wiki 工作流
 
@@ -127,8 +137,9 @@ flowchart LR
 - **NotebookLM BA-first 知識包**：固定 Business Analyst audience；以流程、規則、詞彙、
   evidence state 與 knowledge gaps 為主文件，技術細節只作可選 traceability appendix；
   透過 discovery/readiness 兩次 preflight、Basic DLP 與 stable source IDs 保持可驗證。
-- **可驗證**：跨 Python/Linux/Windows CI、parity、frontmatter、digest
-  freshness、log/index、唯讀 lint 與單元測試。
+- **可驗證**：以 Python 3.11/3.14 在隔離 worktree 手動執行 unit、compile、
+  parity、frontmatter、digest freshness、log/index 與唯讀 lint；本 Repo 不配置
+  GitHub Actions。
 
 ---
 
@@ -195,8 +206,12 @@ installer contract 版本。
 
 1. 在 VS Code 開啟已安裝框架的目標 Repo。
 2. 進入 Copilot Chat 的 Agent 模式。
-3. 使用自然語言，或選擇 `.github/prompts/` 提供的 prompt。
+3. 使用自然語言，或在 VS Code 選擇 `.github/prompts/` 提供的 prompt。
 4. 例如輸入：`請先查 wiki，再必要時回溯 sources，說明訂單取消流程。`
+
+在 GitHub Copilot coding agent 或其他不支援 VS Code prompt files 的 host，請直接
+以自然語言觸發 `.agents/skills/codebase-wiki/`，不要假設 `.github/prompts/`
+會被載入。
 
 ### OpenAI Codex
 
@@ -228,7 +243,7 @@ Basic DLP finding 會阻擋 apply。
 
 ## E2E 驗證樣例
 
-`samples/task-tracker/` 是一個只使用 Python 標準函式庫的 Task Tracker。它包含 entity、repository abstraction、service 狀態轉換、設定載入、例外分支與 injected clock，可驗證完整的 Ingest → Query → Lint 流程。
+`samples/task-tracker/` 是一個只使用 Python 標準函式庫的 Task Tracker。它包含 entity、repository abstraction、service 狀態轉換、設定載入、例外分支與 injected clock，可驗證 Interactive/Batch Ingest、Query、Lint、Archaeology 與 Durable Guide 六項流程。
 
 為避免把框架檔案寫進版本化樣例，請先複製樣例到暫存目錄，再安裝任一 surface。完整步驟與預期結果請看 [samples/README.md](samples/README.md)。
 
@@ -242,7 +257,7 @@ Basic DLP finding 會阻擋 apply。
 | [架構與資料流](docs/architecture/README.md) | 三層模型、雙入口、Agents、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
 | [工作流手冊](docs/workflows/README.md) | 十類意圖、12 個操作情境、平台對照與輸出契約 |
-| [驗證手冊](docs/validation/README.md) | 自動檢查、E2E 驗收與發佈前清單 |
+| [驗證手冊](docs/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
 | [ChangeLog.md](ChangeLog.md) | 框架重要變更 |
@@ -256,8 +271,8 @@ Basic DLP finding 會阻擋 apply。
 | --- | --- | --- |
 | Windows / PowerShell | 支援 | Installer 與 scripts 使用 Python 3.11+ |
 | macOS / Linux | 支援 | 使用對應的路徑語法執行相同 Python commands |
-| GitHub Copilot Chat | 支援 | Agents、prompts、hooks 與共用 skill |
-| OpenAI Codex | 支援 | AGENTS、repo-local skill、hooks 與 optional agents |
+| GitHub Copilot | `static-compatible / runtime-unverified` | VS Code 使用 prompts；其他 hosts 使用共用 Skill；custom agents 只接受明確委派 |
+| OpenAI Codex | `runtime-verified` | Codex CLI 0.152.1（2026-09-03）完成六項情境各 3/3；AGENTS、repo-local Skill、root-resolved hooks 與 optional agents 均納入驗收 |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
 | NotebookLM Enterprise | 支援完整 codebase 的 BA-only 功能需求整理與離線匯出 | `fr-*`／`AC-*`、流程／規則／詞彙／gaps、DLP masking、schema v5 manifest；不含 raw evidence 或雲端 API |
 

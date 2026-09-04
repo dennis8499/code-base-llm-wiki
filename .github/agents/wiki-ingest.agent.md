@@ -3,6 +3,8 @@ name: wiki-ingest
 description: >
   Explicit delegation only. Ingest modules or directories into evidence-backed
   Wiki pages using interactive or batch authorization.
+disable-model-invocation: true
+user-invocable: true
 tools: [read, edit, search]
 ---
 

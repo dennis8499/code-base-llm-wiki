@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [log]
 status: active
 ---
@@ -509,3 +509,10 @@ status: active
 - Exporter 改為 `business-functional-requirements-v2`／`business-only-ba-v2`：全量分析安全 codebase、預設納入 behavioral tests、要求每個 included file 有 non-gap disposition，並只 materialize BA Wiki。
 - 新增 business-requirement、functional requirement catalog、stable FR/capability/AC IDs 與 managed/user-notes/local-only markers；DLP 改為 mask-and-residual-block，Enterprise byte limits 更新為 500/450 MB。
 - 受影響頁面：[[index]]、[[overview]]、[[notebooklm-ba-functional-export]]、[[functional-requirement-catalog]]、[[codebase-functional-coverage]]、[[notebooklm-ba-knowledge-export]]、[[ba-knowledge-precedes-traceability]]、[[readiness-preflight-required]]、[[business-process-catalog]]、[[business-rule-catalog]]、[[business-glossary]]、[[business-knowledge-gaps]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-architecture]]、[[system-analysis]]、[[wiki-quality-and-provenance]]、[[framework-introduction]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[release-and-update]]
+
+## [2026-09-03] update | Copilot/Codex 六流程、本機驗證與手動發版
+
+- Copilot agents 固定為使用者可選但禁止模型自動委派，六個 prompts 收斂為 authoritative workflow adapters；Copilot 狀態明確標示 `static-compatible / runtime-unverified`。
+- Codex hooks 從 session cwd 解析 Git root 並提供非 Git root fallback；跨平台 source symlink、8.3/full path、installer 錯誤契約與六流程 3/3 驗收門檻同步固化。
+- 移除 GitHub Actions，改以 Python 3.11/3.14 本機 gates 與明列四個資產的手動 GitHub Release；LICENSE readiness gate 保持不變。
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[installer-and-upgrade]]、[[notebooklm-exporter]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[wiki-quality-and-provenance]]、[[project-function-catalog]]、[[system-analysis]]

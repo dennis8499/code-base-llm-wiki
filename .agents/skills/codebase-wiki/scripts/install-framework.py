@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import secrets
 import shutil
 import stat
 import tempfile
@@ -37,10 +38,6 @@ INSTALL_STATE_PATH = ".agents/skills/codebase-wiki/install-state.json"
 TRANSACTION_VERSION = 1
 TRANSACTION_SUFFIX = ".codebase-wiki-install-transaction.json"
 TRANSACTION_LOCK_SUFFIX = ".codebase-wiki-install-transaction.lock"
-FRAMEWORK_ONLY_PATHS = {
-    ".github/workflows/ci.yml",
-    ".github/workflows/release.yml",
-}
 
 
 def _sha256(data: bytes) -> str:
@@ -104,11 +101,7 @@ def _framework_version(root: Path) -> str | None:
 def _surface_files(root: Path, surface: str, action: str = "install") -> list[tuple[Path, str]]:
     files: list[tuple[Path, str]] = []
     for relative_root in (*COMMON_SURFACE_PATHS, *SURFACE_PATHS[surface]):
-        files.extend(
-            (source, relative)
-            for source, relative in _files(root, relative_root)
-            if relative not in FRAMEWORK_ONLY_PATHS
-        )
+        files.extend(_files(root, relative_root))
     version_path = root / VERSION_SOURCE_PATH
     _validate_framework_source_path(root, version_path)
     if version_path.is_file():
@@ -556,6 +549,25 @@ def plan_install(
     return plan
 
 
+def _create_stage_directory(parent: Path) -> Path:
+    """Create staging storage whose files retain target-parent access on Windows."""
+    if os.name != "nt":
+        return Path(tempfile.mkdtemp(prefix="codebase-wiki-stage-", dir=parent))
+
+    # Python 3.13+ gives tempfile.mkdtemp() a Windows mode-0700 DACL. Files
+    # created below that directory keep the owner-only DACL after os.replace(),
+    # which prevents Codex's sandbox account from reading an installed surface.
+    # An atomic mkdir with any other mode keeps the destination parent's ACL.
+    for _ in range(100):
+        candidate = parent / f"codebase-wiki-stage-{secrets.token_hex(8)}"
+        try:
+            candidate.mkdir(mode=0o777)
+        except FileExistsError:
+            continue
+        return candidate
+    raise FileExistsError(f"unable to allocate installer stage under {parent}")
+
+
 def _atomic_write_unlocked(target_root: Path, writes: dict[str, bytes]) -> None:
     for relative in writes:
         if not _target_path_is_safe(target_root, relative):
@@ -564,7 +576,7 @@ def _atomic_write_unlocked(target_root: Path, writes: dict[str, bytes]) -> None:
     if not writes:
         return
     target_root.mkdir(parents=True, exist_ok=True)
-    stage = Path(tempfile.mkdtemp(prefix="codebase-wiki-stage-", dir=target_root.parent))
+    stage = _create_stage_directory(target_root.parent)
     backup = Path(tempfile.mkdtemp(prefix="codebase-wiki-backup-", dir=target_root.parent))
     originals: list[str] = []
     created: list[str] = []

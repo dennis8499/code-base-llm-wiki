@@ -94,7 +94,7 @@ class StaleTests(unittest.TestCase):
     def test_directory_sources_use_filesystem_fallback_without_git(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "wiki").mkdir()
+            (root / "wiki").mkdir(parents=True)
             (root / "src/nested").mkdir(parents=True)
             (root / "src/service.py").write_text("return 1\n", encoding="utf-8")
             (root / "src/nested/helper.py").write_text("return 2\n", encoding="utf-8")
@@ -115,7 +115,7 @@ class StaleTests(unittest.TestCase):
 
     def test_filesystem_fallback_prunes_digest_excluded_directories(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             (root / "src/nested").mkdir(parents=True)
             (root / "src/node_modules/package").mkdir(parents=True)
             (root / "src/build").mkdir()
@@ -211,9 +211,10 @@ class StaleTests(unittest.TestCase):
 
     def test_source_symlink_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            (root / "wiki").mkdir()
-            outside = root / "outside.py"
+            temporary = Path(directory)
+            root = temporary / "repo"
+            (root / "wiki").mkdir(parents=True)
+            outside = temporary / "outside.py"
             outside.write_text("return 1\n", encoding="utf-8")
             link = root / "linked.py"
             try:
@@ -230,6 +231,33 @@ class StaleTests(unittest.TestCase):
 
             self.assertTrue(result["critical"])
             self.assertEqual(result["critical"][0]["invalid_sources"], ["linked.py"])
+
+    def test_repo_internal_source_symlink_uses_resolved_target_digest(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            (root / "wiki").mkdir()
+            target = root / "service.py"
+            target.write_text("return 1\n", encoding="utf-8")
+            link = root / "linked.py"
+            try:
+                os.symlink(target, link)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(f"symlink creation unavailable: {exc}")
+
+            digest = check_stale_module.compute_source_digest(root, ["linked.py"])
+            expected = check_stale_module.compute_source_digest(root, ["service.py"])
+            self.assertEqual(digest, expected)
+            (root / "wiki" / "linked.md").write_text(
+                "---\ntitle: Linked\ntype: module\nsources:\n  - linked.py\n"
+                f"source_digest: {digest}\n"
+                "last_updated: 2026-07-01\ntags: [module]\nstatus: active\n---\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(check_stale(root / "wiki", root)["warning"], [])
+            target.write_text("return 2\n", encoding="utf-8")
+            changed = check_stale(root / "wiki", root)
+            self.assertIn("digest_mismatch", changed["warning"][0])
 
     def test_source_digest_detects_same_day_change_and_exact_revert(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

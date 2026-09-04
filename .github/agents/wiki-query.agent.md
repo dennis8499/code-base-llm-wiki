@@ -3,6 +3,8 @@ name: wiki-query
 description: >
   Explicit delegation only. Answer codebase questions Wiki-first, verify
   evidence gaps from sources, and remain read-only.
+disable-model-invocation: true
+user-invocable: true
 tools: [read, search]
 ---
 

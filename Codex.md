@@ -169,12 +169,14 @@ All three implementations live under
 `.agents/skills/codebase-wiki/scripts/hooks/`; `.codex/hooks.json` supplies
 `--platform codex`.
 
-Hook commands are workspace-relative so the same configuration works when
-Codex starts a hook from the active project directory. On Windows,
-`commandWindows` is executed by `cmd.exe`; keep it as a plain relative Python
-command and do not use PowerShell `$()` expressions. If Codex reports
-`PostToolUse hook (failed)`, inspect `.codex/hooks.json` for this rule before
-changing the hook matcher or disabling the audit reminder.
+Codex starts hooks from the session cwd. Each command therefore resolves the
+Git root with `git rev-parse --show-toplevel` before joining the canonical hook
+path. A non-Git installation is supported only when the session starts at its
+Repo root, where the command falls back to the current directory. On Windows,
+`commandWindows` uses a PowerShell wrapper plus `Join-Path`; POSIX uses
+`git rev-parse ... || pwd`. This matches the
+[Codex hooks guidance](https://learn.chatgpt.com/docs/hooks) and keeps spaces or
+non-ASCII root paths intact.
 
 Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
@@ -216,10 +218,9 @@ Test-Path .codex\config.toml
 Test-Path .codex\hooks.json
 Test-Path .agents\skills\codebase-wiki\SKILL.md
 Test-Path .agents\skills\codebase-wiki\scripts\install-framework.py
-python -m py_compile .agents\skills\codebase-wiki\scripts\hooks\common.py .agents\skills\codebase-wiki\scripts\hooks\wiki-session-init.py .agents\skills\codebase-wiki\scripts\hooks\wiki-write-guard.py .agents\skills\codebase-wiki\scripts\hooks\wiki-log-reminder.py
-python -m py_compile .agents\skills\codebase-wiki\scripts\install-framework.py .agents\skills\codebase-wiki\scripts\frontmatter.py .agents\skills\codebase-wiki\scripts\check-stale.py .agents\skills\codebase-wiki\scripts\validate-frontmatter.py .agents\skills\codebase-wiki\scripts\rebuild-index.py .agents\skills\codebase-wiki\scripts\wiki-stats.py
+python -m compileall -q .agents\skills\codebase-wiki\scripts
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki\
-python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\
+python .agents\skills\codebase-wiki\scripts\check-stale.py wiki\ .
 python .agents\skills\codebase-wiki\scripts\validate-log.py wiki\log.md --repo-root .
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
@@ -246,11 +247,12 @@ Hooks do not run:
 
 PostToolUse reports `hook exited with code 1`:
 
-- Confirm the Windows command uses `.agents\\skills\\codebase-wiki\\scripts\\hooks\\...`
-  as a relative path.
-- Remove `$(git rev-parse --show-toplevel)` and PowerShell-only syntax from
-  `commandWindows`; Codex supplies the active workspace as the hook working
-  directory.
+- From a Git subdirectory, run `git rev-parse --show-toplevel` and confirm it
+  points to the installed framework root.
+- On Windows, confirm `commandWindows` still uses the PowerShell `$wikiRoot`
+  wrapper, `Get-Location` fallback, and `Join-Path` to the canonical hook.
+- In a non-Git target, start Codex from the target root; a nested cwd has no
+  repository marker from which to recover the installation root.
 - Restart Codex and review `/hooks` so the updated project-local definition is
   trusted.
 

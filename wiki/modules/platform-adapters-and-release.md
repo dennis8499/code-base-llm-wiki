@@ -1,73 +1,80 @@
 ---
-title: 平台 Adapter、CI 與 Release
+title: 平台 Adapter 與手動 Release
 type: module
-summary: 以 capability parity、跨平台 CI、單一版本來源與授權前置閘門維持可發布的雙平台框架
+summary: 以 Copilot 靜態契約、Codex 六流程 3/3 實機驗收、本機 parity 與手動發版維持雙平台框架
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/parity-check.py
-  - .github/workflows/ci.yml
-  - tools/release.py
-  - tests/test_release.py
   - tests/test_contracts.py
-source_digest: sha256:2a12ddfa4f4d7578f3b80985c456c78c3f7d439bbd51db03ff9846a1b9362875
+  - tools/release.py
+  - docs/releases/README.md
+source_digest: sha256:b1f9b3e4ba7bebc3155c6cedada96bbb542772f72a3bb174463b83cc696d650b
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-08-24
-tags: [module, adapters, ci, release, parity]
+last_updated: 2026-09-03
+tags: [module, adapters, validation, release, parity]
 status: active
 ---
 
-# 平台 Adapter、CI 與 Release
+# 平台 Adapter 與手動 Release
 
 ## 職責
 
-- 維持 Copilot prompts/agents/hooks 與 Codex recipes/agents/hooks 的共同行為契約。
-- 以 `capabilities.json` contract version 3 描述十一個 operations 與 guard modes。
-- 在 Linux/Python 3.11、3.14 與 Windows/Python 3.11 執行完整回歸。
-- 以根 `VERSION` 作為產品版號唯一來源，產生可驗 hash 的 release assets。
-- release assets 排除 `.mypy_cache/`、`.ruff_cache/`、`.codex-hook-logs/`、`.github-hook-logs/` 等平台 fallback/generated state、敏感 credentials/secrets/private-key path 與 repo 內自訂 output tree，並拒絕非排除路徑的 symlink/reparse-point source。
-- release builder 在建立或覆寫 artifact 前保留 lexical output boundary，拒絕 output
-  root、parent components 與既有 artifact entries 的 symlink/reparse point。
-- installer/NotebookLM 的 transaction journal、lock、stage、backup 與 temporary sibling
-  artifacts 也不會進 release archive。
-- Release manifest 的 repository owner/name 也採嚴格格式驗證，避免下載 URL 被輸入內容污染。
-- 在專案擁有者選定 LICENSE 前阻擋公開 release。
+- 維持 Copilot prompts/agents/hooks 與 Codex recipes/agents/hooks 的共同 intent、
+  authorization 與 completion contract。
+- 以 `capabilities.json` contract version 3 描述十一個 operations；六項核心流程的
+  名稱與 authorization policy 不因平台 adapter 改變。
+- 將 Copilot `.github/prompts/` 限定為 VS Code 本機 Agent 入口；其他 Copilot
+  hosts 直接使用 `.agents/skills/codebase-wiki/`。
+- Copilot custom agents 都是 `user-invocable: true`、
+  `disable-model-invocation: true`，保留最小 tools，避免模型隱性委派。
+- Copilot 只宣告 `static-compatible / runtime-unverified`。Codex CLI 0.152.1 已於
+  2026-09-03 完成六項情境各 3/3、raw hashes 不變且 deterministic gates 全通過，
+  因此目前狀態為 `runtime-verified`。
+- 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，
+  手動執行 `gh release create`。
+- 在專案擁有者選定 LICENSE 前阻擋公開 release；本次維護不改版號、不發版。
 
 ## Evidence
 
-- `parity-check.py` 驗證 operations、authorization、hooks、Codex 設定、明確 delegation 與 contract 3。
-- `tests/test_contracts.py` 固定 Copilot prompt 必須載入 authoritative workflow reference，並保留
-  index/log、confirmation、source schema 與 completion coupling。
-- `tests/test_contracts.py` 也固定 CI 的 Ubuntu 3.11/3.14、Windows 3.11 matrix，
-  以及 release validate/build/publish gate 宣告；這是 workflow contract evidence，不取代實際 runner。
-- `.github/workflows/ci.yml` 執行 unit、parity、frontmatter、stale、log、index 與 lint。
-- `tools/release.py` 在 validate/build 時呼叫 `validate_release_readiness()`。
-- `tools/release.py` 的 public CLI 先將 stdout/stderr 設為 UTF-8；
-  `tests/test_release.py` 以含中文 Windows 路徑的暫存 fixture 驗證 validate/build JSON
-  payload 不會因主控台編碼而失敗。
-- release CLI 對非 UTF-8 VERSION/history 或 filesystem failure 會回傳受控 validation
-  failure，不讓 UnicodeDecodeError/OSError 穿透成未格式化 traceback。
-- `docs/history/llm-wiki.md` 只保留原創摘要、作者與 upstream URL，不鏡像無授權全文。
+- `parity-check.py` 驗證 contract 3、六項 prompt coupling、prompt metadata、agent
+  reference、手動委派旗標、最小工具權限、Codex root-resolved hooks，並要求 Repo
+  不含 GitHub workflow YAML。
+- 六個 Copilot prompts 是連結 authoritative workflow 的薄 adapter，不複製完整規則；
+  Interactive/Batch authorization 與 Query/Lint/Archaeology/Guide completion coupling
+  都由 `tests/test_contracts.py` 固定。
+- Codex 的 18 個有效 Task Tracker fixture runs 保存 JSONL tool events、前後 hashes、
+  Git 狀態、情境 assertions 與 deterministic outputs；受修復影響的情境皆捨棄首輪
+  結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。
+- 本機驗證以 Python 3.11 與 3.14 執行 unit、compile、parity、frontmatter、stale、
+  log、stats、lint 與 index check；lint 的兩項語意檢查另由人工完成。
+- `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、LICENSE、
+  repository name、資產邊界與 checksum。
+- Release builder 排除 cache、hook/NotebookLM state、transaction artifacts 與敏感
+  paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry。
 
 ## Contradictions
 
-- `VERSION=0.2.0` 表示實作契約版本已前進，但在 LICENSE 決策完成前不代表已有可公開
-  發布的 `v0.2.0` 資產。
+- `VERSION=0.2.0` 代表目前產品版號，不代表已取得 LICENSE 或已有可公開的
+  `v0.2.0` 資產。
+- 靜態 contract 相容不能當作 Copilot runtime 驗收；Codex 的
+  `runtime-verified` 也只適用於上述版本、日期與已保存的六項驗收矩陣，不能外推為
+  未測 host/version 的保證。
 
 ## Inferences
 
-- Windows 已執行完整測試，但仍只有 Python 3.11；Linux 提供 Python 3.11/3.14 的雙版本
-  覆蓋。
+- 移除 hosted automation 後，發版責任明確落在執行本機矩陣、檢查 assets、推送
+  tag 與呼叫 GitHub CLI 的維護者；deterministic scripts 仍提供相同可稽核 gate。
 
 ## Gaps
 
-- LICENSE 內容與公開發佈日期是專案擁有者決策。
-- 尚未設定套件簽章、SBOM 或 provenance attestation。
-- 尚未在實際 Codex/Copilot host 執行互動式 trust、compact 與 audit-context smoke。
+- Copilot host runtime 尚未執行，因此維持 `runtime-unverified`。
+- LICENSE、公開發佈日期、套件簽章、SBOM 與 provenance attestation 仍待擁有者決策。
 
 ## 相關頁面
 
 - [[release-and-update]]
-- [[installer-and-upgrade]]
+- [[platform-hooks-and-guards]]
+- [[wiki-quality-and-provenance]]
 - [[system-analysis]]

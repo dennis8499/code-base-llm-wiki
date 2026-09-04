@@ -10,9 +10,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:4d9e1b09864cf96605154b9ad13db9c77b50d1afa4729ba1f9eee7d9488fa043
+source_digest: sha256:41996b168ba44b352b9213300b9acb0162a95e3cc96df81db158695a3f2b0e4c
 derived_from: ["[[overview]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -36,7 +36,7 @@ operations 與 authorization policy 由
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
 | NotebookLM exporter | FR/AC 與完整 disposition 閘門、DLP masking、兩階段 preflight、BA-only query-index | [[notebooklm-exporter]] |
-| Release surface | parity、CI、版本、資產與公開發布前置條件 | [[platform-adapters-and-release]] |
+| Platform/release surface | Copilot 靜態契約、Codex UAT、本機 gates、版本與手動發布 | [[platform-adapters-and-release]] |
 
 ## Data Flow
 
@@ -54,7 +54,9 @@ User intent
 ```
 
 Installer 的資料流是 source framework → dry-run classification → staged writes →
-transaction-journaled atomic replacement；遇到兩側同時變更時不寫入。NotebookLM 先驗證
+transaction-journaled atomic replacement；Windows stage 繼承 target parent ACL，避免
+owner-only temporary DACL 使安裝檔無法由 Codex sandbox account 讀取；遇到兩側同時
+變更時不寫入。NotebookLM 先驗證
 Wiki regular tree，以明確 `--root` 讀取安全 inventory；discovery ID 在文件更新後失效，
 readiness 重新建立 identity，apply 再次掃描並檢查 output containment，最後原子替換本機 pack。
 
@@ -64,12 +66,16 @@ readiness 重新建立 identity，apply 再次掃描並檢查 output containment
 GitHub Copilot 的專案入口；Git 僅供獨立 Wiki freshness/history 與可選 manifest
 provenance 使用，NotebookLM export inventory 與 preflight 不要求 Git。安裝後的
 `.notebooklm/` 與 hook logs 是本機生成物，不進入 release。
+框架不配置 GitHub Actions；維護者在隔離 worktree 手動驗證，再明列資產建立
+GitHub Release。
 
 ## Evidence
 
 - `capabilities.json` 是跨平台 machine-readable contract。
 - Installer、lint、exporter 與 hooks 皆位於共享 Skill，平台設定只負責調用。
 - Canonical installer、lint、exporter 與 hook 程式承載可由測試直接驗證的核心行為。
+- Codex CLI 0.152.1 已於 2026-09-03 在獨立 fixtures 完成六項流程各 3/3；
+  Copilot 維持 `static-compatible / runtime-unverified`。
 
 ## Contradictions
 

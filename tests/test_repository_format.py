@@ -114,7 +114,9 @@ class RepositoryFormatTests(unittest.TestCase):
                     self.assertIn("wiki/log.md", plan["files"])
                     self.assertIn("wiki/overview.md", plan["files"])
                     self.assertIn(".agents/skills/codebase-wiki/VERSION", plan["files"])
-                    self.assertNotIn(".github/workflows/release.yml", plan["files"])
+                    self.assertFalse(
+                        any(path.startswith(".github/workflows/") for path in plan["files"])
+                    )
 
 
 if __name__ == "__main__":

@@ -4,7 +4,9 @@ from contextlib import redirect_stdout
 import io
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -25,6 +27,54 @@ def load_guard():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def create_hook_fixture(root: Path) -> None:
+    scripts = root / ".agents" / "skills" / "codebase-wiki" / "scripts"
+    scripts.mkdir(parents=True)
+    shutil.copy2(HOOKS.parent / "frontmatter.py", scripts / "frontmatter.py")
+    shutil.copytree(HOOKS, scripts / "hooks")
+    (root / "AGENTS.md").write_text("# Fixture\n", encoding="utf-8")
+    (root / "wiki").mkdir()
+    (root / "wiki" / "index.md").write_text(
+        "---\ntitle: Index\ntype: index\nsources: []\n"
+        "last_updated: 2026-09-03\ntags: [index]\nstatus: active\n---\n",
+        encoding="utf-8",
+    )
+    (root / "wiki" / "log.md").write_text(
+        "---\ntitle: Log\ntype: log\nsources: []\n"
+        "last_updated: 2026-09-03\ntags: [log]\nstatus: active\n---\n",
+        encoding="utf-8",
+    )
+
+
+def run_configured_command(command: str, cwd: Path, payload: dict[str, object]) -> subprocess.CompletedProcess[str]:
+    if os.name == "nt":
+        prefix = 'powershell.exe -NoProfile -NonInteractive -Command "'
+        if not command.startswith(prefix) or not command.endswith('"'):
+            raise AssertionError(f"unexpected Windows hook command: {command}")
+        args: str | list[str] = [
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            command[len(prefix) : -1],
+        ]
+        shell = False
+    else:
+        args = command
+        shell = True
+    return subprocess.run(
+        args,
+        cwd=cwd,
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+        shell=shell,
+    )
 
 
 class WriteGuardTests(unittest.TestCase):
@@ -219,6 +269,42 @@ class WriteGuardTests(unittest.TestCase):
         hooks = json.loads((REPO_ROOT / ".codex/hooks.json").read_text(encoding="utf-8"))
         matcher = hooks["hooks"]["SessionStart"][0]["matcher"]
         self.assertEqual(matcher, "startup|resume|clear|compact")
+
+    def test_codex_hooks_run_from_repo_root_git_subdirectory_and_non_git_root(self) -> None:
+        hooks = json.loads((REPO_ROOT / ".codex/hooks.json").read_text(encoding="utf-8"))
+        cases = {
+            "SessionStart": {"hook_event_name": "SessionStart", "source": "startup"},
+            "PreToolUse": {
+                "tool_name": "apply_patch",
+                "tool_input": {"command": "*** Update File: wiki/index.md\n"},
+            },
+            "PostToolUse": {
+                "tool_name": "apply_patch",
+                "tool_input": {"command": "*** Update File: wiki/index.md\n"},
+            },
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            temporary = Path(directory).resolve()
+            git_root = temporary / "git fixture"
+            non_git_root = temporary / "non git fixture"
+            for root in (git_root, non_git_root):
+                create_hook_fixture(root)
+            subprocess.run(["git", "init", "-q"], cwd=git_root, check=True)
+            nested = git_root / "nested" / "module"
+            nested.mkdir(parents=True)
+
+            for location_name, cwd in (
+                ("repo-root", git_root),
+                ("git-subdirectory", nested),
+                ("non-git-root", non_git_root),
+            ):
+                for event_name, payload in cases.items():
+                    handler = hooks["hooks"][event_name][0]["hooks"][0]
+                    command_key = "commandWindows" if os.name == "nt" else "command"
+                    result = run_configured_command(handler[command_key], cwd, payload)
+                    with self.subTest(location=location_name, event=event_name):
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertIsInstance(json.loads(result.stdout), dict)
 
     def test_apply_patch_extraction_catches_mixed_targets(self) -> None:
         guard = load_guard()

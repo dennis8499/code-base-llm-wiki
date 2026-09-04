@@ -110,7 +110,7 @@ def _filesystem_source_files(
             continue
         for path in entries:
             try:
-                relative = path.relative_to(resolved_root)
+                relative = path.resolve().relative_to(resolved_root)
             except ValueError:
                 continue
             if set(relative.parts) & DIGEST_EXCLUDED_PARTS:

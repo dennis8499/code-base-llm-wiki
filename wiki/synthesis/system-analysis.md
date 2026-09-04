@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:a9d25de12ee2e1df1a1249cb5f0655b27ceb1172afefd8b63e12abebf92ef8fa
+source_digest: sha256:833415ac228ea77bb565038a79933725df74bd2eb17f78b49c7616e021119726
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [synthesis, system-analysis, notebooklm]
 status: active
 ---
@@ -44,7 +44,7 @@ status: active
 | Data model and data flow | covered | frontmatter、manifest、preflight、install state |
 | External integrations | partial | Codex/Copilot adapter covered；NotebookLM 僅離線 |
 | Security and permissions | partial | authorization、guard、untrusted evidence、secret exclusions、本機 Basic DLP gate；Copilot shell permission 需 host 驗證 |
-| Deployment and operations | covered | dependency-free CLI、CI、release workflow |
+| Deployment and operations | covered | dependency-free CLI、本機驗證與手動 release |
 | Non-functional requirements | partial | correctness/atomicity、200-page lint 與 500 個 synthetic module 的 Wiki full preflight/apply regression covered；query benchmark gap |
 | Errors and failure modes | covered | conflicts、stale、invalid ID、limit/atomic failures |
 | Risks and technical debt | covered | licensing、semantic review、host variation |
@@ -66,7 +66,8 @@ lint/ADR/guide/synthesis/SA、hooks 與離線 NotebookLM pack；不涵蓋 RAG ru
 
 ## 系統總覽與脈絡
 
-使用者透過 Codex 自然語言或 Copilot prompts 觸發共同 Skill。Skill 先讀 Wiki，只有
+使用者透過 Codex 自然語言、VS Code Copilot prompts，或其他 Copilot hosts 的共用
+Skill 觸發工作流。Skill 先讀 Wiki，只有
 evidence gap 才回到 raw source；被授權的 durable change 寫回 Wiki/index/log。
 NotebookLM preparation 另行以 `--root` 的檔案系統邊界執行安全 inventory：先以 discovery
 確認 BA 文件計畫，更新知識後再以 readiness 與第二次確認產生本機 pack。Git repository、
@@ -81,7 +82,7 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 | Wiki quality | Schema、freshness、links、index、log | [[wiki-quality-and-provenance]] |
 | Hooks | Host context 與 write boundary | [[platform-hooks-and-guards]] |
 | Exporter | Preflight 與 incremental source pack | [[notebooklm-exporter]] |
-| Adapter/release | Parity、CI、version、release readiness | [[platform-adapters-and-release]] |
+| Adapter/release | Copilot static parity、Codex UAT、local gates、manual release | [[platform-adapters-and-release]] |
 
 ## 主要流程 / Use Cases
 
@@ -128,8 +129,8 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 
 | 系統 / 套件 | 整合方式 | 風險 / 注意事項 | 來源 |
 | --- | --- | --- | --- |
-| OpenAI Codex | `.codex` hooks/agents + shared Skill | Project trust、host hook schema | [[platform-hooks-and-guards]] |
-| GitHub Copilot | `.github` prompts/agents/hooks | Host response/audit 表現差異 | [[platform-adapters-and-release]] |
+| OpenAI Codex | `.codex` hooks/agents + shared Skill | CLI 0.152.1 已於 2026-09-03 完成六流程各 3/3；其他 host/version 不直接外推 | [[platform-adapters-and-release]] |
+| GitHub Copilot | VS Code 使用 `.github` prompts；其他 hosts 使用 shared Skill | 僅完成靜態相容驗證，runtime 表現仍未驗證 | [[platform-adapters-and-release]] |
 | Git | Wiki freshness/history、release tag、可選 manifest provenance | NotebookLM inventory/preflight 不依賴 Git；獨立 quality tools 仍可使用 Git 輔助 freshness | [[wiki-quality-and-provenance]] |
 | NotebookLM | 使用者手動上傳 query-index、project-map 與 BA-only static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
 
@@ -161,14 +162,15 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 ## 設定 / 部署 / 維運
 
 系統使用 Python 標準函式庫，沒有資料庫 migration 或 daemon。Repo-local TOML 控制
-guard 與 NotebookLM profile。CI 驗證 Linux 3.11/3.14 與 Windows 3.11 full suite；
-release workflow 另外要求 tag/version 相符及明確 LICENSE。
+guard 與 NotebookLM profile。本 Repo 不配置 GitHub Actions；維護者在乾淨隔離
+worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LICENSE 與
+四個 assets 都通過後手動建立 GitHub Release。
 
 ## 非功能需求
 
 | 類別 | 目前證據 | 缺口 |
 | --- | --- | --- |
-| 正確性 | deterministic checks、Python 3.13/3.14 雙版本完整回歸 suite；Windows symlink cases 受 privilege 限制跳過 | 語意矛盾仍需 agent review |
+| 正確性 | deterministic checks、Python 3.11/3.14 雙版本完整回歸；Codex CLI 0.152.1 六流程於 2026-09-03 各 3/3；Windows symlink cases 受 privilege 限制時須由 Linux clean-run 覆蓋 | 語意矛盾仍需 agent review；Copilot runtime 尚未驗證 |
 | 安全性 | raw read-only、guard、secret exclusion、local Basic DLP、two-phase export | host/sandbox 與租戶 Advanced DLP 政策在框架外 |
 | 可恢復性 | installer/exporter stage + rollback；active/committed journal、同一 target/output 的 transaction lock 與子程序終止 regression 覆蓋未完成 replacement recovery | 突然斷電、metadata durability 與所有 host-specific termination windows 尚未完整驗證 |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |
@@ -212,7 +214,7 @@ release workflow 另外要求 tag/version 相符及明確 LICENSE。
 
 - [ ] 專案擁有者選定 LICENSE，解除公開 release gate。
 - [ ] 在 NotebookLM Enterprise 以 `docs/validation/notebooklm-ba-uat.md` 固定題組驗證答案、引用與 gap 行為。
-- [ ] 在實際 Codex/Copilot host 驗證 coexist audit context 呈現。
+- [ ] 在實際 Copilot host 驗證 prompts、permission 與 coexist audit context 呈現。
 
 ## 來源附錄
 

@@ -364,6 +364,29 @@ notebooklm_terms: [cancel order, acceptance]
             self.assertEqual(result["semantic_status"], "review_required")
             self.assertEqual(result["overall_status"], "critical")
 
+    def test_reports_overview_missing_from_index_without_marking_it_orphan(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wiki = root / "wiki"
+            wiki.mkdir()
+            (wiki / "index.md").write_text(page("Index", "index"), encoding="utf-8")
+            (wiki / "log.md").write_text(page("Log", "log"), encoding="utf-8")
+            (wiki / "overview.md").write_text(
+                page("Overview", "overview"), encoding="utf-8"
+            )
+
+            result = LINT.lint_wiki(wiki, root)
+            overview_findings = [
+                item
+                for item in result["findings"]
+                if item.get("page") == "overview.md"
+            ]
+
+            self.assertEqual(
+                [item["code"] for item in overview_findings], ["index_missing"]
+            )
+            self.assertEqual(result["deterministic_status"], "critical")
+
     def test_index_and_self_links_do_not_hide_orphans(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

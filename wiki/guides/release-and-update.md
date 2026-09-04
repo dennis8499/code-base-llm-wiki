@@ -1,16 +1,16 @@
 ---
 title: Codebase LLM Wiki — 版本、發佈與更新
 type: guide
-summary: 以 VERSION、contract 3、CI 與授權 readiness gate 管理可驗證的框架發布
+summary: 以 VERSION、本機驗證、手動 GitHub Release 與授權 gate 管理框架發布
 sources:
   - VERSION
   - tools/release.py
-  - .github/workflows/release.yml
   - docs/releases/README.md
+  - docs/validation/README.md
   - README.md
-source_digest: sha256:0bef380c5022e89e8abc53e87d6f164f6bee7167d1135f6887bc8e1c405a3f78
+source_digest: sha256:e475b395c06b078460982baf2fd7338ea532dce866582312892ae883d3c46914
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -36,10 +36,20 @@ notebooklm_role: traceability
 
 1. 更新 `VERSION` 與 `ChangeLog.md`。
 2. 由專案擁有者選定並加入明確 `LICENSE`。
-3. 執行 `python tools/release.py validate --tag vX.Y.Z`。
-4. 推送對應的 `vX.Y.Z` tag。
-5. GitHub workflow 執行測試與 Wiki checks。
-6. workflow 上傳 ZIP/TAR.GZ、`SHA256SUMS` 與 `update-manifest.json`。
+3. 在乾淨隔離 worktree，以 Python 3.11 與 3.14 手動執行 unit、compile、parity、
+   frontmatter、stale、log、stats、lint、index checks，並完成人工 semantic review。
+4. 執行 `python tools/release.py validate --tag vX.Y.Z` 與
+   `python tools/release.py build --output dist --repository OWNER/NAME`。
+5. 確認 ZIP、TAR.GZ、`update-manifest.json`、`SHA256SUMS` 四個資產及 checksum。
+6. 建立並推送對應 `vX.Y.Z` tag。
+7. 手動執行：
+
+```powershell
+gh release create vX.Y.Z dist/codebase-llm-wiki.zip dist/codebase-llm-wiki.tar.gz dist/update-manifest.json dist/SHA256SUMS --verify-tag --title "Codebase LLM Wiki vX.Y.Z" --generate-notes
+```
+
+Repo 不配置 GitHub Actions；不得把 push tag 描述為自動測試或自動發布，也不得以
+`dist/*` 取代四個明列 assets。
 
 Release builder 會排除 `.git`、`logs`、`.codex-hook-logs`、`.github-hook-logs`、
 `cache`、`.venv`、`__pycache__`、`.mypy_cache`、`.ruff_cache`、`.notebooklm` 與 `dist` 等產生物，也會排除
@@ -74,5 +84,5 @@ UI 或更新套用邏輯。
 
 - [[overview]] — 框架架構、產品結構與版本邊界
 - [[framework-introduction]] — 安裝、升級與驗收
-- [[platform-adapters-and-release]] — CI、parity 與 release readiness 實作
+- [[platform-adapters-and-release]] — 平台 parity、本機驗證與 release readiness 實作
 - [[system-analysis]] — 系統級風險與待確認事項

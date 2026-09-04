@@ -6,7 +6,7 @@ notebooklm_group: project
 notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -16,8 +16,8 @@ status: active
 ## 文件範圍
 
 本目錄以 `scan_profile="framework"` 將共用 Skill、Codex/Copilot adapters 與
-release tooling 視為產品證據。Tests、CI workflow 本身、samples、cache、secrets、
-Wiki 與 export output 仍依安全 inventory 分類；測試與 CI 的行為由專門 Wiki 頁面
+release tooling 視為產品證據。Tests、samples、cache、secrets、Wiki 與 export
+output 仍依安全 inventory 分類；本機驗證與手動發版行為由專門 Wiki 頁面
 引用，而不是當作 NotebookLM raw runtime evidence 自動納入。
 
 ## 功能覆蓋矩陣
@@ -27,11 +27,11 @@ Wiki 與 export output 仍依安全 inventory 分類；測試與 CI 的行為由
 | 安裝與升級 | 安裝 Codex/Copilot surface、安全升級 | `install-framework.py` | install state、file fingerprints | [[installer-and-upgrade]] | covered |
 | Wiki 攝取與品質 | 建立可追溯頁面、偵測 stale/link/index/log 問題 | `$codebase-wiki`、quality CLIs | frontmatter、digest、wikilinks、log entries | [[wiki-quality-and-provenance]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
-| NotebookLM 準備 | 建立 BA 流程、規則、詞彙與 gaps，經兩次確認後產生離線 pack | `export-notebooklm.py` | BA coverage、兩階段 preflight ID、business-first retrieval contract、DLP、manifest v4 | [[notebooklm-exporter]] | covered |
-| 平台與發布 | 驗證 parity/CI、建立版本資產 | parity、CI、`release.py` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
+| NotebookLM 準備 | 建立 BA 流程、規則、詞彙與 gaps，經兩次確認後產生離線 pack | `export-notebooklm.py` | BA coverage、兩階段 preflight ID、business-first retrieval contract、DLP、manifest v5 | [[notebooklm-exporter]] | covered |
+| 平台與發布 | 驗證 Copilot/Codex 契約、建立版本資產 | parity、本機 UAT、`release.py`、`gh` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
-發布功能標為 partial，原因是程式與 CI 已具備，但專案擁有者尚未選擇 LICENSE，公開
-release gate 會刻意拒絕建立資產。
+發布功能標為 partial，原因是本機 builder 與手動程序已具備，但專案擁有者尚未
+選擇 LICENSE，公開 release gate 會刻意拒絕建立資產。
 
 ## 跨功能能力
 

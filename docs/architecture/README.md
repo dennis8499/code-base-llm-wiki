@@ -39,6 +39,10 @@ flowchart TB
 - Raw Sources 唯讀、Wiki-first、append-only log 與 evidence-backed 的核心規則。
 
 平台 adapter 不需要逐 byte 相同；`parity-check.py` 驗證兩邊仍公開相同能力且沒有指向已移除的舊路徑。
+Copilot 的 `.github/prompts/` 是 VS Code 本機 adapter；其他 Copilot hosts 直接
+使用共用 Skill。Copilot 只宣告 `static-compatible / runtime-unverified`；Codex
+已於 2026-09-03 以 CLI 0.152.1 通過六項各 3/3 的實機矩陣，宣告
+`runtime-verified`。
 
 ## Agent 職責
 
@@ -77,9 +81,10 @@ audit context；`framework` 允許本 Repo 的 Wiki、schema、adapters、文件
 測試與 tools。舊 `target` 映射到 `wiki-only`，無效或缺失設定也 fail closed 至此。
 
 Hooks 是 deterministic guardrail，不取代平台 sandbox，也不授權 Agent 修改 raw sources。
-Codex hooks use workspace-relative script paths; Windows `commandWindows`
-entries must use `cmd.exe`-compatible syntax rather than PowerShell command
-substitution.
+Codex hook 是以 session cwd 啟動，因此 POSIX 與 Windows commands 先用
+`git rev-parse --show-toplevel` 定位 canonical script；若安裝目標不是 Git Repo，
+只有從 Repo root 啟動時才回退目前目錄。Windows `commandWindows` 使用
+PowerShell wrapper 與 `Join-Path`，可安全處理空白和非 ASCII root path。
 
 ## Installer
 
@@ -95,6 +100,9 @@ substitution.
    upstream-only、user-only 與 two-sided changes；
 8. 全部輸出先 staging，套用失敗 rollback；starter 日期由 install date 產生；
 9. 舊 `.codebase-wiki/` 只透過 `obsolete_paths` 回報，不自動刪除。
+
+Windows staging 目錄繼承 target parent 的 ACL，避免 Python 3.13+ `mkdtemp()` 的
+owner-only DACL 跟著 staged files 移入目標，造成 Codex sandbox account 無法讀取。
 
 框架 Repo 根目錄的 `wiki/` 是框架自己的持久知識，不會複製到目標專案；目標 Wiki 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 的乾淨骨架建立。`docs/`、`samples/` 與 `tests/` 同樣不屬於 installer surface。
 

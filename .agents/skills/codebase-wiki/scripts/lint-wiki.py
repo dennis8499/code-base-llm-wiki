@@ -170,9 +170,7 @@ def lint_wiki(
                 index_targets.add(stem)
 
     for path in pages:
-        if path.name in SKIP_ORPHAN:
-            continue
-        if inbound[path.stem] == 0:
+        if path.name not in SKIP_ORPHAN and inbound[path.stem] == 0:
             findings.append(
                 finding(
                     "warning",
@@ -181,7 +179,7 @@ def lint_wiki(
                     path.relative_to(wiki_dir).as_posix(),
                 )
             )
-        if path.stem not in index_targets:
+        if path.name not in {"index.md", "log.md"} and path.stem not in index_targets:
             findings.append(
                 finding(
                     "critical",

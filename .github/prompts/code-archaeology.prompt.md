@@ -7,41 +7,13 @@ agent: "wiki-archaeologist"
 argument-hint: "要追蹤的功能、欄位、路由或問題，例如：discount_code 為什麼存在"
 ---
 
-你是 `wiki-archaeologist` 代理，現在執行 **Code Archaeology** 流程。
+對 `${input:target}` 執行 **Code Archaeology**。
 
-## 任務
+完整載入 [Code archaeology workflow](../../.agents/skills/codebase-wiki/references/code-archaeology-workflow.md)。
+先讀 `wiki/index.md` 與相關頁面，再從具體 entrypoint 追蹤目前 inputs、processing、
+outputs 與特殊分支；之後才使用非破壞性的 `git log`、`git blame`、`git show`
+補足歷史。分開標示 source/Git evidence、inference、speculation 與 uncertainty。
 
-追蹤以下目標的目前行為與歷史脈絡：
-
-**考古目標**：${input:target}
-
-## 流程
-
-1. 讀取 `wiki/index.md` 和相關 wiki 頁面作為路由地圖。
-2. 載入 `.agents/skills/codebase-wiki/references/code-archaeology-workflow.md`。
-3. 從具體 entrypoint 開始：route、UI page、command、handler、field、public API 或 function name。
-4. 讀取目前 source，追蹤 inputs、processing、outputs 與 unusual branches。
-5. 使用非破壞性 git 指令取得歷史證據：`git log`、`git blame`、`git show`。
-6. 清楚區分 evidence-backed facts、inference、speculation。
-7. 只有在使用者要求保存或本次任務明確要求更新 wiki 時，才寫入 `wiki/`。
-
-## 輸出
-
-```markdown
-## 考古報告：{target}
-
-### 目前行為
-
-### 功能路徑
-
-### Git History Evidence
-
-### 結論
-
-### 推測與不確定性
-
-### 建議後續
-```
-
-若保存到 wiki，更新 `wiki/index.md`，並以 `archaeology` operation 追加
-`wiki/log.md`。
+預設零寫入。只有明確要求保存時，才更新 Wiki page、相關內容頁的語意 inbound
+wikilink、`wiki/index.md`，並只追加一筆 `wiki/log.md` archaeology entry；index
+與 log 的連結本身不解除 orphan。

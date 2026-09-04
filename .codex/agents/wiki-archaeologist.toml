@@ -20,7 +20,7 @@ Workflow:
    - `git show <commit>`
 5. Separate evidence-supported conclusions from speculation.
 6. When asked to persist findings, return a proposed evidence-backed update to the parent agent; do not write files from this read-only role.
-7. Include the required `wiki/index.md` and append-only `wiki/log.md` coupling in any proposed handoff.
+7. Include a semantic inbound wikilink from a related content page plus the required `wiki/index.md` and append-only `wiki/log.md` coupling in any proposed handoff; index/log links alone do not resolve an orphan.
 
 Boundaries:
 - Never run destructive git commands such as reset, checkout, clean, or rebase for archaeology.

@@ -175,11 +175,14 @@ class ContractTests(unittest.TestCase):
         ):
             self.assertTrue((skill_root / "assets" / template).is_file())
 
-    def test_ci_and_release_workflows_bind_runtime_and_release_gates(self) -> None:
-        ci = (REPO_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-        self.assertRegex(ci, r"os:\s+ubuntu-latest\s+python:\s+\"3\.11\"")
-        self.assertRegex(ci, r"os:\s+ubuntu-latest\s+python:\s+\"3\.14\"")
-        self.assertRegex(ci, r"os:\s+windows-latest\s+python:\s+\"3\.11\"")
+    def test_validation_and_release_are_local_manual_workflows(self) -> None:
+        workflow_root = REPO_ROOT / ".github" / "workflows"
+        self.assertEqual(list(workflow_root.glob("*.yml")), [])
+        self.assertEqual(list(workflow_root.glob("*.yaml")), [])
+
+        validation = (REPO_ROOT / "docs" / "validation" / "README.md").read_text(
+            encoding="utf-8"
+        )
         for token in (
             "python -m unittest discover -s tests -v",
             "parity-check.py",
@@ -189,17 +192,22 @@ class ContractTests(unittest.TestCase):
             "rebuild-index.py wiki --check",
             "lint-wiki.py wiki --repo-root .",
         ):
-            with self.subTest(workflow="ci", token=token):
-                self.assertIn(token, ci)
+            with self.subTest(document="validation", token=token):
+                self.assertIn(token, validation)
 
-        release = (REPO_ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-        self.assertIn('python-version: "3.11"', release)
+        release = (REPO_ROOT / "docs" / "releases" / "README.md").read_text(
+            encoding="utf-8"
+        )
         for token in (
             "python tools/release.py validate --tag",
             "python tools/release.py build --output dist",
             "gh release create",
+            "dist/codebase-llm-wiki.zip",
+            "dist/codebase-llm-wiki.tar.gz",
+            "dist/update-manifest.json",
+            "dist/SHA256SUMS",
         ):
-            with self.subTest(workflow="release", token=token):
+            with self.subTest(document="release", token=token):
                 self.assertIn(token, release)
 
     def test_system_analysis_prompt_preserves_source_schema_boundary(self) -> None:
@@ -228,18 +236,20 @@ class ContractTests(unittest.TestCase):
             "query-wiki.prompt.md": (
                 "references/query-workflow.md",
                 "references/follow-up-actions.md",
-                "1-5",
-                "不寫檔",
+                "1–5",
+                "零寫入",
+                "零委派",
             ),
             "lint-wiki.prompt.md": (
                 "references/lint-checklist.md",
                 "references/follow-up-actions.md",
-                "先回報 findings",
-                "確認後",
+                "先回報",
+                "未經確認不得修復",
             ),
             "code-archaeology.prompt.md": (
                 "references/code-archaeology-workflow.md",
                 "git log",
+                "語意 inbound",
                 "wiki/index.md",
                 "wiki/log.md",
             ),
@@ -287,6 +297,28 @@ class ContractTests(unittest.TestCase):
             for token in required_tokens:
                 with self.subTest(prompt=filename, token=token):
                     self.assertIn(token, text)
+
+    def test_copilot_prompt_metadata_resolves_to_explicit_agents(self) -> None:
+        agent_names = set()
+        for path in (REPO_ROOT / ".github" / "agents").glob("*.agent.md"):
+            text = path.read_text(encoding="utf-8")
+            match = re.search(r"(?m)^name:\s*[\"']?([^\"'\s]+)", text)
+            self.assertIsNotNone(match, path)
+            agent_names.add(match.group(1))
+
+        for path in (REPO_ROOT / ".github" / "prompts").glob("*.prompt.md"):
+            with self.subTest(prompt=path.name):
+                text = path.read_text(encoding="utf-8")
+                expected_name = path.name.removesuffix(".prompt.md")
+                self.assertRegex(text, rf"(?m)^name:\s*[\"']?{re.escape(expected_name)}[\"']?\s*$")
+                self.assertRegex(text, r"(?m)^description:\s*\S+")
+                agent = re.search(r"(?m)^agent:\s*[\"']?([^\"'\s]+)", text)
+                self.assertIsNotNone(agent)
+                self.assertIn(agent.group(1), agent_names)
+                self.assertRegex(
+                    text,
+                    r"(?m)^argument-hint:\s*(?:\"[^\"]+\"|'[^']+'|\S.*)$",
+                )
 
     def test_entrypoint_coverage_matrix_includes_codex_recipes(self) -> None:
         manifest = json.loads(
@@ -416,6 +448,11 @@ class ContractTests(unittest.TestCase):
                     text = path.read_text(encoding="utf-8")
                     self.assertIn("Explicit delegation only.", text)
                     self.assertLessEqual(len(text.splitlines()), 40)
+                    if path.suffix == ".md":
+                        self.assertRegex(
+                            text, r"(?m)^disable-model-invocation:\s*true\s*$"
+                        )
+                        self.assertRegex(text, r"(?m)^user-invocable:\s*true\s*$")
 
 
 if __name__ == "__main__":

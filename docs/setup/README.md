@@ -23,6 +23,8 @@ Installer allowlist 只包含 `.agents/skills/codebase-wiki/`，不會複製同�
 active/committed transaction journal；若程序在替換窗口終止，下一次 apply 會先恢復
 原檔並清理暫存 stage/backup。同一 target 的並行 apply 會由 sibling transaction lock
 序列化；若已有程序持鎖，後來的寫入會 fail closed，不會覆蓋前一個 journal。
+Windows stage 會繼承 target parent ACL，避免 Python 3.13+ 的 owner-only temporary
+directory DACL 被安裝檔保留，導致 Codex sandbox account 無法讀取已安裝 surface。
 
 ### GitHub Copilot surface
 
@@ -98,6 +100,11 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 3. 依 VS Code 信任流程允許專案 hooks。
 4. 使用自然語言或 `.github/prompts/` 的 prompts。
 
+`.github/prompts/` 只屬於 VS Code 本機 Agent host。GitHub Copilot coding agent
+或其他 Copilot hosts 應以自然語言使用 `.agents/skills/codebase-wiki/`；不要把
+prompt files 當成跨 host API。所有 `.github/agents/` profiles 都保留使用者手動
+選取，但禁止模型自動委派。
+
 ### OpenAI Codex
 
 1. 以 Codex 開啟目標 Repo，確認 `AGENTS.md` 被讀取。
@@ -149,6 +156,9 @@ DLP finding 先遮罩，final payload 有殘留才阻擋。
 - Codex 檢查 `.codex/config.toml` 的 hooks feature。
 - Copilot 檢查 `.github/hooks/` 設定與 VS Code 支援版本。
 - 修改設定後重啟平台工作階段。
+- Codex 從 Git 子目錄啟動時，確認 `.codex/hooks.json` 能以
+  `git rev-parse --show-toplevel` 找到 canonical scripts；非 Git 安裝 root 才回退
+  session cwd。
 
 ### Write guard 阻擋變更
 

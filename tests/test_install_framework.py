@@ -173,6 +173,40 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertEqual(rerun_payload["conflicts"], [])
             self.assertTrue(rerun_payload["applied"])
 
+    @unittest.skipUnless(os.name == "nt", "Windows DACL inheritance contract")
+    def test_windows_installed_files_inherit_target_permissions(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+
+            exit_code, payload = self.run_main(
+                installer,
+                [
+                    "install",
+                    "--target",
+                    str(target),
+                    "--surface",
+                    "codex",
+                    "--apply",
+                    "--format",
+                    "json",
+                ],
+            )
+
+            self.assertEqual(exit_code, 0)
+            self.assertTrue(payload["applied"])
+            installed = target / "wiki" / "overview.md"
+            acl = subprocess.run(
+                ["icacls", str(installed)],
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertIn("(I)", acl.stdout)
+
     def test_copilot_surface_excludes_codex_files(self) -> None:
         installer = load_installer()
         with tempfile.TemporaryDirectory() as directory:
@@ -310,7 +344,7 @@ class FrameworkInstallerTests(unittest.TestCase):
             except (OSError, NotImplementedError) as exc:
                 self.skipTest(f"symlink creation unavailable: {exc}")
 
-            with self.assertRaisesRegex(OSError, "must not contain symlink"):
+            with self.assertRaisesRegex(OSError, "symlink or reparse point"):
                 installer.plan_install(source, target, "codex")
 
     def test_target_path_rejects_windows_drive_paths(self) -> None:

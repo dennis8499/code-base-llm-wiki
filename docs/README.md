@@ -19,7 +19,7 @@
 | `docs/architecture/` | 元件、資料流、安全邊界與 installer 架構 | [架構文件](architecture/README.md) |
 | `docs/setup/` | 安裝、升級、平台啟用與排錯 | [安裝手冊](setup/README.md) |
 | `docs/workflows/` | 使用者意圖、授權規則與各工作流契約 | [工作流手冊](workflows/README.md) |
-| `docs/validation/` | 自動化檢查、E2E 驗收與 NotebookLM UAT | [驗證手冊](validation/README.md) |
+| `docs/validation/` | 本機 deterministic checks、E2E 驗收與 NotebookLM UAT | [驗證手冊](validation/README.md) |
 | `docs/releases/` | 版本、發布資產與更新 manifest | [發布契約](releases/README.md) |
 | `docs/history/` | 上游概念 attribution 與歷史材料 | [歷史文件](history/README.md) |
 | `samples/` | 不會隨 installer 發布的可操作 E2E 樣例 | [樣例說明](../samples/README.md) |

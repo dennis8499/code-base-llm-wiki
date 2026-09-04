@@ -7,28 +7,13 @@ agent: "wiki-keeper"
 argument-hint: "指南主題，例如：本機開發環境設定、退款流程除錯、值班排查手冊"
 ---
 
-## 任務
+將 `${input:guideTopic:（若未提供，從目前對話推導）}` 保存為 durable guide。
 
-將目前對話或指定主題整理成一份 durable guide。
+完整載入 [Guide workflow](../../.agents/skills/codebase-wiki/references/guide-workflow.md)。
+先讀 `wiki/index.md`、近期 `wiki/log.md` 與相關 Wiki pages；只有缺漏、stale 或
+矛盾時才回溯 raw sources。產出必須包含目標讀者、前置條件、可執行步驟、
+常見陷阱、gaps 與相關頁面。
 
-**指南主題**：${input:guideTopic:（若未提供，請從對話內容自動推導）}
-
-## 流程
-
-1. 讀取 `wiki/index.md` 與近期 `wiki/log.md`。
-2. 載入 `.agents/skills/codebase-wiki/references/guide-workflow.md`。
-3. 讀取 `wiki/overview.md` 與相關 architecture、modules、entities、patterns、dependencies、decisions、synthesis 頁面。
-4. 只有 wiki 不足、過時或互相矛盾時，才回溯 raw sources。
-5. 決定輸出檔名：`wiki/guides/{kebab-topic}.md`。
-6. 建立或更新 guide 頁面。
-7. 更新 `wiki/index.md`。
-8. 追加 `wiki/log.md` 條目：`## [YYYY-MM-DD] guide | {指南標題}`。
-
-## 品質要求
-
-- 寫清楚目標讀者、前置條件、步驟、常見問題與相關頁面。
-- 使用 `[[page-name]]` wikilink 與 source path 引用。
-- `frontmatter.sources` 只列真實 repo-relative raw source；Wiki 依賴放在
-  `derived_from`，沒有直接 raw evidence 時使用 `sources: []`。
-- 缺少可靠 evidence 時標示 gap，不得編造 setup commands、secrets、owners 或 runtime behavior。
-- 若使用 DB evidence，只能放正文 evidence block，不得放入 frontmatter `sources`。
+寫入 `wiki/guides/{kebab-topic}.md`，raw evidence 放 `sources`、Wiki evidence
+放 `derived_from`；同步 `wiki/index.md` 並只追加一筆 guide log。不得編造
+commands、secrets、owners 或 runtime behavior。

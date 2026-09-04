@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:556088af94a871ae5536a38f32e001c8627fbeb3ff97de3a996a128c8a8328bd
+source_digest: sha256:83bdaacf034714bb87bdd1956899ffdf1d7b51e1707e587d3a6738b51fc4fa71
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -42,10 +42,14 @@ notebooklm_role: traceability
 | 需求 | 建議入口 | 安裝內容 |
 | --- | --- | --- |
 | VS Code Copilot agents、prompts、hooks | Copilot surface | `AGENTS.md`、`codebase-wiki` Skill、`.github/`、`wiki/` |
+| 其他 GitHub Copilot hosts | Copilot surface 的共用 Skill | 以自然語言使用 `.agents/skills/codebase-wiki/`；不依賴 VS Code prompt files |
 | Codex CLI、IDE、App、Cloud task | Codex surface | `AGENTS.md`、`Codex.md`、`codebase-wiki` Skill、`.codex/`、`wiki/` |
 | 同一 Repo 同時支援兩者 | 分別評估並合併兩種 surface | 共用 `.agents/` 與 `wiki/` |
 
-雙入口的能力相同，但平台 adapter 不相同。Codex 不使用 project-level slash prompts；Copilot prompts 也不會被假裝成 Codex 功能。
+雙入口的能力相同，但平台 adapter 不相同。Codex 不使用 project-level slash prompts；
+Copilot prompt files 也不會被假裝成非 VS Code host 功能。Copilot 驗收標示為
+`static-compatible / runtime-unverified`；Codex CLI 0.152.1 已於 2026-09-03 完成
+六項 UAT 各 3/3，標示為 `runtime-verified`。
 
 ## 2. 先 Dry-run 再安裝
 
@@ -65,7 +69,8 @@ Wiki。只有沒有 `conflicts` 時才 apply，且不會自動刪除 legacy
 `vX.Y.Z`。安裝或升級後，可在目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION` 查看已安裝版本。
 
-GitHub Release 提供 ZIP、TAR.GZ、`SHA256SUMS` 與 `update-manifest.json`。未來
+手動建立的 GitHub Release 提供 ZIP、TAR.GZ、`SHA256SUMS` 與
+`update-manifest.json`。未來
 Extension 可比較本地版本與 manifest 版本，驗證 checksum 後呼叫 `upgrade`；
 目前 Extension updater 尚未包含在框架內。完整 tag、發佈與 manifest 契約請看
 `docs/releases/README.md`。
@@ -157,11 +162,11 @@ Exporter 在本機執行 `notebooklm-enterprise-ba-mask-v1` DLP；finding 先遮
 
 Guard 是 deterministic 防呆層，不取代 sandbox。若需求是修改目標專案程式碼，請改成一般 coding task，不要透過 Wiki 任務繞過限制。
 
-Codex 的 `SessionStart`、`PreToolUse` 與 `PostToolUse` 會以目前 workspace
-作為 Hook 工作目錄，因此 `.codex/hooks.json` 使用相對腳本路徑。Windows
-命令由 `cmd.exe` 執行，必須使用 `cmd.exe` 相容語法；若看到
-`PostToolUse hook (failed)` 或 `hook exited with code 1`，先檢查是否誤用了
-PowerShell `$()`、`git rev-parse` 或巢狀引號，不要先停用 audit reminder。
+Codex 的 `SessionStart`、`PreToolUse` 與 `PostToolUse` 以 session cwd 執行。
+`.codex/hooks.json` 的 POSIX command 先以 `git rev-parse --show-toplevel` 找 Git root，
+Windows `commandWindows` 則使用 PowerShell wrapper；兩者在非 Git target root 才回退
+目前目錄。若看到 hook failure，先確認是從 Git tree 或非 Git 安裝 root 啟動，並檢查
+canonical `.agents/skills/codebase-wiki/scripts/hooks/` 是否存在，不要先停用 guard/audit。
 
 ## 7. Deterministic checks
 
@@ -213,7 +218,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 - 架構與資料流：`docs/architecture/README.md`
 - 安裝、升級與排錯：`docs/setup/README.md`
 - 12 個操作情境：`docs/workflows/README.md`
-- 自動與手動驗證：`docs/validation/README.md`
+- 本機 deterministic checks 與手動驗收：`docs/validation/README.md`
 - Codex 獨立手冊：`Codex.md`
 
 ## 相關頁面

@@ -1,23 +1,18 @@
 ---
 title: 平台 Hooks 與寫入邊界
 type: module
-summary: Codex 與 Copilot 共用 canonical hooks，並以 wiki-only、coexist、framework 三種模式明確控制寫入邊界
+summary: 共用 canonical hooks 以 Git-root 定位與三種 guard modes 維持跨 cwd 寫入邊界
 notebooklm_group: function-platform-hooks
 notebooklm_role: traceability
 sources:
-  - .agents/skills/codebase-wiki/scripts/hooks/wiki-write-guard.py
-  - .agents/skills/codebase-wiki/scripts/hooks/wiki-session-init.py
-  - .agents/skills/codebase-wiki/scripts/hooks/wiki-log-reminder.py
-  - .agents/skills/codebase-wiki/scripts/hooks/common.py
+  - .agents/skills/codebase-wiki/scripts/hooks/
   - .agents/skills/codebase-wiki/references/hooks-specification.md
   - .codex/hooks.json
-  - .codex/agents/
   - .github/hooks/
-  - .github/agents/
   - tests/test_write_guard.py
-source_digest: sha256:73e54516d3e104d719a7edacdc04e4e49ecf131329e6644f17e47cbf6e697ccd
+source_digest: sha256:f3ebded31caadf44dc2750e65a1a707c94fc154cfafb35434507d3279ad33877
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-08-23
+last_updated: 2026-09-03
 tags: [module, hooks, guard, codex, copilot]
 status: active
 ---
@@ -41,7 +36,10 @@ status: active
 
 舊 `target` 設定會映射成 `wiki-only`。任何解析後位於 Repo 外的 path 在所有模式都
 被拒絕；Windows drive-qualified path 即使在非 Windows host 也會被拒絕。Codex
-Windows command 使用 workspace-relative `cmd.exe` 相容路徑。
+hook 以 session cwd 執行，所以 POSIX 與 Windows commands 都先用
+`git rev-parse --show-toplevel` 定位 Git root；若目標不是 Git Repo，只有從安裝
+root 啟動時才回退目前目錄。Windows wrapper 以 `Get-Location` 與 `Join-Path`
+保留空白、8.3/full path alias 與非 ASCII root 的正確邊界。
 
 ## Evidence
 
@@ -58,6 +56,9 @@ Windows command 使用 workspace-relative `cmd.exe` 相容路徑。
   非 UTF-8 檔案安全跳過，維持 bounded context 而不讀取外部內容或拋出 traceback。
 - `wiki-write-guard.py` 對 coexist 只允許 repository-relative targets。
 - `.codex/hooks.json` 對三個事件使用共享腳本與明確 `--platform codex`，並涵蓋 compact 後續上下文。
+- `tests/test_write_guard.py` 直接呼叫設定中的三個 Codex commands，覆蓋 Git repo
+  root、Git 子目錄與非 Git root，共九種 event/location 組合；每次都必須回傳有效
+  JSON 且 exit 0。
 - Codex 的 query、lint、archaeology custom agents 明確設定 `sandbox_mode = "read-only"`；
   Copilot 對應 profiles 不暴露直接 `edit` 或 `agent` tool，lint/archaeology 的
   `execute` 依 profile instruction 僅用於 read-only checks 或 Git history；這不是
@@ -76,6 +77,8 @@ Windows command 使用 workspace-relative `cmd.exe` 相容路徑。
 ## Gaps
 
 - 不同 host 對 allow response 的 UI 呈現可能不同，audit context 仍需平台支援。
+- 非 Git 安裝目標若從子目錄啟動，沒有可靠 repository marker 可反推出安裝 root；
+  使用者必須從該目標 root 啟動 Codex。
 - Hook matcher 目前不把 Bash/execute 當成完整 shell write policy；Copilot 的 shell
   寫入安全性仍由 host permission/sandbox 與任務授權共同負責。
 

@@ -1,23 +1,18 @@
 ---
 title: Wiki 品質與證據追溯
 type: module
-summary: 以 frontmatter、內容摘要、語意連結、受管索引與 append-only log 建立可稽核的 Markdown 知識層
+summary: 以安全來源解析、內容摘要、受管索引與 append-only log 建立可稽核的 Markdown 知識層
 notebooklm_group: function-wiki-quality
 notebooklm_role: exclude
 sources:
-  - .agents/skills/codebase-wiki/references/frontmatter-spec.md
-  - .agents/skills/codebase-wiki/scripts/frontmatter.py
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - .agents/skills/codebase-wiki/scripts/check-stale.py
-  - .agents/skills/codebase-wiki/scripts/wiki-stats.py
-  - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/validate-log.py
-  - .agents/skills/codebase-wiki/scripts/rebuild-index.py
-  - tests/test_wiki_lint.py
   - tests/test_stale.py
-source_digest: sha256:3dcf9174bcab4e4c3f06766d76a41da59b52894907992c524cf63420ea457f0a
+  - tests/test_wiki_lint.py
+source_digest: sha256:eed24d3f759ab9d252cab64034bf08b4cf7589d0aba574dc4e3cbefb1d7061cb
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-08-26
+last_updated: 2026-09-03
 tags: [module, lint, provenance, frontmatter, freshness]
 status: active
 ---
@@ -35,6 +30,9 @@ status: active
 - 檢查 missing/stale sources、broken/ambiguous wikilinks、真正 orphan 與 index completeness。
 - 檢查 `sources` 的實際解析路徑仍位於 repo root 內，拒絕 drive-qualified path 或逃逸到
   repo 外的 symlink。
+- Repo 內 raw-source symlink 允許作為 evidence，digest 使用 resolved target；逃逸
+  Repo 的 symlink/reparse source 必須拒絕。這不同於 installer 對 framework source
+  symlink/reparse 的全面拒絕。
 - 維護 index 的 managed region，保留 marker 外的人工內容。
 - 驗證 log operation、日期、affected pages、Git baseline 與 append-only 契約；lint API
   可在 NotebookLM preflight 使用 filesystem-only 模式，略過 Git baseline。
@@ -49,6 +47,9 @@ status: active
 Orphan inbound 不計 `index.md`、`log.md` 或自我連結。`source_digest` 相符時，
 其內容證據優先於 Git commit date 與 dirty-path heuristic；摘要不符則同日變更也會
 報 stale。
+`overview.md` 只免除 orphan warning，仍必須出現在 index；orphan 與 index
+completeness 是兩個獨立判定。持久化 archaeology page 還必須由相關內容頁建立
+語意 inbound wikilink，index/log 不算內容關係。
 
 ## Evidence
 
@@ -56,6 +57,8 @@ Orphan inbound 不計 `index.md`、`log.md` 或自我連結。`source_digest` �
   NotebookLM role/term 契約。
 - `check-stale.py` 對排序後 path/file hash records 建立 aggregate SHA-256。
 - `check-stale.py` 在 existence/digest 判定前驗證 source symlink containment。
+- Filesystem fallback 在做 repo-relative 比較前，同時 resolve root 與 candidate，避免
+  Windows 8.3 路徑和完整路徑指向同一位置卻被誤判為越界。
 - `check-stale.py`、`validate-frontmatter.py` 與 `wiki-stats.py` 都提供標準
   `--help` CLI；source directory 在沒有 Git metadata 時 fallback 到 filesystem scan，
   並可由 lint API 明確停用 Git freshness/history lookup。
@@ -74,6 +77,11 @@ Orphan inbound 不計 `index.md`、`log.md` 或自我連結。`source_digest` �
   canonicalization 繞過同一 regular-tree boundary。
 - `tests/test_stale.py` 與 `tests/test_wiki_lint.py` 也驗證 quality CLI 的成功、warning、
   invalid input 與 unsafe-tree exit contracts，避免只測 library path 而漏掉使用者入口。
+- `tests/test_stale.py` 明確建立 Repo 外 escape target；另固定 Repo 內 symlink 的 resolved
+  digest 必須隨 target 內容變化。無建立 symlink 權限的平台會 skip fixture，而 Linux
+  clean-run 必須執行該契約。
+- `tests/test_wiki_lint.py` 固定 overview 缺 index 時回報 `index_missing`，同時不把
+  overview 誤報為 orphan。
 
 ## Contradictions
 

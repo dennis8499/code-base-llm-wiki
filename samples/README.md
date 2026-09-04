@@ -1,102 +1,138 @@
-# Codebase LLM Wiki E2E 樣例
+# Codebase LLM Wiki 六流程 E2E 樣例
 
-`task-tracker/` 是一個無第三方依賴的 Python codebase，用來手動驗證 Codebase LLM Wiki 的 Installer、Ingest、Query、Lint、index/log 維護與 raw-source protection。
+`task-tracker/` 是無第三方依賴的 Python codebase，用來驗證 Interactive Ingest、
+Batch Ingest、Wiki-first Query、Lint、Code Archaeology 與 Durable Guide。所有 runtime
+測試都在 Repo 外的全新暫存 Git fixture 執行，不能直接污染版本化樣例。
 
-## 為什麼先複製到暫存目錄
-
-Installer 會把 `.agents/`、平台入口與 `wiki/` 寫入目標 Repo。直接對版本化的 `samples/task-tracker/` 執行 `--apply` 會污染樣例，因此必須先複製到 Repo 外的暫存位置。
-
-## 準備樣例
+## 準備每一次 fixture
 
 PowerShell：
 
 ```powershell
-$sampleTarget = Join-Path ([System.IO.Path]::GetTempPath()) 'codebase-wiki-task-tracker'
+$sampleTarget = Join-Path ([System.IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
 Copy-Item -LiteralPath samples\task-tracker -Destination $sampleTarget -Recurse
-Get-ChildItem -LiteralPath (Join-Path $sampleTarget 'src'), (Join-Path $sampleTarget 'config') -File -Recurse |
-  Get-FileHash -Algorithm SHA256 |
-  Sort-Object Path
-```
-
-macOS / Linux：
-
-```bash
-sample_target="$(mktemp -d)/codebase-wiki-task-tracker"
-cp -R samples/task-tracker "$sample_target"
-find "$sample_target/src" "$sample_target/config" -type f -exec sha256sum {} \; | sort
-```
-
-請選擇新的空路徑；若同名目錄已存在，改用另一個名稱，不要覆寫既有資料。保存初始 hashes，完成 Agent workflow 後再次比對。
-
-## 驗證 Copilot surface
-
-在框架 Repo root 執行：
-
-```powershell
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target $sampleTarget --surface copilot --format json
-python .agents\skills\codebase-wiki\scripts\install-framework.py install --target $sampleTarget --surface copilot --apply --format json
-```
-
-以 VS Code 開啟 `$sampleTarget`，在 Copilot Chat Agent mode 依序執行：
-
-```text
-請分析 src/task_tracker/。先摘要職責、公開介面、相依性、狀態轉換、特殊分支與風險；
-確認後建立或更新 wiki pages、wikilinks、wiki/index.md，並追加 wiki/log.md。
-```
-
-```text
-請先查 wiki，再必要時回溯 sources：
-TaskTrackerService.complete_task 遇到不存在與已完成的任務各會怎麼處理？逾期任務如何判定？
-```
-
-對跨頁面或可重複的分析，確認 Query 會在證據與 gaps 後提供最多三個
-後續選項（保存 Synthesis/Guide、更新 Wiki／重新 Ingest、執行 Lint，或
-暫不處理）；簡單的一次性查詢不應強制顯示選項。
-
-```text
-請依 lint 流程檢查 wiki 的 frontmatter、source paths、wikilinks、index completeness 與 stale 狀態，先列出 findings，不要直接做廣泛修復。
-```
-
-確認 Lint 報告後只提供 findings 支持的修復、重新 Ingest 或再次 Lint
-選項；選擇修復前仍須確認，選擇暫不處理時不變更 Wiki。
-
-## 驗證 Codex surface
-
-使用另一份乾淨的樣例副本，避免 Copilot 與 Codex 安裝檔互相干擾：
-
-```powershell
+git -C $sampleTarget init -q
+git -C $sampleTarget add .
+git -C $sampleTarget -c user.email=wiki@example.com -c user.name=Wiki commit -qm initial
 python .agents\skills\codebase-wiki\scripts\install-framework.py install --target $sampleTarget --surface codex --format json
 python .agents\skills\codebase-wiki\scripts\install-framework.py install --target $sampleTarget --surface codex --apply --format json
+Get-ChildItem -LiteralPath (Join-Path $sampleTarget 'src'), (Join-Path $sampleTarget 'config') -File -Recurse |
+  Get-FileHash -Algorithm SHA256 | Sort-Object Path
 ```
 
-以 Codex 開啟目標目錄，使用與上一節相同的三段自然語言要求。Codex 應讀取 `AGENTS.md` 與 `$codebase-wiki`，不需要 project-level slash prompt。
+macOS / Linux 使用 `mktemp -d`、`cp -R` 與相同的 `git -C`、installer commands。
+每個情境、每次 repetition 都必須用不同目錄。保存初始 raw hashes、
+`codex --version` 與 Codex `--json` JSONL；完成後再比對 hashes。
 
-## 預期結果
+## GitHub Copilot 靜態驗證
 
-Agent 產出的頁面名稱可以不同，但必須滿足以下行為契約：
+Copilot runtime 不屬於目前可用驗證環境，因此本 Repo 只標示
+`static-compatible / runtime-unverified`。以 `--surface copilot` 安裝到另一份 fixture，
+再執行 parity 與 unit tests，確認：
 
-- `wiki/index.md` 能導覽到 Task Tracker module 與關鍵 entity/service pages。
-- Wiki 說明 `TaskItem`、`TaskStatus`、`TaskRepository`、`InMemoryTaskRepository`、`TaskTrackerSettings` 與 `TaskTrackerService` 的關係。
-- Query 正確指出 not-found、duplicate completion、open-task limit 與 overdue 判斷，並引用對應 Wiki/source evidence。
-- 高價值 Query 顯示有界 follow-up options，簡單 Query 不產生不必要的後續操作。
-- 每個新增 Wiki page 的 frontmatter.sources 指向真實的 `src/task_tracker/` 或 `config/` 路徑。
-- Ingest 後 `wiki/log.md` 只追加新條目。
-- Lint 沒有 Critical；若有 coverage gaps，必須明確列出而不是虛構內容。
-- `src/` 和 `config/` 的 hashes 與執行前相同。
+- `.github/prompts/` 的六個入口是連結共用 workflow 的薄 adapter；這些 prompt files
+  只適用 VS Code 本機 Agent host；
+- 其他 Copilot hosts 改由 `.agents/skills/codebase-wiki/` 接收自然語言意圖；
+- 所有 custom agents 都是 `user-invocable: true`、
+  `disable-model-invocation: true`，並維持最小 tools；
+- Interactive/Batch authorization、Query 零寫入、Lint report-first、Archaeology
+  explicit persist 與 Guide completion coupling 都被 parity 固定。
 
-上述 Query、Interactive Ingest、Lint 與明確 Delegation 驗收需在每個
-surface 各重複三次；比較 process invariants，不比較自然語言逐字內容。
+這些檢查不能被描述為 Copilot runtime pass。
 
-## Deterministic checks
+## Codex 六項情境
 
-在樣例目標目錄執行：
+每項在獨立 fixture 執行三次。Interactive Ingest、Lint 與 Archaeology 的兩階段
+操作必須沿用同一 session。
+
+### 1. Interactive Ingest
+
+```text
+使用 $codebase-wiki 以 Interactive Ingest 分析 src/task_tracker/。先只摘要職責、
+公開介面、相依性、狀態轉換、特殊分支與風險；不要寫入，等待我確認。
+```
+
+保存 preview 後的 Wiki hashes，確認完全不變，再於同一 session 回覆：
+
+```text
+確認，請依剛才的摘要寫入 Wiki，完成 pages、source_digest、wikilinks、index，
+並只追加一筆 ingest log。
+```
+
+### 2. Batch Ingest
+
+```text
+使用 $codebase-wiki 對 src/task_tracker/ 執行 Batch Ingest。這個請求已授權指定
+scope，不要再次詢問確認；不得處理 scope 外 raw sources。完成 overview、pages、
+index，並只追加一筆 ingest log。
+```
+
+驗證沒有重問、沒有 scope expansion，且 overview/index/log coupling 完整。
+
+### 3. Wiki-first Query
+
+先以已驗證的 ingest 結果建立 fixture baseline，再清除 session，記錄 Wiki hashes：
+
+```text
+使用 $codebase-wiki 先讀 wiki/index.md，再讀最多五個相關頁面，只有必要時回溯
+sources：TaskTrackerService.complete_task 遇到不存在與已完成任務各如何處理？
+逾期如何判定？請列 evidence 與 gaps，不要寫檔或委派。
+```
+
+答案應涵蓋 not-found、duplicate completion 與 overdue evidence；Wiki hashes 必須不變，
+JSONL 不得出現 agent delegation 或 write tool。
+
+### 4. Lint
+
+在已 ingest 的 fixture 刪除 `wiki/index.md` managed region 中一個實際 page entry，
+提交這個受控 defect，再執行：
+
+```text
+使用 $codebase-wiki 執行 Wiki Lint。先回報 deterministic 與 semantic findings，
+不要修復，等待我確認。
+```
+
+確認 preview 零寫入後，在同一 session 回覆：
+
+```text
+確認，只修復剛才報告的 index 缺口，並只追加一筆 lint log。
+```
+
+### 5. Code Archaeology
+
+```text
+使用 $codebase-wiki 考古 TaskTrackerService.complete_task。先說明目前 code path，
+再用非破壞性的 git log、git blame、git show 補歷史證據；預設不要寫入。
+```
+
+確認 Wiki hashes 不變、回答區分 evidence/inference 後，在同一 session 明確要求：
+
+```text
+請把剛才的考古結果保存為 durable Wiki page，更新 index，並只追加一筆
+archaeology log。
+```
+
+### 6. Durable Guide
+
+```text
+使用 $codebase-wiki 建立「Task Tracker 維運與除錯」durable guide。說明目標讀者、
+前置條件、可執行步驟、常見陷阱、gaps 與相關頁面；正確使用 sources 與
+derived_from，更新 index，並只追加一筆 guide log。
+```
+
+## 每次 deterministic checks
+
+在 fixture root 執行：
 
 ```powershell
-python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
-python .agents\skills\codebase-wiki\scripts\check-stale.py wiki
-python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
-python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
-python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
+python .agents/skills/codebase-wiki/scripts/validate-frontmatter.py wiki
+python .agents/skills/codebase-wiki/scripts/check-stale.py wiki .
+python .agents/skills/codebase-wiki/scripts/validate-log.py wiki/log.md --repo-root .
+python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki
+python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --repo-root .
+python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
 ```
 
-框架 Repo 的完整發佈檢查請看 [驗證手冊](../docs/validation/README.md)。
+每次保存 command、stdout、stderr、exit code 與 assertion 結果。任一次失敗就不判定
+該情境通過；修正後重跑完整 3/3。Raw `src/` 與 `config/` before/after hashes
+必須完全相同。完整框架 gates 見[本機驗證手冊](../docs/validation/README.md)。

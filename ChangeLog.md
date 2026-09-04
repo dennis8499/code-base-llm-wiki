@@ -15,6 +15,15 @@
 
 ### Changed
 
+- **Copilot/Codex 六流程契約與驗收邊界**：Copilot custom agents 新增
+  `disable-model-invocation: true`／`user-invocable: true`，六個高頻 prompts 收斂為連結
+  canonical workflow 的薄 adapter；parity 與 tests 固定 metadata、agent reference、
+  最小 tools、authorization 與 completion coupling。文件明確限定 prompt files 為 VS Code
+  本機入口，Copilot 標示 `static-compatible / runtime-unverified`；Codex CLI 0.152.1
+  已於 2026-09-03 完成六項各 3/3，標示為 `runtime-verified`。
+- **本機驗證與手動發版**：移除 `.github/workflows/ci.yml` 與 `release.yml`，刪除
+  installer 的 workflow 特例；維護者改在隔離 worktree 以 Python 3.11/3.14 執行完整
+  gates，再明列 ZIP、TAR.GZ、manifest、checksums 四個資產執行 `gh release create`。
 - **NotebookLM Exporter schema v5 BA-only contract**：改用
   `business-functional-requirements-v2`／`business-only-ba-v2`，全量分析安全 codebase（預設包含
   behavioral tests），要求每個安全檔案具有 non-gap disposition，只 materialize BA Wiki。
@@ -30,6 +39,25 @@
 
 ### Fixed
 
+- **六流程 Codex UAT 修復**：18 個有效 Task Tracker runs 保存 JSONL tool events、
+  before/after hashes 與 deterministic checks；首輪發現的 Windows installer DACL、
+  overview index completeness 漏報及 archaeology persisted-page orphan 均加入 regression，
+  修正後對應情境重新取得完整 3/3。
+- **Windows installer staging ACL**：Windows 不再使用 Python 3.13+ 會建立 owner-only
+  DACL 的 `tempfile.mkdtemp()` 作為 stage；改以安全隨機 sibling 目錄繼承 target parent
+  ACL，並用 `icacls` 驗證移入目標的 framework files 保留 inherited access。
+- **Lint overview index completeness**：`overview.md` 仍免除 orphan warning，但不再跳過
+  index completeness；未列於 `wiki/index.md` 時會穩定回報 `index_missing`。
+- **Archaeology 持久化 inbound coupling**：保存 synthesis page 時除 page/index/log 外，
+  必須由相關內容頁建立語意 wikilink，防止只被 index/log 連入的 orphan page。
+
+- **Codex hook 跨 cwd 啟動**：POSIX/Windows commands 由 session cwd 先解析 Git root，
+  非 Git 安裝 root 回退目前目錄；新增 repo root、Git 子目錄與非 Git root 的實際
+  invocation regression。
+- **Source symlink 與 Windows canonical path**：修正 escape fixture 使 target 真正在
+  Repo 外，固定 Repo 內 symlink 追蹤 resolved digest、Repo 外 symlink/reparse 拒絕，
+  並在 filesystem fallback 比較前 resolve 8.3/full paths；installer 測試改驗證穩定
+  `symlink or reparse point` 錯誤契約。
 - **NotebookLM exclusion-aware fallback traversal**：exporter 與 Wiki stale digest fallback
   改用 top-down 剪枝 walker；保留 ignored、untracked、nested repository 的 runtime source，
   在進入 `.git`、dependencies、generated/cache、tests、CI/IaC、tooling、Wiki/output 等
