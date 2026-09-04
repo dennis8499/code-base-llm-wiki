@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - tests/test_export_notebooklm.py
   - tests/test_wiki_scale.py
-source_digest: sha256:833415ac228ea77bb565038a79933725df74bd2eb17f78b49c7616e021119726
+source_digest: sha256:40c30479667c4062c23d3efd0735f07200daa745858f47c8023a785050266c22
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[framework-introduction]]", "[[notebooklm-export]]", "[[release-and-update]]"]
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [synthesis, system-analysis, notebooklm]
 status: active
 ---
@@ -157,7 +157,7 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
   使命令列入口與 library regular-tree boundary 一致。
 - Exporter 在 `resolve()` 前檢查 output root 與 parent symlink/reparse containment，避免輸出
   boundary 被導向其他位置。
-- SQL Server live evidence 僅允許有界唯讀 SELECT，且不進 frontmatter sources。
+- Wiki Query 不連線即時資料庫，也不呼叫資料庫工具或 fallback；資料庫現況問題只能標示為未驗證 gap。
 
 ## 設定 / 部署 / 維運
 

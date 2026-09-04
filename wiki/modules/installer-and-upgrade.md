@@ -10,9 +10,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_install_framework.py
-source_digest: sha256:49355a65f02ec46b13b6ebbf42517b0f94d95debf145898c3853ce4e1ce37114
+source_digest: sha256:f7b986e96e8d4ac35d8d62a38e8640e31f04b7254598cbedf64e7db75a023fc1
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -55,6 +55,8 @@ JSON contract version 為 3，包含 `managed`、`changes`、`preserved`、
 ## Evidence
 
 - `_prepare_plan()` 以 manifest baseline 比較目標與新 framework fingerprints。
+- 上游移除的受管檔案不進入新安裝；upgrade 將舊路徑列入 `obsolete_paths` 並保留實體檔，
+  `test_upgrade_reports_removed_live_database_rule_without_deleting_it` 固定此相容性契約。
 - `_atomic_write()` 先建立 stage/backup，再使用 `os.replace()` 套用及回復。
 - `_create_stage_directory()` 在 Windows 使用原子 `mkdir` 建立 stage；
   `test_windows_installed_files_inherit_target_permissions` 以 `icacls` 驗證安裝檔含

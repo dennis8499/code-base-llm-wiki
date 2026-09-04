@@ -25,8 +25,6 @@ technical debt, risk review, architecture summary, or query findings under
   pages.
 - Use `[[page-name]]` wikilinks and source paths in backticks.
 - Separate evidence, inference, and speculation.
-- Keep DB live evidence in a page body evidence block, never in
-  `frontmatter.sources`.
 - Update `wiki/index.md` and append `wiki/log.md`.
 
 ## Completion Criterion

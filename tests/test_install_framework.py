@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime as dt
+import hashlib
 import importlib.util
 import io
 import json
@@ -16,6 +17,7 @@ from unittest import mock
 
 REPO_ROOT = Path(__file__).parents[1]
 INSTALLER_PATH = REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "scripts" / "install-framework.py"
+REMOVED_LIVE_DB_REFERENCE = ".agents/skills/codebase-wiki/references/mssql-evidence-rules.md"
 
 
 def load_installer():
@@ -132,6 +134,7 @@ class FrameworkInstallerTests(unittest.TestCase):
                     / "notebooklm-export-workflow.md"
                 ).exists()
             )
+            self.assertFalse((target / REMOVED_LIVE_DB_REFERENCE).exists())
             self.assertEqual(
                 (target / ".agents" / "skills" / "codebase-wiki" / "VERSION").read_text(
                     encoding="utf-8"
@@ -231,9 +234,42 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue(payload["applied"])
             self.assertTrue((target / ".github" / "copilot-instructions.md").exists())
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
+            self.assertFalse((target / REMOVED_LIVE_DB_REFERENCE).exists())
             self.assertFalse((target / ".codex").exists())
             self.assertFalse((target / "Codex.md").exists())
             self.assertFalse((target / ".github" / "workflows" / "release.yml").exists())
+
+    def test_upgrade_reports_removed_live_database_rule_without_deleting_it(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+            installer.apply_install(REPO_ROOT, target, "codex", "install")
+
+            legacy_bytes = b"# locally retained live database rule\n"
+            legacy_path = target / REMOVED_LIVE_DB_REFERENCE
+            legacy_path.parent.mkdir(parents=True, exist_ok=True)
+            legacy_path.write_bytes(legacy_bytes)
+
+            state_path = target / ".agents/skills/codebase-wiki/install-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["files"][REMOVED_LIVE_DB_REFERENCE] = {
+                "kind": "file",
+                "sha256": hashlib.sha256(legacy_bytes).hexdigest(),
+            }
+            state_path.write_text(
+                json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            plan = installer.plan_install(REPO_ROOT, target, "codex", "upgrade")
+            self.assertIn(REMOVED_LIVE_DB_REFERENCE, plan["obsolete_paths"])
+
+            result = installer.apply_install(REPO_ROOT, target, "codex", "upgrade")
+            self.assertIn(REMOVED_LIVE_DB_REFERENCE, result["obsolete_paths"])
+            self.assertEqual(legacy_path.read_bytes(), legacy_bytes)
+            updated_state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertNotIn(REMOVED_LIVE_DB_REFERENCE, updated_state["files"])
 
     def test_conflicting_target_file_blocks_apply(self) -> None:
         installer = load_installer()

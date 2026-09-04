@@ -10,9 +10,9 @@ sources:
   - tests/test_contracts.py
   - tools/release.py
   - docs/releases/README.md
-source_digest: sha256:b1f9b3e4ba7bebc3155c6cedada96bbb542772f72a3bb174463b83cc696d650b
+source_digest: sha256:56e4f8c4103dfd71884f1ebe05fc81dcfdeba6e85ef09065c5311c04da7fc613
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -29,6 +29,8 @@ status: active
   hosts 直接使用 `.agents/skills/codebase-wiki/`。
 - Copilot custom agents 都是 `user-invocable: true`、
   `disable-model-invocation: true`，保留最小 tools，避免模型隱性委派。
+- 共用 Query workflow 與雙平台代理只接受 Wiki／Repo source evidence；即時資料庫存取、
+  資料庫工具及 fallback 由 parity 與 contract regression 明確禁止。
 - Copilot 只宣告 `static-compatible / runtime-unverified`。Codex CLI 0.152.1 已於
   2026-09-03 完成六項情境各 3/3、raw hashes 不變且 deterministic gates 全通過，
   因此目前狀態為 `runtime-verified`。
@@ -39,8 +41,8 @@ status: active
 ## Evidence
 
 - `parity-check.py` 驗證 contract 3、六項 prompt coupling、prompt metadata、agent
-  reference、手動委派旗標、最小工具權限、Codex root-resolved hooks，並要求 Repo
-  不含 GitHub workflow YAML。
+  reference、手動委派旗標、最小工具權限、即時資料庫能力保持移除、Codex
+  root-resolved hooks，並要求 Repo 不含 GitHub workflow YAML。
 - 六個 Copilot prompts 是連結 authoritative workflow 的薄 adapter，不複製完整規則；
   Interactive/Batch authorization 與 Query/Lint/Archaeology/Guide completion coupling
   都由 `tests/test_contracts.py` 固定。

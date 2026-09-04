@@ -6,7 +6,7 @@ notebooklm_group: project
 notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -64,7 +64,7 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 - 不提供 RAG、向量資料庫、常駐搜尋 runtime 或自動雲端同步；`query-index` 是匯出的
   Markdown 路由來源，不是本機搜尋服務。
 - 缺少 LICENSE、SBOM、簽章與公開 release 實際演練。
-- SQL Server live evidence 是 Query sub-mode，不是框架本身的資料庫 runtime。
+- Query 只使用 Wiki 與 Repo source evidence，不提供即時資料庫連線或工具 fallback。
 
 ## 相關頁面
 

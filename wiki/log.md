@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [log]
 status: active
 ---
@@ -516,3 +516,9 @@ status: active
 - Codex hooks 從 session cwd 解析 Git root 並提供非 Git root fallback；跨平台 source symlink、8.3/full path、installer 錯誤契約與六流程 3/3 驗收門檻同步固化。
 - 移除 GitHub Actions，改以 Python 3.11/3.14 本機 gates 與明列四個資產的手動 GitHub Release；LICENSE readiness gate 保持不變。
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[installer-and-upgrade]]、[[notebooklm-exporter]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[wiki-quality-and-provenance]]、[[project-function-catalog]]、[[system-analysis]]
+
+## [2026-09-04] update | 移除即時 SQL／資料庫查詢能力
+
+- Wiki Query 不再連線即時資料庫或呼叫 SQL Server／MSSQL 工具、MCP、app 與 CLI fallback；需要目前資料庫狀態的問題改列為未驗證 gap。
+- 新安裝不再包含舊規則檔，升級透過 `obsolete_paths` 回報並保留既有檔案；靜態 `.sql`、migration 與 schema source evidence 維持支援。
+- 受影響頁面：[[index]]、[[framework-introduction]]、[[project-function-catalog]]、[[system-analysis]]

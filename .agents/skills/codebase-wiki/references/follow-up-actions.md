@@ -66,7 +66,7 @@ selects a choice.
 | `save-guide` | 保存為操作 Guide | `guide` | `wiki/guides/` | User selection is an explicit creation request; report target and sources. |
 | `reingest` | 更新 Wiki／重新 Ingest | `ingest` | Relevant Wiki pages | Use Interactive Ingest preview, then wait for confirmation before writing. |
 | `lint` | 執行 Wiki Lint | `lint` | `wiki/` | Initial pass is read-only; repairs require confirmation. |
-| `none` | 暫不處理 | none | none | No file, database, agent, index, or log state changes. |
+| `none` | 暫不處理 | none | none | No file, agent, index, or log state changes. |
 
 All durable writes retain the normal coupling rules: update `wiki/index.md`
 when page navigation changes, preserve existing user-authored content, and use

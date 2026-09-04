@@ -37,6 +37,13 @@
   改為獨立可選附錄。新增 `business_source_paths`、`include_traceability`、兩次 preflight
   workflow、舊 retrieval contract full-rebuild migration，以及固定 BA 驗收題組。
 
+### Removed
+
+- **即時 SQL／資料庫查詢能力**：移除 Wiki Query 的 SQL Server／MSSQL 規則、工具呼叫、
+  schema／metadata discovery、`SELECT` 與 MCP／app／CLI fallback；需要目前資料庫狀態的問題
+  改列為未驗證 gap。新安裝不再包含舊規則檔，升級僅以 `obsolete_paths` 回報並保留既有檔案；
+  Repo 內的 `.sql`、migration 與 schema 仍維持唯讀 source evidence。
+
 ### Fixed
 
 - **六流程 Codex UAT 修復**：18 個有效 Task Tracker runs 保存 JSONL tool events、

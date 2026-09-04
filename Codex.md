@@ -43,7 +43,9 @@ manually.
 Queries use the Markdown Wiki directly. Read `wiki/index.md`, then 1–5 relevant
 pages, and inspect their listed raw sources only when the Wiki is insufficient,
 stale, or contradictory. The framework does not create a local search database
-or source-code structure index.
+or source-code structure index, and Query does not connect to live databases or
+invoke database-tool fallbacks. Questions that require current database state
+remain explicit unverified gaps.
 
 ## Copilot Prompt To Codex Recipe
 
@@ -193,19 +195,6 @@ or host permission controls.
 Hook audit files are written to `.codex/hooks/logs/` when possible, with fallback
 to `.codex-hook-logs/`. Both paths should stay ignored by git. The complete hook
 I/O contract is in `.agents/skills/codebase-wiki/references/hooks-specification.md`.
-
-## SQL Server Live Evidence
-
-The Codex query workflow supports SQL Server live evidence only when the active
-Codex environment exposes MSSQL tools or an approved MCP/app/CLI fallback. The
-source of truth is
-`.agents/skills/codebase-wiki/references/mssql-evidence-rules.md`.
-
-Summary: allow schema discovery, metadata lookup, connection details, and
-bounded read-only `SELECT`; forbid DML, DDL, `EXEC`, stored procedure execution,
-unbounded scans, credential disclosure, and persistent state changes. DB-derived
-answers must include the metadata listed in the reference, and DB evidence must
-not be put in frontmatter `sources`.
 
 ## Validation Checklist
 

@@ -73,6 +73,74 @@ class ContractTests(unittest.TestCase):
                 lines = (REPO_ROOT / relative).read_text(encoding="utf-8").splitlines()
                 self.assertLessEqual(len(lines), maximum)
 
+    def test_live_database_query_capability_is_removed(self) -> None:
+        removed_reference = (
+            REPO_ROOT
+            / ".agents"
+            / "skills"
+            / "codebase-wiki"
+            / "references"
+            / "mssql-evidence-rules.md"
+        )
+        self.assertFalse(removed_reference.exists())
+
+        active_surfaces = (
+            ".agents/skills/codebase-wiki/SKILL.md",
+            ".agents/skills/codebase-wiki/references/intent-routing.md",
+            ".agents/skills/codebase-wiki/references/query-workflow.md",
+            ".agents/skills/codebase-wiki/references/synthesis-workflow.md",
+            ".agents/skills/codebase-wiki/references/system-analysis-workflow.md",
+            ".github/agents/wiki-query.agent.md",
+            ".github/prompts/query-wiki.prompt.md",
+            ".github/prompts/system-analysis-doc.prompt.md",
+            ".codex/agents/wiki-query.toml",
+            "AGENTS.md",
+            "Codex.md",
+            "README.md",
+            "docs/architecture/README.md",
+            "docs/validation/README.md",
+            "docs/workflows/README.md",
+            "wiki/guides/framework-introduction.md",
+            "wiki/synthesis/project-function-catalog.md",
+            "wiki/synthesis/system-analysis.md",
+        )
+        enablement_tokens = (
+            "mssql",
+            "sql server live evidence",
+            "sql query",
+            "sql queries",
+            "bounded read-only `select`",
+            "db live evidence",
+            "db evidence",
+            "database evidence block",
+            "database evidence is needed",
+            "exposes sql server",
+            "schema discovery",
+            "metadata discovery",
+        )
+        for relative in active_surfaces:
+            with self.subTest(surface=relative):
+                text = (REPO_ROOT / relative).read_text(encoding="utf-8").lower()
+                for token in enablement_tokens:
+                    self.assertNotIn(token, text)
+
+        boundaries = {
+            ".agents/skills/codebase-wiki/references/query-workflow.md": (
+                "must not connect to",
+                "current database state",
+            ),
+            ".github/agents/wiki-query.agent.md": ("不連線即時資料庫", "未驗證 gap"),
+            ".codex/agents/wiki-query.toml": (
+                "do not connect to live databases",
+                "unverified gaps",
+            ),
+        }
+        for relative, required_tokens in boundaries.items():
+            text = (REPO_ROOT / relative).read_text(encoding="utf-8").lower()
+            for token in required_tokens:
+                with self.subTest(surface=relative, token=token):
+                    self.assertIn(token.lower(), text)
+
     def test_workflows_and_templates_have_single_authoritative_resources(self) -> None:
         reference_root = (
             REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "references"

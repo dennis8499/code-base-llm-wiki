@@ -54,13 +54,6 @@ for delegation, subagents, parallel work, or a named Wiki agent.
 Project-level Codex slash prompt files are outside this framework; Codex uses
 natural-language recipes and `$codebase-wiki`.
 
-## Live Database Evidence
-
-SQL Server evidence follows
-`.agents/skills/codebase-wiki/references/mssql-evidence-rules.md`: bounded
-read-only discovery or `SELECT`, required evidence metadata, and body-only
-persistence. Database evidence never enters `frontmatter.sources`.
-
 ## Verification
 
 After Codex changes wiki or schema files, report:

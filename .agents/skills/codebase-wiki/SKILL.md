@@ -38,7 +38,6 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Durable synthesis creation | `references/synthesis-workflow.md` |
 | SA document generation, coverage map, gap handling | `references/system-analysis-workflow.md` |
 | Code archaeology and git-history evidence | `references/code-archaeology-workflow.md` |
-| SQL Server live evidence rules | `references/mssql-evidence-rules.md` |
 | Hook trigger, I/O, and guard-mode contract | `references/hooks-specification.md` |
 | New page starting points | Matching template under `assets/` |
 | Stale source checks, stats, or index rebuilds | Matching script under `scripts/` |

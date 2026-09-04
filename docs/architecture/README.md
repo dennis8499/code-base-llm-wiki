@@ -50,7 +50,7 @@ Copilot 的 `.github/prompts/` 是 VS Code 本機 adapter；其他 Copilot hosts
 | --- | --- | --- |
 | `wiki-keeper` | 意圖路由、ADR、Guide、Synthesis、SA、NotebookLM export 與跨流程協調 | 視工作流 |
 | `wiki-ingest` | 讀取 source evidence 並建立或更新 Wiki | 是 |
-| `wiki-query` | 先查 Wiki，必要時回溯 sources 或唯讀 DB evidence | 否 |
+| `wiki-query` | 先查 Wiki，必要時回溯 repo sources，並標示 inference 與 gaps | 否 |
 | `wiki-lint` | 檢查 stale、frontmatter、連結、index 與 coverage | 先報告 |
 | `wiki-archaeologist` | 追蹤 call path、特殊分支與非破壞性 Git history | 否 |
 
@@ -110,7 +110,8 @@ owner-only DACL 跟著 staged files 移入目標，造成 Codex sandbox account 
 
 - 不建立向量資料庫、SQLite source index 或 Tree-sitter cache。
 - Query 不因讀取而自動持久化結果。
-- SQL Server live evidence 只允許 bounded read-only evidence，且不能放入 frontmatter sources。
+- Query 不連線即時資料庫，也不呼叫資料庫工具或 fallback；需要目前資料庫狀態的問題標示為未驗證 gap。
+- Repo 內的 `.sql`、migration 與 schema 可維持一般唯讀 source evidence。
 - 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
 - NotebookLM export 每次唯讀全量掃描安全 UTF-8 repo text；既有 Wiki 是增量知識基線，不是掃描邊界，非文字業務證據列為 gap。
 - Agent 先以 discovery preflight 確認 BA 文件計畫，更新流程、規則、詞彙與 gaps 後，再以 readiness preflight 的新 ID 確認 apply；本機 `.notebooklm/` 採 BA-first 與原子替換。

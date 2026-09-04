@@ -278,6 +278,7 @@ Basic DLP finding 會阻擋 apply。
 
 本框架不提供 RAG、向量資料庫、本機搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
 NotebookLM export 產生的是可供 NotebookLM 使用的 Markdown `query-index`，不是常駐搜尋引擎；
-它只產生本地 `.notebooklm/`。SQL Server live evidence 僅是 Query 的唯讀子模式，且資料庫證據不得放進 frontmatter `sources`。
+它只產生本地 `.notebooklm/`。Wiki Query 不連線即時資料庫，也不呼叫資料庫工具或 fallback；
+Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
 本 Repo 尚未宣告軟體授權；請勿從參考專案的授權狀態推定本專案授權。

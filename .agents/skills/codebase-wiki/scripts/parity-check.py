@@ -61,6 +61,45 @@ FOLLOW_UP_ADAPTERS = (
     ".codex/agents/wiki-lint.toml",
     "Codex.md",
 )
+REMOVED_LIVE_DATABASE_REFERENCE = (
+    ".agents/skills/codebase-wiki/references/mssql-evidence-rules.md"
+)
+LIVE_DATABASE_CONTRACT_PATHS = (
+    ".agents/skills/codebase-wiki/SKILL.md",
+    ".agents/skills/codebase-wiki/references/intent-routing.md",
+    ".agents/skills/codebase-wiki/references/query-workflow.md",
+    ".agents/skills/codebase-wiki/references/synthesis-workflow.md",
+    ".agents/skills/codebase-wiki/references/system-analysis-workflow.md",
+    ".github/agents/wiki-query.agent.md",
+    ".github/prompts/query-wiki.prompt.md",
+    ".github/prompts/system-analysis-doc.prompt.md",
+    ".codex/agents/wiki-query.toml",
+)
+LIVE_DATABASE_ENABLEMENT_TOKENS = (
+    "mssql",
+    "sql server live evidence",
+    "sql query",
+    "sql queries",
+    "bounded read-only `select`",
+    "db live evidence",
+    "db evidence",
+    "database evidence block",
+    "database evidence is needed",
+    "exposes sql server",
+    "schema discovery",
+    "metadata discovery",
+)
+QUERY_DATABASE_BOUNDARIES = {
+    ".agents/skills/codebase-wiki/references/query-workflow.md": (
+        "must not connect to",
+        "current database state",
+    ),
+    ".github/agents/wiki-query.agent.md": ("不連線即時資料庫", "未驗證 gap"),
+    ".codex/agents/wiki-query.toml": (
+        "do not connect to live databases",
+        "unverified gaps",
+    ),
+}
 COPILOT_READ_ONLY_TOOL_POLICY = {
     "wiki-query.agent.md": ({"read", "search"}, {"agent", "edit", "execute"}),
     "wiki-lint.agent.md": ({"execute", "read", "search"}, {"agent", "edit"}),
@@ -160,6 +199,28 @@ def main() -> int:
         manifest = {}
     else:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    removed_reference = root / REMOVED_LIVE_DATABASE_REFERENCE
+    if removed_reference.exists():
+        issues.append(
+            f"removed live-database reference is still present: {REMOVED_LIVE_DATABASE_REFERENCE}"
+        )
+    for relative in LIVE_DATABASE_CONTRACT_PATHS:
+        path = root / relative
+        if not path.is_file():
+            issues.append(f"missing live-database contract surface: {relative}")
+            continue
+        text = path.read_text(encoding="utf-8").lower()
+        for token in LIVE_DATABASE_ENABLEMENT_TOKENS:
+            if token in text:
+                issues.append(f"live-database query capability remains in {relative}: {token}")
+    for relative, required_tokens in QUERY_DATABASE_BOUNDARIES.items():
+        path = root / relative
+        text = path.read_text(encoding="utf-8").lower() if path.is_file() else ""
+        for token in required_tokens:
+            if token.lower() not in text:
+                issues.append(f"query live-database boundary missing in {relative}: {token}")
+
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
             issues.append(f"manifest missing surface: {surface}")

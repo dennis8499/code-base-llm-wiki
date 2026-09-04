@@ -7,9 +7,9 @@ sources:
   - AGENTS.md
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:7fdce12d02abe1042eb150f5c963e55ccea542af27ea9d814d8532ba811f1084
+source_digest: sha256:62e1664e197fce2820e60a69d9e986922a24bc8bcb291631e5a56a6fb42c23a0
 derived_from: []
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -69,7 +69,8 @@ preflight 與第二次確認，最後產生本地 pack。相關約束見
 
 框架也支援一般 Ingest、Query、Lint、Archaeology、ADR、Synthesis、Guide 與 System
 Analysis；這些能力的工程入口與治理細節保留在 [[project-function-catalog]]、
-[[framework-introduction]] 與 [[system-analysis]]，不作為 BA 問答的主要敘事。
+[[framework-introduction]] 與 [[system-analysis]]，不作為 BA 問答的主要敘事。Query
+只使用 Wiki 與 Repo source evidence，不連線即時資料庫或呼叫資料庫工具 fallback。
 
 ## 範圍與邊界
 

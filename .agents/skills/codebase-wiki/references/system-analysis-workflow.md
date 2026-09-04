@@ -66,8 +66,6 @@ Mark each row as:
 - Distinguish evidence-backed facts, inference, and speculation.
 - Do not invent APIs, flows, actors, non-functional requirements, database
   fields, or deployment behavior.
-- If database live evidence is used, keep it in a body evidence block with the
-  required metadata. Do not place DB evidence in frontmatter `sources`.
 
 ## Persistence Steps
 

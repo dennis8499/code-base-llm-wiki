@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:83bdaacf034714bb87bdd1956899ffdf1d7b51e1707e587d3a6738b51fc4fa71
+source_digest: sha256:5c71191b8b33ece24baa966a263c7ae80f9c5eb4c2c98ca481f0ee8ddf47be4b
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -205,7 +205,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 
 - **直接對版本化 sample 執行 `--apply`**：先複製到暫存目錄。
 - **把 Query 當成全文 source scan**：必須先查 Wiki。
-- **把 DB evidence 放入 sources**：frontmatter sources 只接受 Repo paths。
+- **要求 Query 連線即時資料庫**：Query 只讀 Wiki 與 Repo sources；需要目前資料庫狀態時標示 gap，不呼叫資料庫工具或 fallback。
 - **遇到 conflicts 使用覆寫**：Installer 沒有 force；應人工合併。
 - **未要求就啟用 delegation**：日常任務應由目前 Agent 完成。
 - **把既有 Wiki 當成 NotebookLM 掃描邊界**：export 每次都要重掃安全的全專案範圍，才能發現新增、刪除與未被 Wiki 覆蓋的功能。

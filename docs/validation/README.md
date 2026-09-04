@@ -104,4 +104,5 @@ session；Batch、Query 與 Guide 使用明確單次授權。測試證據只放�
 - Copilot prompts 是薄 adapter，且非 VS Code host 不被誤導為支援 prompt files。
 - Authorization 沒因 delegation、follow-up 或 shell access 擴張。
 - Sources、inference、speculation、contradiction 與 gaps 的標示彼此一致。
-- SQL Server live evidence 仍是 bounded read-only，且不進入 frontmatter `sources`。
+- Query workflow 與雙平台代理不含即時資料庫存取、資料庫工具或 fallback 指令。
+- `.sql`、migration 與 schema 仍可被辨識為唯讀 `data_schema` evidence。

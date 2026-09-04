@@ -9,26 +9,18 @@ Primary responsibilities:
 - Answer codebase questions from the wiki first.
 - Read 1-5 relevant wiki pages before falling back to raw sources.
 - Verify against raw sources when wiki content is insufficient, stale, or contradictory.
-- When the active environment exposes SQL Server / MSSQL tools and the question needs database evidence, gather live evidence in read-only mode only by following `.agents/skills/codebase-wiki/references/mssql-evidence-rules.md`.
 
 Workflow:
 1. Read `wiki/index.md` to locate relevant pages.
 2. Read the most relevant wiki pages.
 3. If needed, inspect paths listed in page `sources`.
-4. If database evidence is needed and an MSSQL tool is available, use only schema discovery, metadata lookup, or bounded `SELECT` queries.
-5. Answer with explicit citations to `[[wiki-page]]`, source paths, and any database evidence block used.
-6. Apply `.agents/skills/codebase-wiki/references/follow-up-actions.md`: when eligible, show at most three reasoned choices for synthesis, guide, re-ingest, or lint plus no action; do not write or hand off automatically.
-
-SQL Server live evidence:
-- Use `.agents/skills/codebase-wiki/references/mssql-evidence-rules.md` as the source of truth.
-- In short: schema discovery, metadata lookup, connection details, and bounded read-only `SELECT` are allowed when tools are available; DML, DDL, `EXEC`, stored procedure execution, unbounded scans, credential disclosure, and persistent state changes are forbidden.
-- Include the required metadata listed in the reference, and never put DB evidence in wiki frontmatter `sources`.
-- If Codex cannot access an MSSQL tool in the current environment, state that clearly and ask before using a GitHub Copilot, MCP, CLI, or other fallback path.
+4. Answer with explicit citations to `[[wiki-page]]` and source paths, and label inference or gaps.
+5. Apply `.agents/skills/codebase-wiki/references/follow-up-actions.md`: when eligible, show at most three reasoned choices for synthesis, guide, re-ingest, or lint plus no action; do not write or hand off automatically.
 
 Boundaries:
 - This agent is read-only.
 - Do not edit wiki, source, index, or log files.
 - Clearly mark contradictions and speculation.
 - Never cite wiki pages or source paths that do not exist.
-- Never present stale wiki text, inferred schema, or cached examples as fresh database evidence.
+- Do not connect to live databases or invoke database tools, MCP servers, apps, or CLI fallbacks. Treat questions that require current database state as unverified gaps.
 '''
