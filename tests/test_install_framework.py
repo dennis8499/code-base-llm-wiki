@@ -18,6 +18,22 @@ from unittest import mock
 REPO_ROOT = Path(__file__).parents[1]
 INSTALLER_PATH = REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "scripts" / "install-framework.py"
 REMOVED_LIVE_DB_REFERENCE = ".agents/skills/codebase-wiki/references/mssql-evidence-rules.md"
+REMOVED_CAPABILITY_PATHS = {
+    ".agents/skills/codebase-wiki/references/guide-workflow.md",
+    ".agents/skills/codebase-wiki/assets/guide-template.md",
+    ".github/prompts/save-guide.prompt.md",
+    ".github/prompts/onboarding-guide.prompt.md",
+    ".github/agents/wiki-archaeologist.agent.md",
+    ".github/agents/wiki-ingest.agent.md",
+    ".github/agents/wiki-keeper.agent.md",
+    ".github/agents/wiki-lint.agent.md",
+    ".github/agents/wiki-query.agent.md",
+    ".codex/agents/wiki-archaeologist.toml",
+    ".codex/agents/wiki-ingest.toml",
+    ".codex/agents/wiki-keeper.toml",
+    ".codex/agents/wiki-lint.toml",
+    ".codex/agents/wiki-query.toml",
+}
 
 
 def load_installer():
@@ -48,7 +64,7 @@ class FrameworkInstallerTests(unittest.TestCase):
             )
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(payload["contract_version"], 4)
+            self.assertEqual(payload["contract_version"], 5)
             self.assertEqual(payload["framework_version"], "0.2.0")
             self.assertEqual(payload["action"], "install")
             self.assertEqual(payload["surface"], "codex")
@@ -154,6 +170,8 @@ class FrameworkInstallerTests(unittest.TestCase):
                     ).exists()
                 )
             self.assertFalse((target / REMOVED_LIVE_DB_REFERENCE).exists())
+            for relative in REMOVED_CAPABILITY_PATHS:
+                self.assertFalse((target / relative).exists())
             self.assertEqual(
                 (target / ".agents" / "skills" / "codebase-wiki" / "VERSION").read_text(
                     encoding="utf-8"
@@ -260,6 +278,8 @@ class FrameworkInstallerTests(unittest.TestCase):
             ):
                 self.assertTrue((target / ".github" / "prompts" / prompt).exists())
             self.assertFalse((target / REMOVED_LIVE_DB_REFERENCE).exists())
+            for relative in REMOVED_CAPABILITY_PATHS:
+                self.assertFalse((target / relative).exists())
             self.assertFalse((target / ".codex").exists())
             self.assertFalse((target / "Codex.md").exists())
             self.assertFalse((target / ".github" / "workflows" / "release.yml").exists())
@@ -295,6 +315,40 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertEqual(legacy_path.read_bytes(), legacy_bytes)
             updated_state = json.loads(state_path.read_text(encoding="utf-8"))
             self.assertNotIn(REMOVED_LIVE_DB_REFERENCE, updated_state["files"])
+
+    def test_upgrade_marks_removed_capability_paths_obsolete_without_deleting_them(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target"
+            target.mkdir()
+            installer.apply_install(REPO_ROOT, target, "codex", "install")
+
+            state_path = target / ".agents/skills/codebase-wiki/install-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            retained: dict[str, bytes] = {}
+            for index, relative in enumerate(sorted(REMOVED_CAPABILITY_PATHS), 1):
+                content = f"locally retained obsolete capability {index}\n".encode()
+                retained[relative] = content
+                path = target / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+                state["files"][relative] = {
+                    "kind": "file",
+                    "sha256": hashlib.sha256(content).hexdigest(),
+                }
+            state_path.write_text(
+                json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            plan = installer.plan_install(REPO_ROOT, target, "codex", "upgrade")
+            self.assertEqual(set(plan["obsolete_paths"]), REMOVED_CAPABILITY_PATHS)
+
+            result = installer.apply_install(REPO_ROOT, target, "codex", "upgrade")
+            self.assertEqual(set(result["obsolete_paths"]), REMOVED_CAPABILITY_PATHS)
+            for relative, content in retained.items():
+                with self.subTest(relative=relative):
+                    self.assertEqual((target / relative).read_bytes(), content)
 
     def test_conflicting_target_file_blocks_apply(self) -> None:
         installer = load_installer()

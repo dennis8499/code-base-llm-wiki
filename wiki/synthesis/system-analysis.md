@@ -12,7 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_contracts.py
   - tests/test_wiki_lint.py
-source_digest: sha256:8042dc9aeb79ca1f8070da18dadac905a8448da35ba50d74826f2e7b3dae52dd
+source_digest: sha256:bedf4258b134ad65e82225c9d73e4225d81832ff38feaa98c1ab9c022adbbcc4
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
 last_updated: 2026-09-04
 tags: [synthesis, system-analysis, standards-aligned]
@@ -274,7 +274,7 @@ sequenceDiagram
 
 本系統把 codebase 知識持久化為人可讀、可版本控制的 Markdown Wiki，使 LLM 不必每次
 從原始碼重新合成相同背景。它涵蓋雙平台代理入口、安裝／升級、Wiki ingest/query/
-lint/ADR/guide/synthesis/SA、hooks 與離線 NotebookLM pack；不涵蓋 RAG runtime、
+lint/ADR/synthesis/BA/SA/SD、hooks 與離線 NotebookLM pack；不涵蓋 RAG runtime、
 自動雲端上傳或修改目標專案 raw sources。
 
 ## 讀者與利害關係人

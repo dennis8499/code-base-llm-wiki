@@ -2,7 +2,7 @@
 name: business-analysis-doc
 description: >
   基於 Codebase LLM Wiki 產生 standard-aligned BA 業務分析文件，保留人工註記並明列 Gap。
-agent: "wiki-keeper"
+agent: "agent"
 argument-hint: "可選：範圍，例如：整體系統、訂單取消、會員管理"
 ---
 

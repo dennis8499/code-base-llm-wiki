@@ -26,6 +26,7 @@ status: active
 | Path or prefix | Disposition | Functional requirements |
 | --- | --- | --- |
 | `.agents/skills/codebase-wiki/` | functional-evidence | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
+| `.agents/skills/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `.codex/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `.github/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `docs/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |

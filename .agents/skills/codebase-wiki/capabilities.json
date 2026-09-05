@@ -1,5 +1,5 @@
 {
-  "contract_version": 4,
+  "contract_version": 5,
   "surfaces": ["copilot", "codex"],
   "guard_modes": {
     "default": "wiki-only",
@@ -38,11 +38,6 @@
       "requires_confirmation": false,
       "authorization_policy": "explicit_request"
     },
-    "guide": {
-      "writes_by_default": true,
-      "requires_confirmation": false,
-      "authorization_policy": "explicit_request"
-    },
     "synthesis": {
       "writes_by_default": true,
       "requires_confirmation": false,
@@ -70,11 +65,6 @@
       "confirmation_stages": ["discovery_plan", "readiness_apply"],
       "audience": "business-analyst",
       "knowledge_contract": "business-knowledge-v1"
-    },
-    "delegation": {
-      "writes_by_default": false,
-      "requires_confirmation": false,
-      "authorization_policy": "explicit_delegation"
     }
   },
   "intent_groups": {
@@ -83,13 +73,12 @@
     "query": ["query"],
     "lint": ["lint"],
     "adr": ["adr"],
-    "synthesis_guide": ["synthesis", "guide"],
+    "synthesis": ["synthesis"],
     "business_analysis": ["business_analysis"],
     "system_analysis": ["system_analysis"],
     "system_design": ["system_design"],
     "notebooklm_export": ["notebooklm_export"],
-    "archaeology": ["archaeology"],
-    "delegation": ["delegation"]
+    "archaeology": ["archaeology"]
   },
   "entrypoints": {
     "copilot": {
@@ -99,13 +88,11 @@
       "lint": ["lint-wiki.prompt.md"],
       "archaeology": ["code-archaeology.prompt.md"],
       "adr": ["new-adr.prompt.md"],
-      "guide": ["save-guide.prompt.md", "onboarding-guide.prompt.md"],
       "synthesis": ["save-synthesis.prompt.md"],
       "business_analysis": ["business-analysis-doc.prompt.md"],
       "system_analysis": ["system-analysis-doc.prompt.md"],
       "system_design": ["system-design-doc.prompt.md"],
-      "notebooklm_export": ["export-notebooklm.prompt.md"],
-      "delegation": []
+      "notebooklm_export": ["export-notebooklm.prompt.md"]
     },
     "codex": {
       "recipe_document": "Codex.md"

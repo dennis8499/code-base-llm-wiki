@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import tomllib
 import unittest
 from pathlib import Path
@@ -13,21 +15,22 @@ REPO_ROOT = Path(__file__).parents[1]
 
 
 class ContractTests(unittest.TestCase):
-    def test_capability_manifest_declares_installer_contract_v4(self) -> None:
+    def test_capability_manifest_declares_installer_contract_v5(self) -> None:
         manifest = json.loads(
             (REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "capabilities.json").read_text(
                 encoding="utf-8"
             )
         )
 
-        self.assertEqual(manifest["contract_version"], 4)
+        self.assertEqual(manifest["contract_version"], 5)
         self.assertEqual(manifest["guard_modes"]["default"], "wiki-only")
         self.assertEqual(manifest["guard_modes"]["installed"], ["wiki-only", "coexist"])
         self.assertEqual(manifest["surfaces"], ["copilot", "codex"])
         self.assertIn("query", manifest["intents"])
         self.assertFalse(manifest["intents"]["query"]["writes_by_default"])
         self.assertEqual(manifest["intents"]["query"]["authorization_policy"], "read_only")
-        self.assertEqual(manifest["intents"]["delegation"]["authorization_policy"], "explicit_delegation")
+        self.assertNotIn("guide", manifest["intents"])
+        self.assertNotIn("delegation", manifest["intents"])
         self.assertEqual(
             manifest["intents"]["notebooklm_export"]["authorization_policy"],
             "preview_then_confirm",
@@ -40,8 +43,8 @@ class ContractTests(unittest.TestCase):
             manifest["intents"]["notebooklm_export"]["audience"],
             "business-analyst",
         )
-        self.assertEqual(len(manifest["intents"]), 13)
-        self.assertEqual(len(manifest["intent_groups"]), 12)
+        self.assertEqual(len(manifest["intents"]), 11)
+        self.assertEqual(len(manifest["intent_groups"]), 11)
         grouped = [
             operation
             for operations in manifest["intent_groups"].values()
@@ -51,7 +54,6 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(set(grouped), set(manifest["intents"]))
         for operation in (
             "adr",
-            "guide",
             "synthesis",
             "business_analysis",
             "system_analysis",
@@ -63,7 +65,9 @@ class ContractTests(unittest.TestCase):
                 manifest["intents"][operation]["authorization_policy"],
                 "explicit_request",
             )
-        self.assertFalse(manifest["intents"]["delegation"]["requires_confirmation"])
+        for surface in manifest["entrypoints"].values():
+            self.assertNotIn("guide", surface)
+            self.assertNotIn("delegation", surface)
         self.assertEqual(set(manifest["cli"]), {"install", "upgrade"})
         self.assertIn("install-framework.py install", manifest["cli"]["install"])
         self.assertIn("install-framework.py upgrade", manifest["cli"]["upgrade"])
@@ -306,12 +310,10 @@ class ContractTests(unittest.TestCase):
             ".agents/skills/codebase-wiki/references/business-analysis-workflow.md",
             ".agents/skills/codebase-wiki/references/system-analysis-workflow.md",
             ".agents/skills/codebase-wiki/references/system-design-workflow.md",
-            ".github/agents/wiki-query.agent.md",
             ".github/prompts/query-wiki.prompt.md",
             ".github/prompts/business-analysis-doc.prompt.md",
             ".github/prompts/system-analysis-doc.prompt.md",
             ".github/prompts/system-design-doc.prompt.md",
-            ".codex/agents/wiki-query.toml",
             "AGENTS.md",
             "Codex.md",
             "README.md",
@@ -349,11 +351,6 @@ class ContractTests(unittest.TestCase):
                 "must not connect to",
                 "current database state",
             ),
-            ".github/agents/wiki-query.agent.md": ("不連線即時資料庫", "未驗證 gap"),
-            ".codex/agents/wiki-query.toml": (
-                "do not connect to live databases",
-                "unverified gaps",
-            ),
         }
         for relative, required_tokens in boundaries.items():
             text = (REPO_ROOT / relative).read_text(encoding="utf-8").lower()
@@ -371,7 +368,6 @@ class ContractTests(unittest.TestCase):
             "follow-up-actions.md",
             "lint-checklist.md",
             "adr-workflow.md",
-            "guide-workflow.md",
             "synthesis-workflow.md",
             "business-analysis-workflow.md",
             "system-analysis-workflow.md",
@@ -398,6 +394,19 @@ class ContractTests(unittest.TestCase):
                         / filename
                     ).is_file()
                 )
+        self.assertFalse((reference_root / "guide-workflow.md").exists())
+        self.assertFalse(
+            (
+                REPO_ROOT
+                / ".agents"
+                / "skills"
+                / "codebase-wiki"
+                / "assets"
+                / "guide-template.md"
+            ).exists()
+        )
+        self.assertRegex(catalog, r"(?im)^\|\s*`guide`.*(?:legacy|read-only|唯讀)")
+        self.assertNotIn("`assets/guide-template.md`", catalog)
 
     def test_follow_up_action_contract_is_shared_by_both_surfaces(self) -> None:
         skill_root = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"
@@ -406,21 +415,17 @@ class ContractTests(unittest.TestCase):
         )
         for token in (
             "save-synthesis",
-            "save-guide",
             "reingest",
             "lint",
             "暫不處理",
             "Completion Criterion",
         ):
             self.assertIn(token, contract)
+        self.assertNotIn("save-guide", contract)
 
         adapters = (
             REPO_ROOT / ".github" / "prompts" / "query-wiki.prompt.md",
             REPO_ROOT / ".github" / "prompts" / "lint-wiki.prompt.md",
-            REPO_ROOT / ".github" / "agents" / "wiki-query.agent.md",
-            REPO_ROOT / ".github" / "agents" / "wiki-lint.agent.md",
-            REPO_ROOT / ".codex" / "agents" / "wiki-query.toml",
-            REPO_ROOT / ".codex" / "agents" / "wiki-lint.toml",
             REPO_ROOT / "Codex.md",
         )
         for path in adapters:
@@ -528,7 +533,6 @@ class ContractTests(unittest.TestCase):
                 "references/follow-up-actions.md",
                 "1–5",
                 "零寫入",
-                "零委派",
             ),
             "lint-wiki.prompt.md": (
                 "references/lint-checklist.md",
@@ -548,18 +552,6 @@ class ContractTests(unittest.TestCase):
                 "references/frontmatter-spec.md",
                 "wiki/index.md",
                 "wiki/log.md",
-            ),
-            "onboarding-guide.prompt.md": (
-                "references/guide-workflow.md",
-                "assets/guide-template.md",
-                "wiki/index.md",
-                "wiki/log.md",
-            ),
-            "save-guide.prompt.md": (
-                "references/guide-workflow.md",
-                "wiki/index.md",
-                "wiki/log.md",
-                "derived_from",
             ),
             "save-synthesis.prompt.md": (
                 "references/synthesis-workflow.md",
@@ -600,14 +592,8 @@ class ContractTests(unittest.TestCase):
                 with self.subTest(prompt=filename, token=token):
                     self.assertIn(token, text)
 
-    def test_copilot_prompt_metadata_resolves_to_explicit_agents(self) -> None:
-        agent_names = set()
-        for path in (REPO_ROOT / ".github" / "agents").glob("*.agent.md"):
-            text = path.read_text(encoding="utf-8")
-            match = re.search(r"(?m)^name:\s*[\"']?([^\"'\s]+)", text)
-            self.assertIsNotNone(match, path)
-            agent_names.add(match.group(1))
-
+    def test_copilot_prompt_metadata_uses_builtin_agent(self) -> None:
+        self.assertEqual(list((REPO_ROOT / ".github" / "agents").glob("*.agent.md")), [])
         for path in (REPO_ROOT / ".github" / "prompts").glob("*.prompt.md"):
             with self.subTest(prompt=path.name):
                 text = path.read_text(encoding="utf-8")
@@ -616,7 +602,7 @@ class ContractTests(unittest.TestCase):
                 self.assertRegex(text, r"(?m)^description:\s*\S+")
                 agent = re.search(r"(?m)^agent:\s*[\"']?([^\"'\s]+)", text)
                 self.assertIsNotNone(agent)
-                self.assertIn(agent.group(1), agent_names)
+                self.assertEqual(agent.group(1), "agent")
                 self.assertRegex(
                     text,
                     r"(?m)^argument-hint:\s*(?:\"[^\"]+\"|'[^']+'|\S.*)$",
@@ -705,56 +691,89 @@ class ContractTests(unittest.TestCase):
         self.assertIn(payload["coverage"]["status"], {"complete", "partial"})
         self.assertIn("uncovered_count", payload["coverage"])
 
-    def test_codex_config_and_read_only_agents_use_current_contract(self) -> None:
+    def test_codex_config_has_no_framework_agent_fanout(self) -> None:
         config = tomllib.loads(
             (REPO_ROOT / ".codex/config.toml").read_text(encoding="utf-8")
         )
-        agents = config["agents"]
-        self.assertEqual(agents["max_concurrent_threads_per_session"], 6)
-        self.assertNotIn("max_threads", agents)
-        for name in ("wiki-query", "wiki-lint", "wiki-archaeologist"):
-            agent = tomllib.loads(
-                (REPO_ROOT / ".codex/agents" / f"{name}.toml").read_text(encoding="utf-8")
-            )
-            self.assertEqual(agent["sandbox_mode"], "read-only")
+        self.assertNotIn("agents", config)
 
-    def test_copilot_read_only_agents_restrict_direct_mutation_and_handoff(self) -> None:
-        expected = {
-            "wiki-query.agent.md": {"read", "search"},
-            "wiki-lint.agent.md": {"execute", "read", "search"},
-            "wiki-archaeologist.agent.md": {"execute", "read", "search"},
-        }
-        for filename, tools in expected.items():
-            with self.subTest(agent=filename):
-                text = (REPO_ROOT / ".github" / "agents" / filename).read_text(
-                    encoding="utf-8"
-                )
-                match = re.search(r"(?m)^tools:\s*\[([^]]*)\]\s*$", text)
-                self.assertIsNotNone(match)
-                actual = {
-                    item.strip().strip("\"'")
-                    for item in match.group(1).split(",")
-                    if item.strip()
-                }
-                self.assertEqual(actual, tools)
-                self.assertNotIn("edit", actual)
-                self.assertNotIn("agent", actual)
-
-    def test_agents_are_explicit_delegation_only_and_compact(self) -> None:
+    def test_repo_custom_agent_profiles_are_absent(self) -> None:
         for directory, pattern in (
             (REPO_ROOT / ".codex" / "agents", "*.toml"),
             (REPO_ROOT / ".github" / "agents", "*.agent.md"),
         ):
-            for path in directory.glob(pattern):
-                with self.subTest(agent=path.name):
-                    text = path.read_text(encoding="utf-8")
-                    self.assertIn("Explicit delegation only.", text)
-                    self.assertLessEqual(len(text.splitlines()), 40)
-                    if path.suffix == ".md":
-                        self.assertRegex(
-                            text, r"(?m)^disable-model-invocation:\s*true\s*$"
-                        )
-                        self.assertRegex(text, r"(?m)^user-invocable:\s*true\s*$")
+            with self.subTest(directory=directory.relative_to(REPO_ROOT).as_posix()):
+                self.assertEqual(list(directory.glob(pattern)), [])
+
+    def test_parity_allows_unrelated_platform_native_agents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "repo"
+            shutil.copytree(
+                REPO_ROOT,
+                target,
+                ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc"),
+            )
+            copilot_agent = target / ".github" / "agents" / "project-review.agent.md"
+            codex_agent = target / ".codex" / "agents" / "project-review.toml"
+            copilot_agent.parent.mkdir(parents=True, exist_ok=True)
+            codex_agent.parent.mkdir(parents=True, exist_ok=True)
+            copilot_agent.write_text(
+                "---\nname: project-review\ndescription: Project-native reviewer\n"
+                "tools: [read, search]\n---\nReview this project.\n",
+                encoding="utf-8",
+            )
+            codex_agent.write_text(
+                'sandbox_mode = "read-only"\n'
+                'developer_instructions = "Review this project."\n',
+                encoding="utf-8",
+            )
+            config_path = target / ".codex" / "config.toml"
+            config = config_path.read_text(encoding="utf-8")
+            if "[agents]" not in config:
+                config += "\n[agents]\nmax_concurrent_threads_per_session = 2\n"
+                config_path.write_text(config, encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(
+                        target
+                        / ".agents"
+                        / "skills"
+                        / "codebase-wiki"
+                        / "scripts"
+                        / "parity-check.py"
+                    ),
+                ],
+                cwd=target,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_removed_guide_creator_resources_are_absent(self) -> None:
+        for relative in (
+            ".agents/skills/codebase-wiki/references/guide-workflow.md",
+            ".agents/skills/codebase-wiki/assets/guide-template.md",
+            ".github/prompts/onboarding-guide.prompt.md",
+            ".github/prompts/save-guide.prompt.md",
+        ):
+            with self.subTest(relative=relative):
+                self.assertFalse((REPO_ROOT / relative).exists())
+
+        exporter = (
+            REPO_ROOT
+            / ".agents"
+            / "skills"
+            / "codebase-wiki"
+            / "scripts"
+            / "notebooklm_exporter.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('if page_type == "guide":', exporter)
+        self.assertIn('return "project-guides"', exporter)
 
 
 if __name__ == "__main__":

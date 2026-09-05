@@ -63,9 +63,9 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
-| [[installer-and-upgrade]] | Installer v4 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD 資源 |
+| [[installer-and-upgrade]] | Installer v5 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD 資源 |
 | [[notebooklm-exporter]] | 以 schema v5、完整 codebase disposition、DLP masking 與 BA-only materialization 建立功能需求 source pack |
-| [[platform-adapters-and-release]] | 以 contract v4、Copilot 薄 adapters、Codex 既有實機證據、本機 parity 與手動發版維持雙平台框架 |
+| [[platform-adapters-and-release]] | 以 contract v5、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架 |
 | [[platform-hooks-and-guards]] | 共用 canonical hooks 以 Git-root 定位與三種 guard modes 維持跨 cwd 寫入邊界 |
 | [[wiki-quality-and-provenance]] | 以安全來源解析、內容摘要、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |
 

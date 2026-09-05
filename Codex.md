@@ -10,7 +10,7 @@ surfaces directly instead of Copilot slash prompt files.
 | ------------------------------- | ----------- | ------------------------------------------------------------- |
 | `AGENTS.md`                     | Yes         | Durable Codex project rules                                   |
 | `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, installer, references, templates, and helper scripts |
-| `.codex/`                       | Recommended | Hooks, config, and explicit-delegation custom agents          |
+| `.codex/`                       | Recommended | Hooks and framework guard configuration                       |
 | `wiki/`                         | Yes         | Generated knowledge base                                      |
 | `.github/`                      | Optional    | Keep only when the repo also supports GitHub Copilot          |
 
@@ -36,9 +36,8 @@ manually.
 1. Codex reads `AGENTS.md` before work starts.
 2. Wiki requests can trigger `$codebase-wiki` implicitly, or you can invoke it explicitly.
 3. The skill loads one branch reference and exact page asset only when needed.
-4. Most work should stay in the main agent.
-5. `.codex/agents/*.toml` are for explicit delegation, subagents, or parallel work.
-6. `.codex/hooks.json` runs after the project `.codex/` layer is trusted.
+4. The current agent performs the selected workflow under its authorization policy.
+5. `.codex/hooks.json` runs after the project `.codex/` layer is trusted.
 
 Queries use the Markdown Wiki directly. Read `wiki/index.md`, then 1–5 relevant
 pages, and inspect their listed raw sources only when the Wiki is insufficient,
@@ -56,8 +55,6 @@ remain explicit unverified gaps.
 | `/query-wiki {question}`       | `請先查 wiki，再必要時回溯 sources，回答：{question}`                                                                  |
 | `/lint-wiki`                   | `請依 AGENTS.md 的 lint 流程檢查 wiki 健康狀態，列出 critical 和 warning。`                                            |
 | `/new-adr {title}`             | `請建立一份 ADR：{title}，寫入 wiki/decisions/，並同步更新 index 與 log。`                                             |
-| `/onboarding-guide`            | `請根據目前 wiki 內容產出一份 onboarding guide，存到 wiki/guides/，並更新 index 與 log。`                              |
-| `/save-guide {topic}`          | `請把目前分析整理成 wiki/guides/{topic} 指南，標示來源、gap 與步驟，並更新 index 與 log。`                             |
 | `/save-synthesis {topic}`      | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。`                                        |
 | `/code-archaeology {target}`   | `請依 code archaeology 流程追蹤 {target} 的目前行為與 git history，清楚區分證據、推測與不確定性。`                     |
 | `/business-analysis-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned BA 文件，保留人工 notes、明列 Gap，並更新 index 與 log。` |
@@ -92,7 +89,7 @@ Wiki-first query:
 Query 若發現長期有價值的分析、Wiki stale/gap 或品質問題，會依
 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 顯示最多三個
 有原因的後續選項與「暫不處理」。選項只是建議；Query 不會自動寫入或
-Hand-Off。
+切換工作流程。
 
 Lint:
 
@@ -107,12 +104,6 @@ Code archaeology:
 
 ```text
 請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
-```
-
-Durable guide:
-
-```text
-請使用 $codebase-wiki，把這次排查流程整理成 wiki/guides/refund-debugging.md，寫清楚目標讀者、前置條件、步驟、常見問題與 gap，並更新 index 與 log。
 ```
 
 Business analysis document:
@@ -149,15 +140,9 @@ schema v5 manifest 與 upload plan。Raw code/config/traceability 不得上傳�
 retrieval contract 必須 full rebuild。Exporter 不呼叫雲端 API。
 ```
 
-Explicit delegation:
-
-```text
-請使用 delegation，把工作拆成兩條平行子任務：委派 wiki-ingest 分析 src/features/checkout/，委派 wiki-lint 做全站健康檢查，最後整合結果。
-```
-
 ## Hooks
 
-`.codex/config.toml` enables Codex hooks and keeps subagent fan-out bounded:
+`.codex/config.toml` enables Codex hooks and selects the framework guard mode:
 
 ```toml
 [features]
@@ -165,12 +150,6 @@ hooks = true
 
 [wiki_guard]
 mode = "framework" # installer chooses "wiki-only" or explicit "coexist"
-
-[agents]
-# Canonical setting; max_threads is a legacy alias.
-max_concurrent_threads_per_session = 6
-# Compatibility guard for Codex versions that expose V1 nesting limits.
-max_depth = 1
 ```
 
 `.codex/hooks.json` configures:
@@ -197,14 +176,12 @@ non-ASCII root paths intact.
 Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
 
-Read-only delegated roles (`wiki-query`, `wiki-lint`, and
-`wiki-archaeologist`) explicitly use `sandbox_mode = "read-only"`. The matching
-Copilot profiles do not expose direct `edit` or `agent` tools; lint and
-archaeology retain `execute` for read-only checks or Git history by instruction.
-Because Copilot `execute` is a shell capability, the instruction is not a
-technical write sandbox; host permissions must deny unapproved shell writes.
-Hook guards remain a defense-in-depth layer and do not replace platform sandbox
-or host permission controls.
+Query, Lint, and Archaeology retain their read-only or report-first boundaries
+through the shared capability and workflow contracts. Prompt metadata does not
+grant writes, and shell access is not a technical write sandbox; host
+permissions must deny unapproved shell writes. Hook guards remain a
+defense-in-depth layer and do not replace platform sandbox or host permission
+controls.
 
 Hook audit files are written to `.codex/hooks/logs/` when possible, with fallback
 to `.codex-hook-logs/`. Both paths should stay ignored by git. The complete hook

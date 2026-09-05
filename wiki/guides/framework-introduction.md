@@ -8,7 +8,7 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:77036f6bff9a42092f6e47666d70b102a9581856264eb61e05ecad78429aa485
+source_digest: sha256:c42d20db79db8e8caf339e3529c8b622a06f59583fb8bb69eef6a8158cf16c4f
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-09-04
 tags: [guide, onboarding, framework, copilot, codex]
@@ -19,7 +19,9 @@ notebooklm_role: traceability
 
 # Codebase LLM Wiki — 使用指南
 
-> 本指南提供框架使用者最短的安裝、操作與驗收路線。架構背景請先閱讀 [[overview]]。
+> 本頁是既有 `type: guide` 的 legacy 相容資料，仍可查詢、驗證與匯出；v5 不再
+> 提供新 Guide 建立流程。以下內容提供框架使用者最短的安裝、操作與驗收路線。
+> 架構背景請先閱讀 [[overview]]。
 
 ## 適用讀者
 
@@ -41,15 +43,15 @@ notebooklm_role: traceability
 
 | 需求 | 建議入口 | 安裝內容 |
 | --- | --- | --- |
-| VS Code Copilot agents、prompts、hooks | Copilot surface | `AGENTS.md`、`codebase-wiki` Skill、`.github/`、`wiki/` |
+| VS Code Copilot prompts、hooks | Copilot surface | `AGENTS.md`、`codebase-wiki` Skill、`.github/`、`wiki/` |
 | 其他 GitHub Copilot hosts | Copilot surface 的共用 Skill | 以自然語言使用 `.agents/skills/codebase-wiki/`；不依賴 VS Code prompt files |
 | Codex CLI、IDE、App、Cloud task | Codex surface | `AGENTS.md`、`Codex.md`、`codebase-wiki` Skill、`.codex/`、`wiki/` |
 | 同一 Repo 同時支援兩者 | 分別評估並合併兩種 surface | 共用 `.agents/` 與 `wiki/` |
 
 雙入口的能力相同，但平台 adapter 不相同。Codex 不使用 project-level slash prompts；
 Copilot prompt files 也不會被假裝成非 VS Code host 功能。Copilot 驗收標示為
-`static-compatible / runtime-unverified`；Codex CLI 0.152.1 已於 2026-09-03 完成
-六項 UAT 各 3/3，標示為 `runtime-verified`。
+`static-compatible / runtime-unverified`；Codex v5 也完成本機契約與 deterministic
+驗證，但尚未重跑 host runtime UAT。2026-09-03 的 v4 Codex evidence 只作歷史基線。
 
 ## 2. 先 Dry-run 再安裝
 
@@ -110,12 +112,10 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | Archaeology | Legacy、異常分支、歷史原因 | 預設唯讀 |
 | ADR | 保存架構選擇 | decision + index + `adr` log |
 | Synthesis | 保存跨模組分析 | synthesis + index + log |
-| Guide | 保存 setup/runbook/onboarding | guide + index + log |
 | Business Analysis / BA | 業務問題、現況／目標、能力、流程、規則、成功指標與 change impact | synthesis + index + log |
 | System Analysis / SA | solution-neutral 邊界、needs、SR/NFR/IF 與 verification needs | synthesis + index + log |
 | System Design / SD | concerns/viewpoints、決策、元件、runtime、資料、介面、部署、安全與品質策略 | synthesis + index + log |
 | NotebookLM export | 全量盤點 codebase 並重建 FR/AC、流程、規則、詞彙與 gaps | BA-only 文件、`.notebooklm/`、schema v5 manifest、upload plan；不自動上傳 |
-| Delegation | 使用者明確要求專業代理 | 不擴張原任務權限 |
 
 完整提示詞與輸出契約位於 `docs/workflows/README.md`。
 
@@ -193,7 +193,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 
 ## 8. E2E 樣例
 
-`samples/task-tracker/` 包含 `TaskItem`、Repository pattern、設定載入、狀態轉換、錯誤分支與 injected clock。依 `samples/README.md` 複製到暫存目錄後，兩平台各重複三次 Query、Interactive Ingest、Lint 與 Delegation 情境。
+`samples/task-tracker/` 包含 `TaskItem`、Repository pattern、設定載入、狀態轉換、錯誤分支與 injected clock。依 `samples/README.md` 複製到暫存目錄後，可對五個 active 情境執行隔離驗收。
 
 驗收不比較 Agent 文字是否完全相同，而是確認：
 
@@ -209,7 +209,6 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 - **把 Query 當成全文 source scan**：必須先查 Wiki。
 - **要求 Query 連線即時資料庫**：Query 只讀 Wiki 與 Repo sources；需要目前資料庫狀態時標示 gap，不呼叫資料庫工具或 fallback。
 - **遇到 conflicts 使用覆寫**：Installer 沒有 force；應人工合併。
-- **未要求就啟用 delegation**：日常任務應由目前 Agent 完成。
 - **把既有 Wiki 當成 NotebookLM 掃描邊界**：export 每次都要重掃安全的全專案範圍，才能發現新增、刪除與未被 Wiki 覆蓋的功能。
 - **把 NotebookLM 當成自動同步服務**：本流程只產生本機 pack 與 diff plan，必須由使用者手動更新 NotebookLM。
 - **修正 log 時重寫歷史**：`wiki/log.md` 永遠只能追加。
@@ -226,7 +225,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 ## 相關頁面
 
 - [[overview]] — 框架定位、產品結構與核心設計
-- [[installer-and-upgrade]] — v4 managed blocks、manifest 與 atomic apply
+- [[installer-and-upgrade]] — v5 managed blocks、manifest 與 atomic apply
 - [[platform-hooks-and-guards]] — 三種 guard mode 與跨平台 hook contract
 - [[business-analysis]] — 業務分析與 BA traceability
 - [[system-analysis]] — solution-neutral 系統分析與 verification needs

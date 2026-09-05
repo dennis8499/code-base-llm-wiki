@@ -2,9 +2,8 @@
 name: codebase-wiki
 description: >
   Operate a persistent, wiki-first Markdown knowledge base. Use for framework
-  install or maintenance, ingest, query, lint, ADR, guide, synthesis, system
-  analysis, business analysis, system design, code archaeology, or explicit
-  wiki delegation.
+  install or maintenance, ingest, query, lint, ADR, synthesis, system analysis,
+  business analysis, system design, or code archaeology.
 ---
 
 # Codebase LLM Wiki
@@ -25,7 +24,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | --- | --- |
 | Install or upgrade | `references/install-workflow.md` |
 | Framework maintenance | `references/framework-maintenance.md` |
-| Intent routing and delegation boundaries | `references/intent-routing.md` |
+| Intent routing | `references/intent-routing.md` |
 | NotebookLM Enterprise export | `references/notebooklm-export-workflow.md` |
 | Ingest sequence, page creation rules, dependency ordering | `references/ingest-workflow.md` |
 | Wiki-first query and citations | `references/query-workflow.md` |
@@ -35,7 +34,6 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Allowed `wiki/log.md` operations and append format | `references/log-operations.md` |
 | Page-type selection and exact template | `references/page-types.md` |
 | ADR creation and numbering | `references/adr-workflow.md` |
-| Durable guide creation | `references/guide-workflow.md` |
 | Durable synthesis creation | `references/synthesis-workflow.md` |
 | BA document generation, business coverage, gap handling | `references/business-analysis-workflow.md` |
 | Solution-neutral SA requirements and verification needs | `references/system-analysis-workflow.md` |
@@ -68,8 +66,6 @@ deterministic checks instead of reimplementing parsing in prose.
 - **Linked Wiki:** Use `[[page-name]]` and backticked source paths.
 - **Preserved authorship:** Update around user-authored notes.
 - **Append-only log:** Existing `wiki/log.md` entries remain unchanged.
-- **Explicit delegation:** Custom agents run only when the user explicitly asks
-  for delegation, subagents, parallel work, or a named Wiki agent.
 
 ## Wiki Update Rules
 
@@ -86,8 +82,7 @@ append one operation from `references/log-operations.md`.
 - explicit batch ingest: scoped Wiki writes authorized;
 - query and default archaeology: read-only;
 - lint: report, then confirm repairs;
-- ADR, guide, synthesis, BA, SA, and SD: explicit creation request authorizes output;
-- delegation: explicit request only.
+- ADR, synthesis, BA, SA, and SD: explicit creation request authorizes output.
 
 ## Verification
 

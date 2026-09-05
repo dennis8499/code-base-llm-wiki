@@ -3,7 +3,7 @@ name: export-notebooklm
 description: >
   全量掃描安全 codebase，重新萃取 FR/AC、流程與規則，產生符合
   NotebookLM Enterprise 限制且不含 raw evidence 的繁中 BA-only source pack。
-agent: "wiki-keeper"
+agent: "agent"
 argument-hint: "可選：匯出範圍；預設為整個目前專案"
 ---
 

@@ -23,16 +23,12 @@ knowledge over time.
 
 ## Routing
 
-Use `$codebase-wiki` for install, ingest, query, lint, ADR, guide, synthesis,
+Use `$codebase-wiki` for install, ingest, query, lint, ADR, synthesis,
 business analysis, solution-neutral system analysis, system design, NotebookLM
 export, archaeology, Wiki maintenance, or framework maintenance.
 Classify the branch with
 `.agents/skills/codebase-wiki/references/intent-routing.md` and load its exact
 reference before acting.
-
-Custom agents under `.codex/agents/` are explicit-delegation surfaces. Normal
-requests stay with the current agent; use custom agents only when the user asks
-for delegation, subagents, parallel work, or a named Wiki agent.
 
 ## Durable Invariants
 

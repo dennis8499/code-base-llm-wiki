@@ -1,7 +1,7 @@
 # Codebase LLM Wiki
 
 Use `$codebase-wiki` at `.agents/skills/codebase-wiki/` for install, ingest,
-query, lint, ADR, guide, synthesis, business analysis, solution-neutral system
+query, lint, ADR, synthesis, business analysis, solution-neutral system
 analysis, system design, NotebookLM export, archaeology, or Wiki maintenance. Load its `SKILL.md`, classify the request with
 `references/intent-routing.md`, and read the selected workflow completely.
 
@@ -18,8 +18,5 @@ authorization.
 - Preserve user-authored notes and keep `wiki/log.md` append-only.
 - Synchronize `wiki/index.md` for page additions, removals, renames, or major
   updates, and append one valid log operation for durable Wiki changes.
-- Use custom Wiki agents only when the user explicitly requests delegation or
-  parallel work.
-
 After changes, run the workflow's deterministic checks and report changed
 Wiki/schema files, index/log coupling, check results, and unresolved gaps.

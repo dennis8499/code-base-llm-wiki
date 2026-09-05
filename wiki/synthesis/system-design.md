@@ -12,7 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:72720e2983540bb39718683fea3ee7de23f21ac14d0538aa0d33c074003a35a0
+source_digest: sha256:977828b9a164c01ecb3bae36e7d8aa725c79089a2724128c0af6509251a07916
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
 last_updated: 2026-09-04
 tags: [synthesis, system-design, standards-aligned]
@@ -33,7 +33,7 @@ status: active
 | Owner／Reviewer | Project owner（待具名）／framework maintainer |
 | 標準 Profile | `system-design-aligned-v1` |
 | 文件狀態／Coverage | active / partial |
-| 變更摘要 | 新增共享 profile、BA/SD workflows、重整 SA，擴充 v4 contract 與 regression gates |
+| 變更摘要 | 新增共享 profile、BA/SD workflows、重整 SA；目前 capability contract 為 v5 |
 
 > 本文件為 standard-aligned，不代表 conformance。IEEE 1016-2009 只作
 > inactive-reserved／informative 的歷史 SDD 組織參考；architecture-description
@@ -43,7 +43,7 @@ status: active
 
 設計沿用框架既有「共享 Skill 是 canonical contract、平台檔案是薄 adapters、Wiki 是
 durable output」架構。新增一份 versioned standards reference，BA／SA／SD 各有獨立
-workflow/template；capabilities v4 對兩平台公開 13 operations／12 groups。現有
+workflow/template；capabilities v5 對兩平台公開 11 operations／11 groups。現有
 frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只作最小擴充，
 不新增 runtime generator 或 dependency。
 
@@ -123,16 +123,16 @@ frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只�
 | `analysis-document-standards.md` | profiles、edition、layer、coverage、ID/marker/diagram contract | three profile IDs | official standards references | `SR-DOC-003/004/005` / `DE-DOC-001` |
 | Three workflow references | routing、source order、coverage、persistence/completion | BA/SA/SD workflow contracts | standards ref + exact template | `SR-DOC-001`–`007` / `DE-DOC-002` |
 | Three templates | document shape and regeneration regions | frontmatter + managed/user/local blocks | workflow/profile | `SR-DOC-002`–`006` / `DE-DOC-002/003/006` |
-| Capability manifest / parity | operations、intent groups、authorization、entrypoint mapping | contract v4 | platform prompts/recipes | `IF-DOC-001` / `DE-DOC-002` |
+| Capability manifest / parity | operations、intent groups、authorization、entrypoint mapping | contract v5 | platform prompts/recipes | `IF-DOC-001` / `DE-DOC-002` |
 | Frontmatter validator | optional metadata value validation and compatibility | profile/coverage values | parser/tests | `NFR-DOC-002/005` / `DE-DOC-003` |
-| Installer | distribute shared skill and selected platform adapters | install state v4; starter only on install | framework surface | `NFR-DOC-002` / `DE-DOC-007` |
+| Installer | distribute shared skill and selected platform adapters | install state v5; starter only on install | framework surface | `NFR-DOC-002` / `DE-DOC-007` |
 | NotebookLM exporter | select business pages, strip local-only, preserve schema v5 | required docs and source pack | Wiki frontmatter | `IF-DOC-003` / `DE-DOC-005` |
 | Framework Wiki | dogfood BA/SA/SD and traceability evidence | requirements/process/rules/synthesis/index/log | all above | `SR-DOC-007` |
 
 ```mermaid
 flowchart TB
     User[User / Author] --> Entry[Copilot prompts or Codex recipes]
-    Entry --> Manifest[capabilities.json v4]
+    Entry --> Manifest[capabilities.json v5]
     Manifest --> Workflows[BA / SA / SD workflows]
     Standards[Shared standards profiles] --> Workflows
     Templates[BA / SA / SD templates] --> Workflows

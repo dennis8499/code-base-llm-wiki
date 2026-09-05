@@ -14,7 +14,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/assets/system-design-template.md
   - .github/prompts/system-design-doc.prompt.md
-source_digest: sha256:b6b4b1a37e73d8d34ac122e16acb4219df732317f626f2084bca5bb40137e0d9
+source_digest: sha256:49572a9ffc124eb16e4eb319e34f9993e16474bfc59fa1a411f518cc9b9598f3
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[system-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]"]
 last_updated: 2026-09-04
 tags: [business-requirement, system-design, standards-aligned, notebooklm]

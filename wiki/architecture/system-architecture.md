@@ -10,7 +10,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:781e001862f71f5187964a8b154845c3f64e244b8fdfed4bea1013fba486fa8a
+source_digest: sha256:7e52dc1285265a2125451722997d8ef8f902abfa1c750b8ec723229879682044
 derived_from: ["[[overview]]"]
 last_updated: 2026-09-04
 tags: [architecture, framework, data-flow, safety]
@@ -22,8 +22,8 @@ status: active
 ## Overview
 
 系統採三層模型：目標專案原始來源是唯讀證據、`wiki/` 是可持續累積的知識層、
-`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十三個 machine
-operations、十二個 intent groups 與 authorization policy 由
+`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十一個 machine
+operations、十一個 intent groups 與 authorization policy 由
 `.agents/skills/codebase-wiki/capabilities.json` 描述，詳細流程由 Skill references
 按意圖載入。[[installer-and-upgrade]] 負責把共用規格及選定平台入口安裝到目標 Repo。
 
@@ -32,7 +32,7 @@ operations、十二個 intent groups 與 authorization policy 由
 | 元件 | 職責 | 證據 |
 | --- | --- | --- |
 | Skill 與 references | 意圖路由、授權、不變量、完成條件 | `.agents/skills/codebase-wiki/SKILL.md` |
-| Installer v4 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
+| Installer v5 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |

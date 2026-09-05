@@ -17,8 +17,8 @@ Questions that require current database state remain explicit unverified gaps.
 5. When the result meets the eligibility rules, append the bounded
    recommendation block from `follow-up-actions.md`.
 
-The recommendation block suggests a separate operation; it does not write,
-delegate, or hand off automatically. Persistence remains an explicit operation.
+The recommendation block suggests a separate operation; it does not write or
+enter another workflow automatically. Persistence remains an explicit operation.
 
 ## Completion Criterion
 

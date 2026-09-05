@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與手動 Release
 type: module
-summary: 以 contract v4、Copilot 薄 adapters、Codex 既有實機證據、本機 parity 與手動發版維持雙平台框架
+summary: 以 contract v5、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -10,7 +10,7 @@ sources:
   - tests/test_contracts.py
   - tools/release.py
   - docs/releases/README.md
-source_digest: sha256:5106c3128e433445f5e562400ec5e46e6c95d5d039b0f39c70983e537082d184
+source_digest: sha256:896a6aa2cb7b7a0b15394234db170a817b7e1384379ad074a365b88c2941d8c1
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-04
 tags: [module, adapters, validation, release, parity]
@@ -21,34 +21,33 @@ status: active
 
 ## 職責
 
-- 維持 Copilot prompts/agents/hooks 與 Codex recipes/agents/hooks 的共同 intent、
+- 維持 Copilot prompts/hooks 與 Codex recipes/hooks 的共同 intent、
   authorization 與 completion contract。
-- 以 `capabilities.json` contract version 4 描述十三個 operations／十二個 intent groups；
+- 以 `capabilities.json` contract version 5 描述十一個 operations／十一個 intent groups；
   BA／SA／SD 與既有操作的
   名稱與 authorization policy 不因平台 adapter 改變。
 - 將 Copilot `.github/prompts/` 限定為 VS Code 本機 Agent 入口；其他 Copilot
   hosts 直接使用 `.agents/skills/codebase-wiki/`。
-- Copilot custom agents 都是 `user-invocable: true`、
-  `disable-model-invocation: true`，保留最小 tools，避免模型隱性委派。
+- 所有保留的 Copilot prompts 使用 built-in `agent` metadata；框架不發佈
+  Repo-local Wiki agent profiles。
 - 共用 Query workflow 與雙平台代理只接受 Wiki／Repo source evidence；即時資料庫存取、
   資料庫工具及 fallback 由 parity 與 contract regression 明確禁止。
-- Copilot 只宣告 `static-compatible / runtime-unverified`。Codex CLI 0.152.1 已於
-  2026-09-03 完成六項情境各 3/3、raw hashes 不變且 deterministic gates 全通過，
-  因此目前狀態為 `runtime-verified`。
+- Copilot 與 Codex v5 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
+  尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到 v5。
 - 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，
   手動執行 `gh release create`。
 - 在專案擁有者選定 LICENSE 前阻擋公開 release；本次維護不改版號、不發版。
 
 ## Evidence
 
-- `parity-check.py` 驗證 contract 4、十三項 operation mapping、prompt coupling、prompt metadata、agent
-  reference、手動委派旗標、最小工具權限、即時資料庫能力保持移除、Codex
+- `parity-check.py` 驗證 contract 5、十一項 operation mapping、prompt coupling、built-in
+  prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
   root-resolved hooks，並要求 Repo 不含 GitHub workflow YAML。
 - Copilot prompts（含新增 BA／SD 與保留 SA 入口）是連結 authoritative workflow 的薄
   adapter，不複製完整規則；
-  Interactive/Batch authorization 與 Query/Lint/Archaeology/Guide completion coupling
+  Interactive/Batch authorization 與 Query/Lint/Archaeology completion coupling
   都由 `tests/test_contracts.py` 固定。
-- Codex 的 18 個有效 Task Tracker fixture runs 保存 JSONL tool events、前後 hashes、
+- Codex v4 的 18 個歷史 Task Tracker fixture runs 保存 JSONL tool events、前後 hashes、
   Git 狀態、情境 assertions 與 deterministic outputs；受修復影響的情境皆捨棄首輪
   結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。
 - 本機驗證以 Python 3.11 與 3.14 執行 unit、compile、parity、frontmatter、stale、
@@ -62,8 +61,7 @@ status: active
 
 - `VERSION=0.2.0` 代表目前產品版號，不代表已取得 LICENSE 或已有可公開的
   `v0.2.0` 資產。
-- 靜態 contract 相容不能當作 Copilot runtime 驗收；Codex 的
-  `runtime-verified` 也只適用於上述版本、日期與已保存的六項驗收矩陣，不能外推為
+- 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v5 或
   未測 host/version 的保證。
 
 ## Inferences

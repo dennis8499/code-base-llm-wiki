@@ -3,7 +3,7 @@ name: query-wiki
 description: >
   查詢 Codebase Wiki——搜尋知識庫回答關於 codebase 的問題，
   必要時回溯原始碼驗證，並保持唯讀。
-agent: "wiki-query"
+agent: "agent"
 argument-hint: "你想問的 codebase 問題，例如：登入流程在哪裡實作？"
 ---
 
@@ -16,4 +16,4 @@ argument-hint: "你想問的 codebase 問題，例如：登入流程在哪裡實
 contradiction 與 gap。
 
 只有 shared contract 判定 eligible 時才提供最多三個有理由的後續選項。
-本 Query 零寫入、零委派、零自動 Hand-Off。
+本 Query 零寫入、零自動切換工作流程。

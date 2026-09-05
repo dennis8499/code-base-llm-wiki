@@ -3,7 +3,7 @@ name: system-analysis-doc
 description: >
   基於 Codebase LLM Wiki 產生 solution-neutral、standard-aligned SA 系統分析文件，
   建立可驗證需求並明列 Gap。
-agent: "wiki-keeper"
+agent: "agent"
 argument-hint: "可選：補充範圍，例如：整體系統、src/auth/、結帳流程"
 ---
 

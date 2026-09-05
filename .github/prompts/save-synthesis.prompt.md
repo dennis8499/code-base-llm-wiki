@@ -3,7 +3,7 @@ name: save-synthesis
 description: >
   將當前對話中的分析結果存入 wiki/synthesis/——互動式引導命名、
   選擇分類，產出結構化 synthesis 頁面並更新索引。
-agent: "wiki-keeper"
+agent: "agent"
 argument-hint: "可選：補充分析主題名稱，例如：登入流程跨模組依賴分析"
 ---
 

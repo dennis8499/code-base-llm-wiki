@@ -3,7 +3,7 @@ name: ingest-batch
 description: >
   批次攝入整個目錄到 wiki——掃描指定路徑下所有模組，
   按依賴順序批次產出 wiki 頁面，最終產出完整摘要報告。
-agent: "wiki-ingest"
+agent: "agent"
 argument-hint: "目標路徑，例如：src/、services/ 或 packages/core"
 ---
 

@@ -8,7 +8,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
-source_digest: sha256:7f79323b0ce6a8e7c571911e55279856660889ddc3cb3ef3d4f2b5d468db624e
+source_digest: sha256:39ee7df3eaffb7439e9976d2daaa1300f4ffb28de954c34cd5c3f5e36428f72e
 derived_from: []
 last_updated: 2026-09-04
 tags: [framework, business-knowledge, wiki, notebooklm]
@@ -79,7 +79,7 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 preflight 與第二次確認，最後產生本地 pack。相關約束見
 [[ba-knowledge-precedes-traceability]] 與 [[readiness-preflight-required]]。
 
-框架也支援一般 Ingest、Query、Lint、Archaeology、ADR、Synthesis 與 Guide；這些
+框架也支援一般 Ingest、Query、Lint、Archaeology、ADR 與 Synthesis；這些
 能力的工程入口與治理細節保留在 [[project-function-catalog]] 與
 [[framework-introduction]]。Query
 只使用 Wiki 與 Repo source evidence，不連線即時資料庫或呼叫資料庫工具 fallback。

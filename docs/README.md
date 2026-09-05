@@ -7,7 +7,7 @@
 ## 建議閱讀順序
 
 1. [安裝與升級](setup/README.md)：確認前置需求、平台 surface、guard mode 與升級行為。
-2. [工作流手冊](workflows/README.md)：了解 Ingest、Query、Lint、ADR、Guide、Synthesis、標準對齊 BA／SA／SD 與 NotebookLM export。
+2. [工作流手冊](workflows/README.md)：了解 Ingest、Query、Lint、ADR、Synthesis、標準對齊 BA／SA／SD 與 NotebookLM export。
 3. [架構與資料流](architecture/README.md)：理解共用 Skill、Copilot/Codex adapters、Hooks、Installer 與 Wiki 的關係。
 4. [驗證手冊](validation/README.md)：執行單元測試、parity、Wiki quality checks 與 E2E 樣例驗收。
 5. [版本、發佈與更新契約](releases/README.md)：管理 `VERSION`、GitHub Release、checksums 與 update manifest。

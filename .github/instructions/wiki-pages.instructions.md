@@ -31,7 +31,7 @@ description: "Applies when editing any markdown file under the wiki/ directory. 
 ## Coupled Updates
 
 - Page add, delete, rename, or major update synchronizes `wiki/index.md`.
-- Ingest, accepted lint repair, ADR, guide, synthesis, system analysis,
+- Ingest, accepted lint repair, ADR, synthesis, system analysis,
   archaeology persistence, or major update appends one valid log operation.
 
 Complete the edit only when frontmatter validation passes, wikilinks resolve or

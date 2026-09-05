@@ -6,12 +6,11 @@ the result suggests a useful, independent next operation.
 ## Purpose
 
 The recommendation block improves discoverability without changing the
-authorization model. It is a text-based cross-platform hand-off: the agent
-suggests an action, the user selects it, and the selected workflow applies its
-own write and confirmation rules.
+authorization model. The current agent suggests an action, the user selects it,
+and the selected workflow applies its own write and confirmation rules.
 
 Query remains read-only until the user selects a follow-up. The agent must not
-automatically write, invoke another agent, or hand off to a different workflow.
+automatically write or enter a different workflow.
 
 ## Eligibility
 
@@ -21,8 +20,7 @@ Offer a recommendation block only when at least one condition is true:
 
 - The answer combines evidence across modules or sources and has durable
   explanatory value.
-- The answer contains a reusable procedure, debugging sequence, runbook, or
-  onboarding path.
+- The answer contains reusable cross-cutting analysis worth preserving.
 - The Wiki has a stale source, missing page, unresolved contradiction, or
   evidence gap that the answer materially exposes.
 - The answer identifies a broken link, frontmatter, orphan, index, or coverage
@@ -63,10 +61,9 @@ selects a choice.
 | Canonical action ID | User-facing action | Existing operation | Default target | Authorization |
 | --- | --- | --- | --- | --- |
 | `save-synthesis` | 保存為 Wiki Synthesis | `synthesis` | `wiki/synthesis/` | User selection is an explicit creation request; report target and sources. |
-| `save-guide` | 保存為操作 Guide | `guide` | `wiki/guides/` | User selection is an explicit creation request; report target and sources. |
 | `reingest` | 更新 Wiki／重新 Ingest | `ingest` | Relevant Wiki pages | Use Interactive Ingest preview, then wait for confirmation before writing. |
 | `lint` | 執行 Wiki Lint | `lint` | `wiki/` | Initial pass is read-only; repairs require confirmation. |
-| `none` | 暫不處理 | none | none | No file, agent, index, or log state changes. |
+| `none` | 暫不處理 | none | none | No file, index, or log state changes. |
 
 All durable writes retain the normal coupling rules: update `wiki/index.md`
 when page navigation changes, preserve existing user-authored content, and use
@@ -78,4 +75,4 @@ does not append a log entry.
 The recommendation contract is satisfied when an eligible Query or Lint result
 contains a reasoned, bounded action block; an ineligible result remains concise;
 each selected action enters the matching existing workflow; and no action is
-executed or delegated implicitly.
+executed implicitly.

@@ -3,7 +3,7 @@ name: code-archaeology
 description: >
   追蹤 legacy 行為、欄位、功能或設計決策的 git history 與目前程式路徑，
   產出 evidence-first 考古報告，必要時保存到 wiki。
-agent: "wiki-archaeologist"
+agent: "agent"
 argument-hint: "要追蹤的功能、欄位、路由或問題，例如：discount_code 為什麼存在"
 ---
 

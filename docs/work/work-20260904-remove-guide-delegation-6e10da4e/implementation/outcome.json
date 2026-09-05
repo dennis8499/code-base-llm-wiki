@@ -1,0 +1,395 @@
+{
+  "bug": null,
+  "bug_verification_ref": null,
+  "changes": [
+    {
+      "path": ".agents/skills/codebase-wiki/SKILL.md",
+      "sha256": "e744ee5fdd1f7560d38ddb031b76c76a5119baad493c9ba76c041b0bde47e703",
+      "summary": "Removes active Guide/delegation workflow material and updates framework routing or compatibility rules."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/assets/target-agents-block.md",
+      "sha256": "355446bfff4a420be89863d7113cd5bd27f63d1790acc1c472b2cbc743306966",
+      "summary": "Removes active Guide/delegation workflow material and updates framework routing or compatibility rules."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/capabilities.json",
+      "sha256": "4acbd0dd896d4c73ab814827bef4129a3af24630d54075a60f77dd0711d624c3",
+      "summary": "Publishes the v5 active capability contract without Guide creation or Explicit Delegation."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/references/follow-up-actions.md",
+      "sha256": "7feee485a8cab4a9975802c1626bfb671e09f45b28c116656ea1ec8b16c2d90a",
+      "summary": "Removes active Guide/delegation workflow material and updates framework routing or compatibility rules."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/references/intent-routing.md",
+      "sha256": "d03f3527fb03061af8156321b8eee721e22cbfaa729bbb8312e79c77b41ed965",
+      "summary": "Removes active Guide/delegation workflow material and updates framework routing or compatibility rules."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/references/log-operations.md",
+      "sha256": "4df32921aa21afde949026615d619d7122bebdcf55304989467f920d0bc2b990",
+      "summary": "Removes active Guide/delegation workflow material and updates framework routing or compatibility rules."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/references/page-types.md",
+      "sha256": "24416b92890c2109cddb13dfe9508aaaf50dc6043c855f508ca3a283b80d8758",
+      "summary": "Removes active Guide/delegation workflow material and updates framework routing or compatibility rules."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/references/query-workflow.md",
+      "sha256": "0b3a3ac1284cadcdd0048a4cda1c479a53aac7987d6d7fe3db60c6ebf54a167f",
+      "summary": "Removes active Guide/delegation workflow material and updates framework routing or compatibility rules."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/scripts/install-framework.py",
+      "sha256": "90bf00e2ce74f453da1159f9138bff1bcbbf5acc006c880df7fb135bf3d40d90",
+      "summary": "Makes fresh installs omit retired paths and upgrades report them obsolete without deletion."
+    },
+    {
+      "path": ".agents/skills/codebase-wiki/scripts/parity-check.py",
+      "sha256": "850b53c464f7d542e7be7ab7a9bb76c093c014213e50febfead3dbb99e288449",
+      "summary": "Enforces only retired framework signatures while allowing unrelated native platform agents."
+    },
+    {
+      "path": ".codex/config.toml",
+      "sha256": "13a0a8277973e612c5b9e9864148bf6e0bcdab719666dbecfffc3529b50d6bb4",
+      "summary": "Removes the framework-owned Codex delegation fan-out configuration."
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "sha256": "91f1aded017ab8d6c8f79ce1787aafb11e944d5c86f776a9aa4bc6df26c893ec",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/instructions/wiki-pages.instructions.md",
+      "sha256": "57ed2e7f2f8f9a0da90724dceb7770fef86999dd205d2071ae75af30ea399c0b",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/business-analysis-doc.prompt.md",
+      "sha256": "8eabef8663626f7e025f0a8f56e64299f14ee4060627217d5068de4193fc6646",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/code-archaeology.prompt.md",
+      "sha256": "a9fc845cbfe282b81ce4639adb16e88c3cf705b5f0752438fad982686b02f28d",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/export-notebooklm.prompt.md",
+      "sha256": "dba9aff545c959836733ba8b1965753924bbd0faa621766034e5cfaac72a6442",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/ingest-batch.prompt.md",
+      "sha256": "e54fa06207ddf0f1df82255589c068d825079db2e90442d35928d0c1b401cfe6",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/ingest-module.prompt.md",
+      "sha256": "c1b043027956820794616f8cb45220d30851951a81f819abc706b935a9857525",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/lint-wiki.prompt.md",
+      "sha256": "d5251315e64e25f73df5b72174537c2712f5bae5813f5aaef43c9ff34e688219",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/new-adr.prompt.md",
+      "sha256": "e13c9aa0207494a27922b1c187409878683a6ff0a1daff8440200840c701fbab",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/query-wiki.prompt.md",
+      "sha256": "a53078572295df33cda06cf2b152492d14e0b5bd82a3d4aed6a4ddaf6daf92ac",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/save-synthesis.prompt.md",
+      "sha256": "2290e8bb2915e85ae882c9ae9ef596450edff1870c505b0fc5fd2a6e8bf702bb",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/system-analysis-doc.prompt.md",
+      "sha256": "b6a8f92d4bf2b6493308514183d86c89d90cb92f28bf5adacf258a8fb4e42560",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/system-design-doc.prompt.md",
+      "sha256": "2cd18732892708a2bd58d1449dc82344d7da49530ad436ea82ee4f6e0346a4b8",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": ".github/prompts/update-index.prompt.md",
+      "sha256": "8014f4eda2f4da3563445f155f9392d34820ab84ba2e64b65b40335171af206c",
+      "summary": "Removes retired Guide/delegation entry points and keeps retained Copilot workflows on the built-in agent."
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "fdc378ba84fe11daa5bef21e06d4d030e88a1f956f11fc240504fc69ebc1d0ce",
+      "summary": "Removes active Explicit Delegation guidance while preserving native host-agent scope."
+    },
+    {
+      "path": "ChangeLog.md",
+      "sha256": "e6b1619300b56ddf24cd1c492f79e5ecf5d635dc3ff2112352325f8b7e78756d",
+      "summary": "Records the breaking active-surface removal and compatibility behavior."
+    },
+    {
+      "path": "Codex.md",
+      "sha256": "8e6d0f658a86dcb7e6411a569bf6efcdaf5a1e4a47d29645d84069adbcbc6f4b",
+      "summary": "Removes active Explicit Delegation guidance while preserving native host-agent scope."
+    },
+    {
+      "path": "README.md",
+      "sha256": "b9cc48cc0c405a9711116f533f6dc4b550033c36c730f9a7874300463c1dc8ed",
+      "summary": "Updates public framework documentation to match the v5 active capability surface."
+    },
+    {
+      "path": "docs/README.md",
+      "sha256": "067029e3fabea9371a8c98b0f591fbf6c507cfe53299f8c3870886a4175a53ec",
+      "summary": "Updates public framework documentation to match the v5 active capability surface."
+    },
+    {
+      "path": "docs/architecture/README.md",
+      "sha256": "29fe23fec1b9243d10b70289365f49b506c8f73e43c01df00809353ce4dc6571",
+      "summary": "Updates public framework documentation to match the v5 active capability surface."
+    },
+    {
+      "path": "docs/setup/README.md",
+      "sha256": "450dbbef8e32daf2c3cbebf76198820eeca62d1f14e25db1d1182bff97e08b1c",
+      "summary": "Updates public framework documentation to match the v5 active capability surface."
+    },
+    {
+      "path": "docs/validation/README.md",
+      "sha256": "75a2655ac1f35ff1712503b72d5af21b376b308d68e4d9a0368dca3e0a7ff7a8",
+      "summary": "Updates public framework documentation to match the v5 active capability surface."
+    },
+    {
+      "path": "docs/workflows/README.md",
+      "sha256": "763389e5da1aa27353f31de72fa698e60f95ef8ca5755c6a31ba5e3c0d445061",
+      "summary": "Updates public framework documentation to match the v5 active capability surface."
+    },
+    {
+      "path": "samples/README.md",
+      "sha256": "6f642a2fd002595196a26ebc7885e813856f8b24d4726dff424f8af9eadaf213",
+      "summary": "Updates public framework documentation to match the v5 active capability surface."
+    },
+    {
+      "path": "tests/test_capability_removal.py",
+      "sha256": "4e9efab95f9b0aa6b40fb4b185d5004ccbf44fb9c68efa39fd4ffa022d9ddb1c",
+      "summary": "Adds or updates behavioral, contract, installer, and compatibility regression coverage."
+    },
+    {
+      "path": "tests/test_contracts.py",
+      "sha256": "c179812a0d27193836c420131eed597b859713053f04ff7b1f42a81becc79d13",
+      "summary": "Adds or updates behavioral, contract, installer, and compatibility regression coverage."
+    },
+    {
+      "path": "tests/test_install_framework.py",
+      "sha256": "2ff7387c2e38830853c877d909a705b573fae894faee8dfcea7ecabc13663c53",
+      "summary": "Adds or updates behavioral, contract, installer, and compatibility regression coverage."
+    },
+    {
+      "path": "wiki/architecture/system-architecture.md",
+      "sha256": "007d2f679dfe164f81393fb983c0998b37cce89a463a5dfed73f9deba566166b",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/guides/framework-introduction.md",
+      "sha256": "8b268df477d430ef564ca4d6d1991e0b0bb8bc4904e2d3a20e1084745c512566",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/guides/notebooklm-export.md",
+      "sha256": "ec440624af71e4838016becf7bd0bbebf8f17e38bb422dd3e43b0486dd939a4f",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/guides/release-and-update.md",
+      "sha256": "f07d8e73f342d9a88b1937e6d6039bd0ecb100c2517d8ecf3f084a4f9cfe1aaf",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/index.md",
+      "sha256": "761554b371d5c4a5fec79bc8d4ca3bcddbbb8d7b70d83fae6bb56b8290df7408",
+      "summary": "Synchronizes the Wiki index with the active framework surface while retaining legacy Guides."
+    },
+    {
+      "path": "wiki/log.md",
+      "sha256": "b3e19e104887e10a7e909105c651c9c82000893287a12a3a4c7944de1abc0942",
+      "summary": "Appends the single durable framework-removal operation required by Wiki governance."
+    },
+    {
+      "path": "wiki/modules/installer-and-upgrade.md",
+      "sha256": "6e497b7c2ff3da3a6d9965ed99be2f82752777987b86ad2a99777488639fb25e",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/modules/notebooklm-exporter.md",
+      "sha256": "56a2de274e153a8d335497fcb0b5a582df881fb757bd638a8e9c9f750ce5597f",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/modules/platform-adapters-and-release.md",
+      "sha256": "ad97aee027740b0ee280b967c4ec4954ab67f0fd662167ba350348a2767e5b8e",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/modules/platform-hooks-and-guards.md",
+      "sha256": "1bc481357b6103a447c59385dfd5b2e57aca38b513ab1aed528b8e351cb34f19",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/overview.md",
+      "sha256": "7426c8e91561f930af22a72b63c79795c474d5a4e3abd8a702198afa2f47203c",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/processes/generate-analysis-document.md",
+      "sha256": "c6d4470b722afe3fa67e72bad5ede4e519c6203a7b8e3cccebb3f020ea90789c",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/requirements/business-analysis-document.md",
+      "sha256": "5e2cbfc72d3ff9814c7a376d626776455619b5933f5d558d038355c31b9ad974",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/requirements/system-analysis-document.md",
+      "sha256": "fd484676b6b14ca2c46005fda8ed2a9f5a724e2cb2834804712c34f4a6bb326c",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/requirements/system-design-document.md",
+      "sha256": "62a615ecf67c7aa46d1201f3a85ca9ebca7bd2c134959b1faef23282d18c6da0",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/synthesis/business-analysis.md",
+      "sha256": "13c4fcde5a9219481a8ffe04cf0cf99c5d3c50ccd44f7357528c6321001f9b6b",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/synthesis/codebase-functional-coverage.md",
+      "sha256": "6cfd910d92f702b100a2b5c32e18a24c476037ef5149f394383929072aa98522",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/synthesis/system-analysis.md",
+      "sha256": "97e97daf25856bf5a5e10c14404d07135509cb443bcb33c4b5943bca38ae442b",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    },
+    {
+      "path": "wiki/synthesis/system-design.md",
+      "sha256": "81fdf4998508212850f9679a9e32be50efa16a653ebc0912e271014b1e4cd73c",
+      "summary": "Updates durable framework knowledge and source digests to describe the active v5 surface."
+    }
+  ],
+  "created_at": "2026-09-04T16:28:06.838805Z",
+  "implementation_run_id": "e232826112c08bb0558b782b97b0bf1cabbfdbaa8459f8d916523f7c7a77c492",
+  "knowledge_decision": "change",
+  "known_deviations": [
+    "The validation host ran Python 3.14.6; no separate Python 3.11 matrix was available.",
+    "Eight pre-existing Windows symlink/reparse-point hardening tests were excluded by missing SeCreateSymbolicLinkPrivilege; no required capability-removal obligation was skipped."
+  ],
+  "markdown": {
+    "path": "docs/work/work-20260904-remove-guide-delegation-6e10da4e/implementation/outcome.md",
+    "sha256": "6290291438af32530d00a67b0a6a0b3f816103736b53012b8d2c41579bb38f03"
+  },
+  "result": "complete",
+  "review": {
+    "evidence_refs": [
+      "review:fresh-review:work-20260904-remove-guide-delegation-6e10da4e-preliminary-r3"
+    ],
+    "report_ref": "reviews/preliminary-r3/report.json",
+    "report_sha256": "e03e3514d2081a6ada113341f0518493a5a4e32a15365c538a8e81abd9ed5b5e",
+    "verdict": "APPROVED"
+  },
+  "revision": 1,
+  "schema": "implementation-outcome/v1",
+  "summary": "Durable Guide creation and Explicit Delegation are removed from active framework surfaces while legacy Guide data, native platform agents, and non-deleting upgrade compatibility remain verified.",
+  "verification": [
+    {
+      "command_id": "CMD-BDD-FULL-001",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/01-cmd-bdd-full-001.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-BUILD-FULL-001",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/02-cmd-build-full-001.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-TEST-FULL-001",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/03-cmd-test-full-001.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-001",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/04-cmd-governance-001.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-002",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/05-cmd-governance-002.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-003",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/06-cmd-governance-003.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-004",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/07-cmd-governance-004.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-005",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/08-cmd-governance-005.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-006",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/09-cmd-governance-006.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-007",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/10-cmd-governance-007.txt"
+      ],
+      "outcome": "passed"
+    },
+    {
+      "command_id": "CMD-GOVERNANCE-008",
+      "evidence_refs": [
+        "reviews/preliminary-r3/outputs/11-cmd-governance-008.txt"
+      ],
+      "outcome": "passed"
+    }
+  ],
+  "work_id": "work-20260904-remove-guide-delegation-6e10da4e",
+  "work_kind": "standard"
+}

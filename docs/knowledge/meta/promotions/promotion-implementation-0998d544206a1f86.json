@@ -1,0 +1,18 @@
+{
+  "approval": {
+    "actor": "workspace-user",
+    "evidence": "conversation:implementation-knowledge-candidate-v1"
+  },
+  "candidate_ref": "knowledge:candidates/promotion-implementation-0998d544206a1f86/candidate.json",
+  "decision": "change",
+  "formal_paths": [],
+  "lint": {
+    "required_outcome": "passed"
+  },
+  "payload_sha256": "cfd27ad74dab9f957225e5be9d850bb1a5a6bc754a53cdbbfc658a0321ffffb7",
+  "promotion_id": "promotion-implementation-0998d544206a1f86",
+  "schema": "knowledge-promotion/v1",
+  "stage": "implementation",
+  "status": "Ready",
+  "work_id": "work-20260904-remove-guide-delegation-6e10da4e"
+}

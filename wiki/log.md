@@ -529,3 +529,9 @@ status: active
 - Capability／installer contract 升級至 v4（13 operations／12 intent groups），frontmatter 新欄位維持 legacy 相容；standalone BA 是可選 NotebookLM business source，SA／SD 不上傳且 schema v5 required documents 不變。
 - 框架 Wiki 實際建立 BA、重整並保存 legacy SA 原正文、建立 SD，同步功能需求、共用流程、規則、catalog、glossary、coverage ledger、架構／操作指南與來源摘要。
 - 受影響頁面：[[index]]、[[overview]]、[[business-analysis-document]]、[[system-analysis-document]]、[[system-design-document]]、[[generate-analysis-document]]、[[standards-alignment-not-conformance]]、[[missing-evidence-remains-gap]]、[[business-analysis]]、[[system-analysis]]、[[system-design]]、[[functional-requirement-catalog]]、[[business-process-catalog]]、[[business-rule-catalog]]、[[business-glossary]]、[[business-knowledge-gaps]]、[[codebase-functional-coverage]]、[[project-function-catalog]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[wiki-quality-and-provenance]]、[[framework-introduction]]、[[notebooklm-ba-functional-export]]、[[notebooklm-ba-knowledge-export]]、[[ba-knowledge-precedes-traceability]]、[[readiness-preflight-required]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[release-and-update]]
+
+## [2026-09-04] update | 移除 Guide 與 Delegation active capabilities
+
+- Capability／installer contract 升級至 v5（11 operations／11 intent groups）；移除 Guide creator resources、兩平台 Wiki custom-agent profiles 與 Codex fan-out 設定，保留 prompts 改用 built-in `agent`。
+- Fresh install 不再帶入 14 個舊路徑；upgrade 只列為 `obsolete_paths` 並保留原 bytes。既有 `type: guide`、Guides index、歷史 `guide` log 與 NotebookLM `project-guides` mapping 保持可讀。
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[business-analysis]]、[[system-analysis]]、[[system-design]]、[[codebase-functional-coverage]]

@@ -1,7 +1,8 @@
 # Page Type Catalog
 
-Choose one page type, then load its exact asset. Page shape lives in the asset;
-field validity lives in `frontmatter-spec.md`.
+Choose one active page type, then load its exact asset. Page shape lives in the
+asset; field validity lives in `frontmatter-spec.md`. The legacy Guide row is a
+read-only compatibility exception and has no creator asset.
 
 | Type | Use when | Asset | Extra required fields |
 | --- | --- | --- | --- |
@@ -15,7 +16,7 @@ field validity lives in `frontmatter-spec.md`.
 | `pattern` | A repeated, evidence-backed implementation pattern | `assets/pattern-template.md` | — |
 | `decision` | An architecture decision and rationale | `assets/adr-template.md` | `decision_date`, `decision_status` |
 | `dependency` | A significant external package | `assets/dependency-template.md` | `package_name`, `version` |
-| `guide` | Actionable onboarding, setup, debugging, or operations | `assets/guide-template.md` | — |
+| `guide` (legacy, read-only) | Existing Guide pages remain parseable; do not create new Guide pages | — | — |
 | `synthesis` | Durable cross-cutting analysis | `assets/synthesis-template.md` | — |
 | `synthesis` (function catalog) | Optional technical capability coverage for traceability or legacy Wiki maintenance | `assets/project-function-catalog-template.md` | tags include `function-catalog`; not a BA export prerequisite |
 | `synthesis` (functional requirement catalog) | Mandatory BA-facing index of every active `fr-*` requirement | `assets/functional-requirement-catalog-template.md` | tags include `functional-requirements`; every active requirement must be linked |
@@ -38,7 +39,8 @@ field validity lives in `frontmatter-spec.md`.
   one Business Rule page per independently queryable condition or decision.
 - Create Pattern and Dependency pages only when source evidence supports
   project-specific behavior or risk.
-- Use Guide for procedures and Synthesis for analysis.
+- Do not create new Guide pages. Preserve existing `type: guide` pages as
+  legacy read-only Wiki data; use Synthesis for durable analysis.
 - New or major evidence-backed pages populate `summary`; pages with raw
   `sources` also populate `source_digest`. Wiki-only derivation uses
   `derived_from`, not `sources`.
@@ -46,6 +48,7 @@ field validity lives in `frontmatter-spec.md`.
 
 ## Completion Criterion
 
-Selection is complete when exactly one asset was loaded, its type/path matches
-`frontmatter-spec.md`, and every retained section is supported or marked as a
-gap.
+Selection for a new page is complete when exactly one active asset was loaded,
+its type/path matches `frontmatter-spec.md`, and every retained section is
+supported or marked as a gap. Reading an existing legacy Guide requires no
+asset.

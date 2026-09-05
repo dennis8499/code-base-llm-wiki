@@ -2,7 +2,7 @@
 name: system-design-doc
 description: >
   基於 Codebase LLM Wiki 產生 ISO/IEC/IEEE 42010 對齊的 SD 系統設計文件與可追溯 views。
-agent: "wiki-keeper"
+agent: "agent"
 argument-hint: "可選：範圍，例如：整體系統、認證子系統、匯出流程"
 ---
 

@@ -32,7 +32,7 @@ reported as warnings and are never rewritten.
 | `init` | Initial wiki skeleton or first-time framework setup was created. |
 | `adr` | An Architecture Decision Record was created or materially updated. |
 | `synthesis` | Durable cross-cutting analysis or a BA／SA／SD document was saved under `wiki/synthesis/`. |
-| `guide` | Durable operational, onboarding, debugging, or contributor guidance was saved under `wiki/guides/`. |
+| `guide` | Legacy compatibility for existing Guide history; no active creator workflow emits new entries. |
 | `archaeology` | Git history or legacy behavior findings were persisted to wiki pages. |
 
 ## Operation Selection

@@ -102,8 +102,8 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 
 `.github/prompts/` 只屬於 VS Code 本機 Agent host。GitHub Copilot coding agent
 或其他 Copilot hosts 應以自然語言使用 `.agents/skills/codebase-wiki/`；不要把
-prompt files 當成跨 host API。所有 `.github/agents/` profiles 都保留使用者手動
-選取，但禁止模型自動委派。
+prompt files 當成跨 host API。保留的 prompts 使用 VS Code built-in `agent`
+metadata；框架不安裝 Repo-local Wiki agent profiles。
 
 ### OpenAI Codex
 

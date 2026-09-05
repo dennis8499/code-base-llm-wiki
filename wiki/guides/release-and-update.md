@@ -8,7 +8,7 @@ sources:
   - docs/releases/README.md
   - docs/validation/README.md
   - README.md
-source_digest: sha256:7d129f879d162a5dce23fb9ee4225cc7be436ea86f2bb3208bbfca5f97ed4a96
+source_digest: sha256:9675c322e6280233aa15794d1f9bd37f4dd0eae9c5924bdb2c8e3ed363da9d6c
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-09-04
 tags: [guide, release, version, extension]

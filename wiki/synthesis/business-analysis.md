@@ -13,7 +13,7 @@ sources:
   - .agents/skills/codebase-wiki/references/business-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
-source_digest: sha256:4ac1783c324666bcd45237749442d3ebcbd8e27900b4a4e4eee7d8a046517241
+source_digest: sha256:78592106df5c122c833b832db4e82da0577b5bbcdcce16888c9186de22829074
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[functional-requirement-catalog]]", "[[business-process-catalog]]", "[[business-rule-catalog]]"]
 last_updated: 2026-09-04
 tags: [synthesis, business-analysis, standards-aligned, notebooklm]
@@ -96,7 +96,7 @@ Analyst、Architect 與 reviewer 能審查自己關心的 abstraction level。�
   SR/NFR/IF、conceptual flow、failure 與 V&V needs。
 - BA／SA／SD templates、standards mapping、coverage、traceability、Gap、markers 與
   evidence-gated Mermaid slots。
-- Capability contract v4、frontmatter 相容性、installer、NotebookLM regression、文件與 Wiki。
+- Capability contract v5、frontmatter 相容性、installer、NotebookLM regression、文件與 Wiki。
 
 ### Out of scope
 
@@ -178,7 +178,7 @@ flowchart TD
 
 | Measure ID | Outcome／Metric | Baseline | Target／Timeframe | Measurement owner | Status |
 | --- | --- | --- | --- | --- | --- |
-| M-DOC-001 | Capability manifest operations/groups | 11 / 10 | 13 / 12 at release | framework maintainer | covered |
+| M-DOC-001 | Capability manifest operations/groups | 13 / 12 | 11 / 11 in contract v5 | framework maintainer | covered |
 | M-DOC-002 | 三份 template/workflow/prompt contract tests | BA/SD absent；SA legacy | all required tokens and semantics pass | framework maintainer | covered |
 | M-DOC-003 | Frontmatter compatibility | 無 standards metadata validation | valid new fields + valid legacy omission | framework maintainer | covered |
 | M-DOC-004 | NotebookLM regression | existing schema v5 | optional BA included/local-only stripped; SA/SD excluded; required list unchanged | framework maintainer | covered |
@@ -199,7 +199,7 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | SA authors | 在 SA 同時描述需求與設計 | 把 solution choices/views 移到 SD | 首次重跑保存 legacy snapshot | framework maintainer |
 | BA users | `BA` 多半表示 NotebookLM export | 使用 `BA文件` 產出 standalone doc | 裸 `BA` 先澄清；export signals 優先 | knowledge maintainer |
-| Installer users | contract v3 schema | contract v4 resources/adapters | upgrade 不改 target Wiki | repository maintainer |
+| Installer users | prior contract resources/adapters | contract v5；removed managed paths 僅列 obsolete | upgrade 不改 target Wiki，也不自動刪舊檔 | repository maintainer |
 | NotebookLM users | 固定 schema-v5 required set | standalone BA 僅 optional business content | 不需 migration | Notebook owner |
 
 ## BA → SA 追溯矩陣

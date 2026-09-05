@@ -54,6 +54,12 @@
 
 ### Removed
 
+- **Durable Guide 與 Explicit Delegation active capabilities**：capability contract 升至
+  v5，收斂為 11 operations／11 intent groups；移除 Guide workflow/template/prompts、
+  兩平台 Repo-local Wiki agent profiles 與 Codex fan-out 設定。剩餘 Copilot prompts
+  改用 built-in `agent`；fresh install 不再包含 14 個舊路徑，upgrade 只列為
+  `obsolete_paths` 且不自動刪除。既有 `type: guide`、Guides index、`guide` log 與
+  NotebookLM `project-guides` mapping 保持可讀相容。
 - **即時 SQL／資料庫查詢能力**：移除 Wiki Query 的 SQL Server／MSSQL 規則、工具呼叫、
   schema／metadata discovery、`SELECT` 與 MCP／app／CLI fallback；需要目前資料庫狀態的問題
   改列為未驗證 gap。新安裝不再包含舊規則檔，升級僅以 `obsolete_paths` 回報並保留既有檔案；

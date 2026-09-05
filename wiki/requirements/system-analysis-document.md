@@ -14,7 +14,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/assets/system-analysis-template.md
   - .github/prompts/system-analysis-doc.prompt.md
-source_digest: sha256:f6a0377fccde227afc4c08cf861ef9d789ce3f6b22f9179fe14d040cf85300dd
+source_digest: sha256:32834275ef80054b8133f0b15b08361d89b6110e6a1735b8765adfc25aafb187
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[business-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]"]
 last_updated: 2026-09-04
 tags: [business-requirement, system-analysis, standards-aligned, notebooklm]

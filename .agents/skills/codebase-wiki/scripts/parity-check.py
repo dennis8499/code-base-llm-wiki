@@ -18,13 +18,11 @@ EXPECTED_OPERATIONS = {
     "lint",
     "archaeology",
     "adr",
-    "guide",
     "synthesis",
     "business_analysis",
     "system_analysis",
     "system_design",
     "notebooklm_export",
-    "delegation",
 }
 EXPECTED_INTENT_CONTRACT = {
     "install": (False, True, "apply_flag"),
@@ -33,13 +31,11 @@ EXPECTED_INTENT_CONTRACT = {
     "lint": (False, True, "confirm_repairs"),
     "archaeology": (False, True, "explicit_persist"),
     "adr": (True, False, "explicit_request"),
-    "guide": (True, False, "explicit_request"),
     "synthesis": (True, False, "explicit_request"),
     "business_analysis": (True, False, "explicit_request"),
     "system_analysis": (True, False, "explicit_request"),
     "system_design": (True, False, "explicit_request"),
     "notebooklm_export": (False, True, "preview_then_confirm"),
-    "delegation": (False, False, "explicit_delegation"),
 }
 EXPECTED_GROUPS = {
     "install_setup": ["install"],
@@ -47,13 +43,12 @@ EXPECTED_GROUPS = {
     "query": ["query"],
     "lint": ["lint"],
     "adr": ["adr"],
-    "synthesis_guide": ["synthesis", "guide"],
+    "synthesis": ["synthesis"],
     "business_analysis": ["business_analysis"],
     "system_analysis": ["system_analysis"],
     "system_design": ["system_design"],
     "notebooklm_export": ["notebooklm_export"],
     "archaeology": ["archaeology"],
-    "delegation": ["delegation"],
 }
 CANONICAL_HOOK_ROOT = ".agents/skills/codebase-wiki/scripts/hooks/"
 CODEX_SESSION_SOURCES = "startup|resume|clear|compact"
@@ -61,12 +56,28 @@ FOLLOW_UP_REFERENCE = ".agents/skills/codebase-wiki/references/follow-up-actions
 FOLLOW_UP_ADAPTERS = (
     ".github/prompts/query-wiki.prompt.md",
     ".github/prompts/lint-wiki.prompt.md",
-    ".github/agents/wiki-query.agent.md",
-    ".github/agents/wiki-lint.agent.md",
-    ".codex/agents/wiki-query.toml",
-    ".codex/agents/wiki-lint.toml",
     "Codex.md",
 )
+REMOVED_ACTIVE_PATHS = (
+    ".agents/skills/codebase-wiki/references/guide-workflow.md",
+    ".agents/skills/codebase-wiki/assets/guide-template.md",
+    ".github/prompts/onboarding-guide.prompt.md",
+    ".github/prompts/save-guide.prompt.md",
+    ".github/agents/wiki-archaeologist.agent.md",
+    ".github/agents/wiki-ingest.agent.md",
+    ".github/agents/wiki-keeper.agent.md",
+    ".github/agents/wiki-lint.agent.md",
+    ".github/agents/wiki-query.agent.md",
+    ".codex/agents/wiki-archaeologist.toml",
+    ".codex/agents/wiki-ingest.toml",
+    ".codex/agents/wiki-keeper.toml",
+    ".codex/agents/wiki-lint.toml",
+    ".codex/agents/wiki-query.toml",
+)
+REMOVED_CODEX_FANOUT_CONFIG = {
+    "max_concurrent_threads_per_session": 6,
+    "max_depth": 1,
+}
 REMOVED_LIVE_DATABASE_REFERENCE = (
     ".agents/skills/codebase-wiki/references/mssql-evidence-rules.md"
 )
@@ -78,12 +89,10 @@ LIVE_DATABASE_CONTRACT_PATHS = (
     ".agents/skills/codebase-wiki/references/business-analysis-workflow.md",
     ".agents/skills/codebase-wiki/references/system-analysis-workflow.md",
     ".agents/skills/codebase-wiki/references/system-design-workflow.md",
-    ".github/agents/wiki-query.agent.md",
     ".github/prompts/query-wiki.prompt.md",
     ".github/prompts/business-analysis-doc.prompt.md",
     ".github/prompts/system-analysis-doc.prompt.md",
     ".github/prompts/system-design-doc.prompt.md",
-    ".codex/agents/wiki-query.toml",
 )
 LIVE_DATABASE_ENABLEMENT_TOKENS = (
     "mssql",
@@ -103,19 +112,6 @@ QUERY_DATABASE_BOUNDARIES = {
     ".agents/skills/codebase-wiki/references/query-workflow.md": (
         "must not connect to",
         "current database state",
-    ),
-    ".github/agents/wiki-query.agent.md": ("不連線即時資料庫", "未驗證 gap"),
-    ".codex/agents/wiki-query.toml": (
-        "do not connect to live databases",
-        "unverified gaps",
-    ),
-}
-COPILOT_READ_ONLY_TOOL_POLICY = {
-    "wiki-query.agent.md": ({"read", "search"}, {"agent", "edit", "execute"}),
-    "wiki-lint.agent.md": ({"execute", "read", "search"}, {"agent", "edit"}),
-    "wiki-archaeologist.agent.md": (
-        {"execute", "read", "search"},
-        {"agent", "edit"},
     ),
 }
 COPILOT_PROMPT_CONTRACT = {
@@ -138,7 +134,6 @@ COPILOT_PROMPT_CONTRACT = {
         "references/query-workflow.md",
         "1–5",
         "零寫入",
-        "零委派",
     ),
     "lint-wiki.prompt.md": (
         "references/lint-checklist.md",
@@ -155,17 +150,6 @@ COPILOT_PROMPT_CONTRACT = {
         "語意 inbound",
         "wiki/index.md",
         "wiki/log.md",
-    ),
-    "save-guide.prompt.md": (
-        "references/guide-workflow.md",
-        "目標讀者",
-        "前置條件",
-        "常見陷阱",
-        "gaps",
-        "sources",
-        "derived_from",
-        "wiki/index.md",
-        "guide log",
     ),
     "business-analysis-doc.prompt.md": (
         "references/business-analysis-workflow.md",
@@ -206,22 +190,6 @@ def markdown_frontmatter(text: str) -> dict[str, str] | None:
     return values
 
 
-def copilot_agent_tools(text: str) -> set[str] | None:
-    """Parse the small tools list used by Copilot agent frontmatter."""
-
-    match = re.search(r"(?ms)^---\s*\n(.*?)\n---\s*\n", text)
-    if not match:
-        return None
-    tools_match = re.search(r"(?m)^tools:\s*\[([^]]*)\]\s*$", match.group(1))
-    if not tools_match:
-        return None
-    return {
-        item.strip().strip("\"'")
-        for item in tools_match.group(1).split(",")
-        if item.strip()
-    }
-
-
 def main() -> int:
     root = Path(__file__).resolve().parents[4]
     manifest_path = root / ".agents" / "skills" / "codebase-wiki" / "capabilities.json"
@@ -231,6 +199,10 @@ def main() -> int:
         manifest = {}
     else:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    for relative in REMOVED_ACTIVE_PATHS:
+        if (root / relative).exists():
+            issues.append(f"removed active capability path is still present: {relative}")
 
     removed_reference = root / REMOVED_LIVE_DATABASE_REFERENCE
     if removed_reference.exists():
@@ -256,8 +228,8 @@ def main() -> int:
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
             issues.append(f"manifest missing surface: {surface}")
-    if manifest.get("contract_version") != 4:
-        issues.append("manifest contract_version must be 4")
+    if manifest.get("contract_version") != 5:
+        issues.append("manifest contract_version must be 5")
     guard_modes = manifest.get("guard_modes", {})
     if guard_modes.get("default") != "wiki-only" or guard_modes.get("installed") != [
         "wiki-only",
@@ -267,7 +239,7 @@ def main() -> int:
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
-        issues.append("manifest intents must define the thirteen canonical operations")
+        issues.append("manifest intents must define the eleven canonical operations")
         intents = {}
     for operation, expected in EXPECTED_INTENT_CONTRACT.items():
         contract = intents.get(operation, {})
@@ -281,7 +253,7 @@ def main() -> int:
 
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
-        issues.append("manifest must define the exact twelve user-facing intent groups")
+        issues.append("manifest must define the exact eleven user-facing intent groups")
         groups = {}
     grouped = [operation for values in groups.values() if isinstance(values, list) for operation in values]
     if len(grouped) != len(set(grouped)) or set(grouped) != EXPECTED_OPERATIONS:
@@ -299,11 +271,6 @@ def main() -> int:
             for filename in filenames:
                 if not (root / ".github" / "prompts" / filename).is_file():
                     issues.append(f"missing Copilot prompt: {filename}")
-    copilot_agent_names: set[str] = set()
-    for path in (root / ".github" / "agents").glob("*.agent.md"):
-        frontmatter = markdown_frontmatter(path.read_text(encoding="utf-8"))
-        if frontmatter and frontmatter.get("name"):
-            copilot_agent_names.add(frontmatter["name"])
     for path in (root / ".github" / "prompts").glob("*.prompt.md"):
         relative = path.relative_to(root).as_posix()
         text = path.read_text(encoding="utf-8")
@@ -318,8 +285,8 @@ def main() -> int:
             if not frontmatter.get(field):
                 issues.append(f"Copilot prompt missing {field}: {relative}")
         agent = frontmatter.get("agent", "")
-        if agent and agent not in copilot_agent_names:
-            issues.append(f"Copilot prompt references missing agent {agent}: {relative}")
+        if agent and agent != "agent":
+            issues.append(f"Copilot prompt must use built-in agent: {relative}")
     for filename, required_tokens in COPILOT_PROMPT_CONTRACT.items():
         path = root / ".github" / "prompts" / filename
         text = path.read_text(encoding="utf-8") if path.is_file() else ""
@@ -432,60 +399,15 @@ def main() -> int:
         issues.append(f"invalid Codex config: {exc}")
         codex_config = {}
     agents_config = codex_config.get("agents", {})
-    if "max_concurrent_threads_per_session" not in agents_config:
-        issues.append("Codex config must use canonical max_concurrent_threads_per_session")
-    if "max_threads" in agents_config:
-        issues.append("Codex config must not use legacy max_threads")
-
-    for relative in (
-        ".codex/agents/wiki-query.toml",
-        ".codex/agents/wiki-lint.toml",
-        ".codex/agents/wiki-archaeologist.toml",
+    if isinstance(agents_config, dict) and all(
+        agents_config.get(key) == value
+        for key, value in REMOVED_CODEX_FANOUT_CONFIG.items()
     ):
-        path = root / relative
-        try:
-            agent_config = tomllib.loads(path.read_text(encoding="utf-8"))
-        except (OSError, tomllib.TOMLDecodeError) as exc:
-            issues.append(f"invalid Codex agent config: {relative}: {exc}")
-            continue
-        if agent_config.get("sandbox_mode") != "read-only":
-            issues.append(f"read-only Wiki agent must declare sandbox_mode=read-only: {relative}")
+        issues.append("removed framework Codex agent fan-out config is still present")
 
-    for directory in (root / ".codex" / "agents", root / ".github" / "agents"):
-        for path in directory.iterdir() if directory.is_dir() else ():
-            if path.is_file():
-                text = path.read_text(encoding="utf-8")
-                if "Explicit delegation only." not in text:
-                    issues.append(
-                        f"agent is missing explicit-delegation marker: {path.relative_to(root)}"
-                    )
-                if directory.name == "agents" and directory.parent.name == ".github":
-                    frontmatter = markdown_frontmatter(text) or {}
-                    if frontmatter.get("disable-model-invocation") != "true":
-                        issues.append(
-                            f"Copilot agent must disable model invocation: {path.relative_to(root)}"
-                        )
-                    if frontmatter.get("user-invocable") != "true":
-                        issues.append(
-                            f"Copilot agent must remain user invocable: {path.relative_to(root)}"
-                        )
-
-    for filename, (required, forbidden) in COPILOT_READ_ONLY_TOOL_POLICY.items():
-        path = root / ".github" / "agents" / filename
-        tools = copilot_agent_tools(path.read_text(encoding="utf-8")) if path.is_file() else None
-        if tools is None:
-            issues.append(f"Copilot read-only agent has no parseable tools list: {path.relative_to(root)}")
-            continue
-        missing = sorted(required - tools)
-        exposed = sorted(forbidden & tools)
-        if missing:
-            issues.append(
-                f"Copilot read-only agent missing tools in {path.relative_to(root)}: {', '.join(missing)}"
-            )
-        if exposed:
-            issues.append(
-                f"Copilot read-only agent exposes forbidden tools in {path.relative_to(root)}: {', '.join(exposed)}"
-            )
+    # The exact ten retired Wiki profiles are already enforced through
+    # REMOVED_ACTIVE_PATHS. Other names belong to the platform-native extension
+    # surface and are deliberately outside this framework removal.
 
     installer_namespace: dict[str, object] = {
         "__file__": str(root / ".agents/skills/codebase-wiki/scripts/install-framework.py"),

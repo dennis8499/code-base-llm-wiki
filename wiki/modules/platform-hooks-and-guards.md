@@ -12,7 +12,7 @@ sources:
   - tests/test_write_guard.py
 source_digest: sha256:f3ebded31caadf44dc2750e65a1a707c94fc154cfafb35434507d3279ad33877
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-03
+last_updated: 2026-09-04
 tags: [module, hooks, guard, codex, copilot]
 status: active
 ---
@@ -59,10 +59,8 @@ root 啟動時才回退目前目錄。Windows wrapper 以 `Get-Location` 與 `Jo
 - `tests/test_write_guard.py` 直接呼叫設定中的三個 Codex commands，覆蓋 Git repo
   root、Git 子目錄與非 Git root，共九種 event/location 組合；每次都必須回傳有效
   JSON 且 exit 0。
-- Codex 的 query、lint、archaeology custom agents 明確設定 `sandbox_mode = "read-only"`；
-  Copilot 對應 profiles 不暴露直接 `edit` 或 `agent` tool，lint/archaeology 的
-  `execute` 依 profile instruction 僅用於 read-only checks 或 Git history；這不是
-  shell 層級的技術 sandbox，host permission 仍必須阻擋未核准的 shell writes。
+- Query、Lint 與 Archaeology 的 authorization 由共用 capability/workflow contract
+  決定；hooks 與 host permission 仍必須阻擋未核准的 shell writes。
 
 ## Contradictions
 

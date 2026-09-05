@@ -1,7 +1,7 @@
-# Codebase LLM Wiki 六流程 E2E 樣例
+# Codebase LLM Wiki 五流程 E2E 樣例
 
 `task-tracker/` 是無第三方依賴的 Python codebase，用來驗證 Interactive Ingest、
-Batch Ingest、Wiki-first Query、Lint、Code Archaeology 與 Durable Guide。所有 runtime
+Batch Ingest、Wiki-first Query、Lint 與 Code Archaeology。所有 runtime
 測試都在 Repo 外的全新暫存 Git fixture 執行，不能直接污染版本化樣例。
 
 ## 準備每一次 fixture
@@ -30,17 +30,15 @@ Copilot runtime 不屬於目前可用驗證環境，因此本 Repo 只標示
 `static-compatible / runtime-unverified`。以 `--surface copilot` 安裝到另一份 fixture，
 再執行 parity 與 unit tests，確認：
 
-- `.github/prompts/` 的六個入口是連結共用 workflow 的薄 adapter；這些 prompt files
+- `.github/prompts/` 的 active 入口是連結共用 workflow 的薄 adapter；這些 prompt files
   只適用 VS Code 本機 Agent host；
 - 其他 Copilot hosts 改由 `.agents/skills/codebase-wiki/` 接收自然語言意圖；
-- 所有 custom agents 都是 `user-invocable: true`、
-  `disable-model-invocation: true`，並維持最小 tools；
 - Interactive/Batch authorization、Query 零寫入、Lint report-first、Archaeology
-  explicit persist 與 Guide completion coupling 都被 parity 固定。
+  explicit persist 都被 parity 固定，且 prompts 使用 built-in `agent` metadata。
 
 這些檢查不能被描述為 Copilot runtime pass。
 
-## Codex 六項情境
+## Codex 五項情境
 
 每項在獨立 fixture 執行三次。Interactive Ingest、Lint 與 Archaeology 的兩階段
 操作必須沿用同一 session。
@@ -76,11 +74,11 @@ index，並只追加一筆 ingest log。
 ```text
 使用 $codebase-wiki 先讀 wiki/index.md，再讀最多五個相關頁面，只有必要時回溯
 sources：TaskTrackerService.complete_task 遇到不存在與已完成任務各如何處理？
-逾期如何判定？請列 evidence 與 gaps，不要寫檔或委派。
+逾期如何判定？請列 evidence 與 gaps，不要寫檔。
 ```
 
 答案應涵蓋 not-found、duplicate completion 與 overdue evidence；Wiki hashes 必須不變，
-JSONL 不得出現 agent delegation 或 write tool。
+JSONL 不得出現 write tool。
 
 ### 4. Lint
 
@@ -110,14 +108,6 @@ JSONL 不得出現 agent delegation 或 write tool。
 ```text
 請把剛才的考古結果保存為 durable Wiki page，更新 index，並只追加一筆
 archaeology log。
-```
-
-### 6. Durable Guide
-
-```text
-使用 $codebase-wiki 建立「Task Tracker 維運與除錯」durable guide。說明目標讀者、
-前置條件、可執行步驟、常見陷阱、gaps 與相關頁面；正確使用 sources 與
-derived_from，更新 index，並只追加一筆 guide log。
 ```
 
 ## 每次 deterministic checks
