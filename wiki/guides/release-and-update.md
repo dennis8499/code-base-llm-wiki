@@ -8,9 +8,9 @@ sources:
   - docs/releases/README.md
   - docs/validation/README.md
   - README.md
-source_digest: sha256:9675c322e6280233aa15794d1f9bd37f4dd0eae9c5924bdb2c8e3ed363da9d6c
+source_digest: sha256:6b30e062948c3d8b19c48e28857aa18cdb3889001ff6f359fd28c1790edd9147
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-06
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -50,6 +50,10 @@ gh release create vX.Y.Z dist/codebase-llm-wiki.zip dist/codebase-llm-wiki.tar.g
 
 Repo 不配置 GitHub Actions；不得把 push tag 描述為自動測試或自動發布，也不得以
 `dist/*` 取代四個明列 assets。
+
+大型 benchmark 的 deterministic owner BDD 與正式效能 gate 分屬兩條 evidence lane：
+前者可使用 controlled timing，後者必須由同一 strict-clean revision 的 Windows／Linux
+CLI 各產生 v3 observed report；controlled report 不得形成 portability pass。
 
 Release builder 會排除 `.git`、`logs`、`.codex-hook-logs`、`.github-hook-logs`、
 `cache`、`.venv`、`__pycache__`、`.mypy_cache`、`.ruff_cache`、`.notebooklm` 與 `dist` 等產生物，也會排除

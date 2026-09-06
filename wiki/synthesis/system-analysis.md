@@ -10,11 +10,13 @@ sources:
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
+  - .agents/skills/project-knowledge/scripts/knowledge_benchmark.py
+  - .agents/skills/project-knowledge/scripts/test_behavior.py
   - tests/test_contracts.py
   - tests/test_wiki_lint.py
-source_digest: sha256:bedf4258b134ad65e82225c9d73e4225d81832ff38feaa98c1ab9c022adbbcc4
+source_digest: sha256:2e9b69ed1090a48381cf7814d7789eede52062c786a6988ee63ed66101203ea1
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-06
 tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
@@ -266,7 +268,7 @@ sequenceDiagram
 | External integrations | partial | Codex/Copilot adapter covered；NotebookLM 僅離線 |
 | Security and permissions | partial | authorization、guard、untrusted evidence、secret exclusions、本機 Basic DLP gate；Copilot shell permission 需 host 驗證 |
 | Deployment and operations | covered | dependency-free CLI、本機驗證與手動 release |
-| Non-functional requirements | partial | correctness/atomicity、200-page lint 與 500 個 synthetic module 的 Wiki full preflight/apply regression covered；query benchmark gap |
+| Non-functional requirements | partial | correctness/atomicity、200-page lint、500-module Wiki full preflight/apply，以及 50k/5k controlled owner BDD 與 observed CLI 三樣本 query/index contract covered；實際 Linux portability 與 NotebookLM retrieval benchmark 仍是 gap |
 | Errors and failure modes | covered | conflicts、stale、invalid ID、limit/atomic failures |
 | Risks and technical debt | covered | licensing、semantic review、host variation |
 
@@ -395,7 +397,7 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 | 安全性 | raw read-only、guard、secret exclusion、local Basic DLP、two-phase export | host/sandbox 與租戶 Advanced DLP 政策在框架外 |
 | 可恢復性 | installer/exporter stage + rollback；active/committed journal、同一 target/output 的 transaction lock 與子程序終止 regression 覆蓋未完成 replacement recovery | 突然斷電、metadata durability 與所有 host-specific termination windows 尚未完整驗證 |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |
-| 效能 | 無常駐服務與第三方 runtime；`query-index` 為 bounded Markdown router；`tests/test_wiki_scale.py` 覆蓋 200-page lint；`tests/test_export_notebooklm.py` 覆蓋 500 個 synthetic module 的 full preflight/apply | 尚無真實 NotebookLM retrieval benchmark |
+| 效能 | 無常駐服務與第三方 runtime；`query-index` 為 bounded Markdown router；200-page lint、500 個 synthetic module 的 full preflight/apply，以及 50,000 files／5,000 pages 的五個 cold、五個 warm、單一 index 三樣本四態 benchmark；完整 owner BDD 使用 controlled timing，CLI completion 使用 observed timing | 尚無實際 Linux strict-clean portability comparison 與真實 NotebookLM retrieval benchmark |
 
 ## 錯誤與失敗模式
 
@@ -405,6 +407,9 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 - installer local+upstream 同時變更 → conflict，目標不寫入。
 - stale preflight ID 或不完整文件 → export exit 2，不建立／替換 pack。
 - source slot/byte/word 超限 → export 失敗並保留舊 pack。
+- Benchmark report v3 明示 `measurement_mode`；functional drift 優先於 timing，mixed
+  evidence 為 inconclusive、持續超限為 performance failure，controlled 或 v2 report、
+  environment/cleanup failure 使用安全 v2 error，皆不能成為 portability pass。
 - 無 LICENSE → release validate/build 失敗。
 
 ## 風險 / 技術債

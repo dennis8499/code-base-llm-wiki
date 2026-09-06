@@ -486,9 +486,42 @@ class ContractTests(unittest.TestCase):
             "validate-log.py wiki/log.md --repo-root .",
             "rebuild-index.py wiki --check",
             "lint-wiki.py wiki --repo-root .",
+            "knowledge_benchmark.py --output",
+            "compare_portability_reports.py --root",
+            "knowledge-portability-report/v3",
+            "measurement_mode=observed",
+            "measurement_mode=controlled",
+            "never admissible portability evidence",
         ):
             with self.subTest(document="validation", token=token):
                 self.assertIn(token, validation)
+
+        skill = (
+            REPO_ROOT / ".agents" / "skills" / "project-knowledge" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        for token in (
+            "knowledge_benchmark.py --output",
+            "compare_portability_reports.py --root",
+            "knowledge-portability-report/v3",
+            "measurement_mode=observed",
+            "measurement_mode=controlled",
+            "never admissible portability evidence",
+        ):
+            with self.subTest(document="project-knowledge-skill", token=token):
+                self.assertIn(token, skill)
+
+        ignore_lines = (REPO_ROOT / ".gitignore").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        self.assertEqual(1, ignore_lines.count(".knowledge-test-tmp/"))
+        for forbidden in (
+            "docs/*",
+            "!docs/work/**",
+            "!docs/bugs/**",
+            "!docs/knowledge/**",
+        ):
+            with self.subTest(ignore=forbidden):
+                self.assertNotIn(forbidden, ignore_lines)
 
         release = (REPO_ROOT / "docs" / "releases" / "README.md").read_text(
             encoding="utf-8"

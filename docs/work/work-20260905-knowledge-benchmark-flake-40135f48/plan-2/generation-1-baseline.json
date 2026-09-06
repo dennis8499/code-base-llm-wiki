@@ -1,0 +1,93 @@
+{
+  "schema": "generation-product-baseline/v1",
+  "work_id": "work-20260905-knowledge-benchmark-flake-40135f48",
+  "generation": 1,
+  "base_sha": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+  "implementation_commit": "1289f106e0dad48908449689e2ed244c21ff913f",
+  "commit_parent": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+  "commit_tree": "64999e11ee446b41dda183153f6b0944bcab06a0",
+  "implementation_run_id": "d9141c19feac3dfe2b921ce705b1feaaa1f0967173a415cafd5f9910b36409f6",
+  "implementation_run_status": "Awaiting upstream reapproval",
+  "product_snapshot_id": "75a191a25a198f535f3eb5e6678cda4db3279cd2cbdbd5cf2796400031848447",
+  "carry_forward_policy": {
+    "mode": "exact-postimage",
+    "retrieval": "git show <implementation_commit>:<path>",
+    "hash": "sha256 of raw blob bytes",
+    "excluded_prefixes": [
+      "docs/bugs/",
+      "docs/knowledge/",
+      "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/"
+    ],
+    "failure_disposition": "Blocked before any product write when the commit, path, or hash cannot be verified"
+  },
+  "files": [
+    {
+      "path": ".agents/skills/project-knowledge/SKILL.md",
+      "sha256": "46b76dc1285394c7555a796c0d905105fafc22e3db9332d4e5fa0c8dd78d5a62"
+    },
+    {
+      "path": ".agents/skills/project-knowledge/scripts/compare_portability_reports.py",
+      "sha256": "99b29dc42cafcbf66d2b5e27ebd4bff1de0abadb735b7ee9e9cd786778b7ed99"
+    },
+    {
+      "path": ".agents/skills/project-knowledge/scripts/knowledge_benchmark.py",
+      "sha256": "2844908179cddde84ab97c987c82c227bbb2c5597a0020e6f16f316c3098bfa8"
+    },
+    {
+      "path": ".agents/skills/project-knowledge/scripts/test_behavior.py",
+      "sha256": "18db8d1128586d91f345de37035cb0e87a6adeaea9f54f9908a926d437a868d1"
+    },
+    {
+      "path": ".agents/skills/project-knowledge/scripts/test_query.py",
+      "sha256": "1ddc218e97596ece9f61676edee732e3912a882afc8087bf708db842f4fd9b92"
+    },
+    {
+      "path": ".agents/skills/project-knowledge/scripts/test_workflow.py",
+      "sha256": "017c8a6b6997a9340e4d46d56e5dea37e6d39b594992340fe164cb911c4a580f"
+    },
+    {
+      "path": ".agents/skills/project-knowledge/scripts/validate_contracts.py",
+      "sha256": "9009dd16c386b46854db0ae5979df88bbfb207dcb972c961f0b719e58508c0cb"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "4461bc64ae5963852d185cab2775e24ab319ceb7287275d24b21933ce2e06784"
+    },
+    {
+      "path": "ChangeLog.md",
+      "sha256": "b48d6aa7aa538d4b7d4d6f989f93ce3ba78ba33ff4214f2baade403c0142fbaa"
+    },
+    {
+      "path": "docs/validation/README.md",
+      "sha256": "2e1b5d296cc46c96d293e486cfe0bb0d5f38a610b217738542dc5fb7215403bd"
+    },
+    {
+      "path": "tests/test_contracts.py",
+      "sha256": "378b660269aefee8b26cf73217afbc22df48a620d4541eb02af5311f14997030"
+    },
+    {
+      "path": "wiki/guides/framework-introduction.md",
+      "sha256": "7e374ede54f1be9f3d55bd4c572665e9206641afd4d71d97e379787ce134b721"
+    },
+    {
+      "path": "wiki/guides/release-and-update.md",
+      "sha256": "946344e21cd7e7344a7c1c38959921d81df72ad074a2cd511acbc23451c4aee1"
+    },
+    {
+      "path": "wiki/index.md",
+      "sha256": "2fafa7fe1dba43bd563448d65e873d7bd8d06f9f384a9d9a0d3f1661bff32eba"
+    },
+    {
+      "path": "wiki/log.md",
+      "sha256": "48a92c2fe80188939e2a4fc8ec91cc6e101637db365284329b9269ec5f593465"
+    },
+    {
+      "path": "wiki/modules/platform-adapters-and-release.md",
+      "sha256": "8e81b48b10205907bfefe7d03ec1a6d96f1ec4e49bc84a4fe651d8c36fd20fbf"
+    },
+    {
+      "path": "wiki/synthesis/system-analysis.md",
+      "sha256": "dba88c5550215d348038cc0e2fa0e4c2b7969e3b6fc05da39a5f5fb1a8a9aa8d"
+    }
+  ]
+}

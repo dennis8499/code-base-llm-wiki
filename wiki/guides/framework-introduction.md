@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:c42d20db79db8e8caf339e3529c8b622a06f59583fb8bb69eef6a8158cf16c4f
+source_digest: sha256:476b045fb52a0bd9a75ee603850120524ad87937c3a85e74640d8292e72884d6
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-06
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -190,6 +190,10 @@ directory source 在沒有 Git metadata 時會 fallback 到 filesystem scan，No
 preflight 則直接使用 filesystem-only Wiki lint mode。
 
 Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不要以虛構 sources 或刪除 log 歷史規避檢查。
+
+大型 portability owner BDD 會以 controlled timing 完整走過 50k/5k 功能路徑；正式
+Windows／Linux 證據只能由 strict-clean CLI 產生 v3 observed report。Controlled report
+不能交給 comparator 充當主機效能證據，完整手動命令見 `docs/validation/README.md`。
 
 ## 8. E2E 樣例
 

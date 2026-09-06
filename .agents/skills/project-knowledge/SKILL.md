@@ -74,5 +74,21 @@ The CLI writes one versioned success object to stdout or one `knowledge-error/v1
 python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_cli.py recover --repo .
 ```
 
-Run `scripts/run_full_suite.py --scope all --fixture-root .knowledge-test-tmp` for a release check. Its BUILD-FULL validation compiles every Git-eligible repository `*.py`, parses every Git-eligible `*.schema.json`, and reports the exact `python_files_checked` and `json_schema_files_checked` inventory counts; a partial skill-local scan is not sufficient. Cross-platform release evidence requires equivalent Windows and Linux reports from `.github/workflows/knowledge-portability.yml`; one local OS result is not Windows/Linux evidence. Machine shapes are defined in `schemas/knowledge-contracts.schema.json`.
+Run `scripts/run_full_suite.py --scope all --fixture-root .knowledge-test-tmp` for a release check. Its BUILD-FULL validation compiles every Git-eligible repository `*.py`, parses every Git-eligible `*.schema.json`, and reports the exact `python_files_checked` and `json_schema_files_checked` inventory counts; a partial skill-local scan is not sufficient.
 
+Cross-platform portability is a local-manual gate, never a hosted workflow. From the same `strict-clean` revision, run the producer independently on an actual Windows host and an actual Linux host, preserving each create-only report:
+
+```text
+python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --output <windows-report-directory>/knowledge-portability-report-windows.json
+python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --output <linux-report-directory>/knowledge-portability-report-linux.json
+```
+
+Move exactly those two reports into the ignored `.knowledge-test-tmp/portability-reports` directory, then replay all raw samples and identities:
+
+```text
+python -X utf8 -B .agents/skills/project-knowledge/scripts/compare_portability_reports.py --root .knowledge-test-tmp/portability-reports
+```
+
+The CLI producer always emits `knowledge-portability-report/v3` with `measurement_mode=observed`. The in-process `measurement_mode=controlled` seam exists only for deterministic contract BDD and is not exposed as a CLI flag. Controlled reports are contract-test evidence only and are never admissible portability evidence.
+
+Do not replace a failed or inconclusive run with a later passing run. Both reports must be v3 observed reports with `verdict=pass`, `cleanup=removed`, and the same clean producer identity and functional oracle; one local OS result is not Windows/Linux evidence. Machine shapes are defined in `schemas/knowledge-contracts.schema.json`.

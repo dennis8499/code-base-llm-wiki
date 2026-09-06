@@ -1,0 +1,110 @@
+{
+  "schema": "bug-assessment/v1",
+  "bug_id": "bug-knowledge-benchmark-baseline-flake",
+  "revision": 1,
+  "markdown": {
+    "path": "docs/bugs/bug-knowledge-benchmark-baseline-flake/assessment-1.md",
+    "sha256": "f4ec3052d0aacf8c5ae784d29e365141b9663ad4bb87f72b71d756108490468e"
+  },
+  "source": {
+    "relation": "intake",
+    "work_id": null,
+    "reported_by": "user-and-diagnosis",
+    "evidence_refs": [
+      "user:20260905:approved-separate-bug-delivery",
+      "diagnosis:bug-knowledge-benchmark-baseline-flake/evidence-summary"
+    ]
+  },
+  "observed_behavior": "On base SHA 71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1 with the same 50,000-file, 5,000-page fixture and matching functional digest, BDD-016 has failed when one index_candidate sample took 3.470925499976147 seconds, while retained and controlled repetitions passed.",
+  "expected_behavior": "The large-repository performance gate must provide a repeatable and explainable verdict for a fixed workload: representative or sustained violations of the 2.0-second contract fail, while an unclassified single timing anomaly does not randomly switch an otherwise identical delivery baseline between pass and fail.",
+  "impact": "Unrelated deliveries can be blocked by an intermittent owner baseline and then pass on retry, preventing implementers from reliably distinguishing a real performance regression, measurement variance, and an environment failure.",
+  "verdict": "confirmed",
+  "severity": "medium",
+  "reproduction": {
+    "status": "intermittent",
+    "symptom_oracle": "Repeated runs at the same source SHA, 50k/5k fixture shape, and functional digest alternate between pass and fail without a classified product or environment difference.",
+    "steps": [
+      "From repository root, run python -X utf8 -B .agents/skills/project-knowledge/scripts/test_behavior.py --group delivery --fixture-root .knowledge-test-tmp.",
+      "Compare report outcome, functional_sha256, file_count, page_count, and durations_seconds.index_candidate across runs.",
+      "Confirm fixture cleanup and a strict-clean repository after each sample."
+    ],
+    "sample": "One retained failure had index_candidate=3.470925499976147s with matching functional digest; one retained focused sample passed; five controlled same-SHA samples passed with index_candidate from 0.7987834999803454s to 0.9807830000063404s.",
+    "command_refs": [
+      "cmd:bdd016-delivery-group",
+      "cmd:knowledge-benchmark-controlled-samples"
+    ],
+    "evidence_refs": [
+      "implementation-run:14a4fc0688112aff6c114ad3a07b6b8c94d053ca5c80c601efd4cdd8713bb7a3/preflight-baseline-recovery",
+      "implementation-run:14a4fc0688112aff6c114ad3a07b6b8c94d053ca5c80c601efd4cdd8713bb7a3/bdd016-sample-3",
+      "diagnosis:bug-knowledge-benchmark-baseline-flake/controlled-samples"
+    ]
+  },
+  "root_cause": {
+    "status": "hypothesized",
+    "confidence": "medium",
+    "summary": "The intermittent gate failure is caused at the verdict boundary by mapping one wall-clock index_candidate sample directly to the whole baseline outcome; the underlying source of the latency outlier remains unconfirmed between traversal state, fixture sequence, and external Windows load.",
+    "evidence_refs": [
+      "source:.agents/skills/project-knowledge/scripts/knowledge_benchmark.py#L431-L506",
+      "source:.agents/skills/project-knowledge/scripts/test_behavior.py#L2318-L2355",
+      "diagnosis:bug-knowledge-benchmark-baseline-flake/controlled-samples"
+    ]
+  },
+  "hypotheses": [
+    {
+      "hypothesis_id": "H-001",
+      "rank": 1,
+      "statement": "A single wall-clock index_candidate sample determines the complete verdict, so ordinary filesystem or scheduler latency variance is misclassified as a stable performance regression.",
+      "variable": "Repeat count for the same operation while source, fixture, and functional digest stay fixed.",
+      "prediction": "The verdict changes with one outlier while adjacent samples remain under the threshold and retain identical functional output.",
+      "falsifier": "The over-threshold duration is stably reproducible in a fixed environment and traces to the same internal product path rather than sample variance.",
+      "outcome": "supported",
+      "evidence_refs": [
+        "diagnosis:bug-knowledge-benchmark-baseline-flake/controlled-samples",
+        "implementation-run:14a4fc0688112aff6c114ad3a07b6b8c94d053ca5c80c601efd4cdd8713bb7a3/preflight-baseline-recovery"
+      ]
+    },
+    {
+      "hypothesis_id": "H-002",
+      "rank": 2,
+      "statement": "A specific predecessor-scenario or fresh-fixture cache state makes the 5,000-page current-page traversal intermittently slow.",
+      "variable": "BDD predecessor sequence or fresh-versus-reused fixture state.",
+      "prediction": "Over-threshold samples cluster reproducibly under one sequence or fixture state.",
+      "falsifier": "Repeated samples show no correlation with sequence or fixture state, or fail at the same rate without predecessors.",
+      "outcome": "untested",
+      "evidence_refs": [
+        "source:.agents/skills/project-knowledge/scripts/knowledge_workflow.py#L63-L88"
+      ]
+    },
+    {
+      "hypothesis_id": "H-003",
+      "rank": 3,
+      "statement": "External Windows CPU, filesystem-filter, or process pressure is the primary source of the observed latency outlier.",
+      "variable": "Measured host resource pressure with all repository inputs fixed.",
+      "prediction": "Outlier frequency rises with external pressure and returns to baseline after the pressure is removed.",
+      "falsifier": "An isolated low-load run can deterministically toggle the failure through an internal product variable.",
+      "outcome": "untested",
+      "evidence_refs": [
+        "implementation-run:14a4fc0688112aff6c114ad3a07b6b8c94d053ca5c80c601efd4cdd8713bb7a3/preflight-baseline-recovery"
+      ]
+    }
+  ],
+  "active_hypothesis_id": null,
+  "risk": {
+    "security_privacy_or_data_risk": false,
+    "redacted_summary": null,
+    "secure_evidence_refs": [],
+    "human_reviewer": null
+  },
+  "disposition": "delivery",
+  "evidence_refs": [
+    "knowledge-query:bug:20260905T140613Z",
+    "diagnosis:bug-knowledge-benchmark-baseline-flake/evidence-summary",
+    "implementation-run:14a4fc0688112aff6c114ad3a07b6b8c94d053ca5c80c601efd4cdd8713bb7a3/preflight-baseline-recovery",
+    "implementation-run:14a4fc0688112aff6c114ad3a07b6b8c94d053ca5c80c601efd4cdd8713bb7a3/bdd016-sample-3",
+    "source:.agents/skills/project-knowledge/scripts/knowledge_benchmark.py#L24-L26",
+    "source:.agents/skills/project-knowledge/scripts/knowledge_benchmark.py#L431-L506",
+    "source:.agents/skills/project-knowledge/scripts/test_behavior.py#L2318-L2355"
+  ],
+  "next_action": "Open an independent BUG delivery requirements stage for a repeatable performance oracle that preserves the 50k/5k fixture, functional digest, and 2.0-second regression contract; do not include the separately unconfirmed Windows Git launch event.",
+  "created_at": "2026-09-05T14:16:14.2663596Z"
+}

@@ -67,6 +67,13 @@
 
 ### Fixed
 
+- **Knowledge benchmark baseline 穩定化**：50k files／5k pages benchmark 對十一個
+  timing-sensitive operations 各保留三個正式樣本，以 0/1/2/3 breach 四態與全域單一
+  isolated-outlier 預算判定；report 升級至 v3 並以 `measurement_mode` 分開 controlled
+  contract BDD 與 observed CLI evidence，error contract 保持 v2。Windows/Linux comparator
+  只接受 observed v3，會從 raw evidence 重算並拒絕 controlled、v2、缺少／未知 mode、
+  inconclusive、dirty 或 identity drift；跨平台證據維持 strict-clean 主機上的
+  local-manual 流程，不新增 GitHub workflow。
 - **六流程 Codex UAT 修復**：18 個有效 Task Tracker runs 保存 JSONL tool events、
   before/after hashes 與 deterministic checks；首輪發現的 Windows installer DACL、
   overview index completeness 漏報及 archaeology persisted-page orphan 均加入 regression，

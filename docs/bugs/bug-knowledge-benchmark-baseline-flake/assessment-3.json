@@ -1,0 +1,113 @@
+{
+  "schema": "bug-assessment/v1",
+  "bug_id": "bug-knowledge-benchmark-baseline-flake",
+  "revision": 3,
+  "markdown": {
+    "path": "docs/bugs/bug-knowledge-benchmark-baseline-flake/assessment-3.md",
+    "sha256": "d83535f5f465f7c667dfa352aeb1c0a900b9ef71cc99c224fdc5c60f2159bff4"
+  },
+  "source": {
+    "relation": "intake",
+    "work_id": null,
+    "reported_by": "user-and-diagnosis",
+    "evidence_refs": [
+      "user:20260906:approved-controlled-bdd-observed-gates",
+      "diagnosis:bug-knowledge-benchmark-baseline-flake/revision-3-evidence-summary",
+      "implementation-run:d9141c19feac3dfe2b921ce705b1feaaa1f0967173a415cafd5f9910b36409f6/seq99-timing-inconclusive",
+      "knowledge-query:bug:20260906T091710Z"
+    ]
+  },
+  "observed_behavior": "The same implementation snapshot produced three strict-clean observed 50k/5k benchmark passes, then BDD-016 repeated real wall-clock measurement and returned MIXED_OPERATION_EVIDENCE/inconclusive with an unchanged functional digest.",
+  "expected_behavior": "The full-scale owner BDD must deterministically verify functional, schema, producer, cleanup, three-sample, and four-state classification contracts with controlled timing evidence; only three predeclared strict-clean standalone observed commands decide delivery performance, and any non-pass is retained and stops without retry-until-green.",
+  "impact": "A correct snapshot can pass all dedicated performance gates and then be blocked by a duplicate host-timing window inside the owner suite, so delivery cannot simultaneously satisfy deterministic baseline and fail-closed completion requirements.",
+  "verdict": "confirmed",
+  "severity": "medium",
+  "reproduction": {
+    "status": "intermittent",
+    "symptom_oracle": "At the same implementation SHA, fixture shape, and functional digest, the three dedicated observed reports pass while a later BDD-016 observed timing window returns a non-pass.",
+    "steps": [
+      "From a strict-clean worktree, run each of the three predeclared standalone 50k/5k observed benchmark commands once and retain every report.",
+      "Run python -X utf8 -B .agents/skills/project-knowledge/scripts/run_full_suite.py --scope all --fixture-root .knowledge-test-tmp.",
+      "Compare BDD-016 measurement mode, functional_sha256, raw timing samples, classification, report verdict, cleanup, and exit code against the dedicated reports."
+    ],
+    "sample": "Three retained standalone reports passed with maximum samples 1.1978953999932855s, 1.6081831000046805s, and 1.45902730000671s. Seq99 then had cold_query_1 breaches 2/3, cold_query_2 breaches 1/3, fixture setup 49.119367600011174s, matching functional SHA, and verdict inconclusive.",
+    "command_refs": [
+      "cmd:knowledge-benchmark-observed-three-gates",
+      "cmd:project-knowledge-full-suite-seq99"
+    ],
+    "evidence_refs": [
+      "implementation:three-strict-clean-observed-passes",
+      "implementation:seq99-timing-inconclusive",
+      "implementation:seq99-command-record"
+    ]
+  },
+  "root_cause": {
+    "status": "hypothesized",
+    "confidence": "medium",
+    "summary": "Evidence supports duplicated observed wall-clock responsibility as the contract-level cause of conflicting completion verdicts; the underlying seq99 latency source remains unconfirmed among traversal state, fixture sequence, and external Windows load.",
+    "evidence_refs": [
+      "source:.agents/skills/project-knowledge/scripts/test_behavior.py#L2547-L2609",
+      "source:.agents/skills/project-knowledge/scripts/knowledge_benchmark.py#L84-L150",
+      "implementation:seq99-timing-inconclusive"
+    ]
+  },
+  "hypotheses": [
+    {
+      "hypothesis_id": "H-001",
+      "rank": 1,
+      "statement": "Owner BDD and standalone commands both make performance decisions from uncontrolled observed wall-clock windows, allowing valid timing variance to produce conflicting completion verdicts for one snapshot.",
+      "variable": "BDD-016 timing evidence mode while fixture, functional path, sample count, and classifier stay fixed.",
+      "prediction": "Controlled BDD sequences are repeatable while standalone observed gates still fail closed for real sustained violations.",
+      "falsifier": "Controlled BDD still changes with host duration, or standalone observed gates can no longer detect sustained violations.",
+      "outcome": "supported",
+      "evidence_refs": [
+        "implementation:seq99-timing-inconclusive",
+        "requirements:requirements-v3-20260906"
+      ]
+    },
+    {
+      "hypothesis_id": "H-002",
+      "rank": 2,
+      "statement": "Fresh-fixture cache or filesystem state makes the 5,000-page traversal or cold query intermittently slow under a specific predecessor sequence.",
+      "variable": "BDD predecessor sequence or fresh-versus-reused fixture state.",
+      "prediction": "Breaches cluster reproducibly under one sequence or fixture state.",
+      "falsifier": "Repeated samples show no sequence correlation, or isolated runs retain the same distribution.",
+      "outcome": "untested",
+      "evidence_refs": [
+        "source:.agents/skills/project-knowledge/scripts/knowledge_workflow.py#L63-L88"
+      ]
+    },
+    {
+      "hypothesis_id": "H-003",
+      "rank": 3,
+      "statement": "External Windows CPU, filesystem-filter, or process pressure is the main source of the seq99 latency window.",
+      "variable": "Measured host resource pressure while repository inputs remain fixed.",
+      "prediction": "Outlier frequency rises with external pressure and returns to baseline after pressure is removed.",
+      "falsifier": "An isolated low-load run deterministically toggles the failure through one internal product variable.",
+      "outcome": "untested",
+      "evidence_refs": [
+        "implementation:seq99-fixture-setup-49.119367600011174s"
+      ]
+    }
+  ],
+  "active_hypothesis_id": null,
+  "risk": {
+    "security_privacy_or_data_risk": false,
+    "redacted_summary": null,
+    "secure_evidence_refs": [],
+    "human_reviewer": null
+  },
+  "disposition": "delivery",
+  "evidence_refs": [
+    "knowledge-query:bug:20260906T091710Z",
+    "diagnosis:bug-knowledge-benchmark-baseline-flake/revision-3-evidence-summary",
+    "implementation:three-strict-clean-observed-passes",
+    "implementation:seq99-timing-inconclusive",
+    "implementation:seq99-command-record",
+    "source:.agents/skills/project-knowledge/scripts/knowledge_benchmark.py#L84-L150",
+    "source:.agents/skills/project-knowledge/scripts/test_behavior.py#L2547-L2609",
+    "requirements:requirements-v3-20260906"
+  ],
+  "next_action": "Bind assessment revision 3 and Requirements v4 under one exact approval, then produce a new Ready Plan for a minimal controlled BDD timing seam, explicit measurement-mode contract, generation 2 handoff, and fixed stop-on-first-non-pass verification sequence.",
+  "created_at": "2026-09-06T09:21:53.762876Z"
+}
