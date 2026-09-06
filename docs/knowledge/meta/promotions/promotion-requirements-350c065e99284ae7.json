@@ -1,0 +1,20 @@
+{
+  "approval": {
+    "actor": "workspace-user",
+    "evidence": "conversation:bug-benchmark-requirements-v2"
+  },
+  "candidate_ref": "knowledge:candidates/promotion-requirements-350c065e99284ae7/candidate.json",
+  "decision": "change",
+  "formal_paths": [
+    "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/requirements-2.md"
+  ],
+  "lint": {
+    "required_outcome": "passed"
+  },
+  "payload_sha256": "b60ee7334d3c13734135f0f31ec981442909cced4d23dc8a514a23eb3e2ceec9",
+  "promotion_id": "promotion-requirements-350c065e99284ae7",
+  "schema": "knowledge-promotion/v1",
+  "stage": "requirements",
+  "status": "Ready",
+  "work_id": "work-20260905-knowledge-benchmark-flake-40135f48"
+}

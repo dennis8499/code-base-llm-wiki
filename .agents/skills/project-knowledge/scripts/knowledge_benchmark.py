@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import platform
 import shutil
@@ -34,6 +35,120 @@ QUERY_TOKENS = (
 # This oracle is intentionally fixed after the first reviewed fixture run. A
 # platform-specific path, newline, encoding, or ordering change must alter it.
 EXPECTED_FUNCTIONAL_SHA256 = "bae0d3eee98a4ba39967ca26e3b60fd1d2f5f1d781b7dca8e00b8d385c615f83"
+SAMPLE_COUNT = 3
+OPERATION_ORDER = (
+    *(f"cold_query_{index}" for index in range(len(QUERY_TOKENS))),
+    *(f"warm_query_{index}" for index in range(len(QUERY_TOKENS))),
+    "index_candidate",
+)
+TIMING_CONTRACT = {
+    "schema": "knowledge-timing-contract/v1",
+    "sample_count": SAMPLE_COUNT,
+    "max_operation_seconds": MAX_SECONDS,
+    "operation_order": list(OPERATION_ORDER),
+    "operation_classifications": {
+        "0": "within-threshold",
+        "1": "isolated-outlier",
+        "2": "mixed-inconclusive",
+        "3": "sustained-violation",
+    },
+    "global_isolated_breach_budget": 1,
+    "overall_precedence": [
+        "sustained-violation",
+        "inconclusive",
+        "isolated-outlier",
+        "within-threshold",
+    ],
+}
+TIMING_CONTRACT_SHA256 = canonical_sha256(TIMING_CONTRACT)
+
+
+class BenchmarkEnvironmentError(RuntimeError):
+    """Stable, safe diagnostic boundary for benchmark environment failures."""
+
+    def __init__(
+        self,
+        category: str,
+        diagnostic_code: str,
+        recovery: str,
+        *,
+        cleanup: str,
+    ) -> None:
+        super().__init__(diagnostic_code)
+        self.category = category
+        self.diagnostic_code = diagnostic_code
+        self.recovery = recovery
+        self.cleanup = cleanup
+
+
+def classify_operation(samples: list[float]) -> dict[str, Any]:
+    """Classify one operation using the closed three-sample timing contract."""
+
+    if len(samples) != SAMPLE_COUNT or any(
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(value)
+        or value < 0
+        for value in samples
+    ):
+        raise ValueError("timing samples must be three finite non-negative numbers")
+    normalized = [float(value) for value in samples]
+    breach_count = sum(value > MAX_SECONDS for value in normalized)
+    classification = (
+        "within-threshold",
+        "isolated-outlier",
+        "mixed-inconclusive",
+        "sustained-violation",
+    )[breach_count]
+    return {
+        "samples_seconds": normalized,
+        "median_seconds": sorted(normalized)[1],
+        "breach_count": breach_count,
+        "classification": classification,
+    }
+
+
+def evaluate_timing_evidence(
+    operation_samples: dict[str, list[float]],
+) -> dict[str, Any]:
+    """Recompute the complete timing decision from ordered raw samples."""
+
+    if list(operation_samples) != list(OPERATION_ORDER):
+        raise ValueError("timing operations do not match the closed operation order")
+    operations = []
+    for operation_id in OPERATION_ORDER:
+        operations.append(
+            {
+                "operation_id": operation_id,
+                **classify_operation(operation_samples[operation_id]),
+            }
+        )
+    total_breach_count = sum(item["breach_count"] for item in operations)
+    classifications = {item["classification"] for item in operations}
+    if "sustained-violation" in classifications:
+        status = "sustained-violation"
+        reason_code = "SUSTAINED_OPERATION_BREACH"
+    elif "mixed-inconclusive" in classifications:
+        status = "inconclusive"
+        reason_code = "MIXED_OPERATION_EVIDENCE"
+    elif total_breach_count > TIMING_CONTRACT["global_isolated_breach_budget"]:
+        status = "inconclusive"
+        reason_code = "GLOBAL_OUTLIER_BUDGET_EXCEEDED"
+    elif total_breach_count == 1:
+        status = "isolated-outlier"
+        reason_code = "ISOLATED_OUTLIER_WITHIN_BUDGET"
+    else:
+        status = "within-threshold"
+        reason_code = "ALL_SAMPLES_WITHIN_THRESHOLD"
+    return {
+        "schema": "knowledge-timing-decision/v1",
+        "contract": TIMING_CONTRACT,
+        "contract_sha256": TIMING_CONTRACT_SHA256,
+        "operations": operations,
+        "total_breach_count": total_breach_count,
+        "status": status,
+        "reason_code": reason_code,
+    }
 
 
 def _write(path: Path, value: bytes) -> None:
@@ -317,6 +432,61 @@ def _normalized_query_result(query: str, report: dict[str, Any]) -> dict[str, An
     }
 
 
+def _normalized_candidate_result(candidate: dict[str, Any]) -> list[dict[str, str]]:
+    return [
+        {
+            "kind": operation["kind"],
+            "path": operation["path"],
+            "postimage_sha256": hashlib.sha256(
+                operation["postimage"].encode("utf-8")
+            ).hexdigest(),
+        }
+        for operation in candidate["operations"]
+    ]
+
+
+def _producer_identity() -> dict[str, Any]:
+    repository = Path(__file__).resolve().parents[4]
+
+    def git(arguments: list[str]) -> subprocess.CompletedProcess[bytes]:
+        return subprocess.run(
+            ["git", *arguments],
+            cwd=repository,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            shell=False,
+        )
+
+    head = git(["rev-parse", "HEAD"])
+    status = git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
+    head_sha = head.stdout.decode("ascii", errors="ignore").strip()
+    if head.returncode != 0 or len(head_sha) not in {40, 64}:
+        raise BenchmarkEnvironmentError(
+            "dependency",
+            "PRODUCER_GIT_IDENTITY_UNAVAILABLE",
+            "Run the benchmark from a Git worktree with Git available.",
+            cleanup="removed",
+        )
+    version_path = repository / "VERSION"
+    try:
+        version = version_path.read_text(encoding="utf-8").strip()
+        script_sha256 = sha256_bytes(Path(__file__).read_bytes())
+    except OSError as exc:
+        raise BenchmarkEnvironmentError(
+            "dependency",
+            "PRODUCER_IDENTITY_UNAVAILABLE",
+            "Restore the framework VERSION and benchmark script, then retry.",
+            cleanup="removed",
+        ) from exc
+    return {
+        "version": version,
+        "git_head_sha": head_sha,
+        "worktree_clean": status.returncode == 0 and status.stdout == b"",
+        "script_sha256": script_sha256,
+    }
+
+
 def _cold_query(repo: Path, *, stage: str, query: str) -> dict[str, Any]:
     completed = subprocess.run(
         [
@@ -391,8 +561,9 @@ def run_benchmark(
 ) -> dict[str, Any]:
     """Build the fixture, then measure fresh cold and compatible warm paths."""
 
-    succeeded = False
+    report: dict[str, Any] | None = None
     try:
+        producer = _producer_identity()
         repo, fixture_setup_duration = _timed(
             lambda: _build_fixture(
                 fixture_root,
@@ -435,52 +606,69 @@ def run_benchmark(
             stage="requirements",
             query=QUERY_TOKENS[0],
         )
-        normalized_cold_queries: list[dict[str, Any]] = []
-        cold_query_durations: list[float] = []
-        for query in QUERY_TOKENS:
-            result, duration = _timed(
-                lambda current=query: _cold_query(
-                    repo,
-                    stage="requirements",
-                    query=current,
+        operation_samples: dict[str, list[float]] = {}
+        operation_results: dict[str, list[Any]] = {}
+        for index, query in enumerate(QUERY_TOKENS):
+            operation_id = f"cold_query_{index}"
+            operation_samples[operation_id] = []
+            operation_results[operation_id] = []
+            for _ in range(SAMPLE_COUNT):
+                result, duration = _timed(
+                    lambda current=query: _cold_query(
+                        repo,
+                        stage="requirements",
+                        query=current,
+                    )
                 )
-            )
-            normalized_cold_queries.append(_normalized_query_result(query, result))
-            cold_query_durations.append(duration)
+                operation_samples[operation_id].append(duration)
+                operation_results[operation_id].append(
+                    _normalized_query_result(query, result)
+                )
 
         for query in QUERY_TOKENS:
             query_repository(str(repo), stage="requirements", query=query)
         build_stage_candidate_draft(str(repo), **candidate_arguments)
 
-        normalized_queries: list[dict[str, Any]] = []
-        query_durations: list[float] = []
-        for query in QUERY_TOKENS:
-            result, duration = _timed(
-                lambda current=query: query_repository(
-                    str(repo),
-                    stage="requirements",
-                    query=current,
+        for index, query in enumerate(QUERY_TOKENS):
+            operation_id = f"warm_query_{index}"
+            operation_samples[operation_id] = []
+            operation_results[operation_id] = []
+            for _ in range(SAMPLE_COUNT):
+                result, duration = _timed(
+                    lambda current=query: query_repository(
+                        str(repo),
+                        stage="requirements",
+                        query=current,
+                    )
                 )
-            )
-            normalized_queries.append(_normalized_query_result(query, result))
-            query_durations.append(duration)
+                operation_samples[operation_id].append(duration)
+                operation_results[operation_id].append(
+                    _normalized_query_result(query, result)
+                )
 
-        candidate, index_duration = _timed(
-            lambda: build_stage_candidate_draft(str(repo), **candidate_arguments)
-        )
+        operation_samples["index_candidate"] = []
+        operation_results["index_candidate"] = []
+        for _ in range(SAMPLE_COUNT):
+            candidate, index_duration = _timed(
+                lambda: build_stage_candidate_draft(str(repo), **candidate_arguments)
+            )
+            operation_samples["index_candidate"].append(index_duration)
+            operation_results["index_candidate"].append(
+                _normalized_candidate_result(candidate)
+            )
+
+        normalized_cold_queries = [
+            operation_results[f"cold_query_{index}"][0]
+            for index in range(len(QUERY_TOKENS))
+        ]
+        normalized_queries = [
+            operation_results[f"warm_query_{index}"][0]
+            for index in range(len(QUERY_TOKENS))
+        ]
         functional = {
             "schema": "knowledge-portability-functional/v1",
             "queries": normalized_queries,
-            "index_candidate": [
-                {
-                    "kind": operation["kind"],
-                    "path": operation["path"],
-                    "postimage_sha256": hashlib.sha256(
-                        operation["postimage"].encode("utf-8")
-                    ).hexdigest(),
-                }
-                for operation in candidate["operations"]
-            ],
+            "index_candidate": operation_results["index_candidate"][0],
             "persisted_path_separator": "/",
             "persisted_encoding": "utf-8",
             "persisted_newline": "lf",
@@ -488,23 +676,54 @@ def run_benchmark(
         functional_sha256 = canonical_sha256(functional)
         cold_queries_sha256 = canonical_sha256(normalized_cold_queries)
         warm_queries_sha256 = canonical_sha256(normalized_queries)
+        result_sha256s = {
+            operation_id: [canonical_sha256(value) for value in results]
+            for operation_id, results in operation_results.items()
+        }
+        repeated_results_stable = all(
+            len(set(hashes)) == 1 for hashes in result_sha256s.values()
+        )
+        cold_warm_results_equal = all(
+            result_sha256s[f"cold_query_{index}"][0]
+            == result_sha256s[f"warm_query_{index}"][0]
+            for index in range(len(QUERY_TOKENS))
+        )
+        timing = evaluate_timing_evidence(operation_samples)
+        for operation in timing["operations"]:
+            operation["result_sha256s"] = result_sha256s[operation["operation_id"]]
         durations = {
-            "queries": query_durations,
-            "cold_queries": cold_query_durations,
-            "index_candidate": index_duration,
+            "queries": [
+                operation_samples[f"warm_query_{index}"][0]
+                for index in range(len(QUERY_TOKENS))
+            ],
+            "cold_queries": [
+                operation_samples[f"cold_query_{index}"][0]
+                for index in range(len(QUERY_TOKENS))
+            ],
+            "index_candidate": operation_samples["index_candidate"][0],
             "fixture_setup": fixture_setup_duration,
         }
-        timed_values = [*cold_query_durations, *query_durations, index_duration]
-        passed = (
+        functional_passed = (
             len(tracked_paths) == file_count
             and tracked_page_count == page_count
             and functional_sha256 == EXPECTED_FUNCTIONAL_SHA256
             and cold_queries_sha256 == warm_queries_sha256
-            and all(value <= MAX_SECONDS for value in timed_values)
+            and repeated_results_stable
+            and cold_warm_results_equal
         )
+        if not functional_passed:
+            verdict = "functional-failure"
+        elif timing["status"] == "sustained-violation":
+            verdict = "performance-failure"
+        elif timing["status"] == "inconclusive":
+            verdict = "inconclusive"
+        else:
+            verdict = "pass"
         report = {
-            "schema": "knowledge-portability-report/v1",
-            "outcome": "passed" if passed else "failed",
+            "schema": "knowledge-portability-report/v2",
+            "outcome": "passed" if verdict == "pass" else "failed",
+            "verdict": verdict,
+            "producer": producer,
             "host": _host(),
             "file_count": len(tracked_paths),
             "page_count": tracked_page_count,
@@ -518,12 +737,25 @@ def run_benchmark(
             "cold_queries_sha256": cold_queries_sha256,
             "warm_queries_sha256": warm_queries_sha256,
             "functional": functional,
+            "timing": timing,
         }
-        succeeded = True
-        return report
     finally:
-        if not keep_fixture or not succeeded:
-            _safe_remove_fixture(fixture_root)
+        cleanup = "retained-by-request" if keep_fixture and report is not None else "removed"
+        if cleanup == "removed":
+            try:
+                _safe_remove_fixture(fixture_root)
+            except Exception as exc:
+                raise BenchmarkEnvironmentError(
+                    "cleanup",
+                    "BENCHMARK_CLEANUP_FAILED",
+                    "Remove .knowledge-test-tmp manually before retrying.",
+                    cleanup="failed",
+                ) from exc
+        if report is not None:
+            report["cleanup"] = cleanup
+    if report is None:
+        raise AssertionError("benchmark completed without a report")
+    return report
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -531,6 +763,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--fixture-root", type=Path, default=Path(".knowledge-test-tmp"))
     parser.add_argument("--reuse-fixture", action="store_true")
     parser.add_argument("--keep-fixture", action="store_true")
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     try:
         report = run_benchmark(
@@ -538,13 +771,56 @@ def main(argv: list[str] | None = None) -> int:
             reuse_fixture=args.reuse_fixture,
             keep_fixture=args.keep_fixture,
         )
+        serialized = json.dumps(report, ensure_ascii=False, sort_keys=True) + "\n"
+        if args.output is not None:
+            try:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                with args.output.open("x", encoding="utf-8", newline="\n") as stream:
+                    stream.write(serialized)
+            except OSError as exc:
+                raise BenchmarkEnvironmentError(
+                    "report-output",
+                    "BENCHMARK_OUTPUT_FAILED",
+                    "Choose a new writable output path; existing evidence is never overwritten.",
+                    cleanup=report["cleanup"],
+                ) from exc
     except Exception as exc:
+        if isinstance(exc, BenchmarkEnvironmentError):
+            category = exc.category
+            diagnostic_code = exc.diagnostic_code
+            recovery = exc.recovery
+            cleanup = exc.cleanup
+        elif isinstance(exc, subprocess.TimeoutExpired):
+            category = "timeout"
+            diagnostic_code = "BENCHMARK_OPERATION_TIMEOUT"
+            recovery = "Verify local tool responsiveness, then retry once on a stable host."
+            cleanup = "removed" if not args.fixture_root.exists() else "failed"
+        elif isinstance(exc, FileNotFoundError):
+            category = "dependency"
+            diagnostic_code = "BENCHMARK_DEPENDENCY_UNAVAILABLE"
+            recovery = "Install the documented local prerequisites, then retry."
+            cleanup = "removed" if not args.fixture_root.exists() else "failed"
+        elif isinstance(exc, ValueError):
+            category = "fixture"
+            diagnostic_code = "BENCHMARK_FIXTURE_INVALID"
+            recovery = "Remove the benchmark fixture and retry with the documented counts."
+            cleanup = "removed" if not args.fixture_root.exists() else "failed"
+        else:
+            category = "process"
+            diagnostic_code = "BENCHMARK_PROCESS_FAILED"
+            recovery = "Verify the documented local Git, Python, and ripgrep prerequisites."
+            cleanup = "removed" if not args.fixture_root.exists() else "failed"
         print(
             json.dumps(
                 {
-                    "schema": "knowledge-portability-error/v1",
+                    "schema": "knowledge-portability-error/v2",
+                    "outcome": "failed",
+                    "verdict": "environment-error",
                     "code": "BENCHMARK_ENVIRONMENT",
-                    "message": str(exc),
+                    "category": category,
+                    "diagnostic_code": diagnostic_code,
+                    "cleanup": cleanup,
+                    "recovery": recovery,
                 },
                 ensure_ascii=False,
                 sort_keys=True,
@@ -552,7 +828,7 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 4
-    print(json.dumps(report, ensure_ascii=False, sort_keys=True))
+    print(serialized, end="")
     return 0 if report["outcome"] == "passed" else 1
 
 

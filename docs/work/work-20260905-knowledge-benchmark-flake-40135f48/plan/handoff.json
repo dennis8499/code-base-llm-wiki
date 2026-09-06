@@ -1,0 +1,1812 @@
+{
+  "approval": {
+    "actor": "workspace-user",
+    "confirmed_at": "2026-09-05T15:54:01.7859073Z",
+    "evidence": "conversation:bug-benchmark-plan-v1",
+    "status": "Ready"
+  },
+  "artifacts": [
+    {
+      "approval_status": "Ready",
+      "path": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/plan.md",
+      "role": "primary",
+      "sha256": "2d9ee7894385cbec4eae85fb6518a752f3d20434952122a9cd78efbe987bd9bf"
+    },
+    {
+      "approval_status": "Ready",
+      "path": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/research.md",
+      "role": "supporting",
+      "sha256": "6d931f10e588f447e2e7b6238ba6c6206a0eae0b3b222523de1512f550591994"
+    },
+    {
+      "approval_status": "Ready",
+      "path": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/handoff.json",
+      "role": "handoff",
+      "sha256": null
+    }
+  ],
+  "bug_context": {
+    "assessment": {
+      "markdown_path": "docs/bugs/bug-knowledge-benchmark-baseline-flake/assessment-2.md",
+      "markdown_sha256": "a417a157ba4d57212a20cb0ec4cf5ace3b159d3525049837a6fb6e64849eb9c1",
+      "path": "docs/bugs/bug-knowledge-benchmark-baseline-flake/assessment-2.json",
+      "sha256": "ed451ce286cba56fe002418b4c62c7e0ed56ba0445da47d4c33298e8e5b44e15"
+    },
+    "bug_id": "bug-knowledge-benchmark-baseline-flake",
+    "original_reproduction_command_ref": "CMD-BUG-REPRO-001",
+    "partial_safeguards": {
+      "follow_up": [],
+      "proxy_bdd_refs": [],
+      "proxy_test_refs": [],
+      "reason": null,
+      "residual_risks": []
+    },
+    "regression_bdd_refs": [
+      "BDD-016",
+      "BDD-019",
+      "BDD-020"
+    ],
+    "regression_test_refs": [
+      "TEST-001",
+      "TEST-002",
+      "TEST-003"
+    ],
+    "reproduction_status": "intermittent",
+    "root_cause_confidence": "medium",
+    "root_cause_status": "hypothesized",
+    "verification_target": "verified"
+  },
+  "candidate": {
+    "payload_sha256": "374316d5d5aa5524f161dc2d4d017484badb79679d9e0f59caab67f9be60cd41",
+    "revision": "plan-v1-20260905"
+  },
+  "commands": [
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/test_behavior.py --group delivery --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-BUG-REPRO-001",
+      "completeness_criteria": [
+        "Discovered=4",
+        "Run=4",
+        "Failed=0",
+        "Skipped=0",
+        "Fixture root absent after run"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "bug-reproduction",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "The original delivery-group symptom no longer produces an unclassified timing failure"
+      ],
+      "timeout_seconds": 900
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/test_behavior.py --list-scenarios",
+      "command_id": "CMD-BDD-DISCOVERY-001",
+      "completeness_criteria": [
+        "Discovered=21",
+        "Run=0",
+        "Failed=0",
+        "Skipped=0",
+        "Every scenario ID is unique"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "bdd-discovery",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Discovery report includes BDD-016, BDD-019, BDD-020, and BDD-021"
+      ],
+      "timeout_seconds": 120
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B -c \"import json,sys; from pathlib import Path; sys.path.insert(0,'.agents/skills/project-knowledge/scripts'); import test_behavior as t; code,report=t._run(['BDD-020'],Path('.knowledge-test-tmp').resolve()); print(json.dumps(report,ensure_ascii=False,sort_keys=True)); raise SystemExit(code)\"",
+      "command_id": "CMD-BDD-FOCUSED-001",
+      "completeness_criteria": [
+        "Discovered=1",
+        "Run=1",
+        "Failed=0",
+        "Skipped=0",
+        "Fixture root absent after run"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "bdd-focused",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "BDD-020 report-v2 reduced-fixture scenario passes"
+      ],
+      "timeout_seconds": 300
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/test_behavior.py --group performance --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-BDD-FOCUSED-002",
+      "completeness_criteria": [
+        "Discovered=3",
+        "Selected exactly BDD-018, BDD-019, BDD-020",
+        "Run=3",
+        "Failed=0",
+        "Skipped=0"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "bdd-focused",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Performance scenarios including deterministic timing consumers pass"
+      ],
+      "timeout_seconds": 600
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B -c \"import json,sys; from pathlib import Path; sys.path.insert(0,'.agents/skills/project-knowledge/scripts'); import test_behavior as t; code,report=t._run(['BDD-016'],Path('.knowledge-test-tmp').resolve()); print(json.dumps(report,ensure_ascii=False,sort_keys=True)); raise SystemExit(code)\"",
+      "command_id": "CMD-BDD-FOCUSED-003",
+      "completeness_criteria": [
+        "Discovered=1",
+        "Run=1",
+        "Failed=0",
+        "Skipped=0",
+        "Fixture root absent after run"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "bdd-focused",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "One full 50k/5k BDD-016 report has verdict pass"
+      ],
+      "timeout_seconds": 900
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/test_behavior.py --group governance --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-BDD-FOCUSED-004",
+      "completeness_criteria": [
+        "Discovered=8",
+        "Run=8",
+        "Failed=0",
+        "Skipped=0",
+        "Fixture root absent after run"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "bdd-focused",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "BDD-021 local-manual/no-workflow scenario and all governance scenarios pass"
+      ],
+      "timeout_seconds": 600
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/test_behavior.py --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-BDD-FULL-001",
+      "completeness_criteria": [
+        "Discovered=21",
+        "Run=21",
+        "Failed=0",
+        "Skipped=0",
+        "Fixture root absent after run"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "bdd-full",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Complete Project Knowledge behavior suite passes"
+      ],
+      "timeout_seconds": 1200
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/test_query.py PerformanceTests --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-TDD-FOCUSED-001",
+      "completeness_criteria": [
+        "All PerformanceTests methods are discovered",
+        "Failures=0",
+        "Errors=0",
+        "Skipped=0",
+        "Fixture root absent after run"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "tdd-focused",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "All timing producer/classifier and comparator-focused PerformanceTests pass"
+      ],
+      "timeout_seconds": 600
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/test_workflow.py --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-TDD-FOCUSED-002",
+      "completeness_criteria": [
+        "All StageHookContractTests methods are discovered",
+        "Failures=0",
+        "Errors=0",
+        "Skipped=0"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "tdd-focused",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Comparator and governance integration contracts pass"
+      ],
+      "timeout_seconds": 600
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B -m unittest tests.test_contracts.ContractTests.test_validation_and_release_are_local_manual_workflows -v",
+      "command_id": "CMD-TDD-FOCUSED-003",
+      "completeness_criteria": [
+        "Ran 1 test",
+        "Failures=0",
+        "Errors=0",
+        "Skipped=0"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "tdd-focused",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Repository local-manual/no-workflow contract passes"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/run_full_suite.py --scope related --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-RELATED-001",
+      "completeness_criteria": [
+        "TEST-QUERY, TEST-WORKFLOW, BDD-RELATED and all owner validators ran",
+        "Every reported command exit_code=0"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "related",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Project Knowledge related owner checks pass"
+      ],
+      "timeout_seconds": 900
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/validate_contracts.py --syntax-all",
+      "command_id": "CMD-BUILD-FULL-001",
+      "completeness_criteria": [
+        "syntax_checked=true",
+        "Every Git-eligible Python file and schema file is counted",
+        "Errors array is empty"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "build-full",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "All Git-eligible Python and schema sources parse"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/run_full_suite.py --scope all --fixture-root .knowledge-test-tmp",
+      "command_id": "CMD-TEST-FULL-001",
+      "completeness_criteria": [
+        "Every command declared by scope=all ran",
+        "Every reported command exit_code=0",
+        "BDD full report has 21 run and zero skipped"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "test-full",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Project Knowledge and all SDLC owner suites pass"
+      ],
+      "timeout_seconds": 1800
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B -m unittest discover -s tests -v",
+      "command_id": "CMD-TEST-FULL-002",
+      "completeness_criteria": [
+        "Every test under tests/ is discovered",
+        "Errors=0 and only existing explicit environment-dependent skips are allowed",
+        "Allowed method 1: test_capability_removal.CapabilityRemovalBehaviorTests.test_active_docs_and_framework_knowledge_match_removed_surface",
+        "Allowed method 2: test_repository_format.RepositoryFormatTests.test_local_markdown_links_resolve",
+        "Allowed targets only: docs/knowledge/topics/work-20260904-remove-guide-delegation-6e10da4e-implementation.md, docs/knowledge/topics/work-20260905-knowledge-benchmark-flake-40135f48-requirements.md, docs/knowledge/decisions/work-20260905-knowledge-benchmark-flake-40135f48-planning.md"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "test-full",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0, or exit code 1 solely for registered bug-knowledge-index-relative-links assertions",
+        "No failure or error outside the two exact allowed test methods and three exact Knowledge index targets"
+      ],
+      "timeout_seconds": 1800
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/validate_contracts.py --governance",
+      "command_id": "CMD-GOVERNANCE-001",
+      "completeness_criteria": [
+        "governance_checked=true",
+        "Errors array is empty",
+        "No workflow or unsupported docs-ignore expectation remains"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Project Knowledge governance report outcome is passed"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/codebase-wiki/scripts/parity-check.py",
+      "command_id": "CMD-GOVERNANCE-002",
+      "completeness_criteria": [
+        "All v5 operations/adapters and no-workflow contract are checked"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Framework manifest/platform parity passes"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/codebase-wiki/scripts/validate-frontmatter.py wiki",
+      "command_id": "CMD-GOVERNANCE-003",
+      "completeness_criteria": [
+        "Every managed Wiki page is checked"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Wiki frontmatter is valid"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/codebase-wiki/scripts/check-stale.py wiki .",
+      "command_id": "CMD-GOVERNANCE-004",
+      "completeness_criteria": [
+        "Every source-bearing Wiki page is checked",
+        "platform-adapters-and-release source_digest matches postimages"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "No disallowed stale evidence remains"
+      ],
+      "timeout_seconds": 300
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/codebase-wiki/scripts/validate-log.py wiki/log.md --repo-root .",
+      "command_id": "CMD-GOVERNANCE-005",
+      "completeness_criteria": [
+        "Entire log and page refs are checked",
+        "Exactly one new update entry belongs to this Work"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Append-only Wiki log validates"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki",
+      "command_id": "CMD-GOVERNANCE-006",
+      "completeness_criteria": [
+        "All pages are counted by type and status"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Wiki statistics complete"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --repo-root .",
+      "command_id": "CMD-GOVERNANCE-007",
+      "completeness_criteria": [
+        "Links, orphans, sources, contradictions and coverage are reported",
+        "Semantic review-required items are explicitly retained for human review"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Wiki lint has zero critical and zero warning findings"
+      ],
+      "timeout_seconds": 600
+    },
+    {
+      "absence_evidence": [],
+      "allowed_writes": [],
+      "command": "python -X utf8 -B .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check",
+      "command_id": "CMD-GOVERNANCE-008",
+      "completeness_criteria": [
+        "Every indexed page and type is checked without writing"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Observed",
+      "success_criteria": [
+        "Exit code 0",
+        "Committed Wiki index equals deterministic rebuild"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "absence_evidence": [
+        {
+          "outcome": "Exit 0; baseline help lists fixture-root, reuse-fixture, and keep-fixture but no --output option.",
+          "probe": "python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --help",
+          "source_ref": "SRC-RESEARCH-001"
+        }
+      ],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        },
+        {
+          "cleanup": "Retain local JSON evidence through review, then remove the ignored directory manually.",
+          "kind": "ignored",
+          "path": "dist/knowledge-benchmark-verification/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --fixture-root .knowledge-test-tmp --output dist/knowledge-benchmark-verification/knowledge-benchmark-run-1.json",
+      "command_id": "CMD-BENCHMARK-VERIFY-001",
+      "completeness_criteria": [
+        "50,000 files, 5,000 pages, 39,998 sources",
+        "All 11 operations contain exactly 3 samples and result hashes",
+        "Functional and cold/warm digests match",
+        "No replacement run is used"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH",
+        "Windows host",
+        "Implementation commit exists and git status is strict-clean before run 1"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Proposed",
+      "success_criteria": [
+        "Exit code 0",
+        "Report schema v2 has verdict pass",
+        "Cleanup status is removed",
+        "Output file is created once and stdout matches its JSON"
+      ],
+      "timeout_seconds": 900
+    },
+    {
+      "absence_evidence": [
+        {
+          "outcome": "Exit 0; baseline help lists fixture-root, reuse-fixture, and keep-fixture but no --output option.",
+          "probe": "python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --help",
+          "source_ref": "SRC-RESEARCH-001"
+        }
+      ],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        },
+        {
+          "cleanup": "Retain local JSON evidence through review, then remove the ignored directory manually.",
+          "kind": "ignored",
+          "path": "dist/knowledge-benchmark-verification/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --fixture-root .knowledge-test-tmp --output dist/knowledge-benchmark-verification/knowledge-benchmark-run-2.json",
+      "command_id": "CMD-BENCHMARK-VERIFY-002",
+      "completeness_criteria": [
+        "50,000 files, 5,000 pages, 39,998 sources",
+        "All 11 operations contain exactly 3 samples and result hashes",
+        "Functional and cold/warm digests match",
+        "No replacement run is used"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH",
+        "Windows host",
+        "Implementation commit exists and git status is strict-clean before run 1"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Proposed",
+      "success_criteria": [
+        "Exit code 0",
+        "Report schema v2 has verdict pass",
+        "Cleanup status is removed",
+        "Output file is created once and stdout matches its JSON"
+      ],
+      "timeout_seconds": 900
+    },
+    {
+      "absence_evidence": [
+        {
+          "outcome": "Exit 0; baseline help lists fixture-root, reuse-fixture, and keep-fixture but no --output option.",
+          "probe": "python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --help",
+          "source_ref": "SRC-RESEARCH-001"
+        }
+      ],
+      "allowed_writes": [
+        {
+          "cleanup": "The owning runner removes the exact workspace child in finally; success also verifies it is absent.",
+          "kind": "temporary",
+          "path": ".knowledge-test-tmp/"
+        },
+        {
+          "cleanup": "Retain local JSON evidence through review, then remove the ignored directory manually.",
+          "kind": "ignored",
+          "path": "dist/knowledge-benchmark-verification/"
+        }
+      ],
+      "command": "python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --fixture-root .knowledge-test-tmp --output dist/knowledge-benchmark-verification/knowledge-benchmark-run-3.json",
+      "command_id": "CMD-BENCHMARK-VERIFY-003",
+      "completeness_criteria": [
+        "50,000 files, 5,000 pages, 39,998 sources",
+        "All 11 operations contain exactly 3 samples and result hashes",
+        "Functional and cold/warm digests match",
+        "No replacement run is used"
+      ],
+      "cwd": ".",
+      "environment_prerequisites": [
+        "Python 3.14.6 available on PATH",
+        "Run from the canonical delivery worktree",
+        "Git and ripgrep available on PATH",
+        "Windows host",
+        "Implementation commit exists and git status is strict-clean before run 1"
+      ],
+      "external_side_effects": [],
+      "network_policy": "forbidden",
+      "purpose": "governance",
+      "status": "Proposed",
+      "success_criteria": [
+        "Exit code 0",
+        "Report schema v2 has verdict pass",
+        "Cleanup status is removed",
+        "Output file is created once and stdout matches its JSON"
+      ],
+      "timeout_seconds": 900
+    }
+  ],
+  "contract_index": [
+    {
+      "contract_id": "BDD-FWK-001",
+      "kind": "bdd-framework",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "BDD-020",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "BDD-019",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "BDD-016",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "BDD-021",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "TEST-001",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "TEST-002",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "TEST-003",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "TEST-004",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "WP-001",
+      "kind": "work-package",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "WP-002",
+      "kind": "work-package",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "WP-003",
+      "kind": "work-package",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BUG-REPRO-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-DISCOVERY-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-FOCUSED-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-FOCUSED-002",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-FOCUSED-003",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-FOCUSED-004",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-FULL-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-FOCUSED-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-FOCUSED-002",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-FOCUSED-003",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-RELATED-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BUILD-FULL-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-TEST-FULL-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-TEST-FULL-002",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-002",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-003",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-004",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-005",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-006",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-007",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE-008",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BENCHMARK-VERIFY-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BENCHMARK-VERIFY-002",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BENCHMARK-VERIFY-003",
+      "kind": "command",
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    }
+  ],
+  "planning_baseline": {
+    "head_sha": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+    "repo_id": "3a6b11d008ffd5ef15f38f901249bf99b363ea4742fe8c587add45cd96949ab9",
+    "status_sha256": "8b48f5404eda0e8d2ae9632b0664c1da4369a6f2756ee25b1aeb26d6641ccd92"
+  },
+  "primary_plan": {
+    "path": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/plan.md",
+    "sha256": "2d9ee7894385cbec4eae85fb6518a752f3d20434952122a9cd78efbe987bd9bf"
+  },
+  "revision_impact": {
+    "changes": [
+      {
+        "affected_wp_refs": [
+          "WP-001",
+          "WP-002",
+          "WP-003"
+        ],
+        "changed_ref": "SRC-REQ-001",
+        "scope": "global-baseline"
+      },
+      {
+        "affected_wp_refs": [
+          "WP-001",
+          "WP-002",
+          "WP-003"
+        ],
+        "changed_ref": "SRC-BUG-001",
+        "scope": "global-baseline"
+      },
+      {
+        "affected_wp_refs": [
+          "WP-001",
+          "WP-002",
+          "WP-003"
+        ],
+        "changed_ref": "SRC-RESEARCH-001",
+        "scope": "global-baseline"
+      }
+    ],
+    "revision": "plan-v1-20260905"
+  },
+  "schema": "ready-plan/v1",
+  "sources": [
+    {
+      "kind": "spec",
+      "location": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/requirements-2.md",
+      "plan_refs": [
+        "CON-001",
+        "CON-002",
+        "CON-003",
+        "CON-004",
+        "CON-005",
+        "CON-006",
+        "TD-001",
+        "TD-002",
+        "TD-003",
+        "TD-004",
+        "TD-005",
+        "BDD-FWK-001",
+        "BDD-016",
+        "BDD-019",
+        "BDD-020",
+        "BDD-021",
+        "TEST-001",
+        "TEST-002",
+        "TEST-003",
+        "TEST-004",
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "TR-001",
+        "TR-002",
+        "TR-003",
+        "CR-001",
+        "AC-001",
+        "AC-002",
+        "AC-003",
+        "AC-004",
+        "AC-005",
+        "AC-006",
+        "AC-007",
+        "AC-008",
+        "AC-009"
+      ],
+      "revision": "requirements-v2-20260905",
+      "sha256": "8c6b0a0961687a69cb387088ca45718ca56516a3690fb7117c2e405c4c7641a3",
+      "source_id": "SRC-REQ-001",
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "kind": "bug",
+      "location": "docs/bugs/bug-knowledge-benchmark-baseline-flake/assessment-2.json",
+      "plan_refs": [
+        "CON-002",
+        "CON-004",
+        "TD-001",
+        "TD-005",
+        "BDD-016",
+        "BDD-019",
+        "BDD-020",
+        "TEST-001",
+        "TEST-002",
+        "TEST-003"
+      ],
+      "revision": "2",
+      "sha256": "ed451ce286cba56fe002418b4c62c7e0ed56ba0445da47d4c33298e8e5b44e15",
+      "source_id": "SRC-BUG-001",
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "kind": "governance",
+      "location": ".agents/skills/codebase-wiki/references/framework-maintenance.md",
+      "plan_refs": [
+        "CON-006",
+        "TD-004",
+        "TD-005",
+        "BDD-021",
+        "TEST-004",
+        "CR-001"
+      ],
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "bbe3f935e423e8cb1dc709f1c5545683964e4788719237b8fe0238985931799d",
+      "source_id": "SRC-GOV-001",
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "kind": "project",
+      "location": ".agents/skills/project-knowledge/scripts/knowledge_benchmark.py",
+      "plan_refs": [
+        "CON-001",
+        "CON-003",
+        "CON-004",
+        "TD-001",
+        "TD-002",
+        "MOD-001",
+        "MOD-002",
+        "SEAM-001",
+        "SEAM-002",
+        "BDD-016",
+        "BDD-019",
+        "BDD-020",
+        "TEST-001",
+        "TEST-002",
+        "TEST-003"
+      ],
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "89db943c0841b4d046802c8c61779996aeb7bc43b02cf67bee2dc23d335bbc48",
+      "source_id": "SRC-BENCH-001",
+      "wp_refs": [
+        "WP-001",
+        "WP-002"
+      ]
+    },
+    {
+      "kind": "contract",
+      "location": ".agents/skills/project-knowledge/scripts/compare_portability_reports.py",
+      "plan_refs": [
+        "CON-003",
+        "TD-003",
+        "MOD-003",
+        "SEAM-003",
+        "BDD-016",
+        "BDD-019",
+        "TEST-003"
+      ],
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "ad9f673f63cf613c8a4e8fd135e440914fa6116c26fb44b65182765fd81e8af1",
+      "source_id": "SRC-COMPARE-001",
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "kind": "project",
+      "location": ".agents/skills/project-knowledge/scripts/validate_contracts.py",
+      "plan_refs": [
+        "CON-005",
+        "TD-004",
+        "MOD-004",
+        "SEAM-004",
+        "BDD-021",
+        "TEST-004"
+      ],
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "ebbb9f7f8a0fe673f47df9c0fa13f7a974a307e24318e934e4dd1b018dd38533",
+      "source_id": "SRC-VALIDATOR-001",
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "kind": "contract",
+      "location": "tests/test_contracts.py",
+      "plan_refs": [
+        "CON-005",
+        "TD-004",
+        "TD-005",
+        "BDD-021",
+        "TEST-004"
+      ],
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "c179812a0d27193836c420131eed597b859713053f04ff7b1f42a81becc79d13",
+      "source_id": "SRC-REPO-POLICY-001",
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "kind": "supporting",
+      "location": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/research.md",
+      "plan_refs": [
+        "TD-001",
+        "TD-002",
+        "TD-003",
+        "TD-004",
+        "TD-005",
+        "BDD-FWK-001",
+        "BDD-016",
+        "BDD-019",
+        "BDD-020",
+        "BDD-021",
+        "TEST-001",
+        "TEST-002",
+        "TEST-003",
+        "TEST-004"
+      ],
+      "revision": "research-v1-20260905",
+      "sha256": "6d931f10e588f447e2e7b6238ba6c6206a0eae0b3b222523de1512f550591994",
+      "source_id": "SRC-RESEARCH-001",
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    }
+  ],
+  "work_packages": [
+    {
+      "blocked_by": [],
+      "command_refs": [
+        "CMD-BDD-DISCOVERY-001",
+        "CMD-BDD-FOCUSED-001",
+        "CMD-BDD-FULL-001",
+        "CMD-TDD-FOCUSED-001",
+        "CMD-RELATED-001",
+        "CMD-BUILD-FULL-001",
+        "CMD-TEST-FULL-001",
+        "CMD-TEST-FULL-002"
+      ],
+      "contract_refs": [
+        "BDD-FWK-001",
+        "BDD-020",
+        "TEST-001",
+        "TEST-002",
+        "WP-001",
+        "CMD-BDD-DISCOVERY-001",
+        "CMD-BDD-FOCUSED-001",
+        "CMD-BDD-FULL-001",
+        "CMD-TDD-FOCUSED-001",
+        "CMD-RELATED-001",
+        "CMD-BUILD-FULL-001",
+        "CMD-TEST-FULL-001",
+        "CMD-TEST-FULL-002"
+      ],
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_id": "WP-001"
+    },
+    {
+      "blocked_by": [
+        "WP-001"
+      ],
+      "command_refs": [
+        "CMD-BUG-REPRO-001",
+        "CMD-BDD-DISCOVERY-001",
+        "CMD-BDD-FOCUSED-002",
+        "CMD-BDD-FOCUSED-003",
+        "CMD-BDD-FULL-001",
+        "CMD-TDD-FOCUSED-001",
+        "CMD-TDD-FOCUSED-002",
+        "CMD-RELATED-001",
+        "CMD-BUILD-FULL-001",
+        "CMD-TEST-FULL-001",
+        "CMD-TEST-FULL-002"
+      ],
+      "contract_refs": [
+        "BDD-FWK-001",
+        "BDD-019",
+        "BDD-016",
+        "TEST-003",
+        "WP-002",
+        "CMD-BUG-REPRO-001",
+        "CMD-BDD-DISCOVERY-001",
+        "CMD-BDD-FOCUSED-002",
+        "CMD-BDD-FOCUSED-003",
+        "CMD-BDD-FULL-001",
+        "CMD-TDD-FOCUSED-001",
+        "CMD-TDD-FOCUSED-002",
+        "CMD-RELATED-001",
+        "CMD-BUILD-FULL-001",
+        "CMD-TEST-FULL-001",
+        "CMD-TEST-FULL-002"
+      ],
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-BENCH-001",
+        "SRC-COMPARE-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_id": "WP-002"
+    },
+    {
+      "blocked_by": [
+        "WP-002"
+      ],
+      "command_refs": [
+        "CMD-BDD-DISCOVERY-001",
+        "CMD-BDD-FOCUSED-004",
+        "CMD-BDD-FULL-001",
+        "CMD-TDD-FOCUSED-002",
+        "CMD-TDD-FOCUSED-003",
+        "CMD-RELATED-001",
+        "CMD-BUILD-FULL-001",
+        "CMD-TEST-FULL-001",
+        "CMD-TEST-FULL-002",
+        "CMD-GOVERNANCE-001",
+        "CMD-GOVERNANCE-002",
+        "CMD-GOVERNANCE-003",
+        "CMD-GOVERNANCE-004",
+        "CMD-GOVERNANCE-005",
+        "CMD-GOVERNANCE-006",
+        "CMD-GOVERNANCE-007",
+        "CMD-GOVERNANCE-008",
+        "CMD-BENCHMARK-VERIFY-001",
+        "CMD-BENCHMARK-VERIFY-002",
+        "CMD-BENCHMARK-VERIFY-003"
+      ],
+      "contract_refs": [
+        "BDD-FWK-001",
+        "BDD-021",
+        "TEST-004",
+        "WP-003",
+        "CMD-BDD-DISCOVERY-001",
+        "CMD-BDD-FOCUSED-004",
+        "CMD-BDD-FULL-001",
+        "CMD-TDD-FOCUSED-002",
+        "CMD-TDD-FOCUSED-003",
+        "CMD-RELATED-001",
+        "CMD-BUILD-FULL-001",
+        "CMD-TEST-FULL-001",
+        "CMD-TEST-FULL-002",
+        "CMD-GOVERNANCE-001",
+        "CMD-GOVERNANCE-002",
+        "CMD-GOVERNANCE-003",
+        "CMD-GOVERNANCE-004",
+        "CMD-GOVERNANCE-005",
+        "CMD-GOVERNANCE-006",
+        "CMD-GOVERNANCE-007",
+        "CMD-GOVERNANCE-008",
+        "CMD-BENCHMARK-VERIFY-001",
+        "CMD-BENCHMARK-VERIFY-002",
+        "CMD-BENCHMARK-VERIFY-003"
+      ],
+      "source_refs": [
+        "SRC-REQ-001",
+        "SRC-BUG-001",
+        "SRC-GOV-001",
+        "SRC-VALIDATOR-001",
+        "SRC-REPO-POLICY-001",
+        "SRC-RESEARCH-001"
+      ],
+      "wp_id": "WP-003"
+    }
+  ]
+}

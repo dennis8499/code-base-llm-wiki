@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:c42d20db79db8e8caf339e3529c8b622a06f59583fb8bb69eef6a8158cf16c4f
+source_digest: sha256:d0d67f66260cb5e820d8cc12132a51fa203e98503bc9c8203bdb9aa1efb26ca5
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-06
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides

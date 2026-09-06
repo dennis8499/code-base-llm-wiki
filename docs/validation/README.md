@@ -60,6 +60,39 @@ python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
 - Repo 內 raw-source symlink 可追蹤 resolved target digest，逃逸 Repo 的
   symlink/reparse source 會被拒絕；installer 則拒絕所有 framework-source symlink/reparse。
 
+## Windows／Linux portability（local-manual）
+
+Portability 不由 GitHub Actions 執行。先在實際 Windows 與 Linux 主機 checkout 同一個
+revision；兩個 worktree 都必須是 `strict-clean`，且根 `VERSION`、Git HEAD 與
+`knowledge_benchmark.py` bytes 完全相同。各主機只執行一次 producer，使用新的
+create-only output path：
+
+```powershell
+python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --output "$env:TEMP\knowledge-portability-report-windows.json"
+```
+
+```bash
+python -X utf8 -B .agents/skills/project-knowledge/scripts/knowledge_benchmark.py --output "${TMPDIR:-/tmp}/knowledge-portability-report-linux.json"
+```
+
+每份 `knowledge-portability-report/v2` 都必須保留 50,000 files／5,000 pages、十一個
+operations 各三個 raw samples 與 result hashes、legacy first-sample projection、
+functional oracle、producer identity 及 `cleanup=removed`。任何 run 若為
+`functional-failure`、`performance-failure`、`inconclusive` 或 environment error，保存
+該份 evidence 並停止；不得用額外 retry 的 pass 覆蓋。
+
+把兩台主機產生的原始檔人工搬到只含這兩份 report 的 ignored directory
+`.knowledge-test-tmp/portability-reports`，再執行：
+
+```text
+python -X utf8 -B .agents/skills/project-knowledge/scripts/compare_portability_reports.py --root .knowledge-test-tmp/portability-reports
+```
+
+Comparator 只接受 Windows、Linux 各一份，從 raw samples 重算四態 timing decision、
+結果 hashes、legacy projection 與全樣本最大值；兩份報告還必須同為 `verdict=pass`、
+strict-clean、相同 producer identity、timing contract 與 functional oracle。單一 OS 或
+synthetic OS metadata 只能驗證 contract，不能宣稱跨平台效能通過。
+
 ## BA／SA／SD 文件契約驗收
 
 Contract tests 另固定驗證：

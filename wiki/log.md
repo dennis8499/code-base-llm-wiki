@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-04
+last_updated: 2026-09-06
 tags: [log]
 status: active
 ---
@@ -535,3 +535,10 @@ status: active
 - Capability／installer contract 升級至 v5（11 operations／11 intent groups）；移除 Guide creator resources、兩平台 Wiki custom-agent profiles 與 Codex fan-out 設定，保留 prompts 改用 built-in `agent`。
 - Fresh install 不再帶入 14 個舊路徑；upgrade 只列為 `obsolete_paths` 並保留原 bytes。既有 `type: guide`、Guides index、歷史 `guide` log 與 NotebookLM `project-guides` mapping 保持可讀。
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[business-analysis]]、[[system-analysis]]、[[system-design]]、[[codebase-functional-coverage]]
+
+## [2026-09-06] update | Knowledge benchmark 三樣本與本機 portability
+
+- 50k/5k Knowledge benchmark 改為十一個 operations 各三個正式樣本，以四態 timing decision 與全域單一 isolated-outlier 預算區分 jitter、inconclusive 與 sustained regression。
+- Report/error 與 Windows/Linux comparator 升級至 v2，保存並重算 raw samples、result hashes、legacy projection、cleanup、producer identity 與 functional oracle；v1、dirty 或漂移 evidence fail closed。
+- Portability 維持兩台 strict-clean 實際主機的 local-manual 流程，Repo 不新增 workflow YAML，並以 `.knowledge-test-tmp/` 保存 ignored local evidence。
+- 受影響頁面：[[index]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[release-and-update]]、[[system-analysis]]

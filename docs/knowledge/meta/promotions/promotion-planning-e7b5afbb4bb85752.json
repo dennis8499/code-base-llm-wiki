@@ -1,0 +1,22 @@
+{
+  "approval": {
+    "actor": "workspace-user",
+    "evidence": "conversation:bug-benchmark-plan-v1"
+  },
+  "candidate_ref": "knowledge:candidates/promotion-planning-e7b5afbb4bb85752/candidate.json",
+  "decision": "change",
+  "formal_paths": [
+    "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/handoff.json",
+    "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/plan.md",
+    "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/research.md"
+  ],
+  "lint": {
+    "required_outcome": "passed"
+  },
+  "payload_sha256": "8e6b3abda65744d25c638911c3dc131a19b4f05118843f065804804862888a97",
+  "promotion_id": "promotion-planning-e7b5afbb4bb85752",
+  "schema": "knowledge-promotion/v1",
+  "stage": "planning",
+  "status": "Ready",
+  "work_id": "work-20260905-knowledge-benchmark-flake-40135f48"
+}

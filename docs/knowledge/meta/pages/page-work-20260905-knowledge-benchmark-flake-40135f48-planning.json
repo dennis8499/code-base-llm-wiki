@@ -1,0 +1,34 @@
+{
+  "aliases": [],
+  "backlinks": [],
+  "claims": [
+    {
+      "claim_id": "claim-work-20260905-knowledge-benchmark-flake-40135f48-planning",
+      "content_anchor": "planning-claim",
+      "contradicts": [],
+      "evidence_class": "planned",
+      "lifecycle": "current",
+      "source_refs": [
+        {
+          "excerpt_sha256": "2c1f0967af7d9617c41d14f5f8ef1ec3a93c6a5022b45bd0ccea89c4cb30705e",
+          "locator": {
+            "end_line": 14,
+            "start_line": 14
+          },
+          "path": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/plan/plan.md",
+          "sha256": "2d9ee7894385cbec4eae85fb6518a752f3d20434952122a9cd78efbe987bd9bf"
+        }
+      ],
+      "supersedes": []
+    }
+  ],
+  "content_path": "docs/knowledge/decisions/work-20260905-knowledge-benchmark-flake-40135f48-planning.md",
+  "content_sha256": "9655d059d8813ca6a6ee5ecce5107db1dfb7beea8d39a7187f517de0da52cbaf",
+  "lifecycle": "current",
+  "page_id": "page-work-20260905-knowledge-benchmark-flake-40135f48-planning",
+  "schema": "knowledge-page/v1",
+  "tags": [
+    "planning"
+  ],
+  "title": "Large Knowledge Benchmark Stabilization Plan"
+}

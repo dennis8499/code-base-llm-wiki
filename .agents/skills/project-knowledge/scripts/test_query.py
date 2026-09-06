@@ -28,6 +28,7 @@ from test_behavior import (
     _build_retrieval_fixture,
     _evaluate_golden,
     _remove_fixture,
+    _synthetic_portability_report,
     _tree_snapshot,
 )
 
@@ -373,6 +374,196 @@ class PerformanceTests(unittest.TestCase):
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
             exit_code = knowledge_main(arguments)
         return exit_code, stdout.getvalue(), stderr.getvalue()
+
+    def test_timing_decision_uses_the_closed_three_sample_contract(self) -> None:
+        import knowledge_benchmark
+
+        self.assertTrue(
+            hasattr(knowledge_benchmark, "classify_operation"),
+            "the approved public timing-decision seam is missing",
+        )
+        classify = knowledge_benchmark.classify_operation
+        cases = (
+            ([0.1, 0.2, 2.0], 0, "within-threshold"),
+            ([0.1, 2.001, 0.2], 1, "isolated-outlier"),
+            ([2.001, 0.2, 2.1], 2, "mixed-inconclusive"),
+            ([2.001, 2.1, 2.2], 3, "sustained-violation"),
+        )
+        for samples, breach_count, classification in cases:
+            with self.subTest(classification=classification):
+                decisions = [classify(samples) for _ in range(10)]
+                self.assertEqual([decisions[0]] * 10, decisions)
+                self.assertEqual(samples, decisions[0]["samples_seconds"])
+                self.assertEqual(sorted(samples)[1], decisions[0]["median_seconds"])
+                self.assertEqual(breach_count, decisions[0]["breach_count"])
+                self.assertEqual(classification, decisions[0]["classification"])
+
+        for invalid in (
+            [0.1, 0.2],
+            [0.1, 0.2, True],
+            [0.1, 0.2, float("nan")],
+            [0.1, 0.2, float("inf")],
+            [0.1, 0.2, -0.1],
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                classify(invalid)
+
+    def test_benchmark_cli_preserves_output_and_safe_environment_errors(self) -> None:
+        import knowledge_benchmark
+
+        report = {
+            "schema": "knowledge-portability-report/v2",
+            "outcome": "passed",
+            "verdict": "pass",
+            "cleanup": "removed",
+        }
+        output = self.fixture_root / "saved-report.json"
+        expected = json.dumps(report, ensure_ascii=False, sort_keys=True) + "\n"
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch("knowledge_benchmark.run_benchmark", return_value=report),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            exit_code = knowledge_benchmark.main(["--output", str(output)])
+        self.assertEqual(0, exit_code)
+        self.assertEqual(expected, stdout.getvalue())
+        self.assertEqual("", stderr.getvalue())
+        self.assertEqual(expected.encode("utf-8"), output.read_bytes())
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch("knowledge_benchmark.run_benchmark", return_value=report),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            exit_code = knowledge_benchmark.main(["--output", str(output)])
+        self.assertEqual(4, exit_code)
+        self.assertEqual("", stdout.getvalue())
+        error = json.loads(stderr.getvalue())
+        self.assertEqual("knowledge-portability-error/v2", error["schema"])
+        self.assertEqual("environment-error", error["verdict"])
+        self.assertEqual("report-output", error["category"])
+        self.assertNotIn(str(output), stderr.getvalue())
+        self.assertEqual(expected.encode("utf-8"), output.read_bytes())
+
+        failures = (
+            (FileNotFoundError("token=secret-value"), "dependency"),
+            (subprocess.TimeoutExpired(["secret-command"], 30), "timeout"),
+            (ValueError("C:/private/fixture"), "fixture"),
+            (RuntimeError("password=secret-value"), "process"),
+            (
+                knowledge_benchmark.BenchmarkEnvironmentError(
+                    "cleanup",
+                    "BENCHMARK_CLEANUP_FAILED",
+                    "Remove the bounded temporary fixture before retrying.",
+                    cleanup="failed",
+                ),
+                "cleanup",
+            ),
+        )
+        for failure, category in failures:
+            with self.subTest(category=category):
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with (
+                    mock.patch("knowledge_benchmark.run_benchmark", side_effect=failure),
+                    contextlib.redirect_stdout(stdout),
+                    contextlib.redirect_stderr(stderr),
+                ):
+                    exit_code = knowledge_benchmark.main([])
+                self.assertEqual(4, exit_code)
+                self.assertEqual("", stdout.getvalue())
+                error = json.loads(stderr.getvalue())
+                self.assertEqual(category, error["category"])
+                self.assertEqual("failed", error["outcome"])
+                self.assertNotIn("secret-value", stderr.getvalue())
+                self.assertNotIn("private", stderr.getvalue())
+
+        failed_report = dict(report, outcome="failed", verdict="inconclusive")
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch("knowledge_benchmark.run_benchmark", return_value=failed_report),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            exit_code = knowledge_benchmark.main([])
+        self.assertEqual(1, exit_code)
+        self.assertEqual("", stderr.getvalue())
+        self.assertEqual(failed_report, json.loads(stdout.getvalue()))
+
+    def test_benchmark_functional_drift_precedes_timing_and_cleanup_failure(self) -> None:
+        import knowledge_benchmark
+
+        real_normalize = knowledge_benchmark._normalized_query_result
+        normalization_count = 0
+
+        def drifting_normalize(query: str, report: dict[str, object]) -> dict[str, object]:
+            nonlocal normalization_count
+            normalization_count += 1
+            value = real_normalize(query, report)
+            if normalization_count == 2:
+                value = dict(value)
+                value["query"] = f"{query}-drift"
+            return value
+
+        _remove_fixture(self.fixture_root)
+        with (
+            mock.patch.object(knowledge_benchmark, "FILE_COUNT", 250),
+            mock.patch.object(knowledge_benchmark, "PAGE_COUNT", 20),
+            mock.patch.object(
+                knowledge_benchmark,
+                "EXPECTED_FUNCTIONAL_SHA256",
+                "6310a73a73d1beb175615d927b429bce350694a95a131a1c68356a69d9f6ba32",
+            ),
+            mock.patch(
+                "knowledge_benchmark._normalized_query_result",
+                side_effect=drifting_normalize,
+            ),
+        ):
+            report = knowledge_benchmark.run_benchmark(
+                self.fixture_root,
+                file_count=250,
+                page_count=20,
+            )
+        self.assertEqual("failed", report["outcome"])
+        self.assertEqual("functional-failure", report["verdict"])
+        self.assertEqual(
+            report["functional_sha256"], report["expected_functional_sha256"]
+        )
+        self.assertEqual("removed", report["cleanup"])
+        self.assertFalse(self.fixture_root.exists())
+
+        with (
+            mock.patch(
+                "knowledge_benchmark._producer_identity",
+                return_value={
+                    "version": "test",
+                    "git_head_sha": "0" * 40,
+                    "worktree_clean": False,
+                    "script_sha256": "0" * 64,
+                },
+            ),
+            mock.patch(
+                "knowledge_benchmark._build_fixture",
+                side_effect=RuntimeError("initial product failure"),
+            ),
+            mock.patch(
+                "knowledge_benchmark._safe_remove_fixture",
+                side_effect=RuntimeError("cleanup failure"),
+            ),
+            self.assertRaises(knowledge_benchmark.BenchmarkEnvironmentError) as raised,
+        ):
+            knowledge_benchmark.run_benchmark(
+                self.fixture_root,
+                file_count=50,
+                page_count=5,
+            )
+        self.assertEqual("cleanup", raised.exception.category)
+        self.assertEqual("failed", raised.exception.cleanup)
 
     def test_query_reuses_one_snapshot_and_one_fixed_pattern_search(self) -> None:
         import knowledge_query
@@ -954,12 +1145,31 @@ class PerformanceTests(unittest.TestCase):
             )
 
         durations = report["durations_seconds"]
+        self.assertEqual("knowledge-portability-report/v2", report["schema"])
+        self.assertEqual("pass", report["verdict"])
+        self.assertEqual("removed", report["cleanup"])
         self.assertEqual(5, len(durations["queries"]))
         self.assertEqual(5, len(durations["cold_queries"]))
-        self.assertEqual(6, cold_queries.call_count)
+        self.assertEqual(16, cold_queries.call_count)
+        for sample_call in cold_queries.call_args_list[1:4]:
+            self.assertEqual(cold_queries.call_args_list[0].kwargs, sample_call.kwargs)
+        timing = report["timing"]
+        self.assertEqual(11, len(timing["operations"]))
+        self.assertEqual(3, timing["contract"]["sample_count"])
+        for operation in timing["operations"]:
+            self.assertEqual(3, len(operation["samples_seconds"]))
+            self.assertEqual(3, len(operation["result_sha256s"]))
+            self.assertEqual(
+                [operation["result_sha256s"][0]] * 3,
+                operation["result_sha256s"],
+            )
         self.assertEqual(
-            cold_queries.call_args_list[0].kwargs,
-            cold_queries.call_args_list[1].kwargs,
+            durations["cold_queries"],
+            [item["samples_seconds"][0] for item in timing["operations"][:5]],
+        )
+        self.assertEqual(
+            durations["queries"],
+            [item["samples_seconds"][0] for item in timing["operations"][5:10]],
         )
         self.assertGreaterEqual(durations["fixture_setup"], 0.0)
         self.assertEqual(report["warm_queries_sha256"], report["cold_queries_sha256"])
@@ -1083,59 +1293,111 @@ class PerformanceTests(unittest.TestCase):
             )
         self.assertFalse(self.fixture_root.exists())
 
-    def test_portability_comparator_requires_cold_warm_hash_contract(self) -> None:
+    def test_portability_comparator_replays_v2_evidence_and_rejects_drift(self) -> None:
         import compare_portability_reports
 
-        functional = {"schema": "test-functional/v1", "queries": []}
-        functional_digest = compare_portability_reports.canonical_sha256(functional)
-        query_digest = compare_portability_reports.canonical_sha256(functional["queries"])
         reports = [
-            {
-                "schema": "knowledge-portability-report/v1",
-                "outcome": "passed",
-                "host": {"os": os_name},
-                "file_count": 50_000,
-                "page_count": 5_000,
-                "source_file_count": 39_998,
-                "total_fixture_files": 50_000,
-                "tracked_fixture": True,
-                "functional": functional,
-                "functional_sha256": functional_digest,
-                "warm_queries_sha256": query_digest,
-                "cold_queries_sha256": query_digest,
-                "durations_seconds": {
-                    "queries": [0.1, 0.2, 0.3, 0.4, 0.5],
-                    "cold_queries": [0.6, 0.7, 0.8, 0.9, 1.0],
-                    "index_candidate": 0.6,
-                    "fixture_setup": 1.5,
-                },
-            }
+            _synthetic_portability_report(os_name)
             for os_name in ("windows", "linux")
         ]
+        functional_digest = reports[0]["functional_sha256"]
         original = compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256
         compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = functional_digest
         try:
             valid = compare_portability_reports.compare_reports(reports)
+            mutations = []
+
             legacy = json.loads(json.dumps(reports))
-            del legacy[0]["durations_seconds"]["cold_queries"]
-            missing_cold = compare_portability_reports.compare_reports(legacy)
-            mismatched = json.loads(json.dumps(reports))
-            mismatched[1]["cold_queries_sha256"] = "0" * 64
-            hash_mismatch = compare_portability_reports.compare_reports(mismatched)
+            legacy[0]["schema"] = "knowledge-portability-report/v1"
+            mutations.append(legacy)
+
+            missing_sample = json.loads(json.dumps(reports))
+            missing_sample[0]["timing"]["operations"][0]["samples_seconds"].pop()
+            mutations.append(missing_sample)
+
+            asserted_drift = json.loads(json.dumps(reports))
+            asserted_drift[0]["timing"]["operations"][0]["median_seconds"] = 1.5
+            mutations.append(asserted_drift)
+
+            hash_drift = json.loads(json.dumps(reports))
+            hash_drift[0]["timing"]["operations"][0]["result_sha256s"][0] = "0" * 64
+            mutations.append(hash_drift)
+
+            projection_drift = json.loads(json.dumps(reports))
+            projection_drift[0]["durations_seconds"]["cold_queries"][0] = 1.5
+            mutations.append(projection_drift)
+
+            dirty = json.loads(json.dumps(reports))
+            dirty[0]["producer"]["worktree_clean"] = False
+            mutations.append(dirty)
+
+            identity_drift = json.loads(json.dumps(reports))
+            identity_drift[0]["producer"]["script_sha256"] = "3" * 64
+            mutations.append(identity_drift)
+
+            invalid_number = json.loads(json.dumps(reports))
+            invalid_number[0]["timing"]["operations"][0]["samples_seconds"][0] = float("nan")
+            mutations.append(invalid_number)
+
+            rejected = [
+                compare_portability_reports.compare_reports(value)
+                for value in mutations
+            ]
         finally:
             compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = original
 
         self.assertEqual("passed", valid["outcome"])
-        self.assertEqual("failed", missing_cold["outcome"])
+        self.assertEqual("knowledge-portability-comparison/v2", valid["schema"])
+        self.assertEqual([], valid["diagnostics"])
+        self.assertEqual(["linux", "windows"], valid["oses"])
+        self.assertTrue(all(value["outcome"] == "failed" for value in rejected), rejected)
         self.assertTrue(
-            any("cold query durations" in item for item in missing_cold["diagnostics"]),
-            missing_cold,
+            any(
+                "top-level verdict differs" in diagnostic
+                for diagnostic in rejected[3]["diagnostics"]
+            ),
+            rejected[3],
         )
-        self.assertEqual("failed", hash_mismatch["outcome"])
-        self.assertTrue(
-            any("cold/warm query hashes" in item for item in hash_mismatch["diagnostics"]),
-            hash_mismatch,
+
+    def test_portability_comparator_cli_only_reads_named_v2_reports(self) -> None:
+        import compare_portability_reports
+
+        report_root = self.fixture_root / "portability-reports"
+        report_root.mkdir()
+        reports = [
+            _synthetic_portability_report(os_name)
+            for os_name in ("windows", "linux")
+        ]
+        for report in reports:
+            path = report_root / f"knowledge-portability-report-{report['host']['os']}.json"
+            path.write_text(
+                json.dumps(report, ensure_ascii=False, sort_keys=True) + "\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+        (report_root / "knowledge-portability-comparison.json").write_text(
+            "not json\n",
+            encoding="utf-8",
+            newline="\n",
         )
+
+        stdout = io.StringIO()
+        original = compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256
+        compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = reports[0][
+            "functional_sha256"
+        ]
+        try:
+            with contextlib.redirect_stdout(stdout):
+                exit_code = compare_portability_reports.main(
+                    ["--root", str(report_root)]
+                )
+        finally:
+            compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = original
+
+        self.assertEqual(0, exit_code)
+        comparison = json.loads(stdout.getvalue())
+        self.assertEqual("knowledge-portability-comparison/v2", comparison["schema"])
+        self.assertEqual("passed", comparison["outcome"])
 
 
 def main(argv: list[str] | None = None) -> int:

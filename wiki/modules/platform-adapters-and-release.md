@@ -1,18 +1,23 @@
 ---
 title: 平台 Adapter 與手動 Release
 type: module
-summary: 以 contract v5、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架
+summary: 以 contract v5、Copilot 薄 adapters、本機 parity、三樣本 portability benchmark 與手動發版維持雙平台框架
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/parity-check.py
+  - .agents/skills/project-knowledge/SKILL.md
+  - .agents/skills/project-knowledge/scripts/knowledge_benchmark.py
+  - .agents/skills/project-knowledge/scripts/compare_portability_reports.py
+  - .agents/skills/project-knowledge/scripts/validate_contracts.py
   - tests/test_contracts.py
   - tools/release.py
+  - docs/validation/README.md
   - docs/releases/README.md
-source_digest: sha256:896a6aa2cb7b7a0b15394234db170a817b7e1384379ad074a365b88c2941d8c1
+source_digest: sha256:ccb36cfe179d47b8ab55dba384824b3c648105af58b659fc05741b10c26ae36c
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-06
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -36,6 +41,12 @@ status: active
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到 v5。
 - 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，
   手動執行 `gh release create`。
+- 大型 Knowledge portability benchmark 固定 50,000 files／5,000 pages，十一個
+  timing-sensitive operations 各取三個正式樣本；單一 isolated outlier 可依共同規則
+  通過，mixed、sustained、functional drift 或環境錯誤一律不能成為跨平台通過證據。
+- Windows／Linux 必須在同一 `strict-clean` revision 的實際主機各自產生一份 v2
+  report，再由本機 comparator 重算 raw samples、result hashes、legacy projection、
+  producer identity 與 functional oracle；Repo 不以 workflow YAML 模擬雙平台證據。
 - 在專案擁有者選定 LICENSE 前阻擋公開 release；本次維護不改版號、不發版。
 
 ## Evidence
@@ -52,6 +63,12 @@ status: active
   結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。
 - 本機驗證以 Python 3.11 與 3.14 執行 unit、compile、parity、frontmatter、stale、
   log、stats、lint 與 index check；lint 的兩項語意檢查另由人工完成。
+- `knowledge_benchmark.py` 以 report/error v2 保存 33 個 raw timing samples、normalized
+  result hashes、四態 decision、cleanup 與 producer identity；
+  `compare_portability_reports.py` fail closed 拒絕 v1、缺樣本、宣告漂移、dirty source、
+  OS 缺漏及跨主機 identity／functional 不一致。
+- `docs/validation/README.md` 保存 Windows 與 Linux producer 命令、create-only report
+  搬移方式及 comparator 命令；`.knowledge-test-tmp/` 是唯一新增的 ignored evidence root。
 - `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、LICENSE、
   repository name、資產邊界與 checksum。
 - Release builder 排除 cache、hook/NotebookLM state、transaction artifacts 與敏感
@@ -63,15 +80,21 @@ status: active
   `v0.2.0` 資產。
 - 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v5 或
   未測 host/version 的保證。
+- Synthetic OS metadata 與單一 Windows run 只能驗證 contract／本機路徑，不能宣稱
+  已完成 Windows/Linux portability。
 
 ## Inferences
 
 - 移除 hosted automation 後，發版責任明確落在執行本機矩陣、檢查 assets、推送
   tag 與呼叫 GitHub CLI 的維護者；deterministic scripts 仍提供相同可稽核 gate。
+- 三樣本四態規則把一次 host jitter 與持續 regression 分開；comparator 仍要求兩份
+  pass report，避免把 inconclusive evidence 推論成成功。
 
 ## Gaps
 
 - Copilot host runtime 尚未執行，因此維持 `runtime-unverified`。
+- 本次只在 Windows 執行大型 benchmark；實際 Linux strict-clean report 與雙平台
+  comparator 結果仍是 release／portability follow-up，不由 synthetic test 代替。
 - LICENSE、公開發佈日期、套件簽章、SBOM 與 provenance attestation 仍待擁有者決策。
 
 ## 相關頁面

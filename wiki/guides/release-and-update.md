@@ -8,9 +8,9 @@ sources:
   - docs/releases/README.md
   - docs/validation/README.md
   - README.md
-source_digest: sha256:9675c322e6280233aa15794d1f9bd37f4dd0eae9c5924bdb2c8e3ed363da9d6c
+source_digest: sha256:1770000dd06c191620b86e8781c3559f44f86ffbfce1807b8a63102faf70eaa1
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-06
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides

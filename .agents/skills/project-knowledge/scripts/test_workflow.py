@@ -24,6 +24,7 @@ from test_behavior import (
     _git,
     _persist_preliminary_review_fixture,
     _remove_fixture,
+    _synthetic_portability_report,
     _write,
 )
 
@@ -975,75 +976,55 @@ class StageHookContractTests(unittest.TestCase):
         self.assertEqual("CANDIDATE_INVALID", raised.exception.code)
 
     def test_windows_linux_reports_require_one_functional_oracle(self) -> None:
-        functional = {
-            "schema": "test-functional/v1",
-            "paths": ["a/b"],
-            "queries": [],
-        }
-        digest = canonical_sha256(functional)
-        query_digest = canonical_sha256(functional["queries"])
+        reports = [
+            _synthetic_portability_report(os_name)
+            for os_name in ("windows", "linux")
+        ]
+        digest = reports[0]["functional_sha256"]
         original = compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256
         compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = digest
         try:
-            reports = [
-                {
-                    "schema": "knowledge-portability-report/v1",
-                    "outcome": "passed",
-                    "host": {"os": os_name},
-                    "file_count": 50_000,
-                    "page_count": 5_000,
-                    "source_file_count": 39_998,
-                    "total_fixture_files": 50_000,
-                    "tracked_fixture": True,
-                    "functional": functional,
-                    "functional_sha256": digest,
-                    "warm_queries_sha256": query_digest,
-                    "cold_queries_sha256": query_digest,
-                    "durations_seconds": {
-                        "queries": [0.1, 0.2, 0.3, 0.4, 0.5],
-                        "cold_queries": [0.1, 0.2, 0.3, 0.4, 0.5],
-                        "index_candidate": 0.6,
-                        "fixture_setup": 1.0,
-                    },
-                }
-                for os_name in ("windows", "linux")
-            ]
             comparison = compare_portability_reports.compare_reports(reports)
+            mismatched = json.loads(json.dumps(reports))
+            mismatched[1]["producer"]["git_head_sha"] = "3" * 40
+            mismatch = compare_portability_reports.compare_reports(mismatched)
         finally:
             compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = original
         self.assertEqual("passed", comparison["outcome"])
         self.assertEqual(["linux", "windows"], comparison["oses"])
+        self.assertEqual("failed", mismatch["outcome"])
+        self.assertTrue(
+            any("producer identities differ" in item for item in mismatch["diagnostics"]),
+            mismatch,
+        )
 
     def test_portability_comparison_fails_on_missing_or_slow_platform(self) -> None:
-        functional = {"queries": []}
-        query_digest = canonical_sha256(functional["queries"])
-        report = {
-            "schema": "knowledge-portability-report/v1",
-            "outcome": "passed",
-            "host": {"os": "windows"},
-            "file_count": 50_000,
-            "page_count": 5_000,
-            "source_file_count": 39_998,
-            "total_fixture_files": 50_000,
-            "tracked_fixture": False,
-            "functional": functional,
-            "functional_sha256": canonical_sha256(functional),
-            "warm_queries_sha256": query_digest,
-            "cold_queries_sha256": query_digest,
-            "durations_seconds": {
-                "queries": [2.001, 0.2, 0.3, 0.4, 0.5],
-                "cold_queries": [0.1, 0.2, 0.3, 0.4, 0.5],
-                "index_candidate": 0.6,
-                "fixture_setup": 1.0,
-            },
+        import knowledge_benchmark
+
+        samples = {
+            operation_id: [0.1, 0.1, 0.1]
+            for operation_id in knowledge_benchmark.OPERATION_ORDER
         }
-        comparison = compare_portability_reports.compare_reports([report])
+        samples["warm_query_0"] = [2.001, 2.001, 2.001]
+        report = _synthetic_portability_report(
+            "windows",
+            operation_samples=samples,
+        )
+        report["tracked_fixture"] = False
+        original = compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256
+        compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = report[
+            "functional_sha256"
+        ]
+        try:
+            comparison = compare_portability_reports.compare_reports([report])
+        finally:
+            compare_portability_reports.EXPECTED_FUNCTIONAL_SHA256 = original
         self.assertEqual("failed", comparison["outcome"])
         self.assertTrue(any("missing OS reports" in item for item in comparison["diagnostics"]))
-        self.assertTrue(any("exceeded" in item for item in comparison["diagnostics"]))
+        self.assertTrue(any("verdict is not pass" in item for item in comparison["diagnostics"]))
         self.assertTrue(any("tracked-file shape" in item for item in comparison["diagnostics"]))
 
-        unsupported = dict(report)
+        unsupported = json.loads(json.dumps(report))
         unsupported["host"] = {"os": "macos"}
         unsupported_comparison = compare_portability_reports.compare_reports([unsupported])
         self.assertEqual("failed", unsupported_comparison["outcome"])

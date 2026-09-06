@@ -37,10 +37,11 @@ GROUP_SCENARIOS: dict[str, tuple[str, ...]] = {
         "BDD-014",
         "BDD-015",
         "BDD-017",
+        "BDD-021",
     ),
     "promotion": ("BDD-006", "BDD-007", "BDD-013"),
     "delivery": ("BDD-008", "BDD-010", "BDD-011", "BDD-016"),
-    "performance": ("BDD-018", "BDD-020"),
+    "performance": ("BDD-018", "BDD-019", "BDD-020"),
 }
 
 
@@ -1683,6 +1684,157 @@ def audit_query_preserves_results_with_a_bounded_child_process_budget(
     )
 
 
+def _synthetic_portability_report(
+    os_name: str,
+    *,
+    operation_samples: dict[str, list[float]] | None = None,
+) -> dict[str, object]:
+    """Build one complete v2 report whose raw evidence can be independently replayed."""
+
+    import knowledge_benchmark
+
+    functional = {
+        "schema": "knowledge-portability-functional/v1",
+        "queries": [
+            {"query": query, "results": []}
+            for query in knowledge_benchmark.QUERY_TOKENS
+        ],
+        "index_candidate": [],
+        "persisted_path_separator": "/",
+        "persisted_encoding": "utf-8",
+        "persisted_newline": "lf",
+    }
+    samples = operation_samples or {
+        operation_id: [0.1, 0.1, 0.1]
+        for operation_id in knowledge_benchmark.OPERATION_ORDER
+    }
+    timing = knowledge_benchmark.evaluate_timing_evidence(samples)
+    for index, operation in enumerate(timing["operations"]):
+        operation_id = operation["operation_id"]
+        if operation_id.startswith("cold_query_"):
+            result = functional["queries"][index]
+        elif operation_id.startswith("warm_query_"):
+            result = functional["queries"][index - len(knowledge_benchmark.QUERY_TOKENS)]
+        else:
+            result = functional["index_candidate"]
+        result_sha256 = knowledge_benchmark.canonical_sha256(result)
+        operation["result_sha256s"] = [result_sha256] * 3
+
+    status = timing["status"]
+    verdict = {
+        "sustained-violation": "performance-failure",
+        "inconclusive": "inconclusive",
+    }.get(status, "pass")
+    query_sha256 = knowledge_benchmark.canonical_sha256(functional["queries"])
+    functional_sha256 = knowledge_benchmark.canonical_sha256(functional)
+    return {
+        "schema": "knowledge-portability-report/v2",
+        "outcome": "passed" if verdict == "pass" else "failed",
+        "verdict": verdict,
+        "producer": {
+            "version": "test-version",
+            "git_head_sha": "1" * 40,
+            "worktree_clean": True,
+            "script_sha256": "2" * 64,
+        },
+        "host": {
+            "os": os_name,
+            "python": "test-python",
+            "git": "test-git",
+            "rg": "test-rg",
+            "cpu": "test-cpu",
+        },
+        "file_count": 50_000,
+        "page_count": 5_000,
+        "source_file_count": 39_998,
+        "total_fixture_files": 50_000,
+        "tracked_fixture": True,
+        "max_operation_seconds": knowledge_benchmark.MAX_SECONDS,
+        "durations_seconds": {
+            "cold_queries": [
+                samples[f"cold_query_{index}"][0]
+                for index in range(len(knowledge_benchmark.QUERY_TOKENS))
+            ],
+            "queries": [
+                samples[f"warm_query_{index}"][0]
+                for index in range(len(knowledge_benchmark.QUERY_TOKENS))
+            ],
+            "index_candidate": samples["index_candidate"][0],
+            "fixture_setup": 1.0,
+        },
+        "functional_sha256": functional_sha256,
+        "expected_functional_sha256": functional_sha256,
+        "cold_queries_sha256": query_sha256,
+        "warm_queries_sha256": query_sha256,
+        "functional": functional,
+        "timing": timing,
+        "cleanup": "removed",
+    }
+
+
+@scenario("BDD-019", "performance")
+def portability_decisions_replay_three_sample_evidence(fixture_root: Path) -> None:
+    import compare_portability_reports
+    import knowledge_benchmark
+
+    del fixture_root
+    cases = (
+        ("within-threshold", {}, "within-threshold"),
+        ("isolated-outlier", {"cold_query_0": [2.001, 0.1, 0.1]}, "isolated-outlier"),
+        ("mixed-inconclusive", {"cold_query_0": [2.001, 2.001, 0.1]}, "inconclusive"),
+        ("sustained-violation", {"cold_query_0": [2.001, 2.001, 2.001]}, "sustained-violation"),
+        (
+            "distributed-outliers",
+            {
+                "cold_query_0": [2.001, 0.1, 0.1],
+                "warm_query_0": [2.001, 0.1, 0.1],
+            },
+            "inconclusive",
+        ),
+    )
+    for label, overrides, expected in cases:
+        samples = {
+            operation_id: [0.1, 0.1, 0.1]
+            for operation_id in knowledge_benchmark.OPERATION_ORDER
+        }
+        samples.update(overrides)
+        outcomes = [
+            knowledge_benchmark.evaluate_timing_evidence(samples)["status"]
+            for _ in range(10)
+        ]
+        assert outcomes == [expected] * 10, {"case": label, "outcomes": outcomes}
+
+    reports = [
+        _synthetic_portability_report(os_name)
+        for os_name in ("windows", "linux")
+    ]
+    oracle = reports[0]["functional_sha256"]
+    with mock.patch.object(
+        compare_portability_reports,
+        "EXPECTED_FUNCTIONAL_SHA256",
+        oracle,
+    ):
+        comparison = compare_portability_reports.compare_reports(reports)
+        legacy = json.loads(json.dumps(reports))
+        legacy[0]["schema"] = "knowledge-portability-report/v1"
+        incomplete = json.loads(json.dumps(reports))
+        incomplete[0]["timing"]["operations"][0]["samples_seconds"].pop()
+        drifted = json.loads(json.dumps(reports))
+        drifted[0]["timing"]["operations"][0]["classification"] = (
+            "sustained-violation"
+        )
+        legacy_result = compare_portability_reports.compare_reports(legacy)
+        incomplete_result = compare_portability_reports.compare_reports(incomplete)
+        drifted_result = compare_portability_reports.compare_reports(drifted)
+
+    assert comparison["schema"] == "knowledge-portability-comparison/v2"
+    assert comparison["outcome"] == "passed", comparison
+    assert comparison["oses"] == ["linux", "windows"]
+    assert legacy_result["outcome"] == "failed"
+    assert incomplete_result["outcome"] == "failed"
+    assert drifted_result["outcome"] == "failed"
+
+
 @scenario("BDD-020", "performance")
 def benchmark_reports_fresh_cold_and_compatible_warm_samples(
     fixture_root: Path,
@@ -1704,18 +1856,54 @@ def benchmark_reports_fresh_cold_and_compatible_warm_samples(
             page_count=20,
         )
 
-    durations = report["durations_seconds"]
-    assert report["schema"] == "knowledge-portability-report/v1"
+    assert report["schema"] == "knowledge-portability-report/v2"
     assert report["outcome"] == "passed", report
+    assert report["verdict"] == "pass", report
+    assert report["cleanup"] == "removed"
+
+    timing = report["timing"]
+    assert timing["schema"] == "knowledge-timing-decision/v1"
+    assert timing["contract"]["sample_count"] == 3
+    assert timing["contract"]["max_operation_seconds"] == 2.0
+    assert timing["contract_sha256"] == knowledge_benchmark.canonical_sha256(
+        timing["contract"]
+    )
+    expected_operations = [
+        *(f"cold_query_{index}" for index in range(5)),
+        *(f"warm_query_{index}" for index in range(5)),
+        "index_candidate",
+    ]
+    assert timing["contract"]["operation_order"] == expected_operations
+    assert [item["operation_id"] for item in timing["operations"]] == expected_operations
+    for operation in timing["operations"]:
+        assert len(operation["samples_seconds"]) == 3
+        assert len(operation["result_sha256s"]) == 3
+        assert operation["result_sha256s"] == [operation["result_sha256s"][0]] * 3
+        assert operation["median_seconds"] == sorted(operation["samples_seconds"])[1]
+        assert operation["breach_count"] == 0
+        assert operation["classification"] == "within-threshold"
+    assert timing["total_breach_count"] == 0
+    assert timing["status"] == "within-threshold"
+
+    durations = report["durations_seconds"]
     assert len(durations["cold_queries"]) == 5
     assert len(durations["queries"]) == 5
     assert durations["fixture_setup"] >= 0.0
-    assert all(
-        value <= report["max_operation_seconds"]
-        for value in [*durations["cold_queries"], *durations["queries"]]
-    )
+    assert durations["cold_queries"] == [
+        item["samples_seconds"][0] for item in timing["operations"][:5]
+    ]
+    assert durations["queries"] == [
+        item["samples_seconds"][0] for item in timing["operations"][5:10]
+    ]
+    assert durations["index_candidate"] == timing["operations"][10][
+        "samples_seconds"
+    ][0]
     assert report["cold_queries_sha256"] == report["warm_queries_sha256"]
     assert report["functional_sha256"] == report["expected_functional_sha256"]
+    assert report["producer"]["version"]
+    assert len(report["producer"]["git_head_sha"]) in {40, 64}
+    assert isinstance(report["producer"]["worktree_clean"], bool)
+    assert len(report["producer"]["script_sha256"]) == 64
     assert not fixture_root.exists()
 
 
@@ -2315,21 +2503,64 @@ def partial_bug_stays_unresolved_and_never_claims_a_fix(fixture_root: Path) -> N
     assert report["lint"] == "passed"
 
 
+@scenario("BDD-021", "governance")
+def portability_remains_a_local_manual_zero_workflow_contract(
+    fixture_root: Path,
+) -> None:
+    del fixture_root
+    spec = importlib.util.spec_from_file_location(
+        "project_knowledge_validate_contracts_bdd",
+        SCRIPT_DIR / "validate_contracts.py",
+    )
+    if spec is None or spec.loader is None:
+        raise AssertionError("cannot load the Project Knowledge validator")
+    validator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validator)
+    assert validator.governance_errors() == []
+    workflow_root = Path(".github/workflows")
+    assert list(workflow_root.glob("*.yml")) == []
+    assert list(workflow_root.glob("*.yaml")) == []
+
+    ignore_lines = Path(".gitignore").read_text(encoding="utf-8").splitlines()
+    assert ignore_lines.count(".knowledge-test-tmp/") == 1
+    for forbidden in (
+        "docs/*",
+        "!docs/work/**",
+        "!docs/bugs/**",
+        "!docs/knowledge/**",
+    ):
+        assert forbidden not in ignore_lines
+
+    command_fragments = (
+        "knowledge_benchmark.py --output",
+        "compare_portability_reports.py --root",
+    )
+    for relative in (
+        ".agents/skills/project-knowledge/SKILL.md",
+        "docs/validation/README.md",
+    ):
+        text = Path(relative).read_text(encoding="utf-8")
+        for fragment in command_fragments:
+            assert fragment in text, {"path": relative, "missing": fragment}
+
+
 @scenario("BDD-016", "delivery")
 def cross_platform_results_and_large_repository_operations_are_bounded(
     fixture_root: Path,
 ) -> None:
-    from knowledge_benchmark import run_benchmark
+    import knowledge_benchmark
 
     persisted_report = os.environ.get("KNOWLEDGE_PORTABILITY_REPORT")
     if persisted_report:
         report = json.loads(Path(persisted_report).read_text(encoding="utf-8"))
     else:
-        report = run_benchmark(fixture_root)
-    assert report["schema"] == "knowledge-portability-report/v1"
+        report = knowledge_benchmark.run_benchmark(fixture_root)
+    assert report["schema"] == "knowledge-portability-report/v2"
     assert report["host"]["os"] in {"windows", "linux"}
     assert report["outcome"] == "passed", json.dumps(
         {
+            "verdict": report.get("verdict"),
+            "timing": report.get("timing"),
             "durations_seconds": report.get("durations_seconds"),
             "functional_sha256": report.get("functional_sha256"),
             "expected_functional_sha256": report.get("expected_functional_sha256"),
@@ -2339,20 +2570,61 @@ def cross_platform_results_and_large_repository_operations_are_bounded(
         ensure_ascii=False,
         sort_keys=True,
     )
+    assert report["verdict"] == "pass"
+    assert report["cleanup"] == "removed"
     assert report["file_count"] == 50_000
     assert report["page_count"] == 5_000
     assert report["tracked_fixture"] is True
     assert report["total_fixture_files"] == 50_000
     assert report["source_file_count"] == 39_998
     assert report["functional_sha256"] == report["expected_functional_sha256"]
-    assert len(report["durations_seconds"]["queries"]) == 5
-    assert all(
-        duration <= 2.0
-        for duration in [
-            *report["durations_seconds"]["queries"],
-            report["durations_seconds"]["index_candidate"],
-        ]
+    assert report["max_operation_seconds"] == 2.0
+
+    timing = report["timing"]
+    assert timing["schema"] == "knowledge-timing-decision/v1"
+    assert timing["contract"] == knowledge_benchmark.TIMING_CONTRACT
+    assert timing["contract_sha256"] == knowledge_benchmark.TIMING_CONTRACT_SHA256
+    assert timing["contract_sha256"] == knowledge_benchmark.canonical_sha256(
+        timing["contract"]
     )
+    assert [item["operation_id"] for item in timing["operations"]] == list(
+        knowledge_benchmark.OPERATION_ORDER
+    )
+    operation_samples = {
+        item["operation_id"]: item["samples_seconds"]
+        for item in timing["operations"]
+    }
+    recomputed = knowledge_benchmark.evaluate_timing_evidence(operation_samples)
+    for expected, actual in zip(
+        recomputed["operations"],
+        timing["operations"],
+        strict=True,
+    ):
+        assert len(actual["samples_seconds"]) == 3
+        assert len(actual["result_sha256s"]) == 3
+        assert actual["result_sha256s"] == [actual["result_sha256s"][0]] * 3
+        expected["result_sha256s"] = actual["result_sha256s"]
+    assert timing == recomputed
+    assert timing["status"] in {"within-threshold", "isolated-outlier"}
+    assert timing["total_breach_count"] <= 1
+
+    durations = report["durations_seconds"]
+    assert len(durations["queries"]) == 5
+    assert len(durations["cold_queries"]) == 5
+    assert durations["cold_queries"] == [
+        operation_samples[f"cold_query_{index}"][0] for index in range(5)
+    ]
+    assert durations["queries"] == [
+        operation_samples[f"warm_query_{index}"][0] for index in range(5)
+    ]
+    assert durations["index_candidate"] == operation_samples["index_candidate"][0]
+    assert durations["fixture_setup"] >= 0.0
+
+    producer = report["producer"]
+    assert producer["version"]
+    assert len(producer["git_head_sha"]) in {40, 64}
+    assert isinstance(producer["worktree_clean"], bool)
+    assert re.fullmatch(r"[0-9a-f]{64}", producer["script_sha256"])
 
 
 class _ScenarioCase(unittest.TestCase):

@@ -1,0 +1,34 @@
+{
+  "aliases": [],
+  "backlinks": [],
+  "claims": [
+    {
+      "claim_id": "claim-work-20260905-knowledge-benchmark-flake-40135f48-requirements",
+      "content_anchor": "requirements-claim",
+      "contradicts": [],
+      "evidence_class": "required",
+      "lifecycle": "current",
+      "source_refs": [
+        {
+          "excerpt_sha256": "05f9428007dca141f372fcf128a461aed653ef857f33e381e5814c88b6790246",
+          "locator": {
+            "end_line": 30,
+            "start_line": 30
+          },
+          "path": "docs/work/work-20260905-knowledge-benchmark-flake-40135f48/requirements-2.md",
+          "sha256": "8c6b0a0961687a69cb387088ca45718ca56516a3690fb7117c2e405c4c7641a3"
+        }
+      ],
+      "supersedes": []
+    }
+  ],
+  "content_path": "docs/knowledge/topics/work-20260905-knowledge-benchmark-flake-40135f48-requirements.md",
+  "content_sha256": "11b7882119aefd5667b6402d1c5c37a87b192632eb9424cd88a91031a1980870",
+  "lifecycle": "current",
+  "page_id": "page-work-20260905-knowledge-benchmark-flake-40135f48-requirements",
+  "schema": "knowledge-page/v1",
+  "tags": [
+    "requirements"
+  ],
+  "title": "Large Knowledge Benchmark Baseline Requirements"
+}

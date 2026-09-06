@@ -101,7 +101,7 @@ def governance_errors() -> list[str]:
         ".agents/skills/project-knowledge/scripts/knowledge_cli.py",
         ".agents/skills/project-knowledge/scripts/knowledge_benchmark.py",
         ".agents/skills/project-knowledge/scripts/compare_portability_reports.py",
-        ".github/workflows/knowledge-portability.yml",
+        "docs/validation/README.md",
     )
     for relative in required_files:
         if not (WORKSPACE / relative).is_file():
@@ -122,6 +122,8 @@ def governance_errors() -> list[str]:
                 "Re-read every returned `source_refs.path`",
                 "A prior plan approval",
                 "one local OS result is not Windows/Linux evidence",
+                "knowledge_benchmark.py --output",
+                "compare_portability_reports.py --root",
             ),
             "SKILL.md",
         )
@@ -194,32 +196,44 @@ def governance_errors() -> list[str]:
         if forbidden in all_python:
             errors.append(f"forbidden runtime dependency or shell mode present: {forbidden}")
 
-    ignore = _read(".gitignore")
-    errors.extend(
-        _required_fragments(
-            ignore,
-            (
-                "docs/*",
-                "!docs/work/**",
-                "!docs/bugs/**",
-                "!docs/knowledge/**",
-                ".knowledge-test-tmp/",
-            ),
-            ".gitignore",
+    ignore_lines = _read(".gitignore").splitlines()
+    if ignore_lines.count(".knowledge-test-tmp/") != 1:
+        errors.append(".gitignore must contain exactly one .knowledge-test-tmp/ entry")
+    for forbidden in (
+        "docs/*",
+        "!docs/work/**",
+        "!docs/bugs/**",
+        "!docs/knowledge/**",
+    ):
+        if forbidden in ignore_lines:
+            errors.append(f".gitignore contains forbidden documentation rule: {forbidden}")
+
+    workflow_root = WORKSPACE / ".github" / "workflows"
+    workflow_files = sorted(
+        (
+            path.relative_to(WORKSPACE).as_posix()
+            for pattern in ("*.yml", "*.yaml")
+            for path in workflow_root.rglob(pattern)
         )
     )
-    workflow = _read(".github/workflows/knowledge-portability.yml")
+    if workflow_files:
+        errors.append(
+            f"local-manual policy forbids workflow YAML: {', '.join(workflow_files)}"
+        )
+
+    validation = _read("docs/validation/README.md")
     errors.extend(
         _required_fragments(
-            workflow,
+            validation,
             (
-                "runner: ubuntu-latest",
-                "runner: windows-latest",
-                "knowledge_benchmark.py",
-                "run_full_suite.py",
-                "compare_portability_reports.py",
+                "knowledge_benchmark.py --output",
+                "compare_portability_reports.py --root",
+                ".knowledge-test-tmp/portability-reports",
+                "strict-clean",
+                "Windows",
+                "Linux",
             ),
-            "knowledge-portability.yml",
+            "docs/validation/README.md",
         )
     )
     benchmark = _read(".agents/skills/project-knowledge/scripts/knowledge_benchmark.py")
@@ -230,10 +244,28 @@ def governance_errors() -> list[str]:
                 "FILE_COUNT = 50_000",
                 "PAGE_COUNT = 5_000",
                 "MAX_SECONDS = 2.0",
+                "SAMPLE_COUNT = 3",
                 "EXPECTED_FUNCTIONAL_SHA256",
                 "explicit-crlf-header",
+                '"knowledge-portability-report/v2"',
+                'parser.add_argument("--output"',
             ),
             "knowledge_benchmark.py",
+        )
+    )
+    comparator = _read(
+        ".agents/skills/project-knowledge/scripts/compare_portability_reports.py"
+    )
+    errors.extend(
+        _required_fragments(
+            comparator,
+            (
+                "evaluate_timing_evidence",
+                '"knowledge-portability-comparison/v2"',
+                'rglob("knowledge-portability-report-*.json")',
+                'producer.get("worktree_clean") is True',
+            ),
+            "compare_portability_reports.py",
         )
     )
     return errors
@@ -268,4 +300,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-
