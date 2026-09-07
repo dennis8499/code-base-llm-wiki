@@ -39,7 +39,7 @@ ALLOWED_TYPES = {
 }
 ALLOWED_STATUS = {"active", "stale", "placeholder"}
 ALLOWED_DECISION_STATUS = {"proposed", "accepted", "deprecated", "superseded"}
-ALLOWED_NOTEBOOKLM_ROLES = {"business", "traceability", "exclude"}
+ALLOWED_NOTEBOOKLM_ROLES = {"business", "analysis", "traceability", "exclude"}
 ALLOWED_COVERAGE_STATUS = {"covered", "partial", "gap"}
 ALLOWED_EVIDENCE_STATES = {
     "business-confirmed",
@@ -211,6 +211,46 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
                     errors.append(
                         f"{rel}: every derived_from entry must be a [[wiki-page]] wikilink"
                     )
+
+    notebooklm_document = fm.get("notebooklm_document")
+    source_locators = fm.get("source_locators")
+    if notebooklm_document is not None:
+        expected = {
+            "ba": ("codebase-business-analysis-v1", "business"),
+            "sa": ("codebase-system-analysis-v1", "analysis"),
+        }
+        if notebooklm_document not in expected:
+            errors.append(f"{rel}: notebooklm_document must be ba or sa")
+        else:
+            expected_profile, expected_role = expected[notebooklm_document]
+            capability_id = fm.get("capability_id")
+            if (
+                page_type != "synthesis"
+                or not isinstance(capability_id, str)
+                or not capability_id.startswith("cap-")
+                or not NOTEBOOKLM_GROUP_PATTERN.fullmatch(capability_id)
+            ):
+                errors.append(
+                    f"{rel}: BA/SA export documents require type synthesis and a cap-* capability_id"
+                )
+            elif rel != pathlib.PurePosixPath(
+                f"synthesis/{capability_id}-{notebooklm_document}.md"
+            ):
+                errors.append(f"{rel}: BA/SA export document path does not match capability_id")
+            if standards_profile != expected_profile:
+                errors.append(
+                    f"{rel}: {notebooklm_document.upper()} export document requires standards_profile: {expected_profile}"
+                )
+            if notebooklm_role != expected_role:
+                errors.append(
+                    f"{rel}: {notebooklm_document.upper()} export document requires notebooklm_role: {expected_role}"
+                )
+            if coverage_status is None:
+                errors.append(f"{rel}: BA/SA export documents require coverage_status")
+            if not isinstance(source_locators, list) or not all(
+                is_non_empty_string(item) for item in source_locators
+            ):
+                errors.append(f"{rel}: BA/SA export documents require a source_locators array")
 
     if page_type == "decision":
         if not is_valid_date(fm.get("decision_date")):

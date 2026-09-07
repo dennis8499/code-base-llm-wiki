@@ -6,7 +6,7 @@ notebooklm_group: local-governance
 notebooklm_role: exclude
 sources: []
 derived_from: ["[[functional-requirement-catalog]]", "[[notebooklm-ba-functional-export]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [synthesis, coverage, notebooklm, local-only]
 status: active
 ---
@@ -43,6 +43,7 @@ status: active
 
 ## Gate 結果
 
+Analyzed discovery ID: `sha256:9480a32d68d6748882c2930b4f47969b23de3db755e9bc25e3e89001ef77c755`
 - Uncovered safe files：0
 - Analysis gaps：0
 - Dangling requirement links：0

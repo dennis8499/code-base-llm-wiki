@@ -1,5 +1,5 @@
 {
-  "contract_version": 5,
+  "contract_version": 6,
   "surfaces": ["copilot", "codex"],
   "guard_modes": {
     "default": "wiki-only",
@@ -62,9 +62,9 @@
       "writes_by_default": false,
       "requires_confirmation": true,
       "authorization_policy": "preview_then_confirm",
-      "confirmation_stages": ["discovery_plan", "readiness_apply"],
-      "audience": "business-analyst",
-      "knowledge_contract": "business-knowledge-v1"
+      "confirmation_stages": ["discovery_plan"],
+      "audience": "business-and-system-analyst",
+      "knowledge_contract": "codebase-ba-sa-v1"
     }
   },
   "intent_groups": {

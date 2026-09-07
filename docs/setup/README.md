@@ -114,7 +114,7 @@ metadata；框架不安裝 Repo-local Wiki agent profiles。
 
 ## NotebookLM Enterprise source pack
 
-NotebookLM export 是固定服務 BA 的離線產出流程，不需要 API credentials，也不會由
+NotebookLM export 是服務 BA 與 SA 的離線產出流程，不需要 API credentials，也不會由
 installer 自動啟用或上傳檔案。從 Repo root 先執行唯讀 discovery preflight：
 
 ```powershell
@@ -122,20 +122,21 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --preflight --format json
 ```
 
-Agent 掃描完整安全 UTF-8 repo text（包含 behavioral tests），盤點 FR/AC、actor、流程、規則、詞彙、證據狀態與 gaps；
-PDF/Office/圖片等非文字證據只登記缺口。預覽必須列出 inventory、BA coverage、準備建立
-或更新的 BA 文件、容量與未驗證事項；即使沒有警告也要等待第一次確認。確認後補齊
-`business-requirement`、process、rule、catalog、glossary、gaps 與完整 file disposition ledger，再重新執行上面的
-`--preflight`。展示 readiness 結果並取得第二次確認後，才執行：
+Agent 掃描完整安全 UTF-8 repo text（包含 behavioral tests、README、規格與註解），盤點
+FR/AC、actor、流程、規則、詞彙、證據狀態與 gaps。預覽必須列出 inventory、每功能 BA／SA
+coverage、待分析內容、容量與未驗證事項；即使沒有警告也要等待一次確認。確認後補齊
+catalogs、完整 file disposition ledger 與每個 `cap-*` 的 BA／SA 配對，記錄 analyzed discovery
+ID，再自動執行 readiness `--preflight` 與 apply：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --apply --preflight-id <readiness-id> --output .notebooklm --format json
+  --root . --apply --discovery-id <confirmed-discovery-id> `
+  --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-Exporter 只將 BA 文件打包成 `sources/*.md`、schema v5 `manifest.json`、`upload-plan.md`
-與 README。Raw source、config、business evidence 原文與 technical traceability 永不進入 pack；
-DLP finding 先遮罩，final payload 有殘留才阻擋。
+Exporter 產生完整 `documents/{cap}-ba.md`／`-sa.md`、只供上傳的 `sources/*.md`、schema v6
+`manifest.json`、`upload-plan.md`、README 與 local-only governance。Raw source/config 不會直接
+進入 pack；documents 與 sources 的 DLP finding 先遮罩，residual 有命中才阻擋。
 只把 `sources/*.md` 手動加入企業版 Notebook；再次執行時仍會全量重掃專案與增量
 更新 Wiki，再依 upload plan 處理新增、變更與刪除，`unchanged` 不需重新上傳。
 `.notebooklm/` 預設被 Git 忽略；若需調整 Workspace tier 或 analysis scope，可將
@@ -184,7 +185,7 @@ python .agents\skills\codebase-wiki\scripts\validate-log.py wiki\log.md --repo-r
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --discovery-id DISCOVERY_ID --preflight-id PREFLIGHT_ID --output .notebooklm --format json
 ```
 
 完整的框架 Repo 發佈檢查請看 [驗證手冊](../validation/README.md)。

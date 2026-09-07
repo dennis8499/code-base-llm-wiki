@@ -1,16 +1,16 @@
 ---
 title: Codebase LLM Wiki — 業務總覽
 type: overview
-summary: 讓團隊把 codebase 建成可追溯 Wiki，並產出標準對齊 BA／SA／SD 與 BA-only NotebookLM 知識包
+summary: 讓團隊把 codebase 建成可追溯 Wiki，並產出標準對齊 BA／SA／SD 與現況 NotebookLM BA／SA 知識包
 sources:
   - README.md
   - AGENTS.md
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
-source_digest: sha256:39ee7df3eaffb7439e9976d2daaa1300f4ffb28de954c34cd5c3f5e36428f72e
+source_digest: sha256:37e5b89d5497d53df5562aaad429039d1bafef5c4ef171ae736edd62dff01495
 derived_from: []
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -31,8 +31,9 @@ Codebase LLM Wiki 讓團隊把散落在程式、設定、既有文件與人員�
 知道 class、API、資料表或 repository 路徑，便能從功能需求、驗收條件、角色、流程、
 規則、詞彙與已知缺口開始理解系統。
 
-NotebookLM Exporter 進一步把這份持久 Wiki 整理成離線 BA source pack。它不是 RAG，也不會
-自行上傳或修改 NotebookLM；交付者先審查本地 pack，再依 upload plan 手動更新 Notebook。
+NotebookLM Exporter 每次從當下完整安全 Codebase 重新盤點，以 Wiki 作比對與持久化基線，
+再為每個 capability 建立互連的現況 BA／SA，整理成離線單一 Notebook source pack。它不會
+自行上傳或修改 NotebookLM；交付者先審查本機 pack，再依 upload plan 手動更新 Notebook。
 
 ## 主要角色與價值
 
@@ -75,8 +76,9 @@ NotebookLM Exporter 進一步把這份持久 Wiki 整理成離線 BA source pack
 
 NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到端流程是
 [[notebooklm-ba-knowledge-export]]：
-知識維護者先完成 discovery preflight 與文件計畫確認，補齊 BA 知識後再完成 readiness
-preflight 與第二次確認，最後產生本地 pack。相關約束見
+知識維護者先完成 discovery preflight，展示全部安全來源、capability、未完成分析與文件
+計畫；使用者一次確認後，全量產生 BA／SA 並自動完成 readiness，最後以相符雙 ID 產生
+本機 pack。相關約束見
 [[ba-knowledge-precedes-traceability]] 與 [[readiness-preflight-required]]。
 
 框架也支援一般 Ingest、Query、Lint、Archaeology、ADR 與 Synthesis；這些
@@ -90,7 +92,7 @@ preflight 與第二次確認，最後產生本地 pack。相關約束見
 
 - 可全量重新萃取並持久維護的功能需求、驗收條件、流程、規則、詞彙與缺口；
 - GitHub Copilot 與 OpenAI Codex 共用的 Wiki 工作流契約；
-- BA-only NotebookLM source pack、schema-v5 manifest 與手動 upload plan；
+- 每 capability 現況 BA／SA、schema-v6 單一 Notebook source pack 與手動 upload plan；
 - 可審查的安全排除、DLP、容量與 migration 狀態。
 - Versioned standards profiles、coverage、markers、evidence-gated Mermaid 與
   BA → SA → SD traceability。
@@ -120,8 +122,8 @@ readiness preflight。
 <!-- notebooklm:local-only:start -->
 ## 本機技術追溯入口
 
-- [[notebooklm-export]] — 操作者的兩階段匯出指南
-- [[notebooklm-exporter]] — schema v5、完整覆蓋、DLP masking、容量與原子輸出實作
+- [[notebooklm-export]] — 操作者的一次確認與雙識別碼匯出指南
+- [[notebooklm-exporter]] — schema v6、BA／SA 配對、完整覆蓋、DLP、容量與原子輸出實作
 - [[system-architecture]] — 框架元件、資料流與安全邊界
 - [[wiki-quality-and-provenance]] — frontmatter、digest、index、log 與 lint
 - [[system-analysis]] — 跨模組風險與非功能需求

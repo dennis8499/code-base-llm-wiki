@@ -24,7 +24,7 @@ import subprocess
 import sys
 import tempfile
 import tomllib
-from typing import Any, Iterable, Sequence
+from typing import Any, Callable, Iterable, Sequence
 
 try:
     from frontmatter import (
@@ -41,9 +41,10 @@ except ModuleNotFoundError:  # pragma: no cover - useful when loaded by a caller
     )
 
 
-EXPORT_SCHEMA_VERSION = 5
-SUPPORTED_MANIFEST_SCHEMAS = {1, 2, 3, 4, EXPORT_SCHEMA_VERSION}
-PREFLIGHT_SCHEMA_VERSION = 5
+EXPORT_SCHEMA_VERSION = 6
+SUPPORTED_MANIFEST_SCHEMAS = {1, 2, 3, 4, 5, EXPORT_SCHEMA_VERSION}
+PREFLIGHT_SCHEMA_VERSION = 6
+DISCOVERY_SCHEMA_VERSION = 1
 OUTPUT_TRANSACTION_VERSION = 1
 OUTPUT_TRANSACTION_SUFFIX = ".notebooklm-transaction.json"
 OUTPUT_TRANSACTION_LOCK_SUFFIX = ".notebooklm-transaction.lock"
@@ -204,13 +205,14 @@ NON_CJK_TOKEN_PATTERN = re.compile(
 )
 WORD_COUNT_MODEL = "han_characters_plus_non_han_tokens"
 GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-AUDIENCE = "business-analyst"
-CONTENT_MODE = "ba_only"
-KNOWLEDGE_CONTRACT = "business-functional-requirements-v2"
-RETRIEVAL_CONTRACT = "business-only-ba-v2"
+AUDIENCE = "business-and-system-analyst"
+CONTENT_MODE = "ba_sa"
+KNOWLEDGE_CONTRACT = "codebase-ba-sa-v1"
+RETRIEVAL_CONTRACT = "codebase-ba-sa-retrieval-v1"
 QUERY_INDEX_SOURCE_ID = "query-index"
+SHARED_BUSINESS_CONTEXT_SOURCE_ID = "shared-business-context"
 MAX_PRIMARY_SOURCE_GROUPS = 5
-DLP_PROFILE = "notebooklm-enterprise-ba-mask-v1"
+DLP_PROFILE = "notebooklm-enterprise-ba-sa-mask-v1"
 DLP_ANALYSIS_ENFORCEMENT = "mask_and_continue"
 DLP_PAYLOAD_ENFORCEMENT = "mask_then_block_residual"
 DLP_DETECTORS = (
@@ -238,7 +240,9 @@ DLP_PRIVATE_KEY_PATTERN = re.compile(
 )
 DLP_PASSWORD_PATTERN = re.compile(
     r"""(?ix)
-    (?P<key>\b(?:password|passwd|pwd)\b)\s*(?:[:=]|=>)\s*
+    (?<![A-Za-z0-9])
+    (?P<key>['"]?(?:[a-z0-9]+[_-])*(?:password|passwd|pwd)['"]?)
+    \s*(?:[:=]|=>)\s*
     (?P<quote>['"]?)(?P<value>[^\s,;#}\]"']{3,})(?P=quote)
     """
 )
@@ -250,6 +254,15 @@ DLP_FINANCIAL_ACCOUNT_PATTERN = re.compile(
     """
 )
 DLP_CREDIT_CARD_PATTERN = re.compile(r"(?<!\d)(?:\d[ -]?){11,18}\d(?!\d)")
+CAPABILITY_ID_PATTERN = re.compile(r"^cap-[a-z0-9]+(?:-[a-z0-9]+)*$")
+CAPABILITY_DOCUMENT_PROFILES = {
+    "ba": ("codebase-business-analysis-v1", "business"),
+    "sa": ("codebase-system-analysis-v1", "analysis"),
+}
+SOURCE_LOCATOR_PATTERN = re.compile(r"^(?P<path>.+):(?P<line>[1-9][0-9]*)$")
+ANALYZED_DISCOVERY_PATTERN = re.compile(
+    r"(?mi)^Analyzed discovery ID:\s*`?(sha256:[0-9a-f]{64})`?\s*$"
+)
 
 
 class ExportError(ValueError):
@@ -314,6 +327,8 @@ class Unit:
     inputs: tuple[InputFile, ...]
     content: str
     priority: int = 0
+    document_spans: tuple[tuple[str, int, int], ...] = ()
+    document_ids: tuple[str, ...] = ()
 
     @property
     def byte_count(self) -> int:
@@ -474,6 +489,12 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     if scan_profile not in {"target", "framework"}:
         raise ExportError("scan_profile must be 'target' or 'framework'")
     content_mode = raw.get("content_mode", CONTENT_MODE)
+    if content_mode == "ba_only":
+        raise ExportError(
+            "content_mode 'ba_only' is a legacy schema v5 setting; remove it or "
+            "set content_mode = 'ba_sa', rebuild every BA/SA document, and replace "
+            "all sources in the same Notebook"
+        )
     if content_mode != CONTENT_MODE:
         raise ExportError(f"content_mode must be {CONTENT_MODE!r}")
     analysis_include_tests = raw.get("analysis_include_tests", True)
@@ -502,9 +523,9 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     ]
     if deprecated:
         raise ExportError(
-            "BA-only schema v5 no longer accepts "
+            "schema v6 no longer accepts "
             + ", ".join(deprecated)
-            + "; remove these keys because raw evidence is never uploaded and DLP findings are masked"
+            + "; these are legacy BA-only keys; remove them because raw evidence is never uploaded and DLP findings are masked"
         )
 
     if source_limit > ENTERPRISE_MAX_SOURCES:
@@ -617,7 +638,9 @@ def _password_is_literal(value: str) -> bool:
         "your_password",
     }:
         return False
-    return not normalized.startswith(("${", "{{", "$(", "<", "os.", "process.env", "getenv(", "env["))
+    return not normalized.startswith(
+        ("${", "{{", "$(", "<", "[MASKED:", "os.", "process.env", "getenv(", "env[")
+    )
 
 
 def _line_text(text: str, offset: int) -> str:
@@ -788,7 +811,7 @@ def dlp_warning(report: dict[str, Any]) -> str | None:
         )
     if report["status"] == "passed_with_masking":
         return (
-            f"DLP 已遮罩 {report['masked_count']} 個命中；原始值未進入 BA payload"
+            f"DLP 已遮罩 {report['masked_count']} 個命中；原始值未進入 BA／SA 工作副本"
         )
     return None
 
@@ -863,6 +886,29 @@ def _is_transaction_artifact(relative: str) -> bool:
     return False
 
 
+def _is_delivery_execution_evidence(relative: str) -> bool:
+    """Keep delivery receipts visible as exclusions without treating them as domain input.
+
+    An implementation Outcome contains hashes of the files it attests. Including
+    those bytes in the discovery identity would create a self-referential cycle:
+    refreshing the coverage ledger changes the Outcome, which changes discovery
+    again. Requirements and plans remain normal documentation inputs; only the
+    final execution attestations are classified as generated delivery evidence.
+    """
+
+    parts = PurePosixPath(relative.lower()).parts
+    return (
+        len(parts) == 5
+        and parts[0:2] == ("docs", "work")
+        and parts[3] == "implementation"
+        and re.fullmatch(
+            r"outcome(?:-(?:[2-9]|[1-9][0-9]+))?\.(?:json|md)",
+            parts[4],
+        )
+        is not None
+    )
+
+
 def _is_business_source_path(relative: str, settings: Settings) -> bool:
     return _has_prefix(relative, settings.business_source_paths)
 
@@ -882,6 +928,8 @@ def _exclusion_reason_for_relative(
     output = settings.output_directory.lower()
     if _is_transaction_artifact(relative):
         return "binary_or_generated"
+    if _is_delivery_execution_evidence(relative):
+        return "delivery_execution_evidence"
     if path.name.lower().endswith(
         (OUTPUT_TRANSACTION_SUFFIX, OUTPUT_TRANSACTION_LOCK_SUFFIX)
     ):
@@ -1282,7 +1330,7 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
             excluded.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
             continue
         try:
-            data.decode("utf-8")
+            text = data.decode("utf-8")
         except UnicodeDecodeError:
             excluded.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
             continue
@@ -1292,6 +1340,7 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
                 "category": classify_project_file(relative),
                 "byte_count": len(data),
                 "sha256": sha256_bytes(data),
+                "line_count": max(1, len(text.splitlines())),
             }
         )
 
@@ -1313,6 +1362,7 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
             "category": "business_documentation",
             "byte_count": len(item.text.encode("utf-8")),
             "sha256": item.digest,
+            "line_count": max(1, len(item.text.splitlines())),
         }
     included = list(by_path.values())
     excluded.extend(business_skipped)
@@ -1579,9 +1629,143 @@ def retrieval_contract_payload() -> dict[str, Any]:
         "knowledge_contract": KNOWLEDGE_CONTRACT,
         "router_source": QUERY_INDEX_SOURCE_ID,
         "navigation_source": "project-map",
+        "shared_context_source": SHARED_BUSINESS_CONTEXT_SOURCE_ID,
         "max_primary_source_groups": MAX_PRIMARY_SOURCE_GROUPS,
         "instructions_location": "README.md",
+        "document_roles": ["ba", "sa"],
     }
+
+
+def _active_capability_ids(pages: Sequence[InputFile]) -> list[str]:
+    """Return stable capabilities declared by active code-backed requirements."""
+
+    values = {
+        str(frontmatter.get("capability_id"))
+        for page in pages
+        if (frontmatter := parse_frontmatter_text(page.text)).get("status") == "active"
+        and frontmatter.get("type") == "business-requirement"
+        and isinstance(frontmatter.get("capability_id"), str)
+        and str(frontmatter.get("capability_id")).startswith("cap-")
+    }
+    return sorted(values)
+
+
+def _observed_capability_id(path: str) -> str:
+    """Create a stable preview-only ID for raw evidence awaiting analysis."""
+
+    without_suffix = PurePosixPath(path).with_suffix("").as_posix()
+    return f"cap-observed-{slugify(without_suffix)}"
+
+
+def _requirement_capabilities(pages: Sequence[InputFile]) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for page in pages:
+        frontmatter = parse_frontmatter_text(page.text)
+        capability_id = frontmatter.get("capability_id")
+        if (
+            frontmatter.get("type") == "business-requirement"
+            and frontmatter.get("status") == "active"
+            and isinstance(capability_id, str)
+            and CAPABILITY_ID_PATTERN.fullmatch(capability_id)
+        ):
+            result[Path(page.path).stem] = capability_id
+    return result
+
+
+def capability_preview(
+    pages: Sequence[InputFile],
+    scan: dict[str, Any],
+    discovery_id: str,
+    capability_coverage: dict[str, Any],
+) -> dict[str, Any]:
+    """Describe every known capability and every safe input still needing analysis."""
+
+    coverage_by_id = {
+        item["capability_id"]: item
+        for item in capability_coverage.get("capabilities", [])
+    }
+    requirement_capabilities = _requirement_capabilities(pages)
+    observed_by_capability: dict[str, set[str]] = {
+        capability_id: set() for capability_id in _active_capability_ids(pages)
+    }
+    for item in scan.get("coverage_dispositions", []):
+        for requirement in item.get("requirements", []):
+            capability_id = requirement_capabilities.get(requirement)
+            if capability_id:
+                observed_by_capability.setdefault(capability_id, set()).add(item["path"])
+
+    pending = sorted(
+        set(scan.get("uncovered_paths", [])) | set(scan.get("analysis_gap_paths", []))
+    )
+    for path in pending:
+        observed_by_capability.setdefault(_observed_capability_id(path), set()).add(path)
+
+    capabilities: list[dict[str, Any]] = []
+    active_ids = set(_active_capability_ids(pages))
+    for capability_id in sorted(observed_by_capability):
+        coverage_item = coverage_by_id.get(capability_id, {})
+        documents = coverage_item.get("documents", {})
+        document_coverage = {
+            role: (
+                str(documents[role].get("coverage_status") or "active")
+                if role in documents
+                else "missing"
+            )
+            for role in ("ba", "sa")
+        }
+        capabilities.append(
+            {
+                "capability_id": capability_id,
+                "discovery_status": (
+                    "documented" if capability_id in active_ids else "pending-analysis"
+                ),
+                "observed_sources": sorted(observed_by_capability[capability_id]),
+                "ba_document": f"wiki/synthesis/{capability_id}-ba.md",
+                "sa_document": f"wiki/synthesis/{capability_id}-sa.md",
+                "document_coverage": document_coverage,
+            }
+        )
+
+    unreadable = sorted(
+        item["path"]
+        for item in scan.get("excluded", [])
+        if item.get("reason") == "unreadable"
+    )
+    included_paths = sorted(item["path"] for item in scan.get("included", []))
+    declared_missing = sorted(
+        source
+        for source in scan.get("declared_source_paths", [])
+        if not any(path == source or path.startswith(source.rstrip("/") + "/") for path in included_paths)
+    )
+    return {
+        "discovery_id": discovery_id,
+        "capabilities": capabilities,
+        "pending_analysis": pending,
+        "evidence_gaps": list(capability_coverage.get("evidence_gaps", [])),
+        "source_differences": {
+            "uncovered": sorted(scan.get("uncovered_paths", [])),
+            "analysis_gaps": sorted(scan.get("analysis_gap_paths", [])),
+            "declared_not_in_safe_inventory": declared_missing,
+        },
+        "included_sources": included_paths,
+        "excluded": [
+            {"path": item["path"], "reason": item["reason"]}
+            for item in scan.get("excluded", [])
+        ],
+        "excluded_roots": [
+            {"path": item["path"], "reason": item["reason"]}
+            for item in scan.get("excluded_roots", [])
+        ],
+        "unreadable": unreadable,
+    }
+
+
+def analyzed_discovery_id(pages: Sequence[InputFile]) -> str | None:
+    ledger = next((page for page in pages if page.path == COVERAGE_LEDGER_PATH), None)
+    if ledger is None:
+        return None
+    matches = ANALYZED_DISCOVERY_PATTERN.findall(ledger.text)
+    return matches[0] if len(set(matches)) == 1 else None
 
 
 def _clean_query_value(value: str) -> str:
@@ -1602,7 +1786,7 @@ def _frontmatter_strings(value: Any) -> list[str]:
 
 def notebooklm_role(page: InputFile) -> str | None:
     value = parse_frontmatter_text(page.text).get("notebooklm_role")
-    return value if value in {"business", "traceability", "exclude"} else None
+    return value if value in {"business", "analysis", "traceability", "exclude"} else None
 
 
 def pages_for_role(pages: Iterable[InputFile], role: str) -> list[InputFile]:
@@ -1641,7 +1825,7 @@ def business_contract_coverage(pages: Sequence[InputFile]) -> dict[str, Any]:
     for path in REQUIRED_BA_DOCUMENTS:
         page = by_path.get(path)
         if page is not None and notebooklm_role(page) != "business":
-            issues.append(f"required BA document lacks notebooklm_role business: {path}")
+            issues.append(f"required business baseline lacks notebooklm_role business: {path}")
     ledger = by_path.get(COVERAGE_LEDGER_PATH)
     if ledger is not None and notebooklm_role(ledger) != "exclude":
         issues.append(f"coverage ledger must use notebooklm_role exclude: {COVERAGE_LEDGER_PATH}")
@@ -1790,6 +1974,192 @@ def business_contract_coverage(pages: Sequence[InputFile]) -> dict[str, Any]:
         "unclassified_pages": sorted(
             page.path for page in pages if notebooklm_role(page) is None
         ),
+    }
+
+
+def _source_locator_issues(
+    page: InputFile,
+    frontmatter: dict[str, Any],
+    root: Path,
+    safe_inventory: dict[str, dict[str, Any]],
+) -> tuple[list[str], list[str]]:
+    sources = frontmatter.get("sources", [])
+    locators = frontmatter.get("source_locators", [])
+    if not isinstance(sources, list) or not all(isinstance(item, str) for item in sources):
+        issue = f"invalid sources in capability document: {page.path}"
+        return [issue], [issue]
+    if not isinstance(locators, list) or not all(isinstance(item, str) for item in locators):
+        issue = f"invalid source_locators in capability document: {page.path}"
+        return [issue], [issue]
+    if sources and not locators:
+        return [f"missing source locator in capability document: {page.path}"], []
+    issues: list[str] = []
+    unsafe: list[str] = []
+    normalized_sources: set[str] = set()
+    for source in sources:
+        try:
+            relative = validate_relative_config_path(
+                source, root, "capability document source"
+            )
+        except ExportError:
+            issue = f"unsafe capability source path in {page.path}: {source}"
+            issues.append(issue)
+            unsafe.append(issue)
+            continue
+        normalized_sources.add(relative)
+        if relative not in safe_inventory:
+            issue = (
+                f"capability source is not in the safe included inventory: "
+                f"{page.path} -> {relative}"
+            )
+            issues.append(issue)
+            unsafe.append(issue)
+    for locator in locators:
+        match = SOURCE_LOCATOR_PATTERN.fullmatch(locator)
+        if match is None:
+            issues.append(f"invalid source locator in {page.path}: {locator}")
+            continue
+        try:
+            relative = validate_relative_config_path(
+                match.group("path"), root, "source locator"
+            )
+        except ExportError:
+            issues.append(f"invalid source locator in {page.path}: {locator}")
+            continue
+        if relative not in normalized_sources:
+            issues.append(
+                f"invalid source locator in {page.path}: {locator} is not declared in sources"
+            )
+            continue
+        source_metadata = safe_inventory.get(relative)
+        if source_metadata is None:
+            continue
+        line = int(match.group("line"))
+        line_count = int(source_metadata["line_count"])
+        if line > line_count:
+            issues.append(
+                f"invalid source locator in {page.path}: {locator} exceeds {line_count} lines"
+            )
+    return sorted(set(issues)), sorted(set(unsafe))
+
+
+def capability_document_coverage(
+    pages: Sequence[InputFile], root: Path, scan: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate one current-state BA/SA pair for every active capability."""
+
+    capability_ids = _active_capability_ids(pages)
+    indexed: dict[tuple[str, str], list[tuple[InputFile, dict[str, Any]]]] = {}
+    issues: list[str] = []
+    analysis_gaps: list[str] = []
+    evidence_gaps: list[str] = []
+    unsafe_source_issues: list[str] = []
+    safe_inventory = {item["path"]: item for item in scan.get("included", [])}
+    for page in pages:
+        frontmatter = parse_frontmatter_text(page.text)
+        document_role = frontmatter.get("notebooklm_document")
+        if document_role is None:
+            continue
+        capability_id = frontmatter.get("capability_id")
+        if document_role not in CAPABILITY_DOCUMENT_PROFILES:
+            issues.append(f"invalid notebooklm_document in {page.path}: {document_role}")
+            continue
+        if not isinstance(capability_id, str) or not CAPABILITY_ID_PATTERN.fullmatch(
+            capability_id
+        ):
+            issues.append(f"invalid capability_id in capability document: {page.path}")
+            continue
+        indexed.setdefault((capability_id, document_role), []).append((page, frontmatter))
+        if capability_id not in capability_ids:
+            issues.append(f"capability document has no active requirement: {page.path}")
+
+    capabilities: list[dict[str, Any]] = []
+    for capability_id in capability_ids:
+        documents: dict[str, Any] = {}
+        groups: set[str] = set()
+        for document_role in ("ba", "sa"):
+            matches = indexed.get((capability_id, document_role), [])
+            label = document_role.upper()
+            if not matches:
+                issues.append(f"missing {label} document for {capability_id}")
+                continue
+            if len(matches) > 1:
+                issues.append(f"duplicate {label} document for {capability_id}")
+                continue
+            page, frontmatter = matches[0]
+            profile, expected_role = CAPABILITY_DOCUMENT_PROFILES[document_role]
+            expected_path = f"wiki/synthesis/{capability_id}-{document_role}.md"
+            if page.path != expected_path:
+                issues.append(
+                    f"invalid {label} document path for {capability_id}: {page.path}"
+                )
+            if frontmatter.get("type") != "synthesis":
+                issues.append(f"capability document must use type synthesis: {page.path}")
+            if frontmatter.get("standards_profile") != profile:
+                issues.append(f"invalid {label} standards_profile: {page.path}")
+            if frontmatter.get("notebooklm_role") != expected_role:
+                issues.append(f"invalid {label} notebooklm_role: {page.path}")
+            if frontmatter.get("status") != "active":
+                issues.append(f"stale capability document: {page.path}")
+            group = frontmatter.get("notebooklm_group")
+            if isinstance(group, str):
+                groups.add(group)
+            else:
+                issues.append(f"capability document lacks notebooklm_group: {page.path}")
+            other = "sa" if document_role == "ba" else "ba"
+            other_stem = f"{capability_id}-{other}"
+            if other_stem not in _wiki_link_targets(page.text):
+                issues.append(f"capability document lacks {other.upper()} link: {page.path}")
+            locator_issues, unsafe_issues = _source_locator_issues(
+                page, frontmatter, root, safe_inventory
+            )
+            issues.extend(locator_issues)
+            unsafe_source_issues.extend(unsafe_issues)
+            explicit_no_evidence = "Codebase 未提供證據" in page.text
+            if not frontmatter.get("sources") and not explicit_no_evidence:
+                analysis_gaps.append(page.path)
+            elif explicit_no_evidence:
+                evidence_gaps.append(page.path)
+            if frontmatter.get("coverage_status") == "gap":
+                analysis_gaps.append(page.path)
+            documents[document_role] = {
+                "path": page.path,
+                "profile": profile,
+                "role": expected_role,
+                "group": group,
+                "coverage_status": frontmatter.get("coverage_status"),
+                "sources": list(frontmatter.get("sources", [])),
+                "source_locators": list(frontmatter.get("source_locators", [])),
+            }
+        if len(groups) > 1:
+            issues.append(f"BA and SA groups differ for {capability_id}")
+        capabilities.append(
+            {
+                "capability_id": capability_id,
+                "documents": documents,
+                "group": next(iter(groups)) if len(groups) == 1 else None,
+            }
+        )
+
+    if not capability_ids:
+        issues.append("no active codebase capability was identified")
+    if issues or analysis_gaps:
+        status = "gap"
+    elif evidence_gaps:
+        status = "partial"
+    else:
+        status = "covered"
+    return {
+        "status": status,
+        "capabilities": capabilities,
+        "capability_count": len(capability_ids),
+        "pair_count": sum(
+            1 for item in capabilities if set(item["documents"]) == {"ba", "sa"}
+        ),
+        "structural_issues": sorted(set(issues)),
+        "analysis_gaps": sorted(set(analysis_gaps)),
+        "evidence_gaps": sorted(set(evidence_gaps)),
+        "unsafe_source_issues": sorted(set(unsafe_source_issues)),
     }
 
 
@@ -1950,6 +2320,147 @@ def render_business_page(page: InputFile) -> str:
     )
     body = re.sub(r"`([^`\n]+)`", _redact_inline_path, body)
     return body.strip() + "\n"
+
+
+def render_capability_document(page: InputFile) -> str:
+    """Render one current-state BA or SA page as a complete portable document."""
+
+    frontmatter = parse_frontmatter_text(page.text)
+    role = str(frontmatter.get("notebooklm_document", "")).lower()
+    capability_id = str(frontmatter.get("capability_id", ""))
+    profile = str(frontmatter.get("standards_profile", ""))
+    group = str(frontmatter.get("notebooklm_group", ""))
+    title = _clean_query_value(
+        str(frontmatter.get("title", f"{capability_id} {role.upper()}"))
+    )
+    sources = _frontmatter_strings(frontmatter.get("sources"))
+    locators = _frontmatter_strings(frontmatter.get("source_locators"))
+    body = _without_frontmatter(page.text)
+    body = _remove_marked_blocks(body, LOCAL_ONLY_START, LOCAL_ONLY_END)
+    body = body.replace(MANAGED_START, "").replace(MANAGED_END, "")
+    body = body.replace(USER_NOTES_START, "").replace(USER_NOTES_END, "")
+    body = re.sub(r"\[\[([^\]]+)\]\]", _business_wikilink, body)
+    lines = [
+        f"# {title}\n\n",
+        f"- Capability ID：`{capability_id}`\n",
+        f"- Document role：`{role}`\n",
+        f"- Standards profile：`{profile}`\n",
+        f"- Knowledge group：`{group}`\n",
+        f"- Wiki page：`{page.path}`\n",
+        "- Evidence rule：以當下 Codebase 為準；README、規格、測試或註解衝突時，以程式碼現況為主。\n",
+        "\n## 來源\n\n",
+    ]
+    lines.extend(f"- `{source}`\n" for source in sources)
+    if not sources:
+        lines.append("- Codebase 未提供證據\n")
+    lines.extend(["\n## 來源定位\n\n"])
+    lines.extend(f"- `{locator}`\n" for locator in locators)
+    if not locators:
+        lines.append("- Codebase 未提供證據\n")
+    lines.extend(["\n## 文件內容\n\n", body.strip(), "\n"])
+    return "".join(lines)
+
+
+def capability_document_units(pages: Sequence[InputFile]) -> list[Unit]:
+    """Return exactly the validated BA/SA current-state document candidates."""
+
+    selected: list[tuple[str, str, InputFile, dict[str, Any]]] = []
+    for page in pages:
+        frontmatter = parse_frontmatter_text(page.text)
+        role = frontmatter.get("notebooklm_document")
+        capability_id = frontmatter.get("capability_id")
+        if (
+            role in CAPABILITY_DOCUMENT_PROFILES
+            and isinstance(capability_id, str)
+            and CAPABILITY_ID_PATTERN.fullmatch(capability_id)
+            and frontmatter.get("status") == "active"
+        ):
+            selected.append((capability_id, str(role), page, frontmatter))
+    units: list[Unit] = []
+    for capability_id, role, page, frontmatter in sorted(selected):
+        units.append(
+            Unit(
+                logical_source_id=f"{capability_id}:{role}",
+                kind=role,
+                group=str(frontmatter.get("notebooklm_group", capability_id)),
+                title=_clean_query_value(
+                    str(frontmatter.get("title", f"{capability_id} {role.upper()}"))
+                ),
+                inputs=(page,),
+                content=render_capability_document(page),
+                priority=1_000_000,
+            )
+        )
+    return units
+
+
+def shared_business_context_units(pages: Sequence[InputFile]) -> list[Unit]:
+    """Build the mandatory glossary and evidence-backed process source.
+
+    The source is shared across capability pairs. Process pages are eligible
+    only when active, business-facing, and backed by at least one concrete
+    source or derived Wiki evidence; gap-only process drafts stay local.
+    """
+
+    selected: list[InputFile] = []
+    for page in pages:
+        frontmatter = parse_frontmatter_text(page.text)
+        if (
+            frontmatter.get("status") != "active"
+            or notebooklm_role(page) != "business"
+        ):
+            continue
+        if page.path in {
+            "wiki/synthesis/business-glossary.md",
+            "wiki/synthesis/business-process-catalog.md",
+        }:
+            selected.append(page)
+            continue
+        if (
+            frontmatter.get("type") == "business-process"
+            and frontmatter.get("coverage_status") in {"covered", "partial"}
+            and (
+                _frontmatter_strings(frontmatter.get("sources"))
+                or _frontmatter_strings(frontmatter.get("derived_from"))
+            )
+        ):
+            selected.append(page)
+    if not selected:
+        return []
+    priority = {
+        "wiki/synthesis/business-glossary.md": 0,
+        "wiki/synthesis/business-process-catalog.md": 1,
+    }
+    selected.sort(key=lambda page: (priority.get(page.path, 2), page.path))
+    body = [
+        "# 共用業務詞彙與跨功能流程\n\n",
+        "> 本來源補足所有 capability BA／SA 共用的詞彙與端到端流程語境；",
+        "內容只取自目前 Codebase 支持的 active Wiki evidence。\n\n",
+        f"> Logical source ID: `{SHARED_BUSINESS_CONTEXT_SOURCE_ID}`\n\n",
+    ]
+    for page in selected:
+        frontmatter = parse_frontmatter_text(page.text)
+        title = _clean_query_value(
+            str(frontmatter.get("title", Path(page.path).stem))
+        )
+        body.extend(
+            [
+                f"## {title}\n\n",
+                render_business_page(page).rstrip(),
+                "\n\n",
+            ]
+        )
+    return [
+        Unit(
+            logical_source_id=SHARED_BUSINESS_CONTEXT_SOURCE_ID,
+            kind="shared_business_context",
+            group="business-core",
+            title="共用業務詞彙與跨功能流程",
+            inputs=tuple(selected),
+            content="".join(body),
+            priority=1_500_000,
+        )
+    ]
 
 
 def wiki_units(pages: Iterable[InputFile]) -> list[Unit]:
@@ -2267,7 +2778,15 @@ def materialize_units(units: Iterable[Unit], settings: Settings) -> list[tuple[U
         chunks = split_text(unit.content, settings.max_source_bytes, settings.max_source_words)
         base_filename = source_filename(unit.logical_source_id)
         base_path = Path("sources") / base_filename
+        cursor = 0
         for index, chunk in enumerate(chunks, start=1):
+            start = cursor
+            end = start + len(chunk)
+            if unit.content[start:end] != chunk:
+                raise ExportError(
+                    f"source splitting lost deterministic offsets: {unit.logical_source_id}"
+                )
+            cursor = end
             if len(chunks) == 1:
                 logical_id = unit.logical_source_id
                 filename = base_path
@@ -2284,6 +2803,16 @@ def materialize_units(units: Iterable[Unit], settings: Settings) -> list[tuple[U
                 inputs=unit.inputs,
                 content=chunk,
                 priority=unit.priority,
+                document_ids=tuple(
+                    sorted(
+                        {
+                            document_id
+                            for document_id, span_start, span_end in unit.document_spans
+                            if start < span_end and end > span_start
+                        }
+                        | set(unit.document_ids)
+                    )
+                ),
             )
             output_sha = sha256_bytes(chunk.encode("utf-8"))
             materialized.append((part, filename.as_posix(), output_sha))
@@ -2328,13 +2857,13 @@ def fit_document_units(
 
 
 def mask_materialized_units(
-    materialized: Sequence[tuple[Unit, str, str]]
+    materialized: Sequence[tuple[Unit, str, str]], *, phase: str = "sources"
 ) -> tuple[list[tuple[Unit, str, str]], dict[str, Any]]:
     payload_inputs = tuple(
         InputFile(path=filename, text=unit.content, digest=output_sha)
         for unit, filename, output_sha in materialized
     )
-    masked_inputs, report = mask_dlp_inputs(payload_inputs, phase="payload")
+    masked_inputs, report = mask_dlp_inputs(payload_inputs, phase=phase)
     by_path = {item.path: item for item in masked_inputs}
     masked_materialized: list[tuple[Unit, str, str]] = []
     for unit, filename, _ in materialized:
@@ -2347,6 +2876,8 @@ def mask_materialized_units(
             inputs=unit.inputs,
             content=content,
             priority=unit.priority,
+            document_spans=unit.document_spans,
+            document_ids=unit.document_ids,
         )
         masked_materialized.append(
             (masked_unit, filename, sha256_bytes(content.encode("utf-8")))
@@ -2356,7 +2887,7 @@ def mask_materialized_units(
             InputFile(path=filename, text=unit.content, digest=output_sha)
             for unit, filename, output_sha in masked_materialized
         ),
-        phase="payload_residual",
+        phase=f"{phase}_residual",
         enforcement=DLP_PAYLOAD_ENFORCEMENT,
         blocked=True,
     )
@@ -2364,87 +2895,295 @@ def mask_materialized_units(
     report["residual_finding_count"] = residual["finding_count"]
     if residual["status"] == "blocked":
         raise ExportError(
-            f"DLP payload masking left {residual['finding_count']} residual findings"
+            f"DLP {phase} masking left {residual['finding_count']} residual findings"
         )
     return masked_materialized, report
 
 
-def plan_ba_sources(
+def materialize_capability_documents(
+    units: Sequence[Unit],
+) -> tuple[list[tuple[Unit, str, str]], dict[str, dict[str, Any]]]:
+    materialized: list[tuple[Unit, str, str]] = []
+    metadata: dict[str, dict[str, Any]] = {}
+    for unit in units:
+        capability_id, role = unit.logical_source_id.rsplit(":", 1)
+        filename = f"documents/{capability_id}-{role}.md"
+        digest = sha256_bytes(unit.content.encode("utf-8"))
+        materialized.append((unit, filename, digest))
+        frontmatter = parse_frontmatter_text(unit.inputs[0].text)
+        metadata[unit.logical_source_id] = {
+            "capability_id": capability_id,
+            "role": role,
+            "profile": frontmatter.get("standards_profile"),
+            "source_locators": list(frontmatter.get("source_locators", [])),
+        }
+    return materialized, metadata
+
+
+def capability_source_units(document_units: Sequence[Unit]) -> list[Unit]:
+    grouped: dict[str, list[Unit]] = {}
+    for unit in document_units:
+        capability_id, _ = unit.logical_source_id.rsplit(":", 1)
+        grouped.setdefault(capability_id, []).append(unit)
+    result: list[Unit] = []
+    for capability_id in sorted(grouped):
+        members = sorted(grouped[capability_id], key=lambda item: item.kind)
+        sections: list[str] = [
+            f"# {capability_id} — 現況 BA／SA\n\n",
+            "> 本來源由相同 capability 的完整 BA 與 SA 文件組成；內容只依據當下 Codebase。\n\n",
+            f"> Logical source ID: `capability:{capability_id}`\n\n",
+        ]
+        cursor = sum(len(section) for section in sections)
+        spans: list[tuple[str, int, int]] = []
+        for member in members:
+            heading = f"## {member.kind.upper()} 文件：`{member.logical_source_id}`\n\n"
+            content = member.content.rstrip()
+            sections.append(heading)
+            cursor += len(heading)
+            start = cursor
+            sections.append(content)
+            cursor += len(content)
+            spans.append((member.logical_source_id, start, cursor))
+            sections.append("\n\n")
+            cursor += 2
+        inputs = {item.path: item for member in members for item in member.inputs}
+        result.append(
+            Unit(
+                logical_source_id=f"capability:{capability_id}",
+                kind="capability_documentation",
+                group=members[0].group,
+                title=f"{capability_id} 現況 BA／SA",
+                inputs=tuple(inputs[path] for path in sorted(inputs)),
+                content="".join(sections),
+                priority=1_000_000,
+                document_spans=tuple(spans),
+            )
+        )
+    return result
+
+
+def _combined_capability_source(units: Sequence[Unit]) -> Unit:
+    body = [
+        "# 全專案現況 BA／SA 文件\n\n",
+        "> 因單一 Notebook source-slot 額度合併；每個 capability 與 BA／SA 邊界均完整保留。\n\n",
+        "> Logical source ID: `capability:combined`\n\n",
+    ]
+    cursor = sum(len(section) for section in body)
+    spans: list[tuple[str, int, int]] = []
+    for unit in units:
+        heading = f"## Capability source：`{unit.logical_source_id}`\n\n"
+        content = unit.content.rstrip()
+        body.append(heading)
+        cursor += len(heading)
+        content_start = cursor
+        body.append(content)
+        cursor += len(content)
+        for document_id, start, end in unit.document_spans:
+            spans.append(
+                (document_id, content_start + start, content_start + end)
+            )
+        body.append("\n\n")
+        cursor += 2
+    inputs = {item.path: item for unit in units for item in unit.inputs}
+    return Unit(
+        logical_source_id="capability:combined",
+        kind="capability_documentation",
+        group="combined",
+        title="全專案現況 BA／SA 文件",
+        inputs=tuple(inputs[path] for path in sorted(inputs)),
+        content="".join(body),
+        priority=1_000_000,
+        document_spans=tuple(spans),
+    )
+
+
+def fit_capability_sources(
+    document_units: Sequence[Unit], settings: Settings, max_slots: int
+) -> tuple[list[tuple[Unit, str, str]], bool]:
+    if max_slots <= 0:
+        raise ExportError("no NotebookLM source slot remains for mandatory BA/SA documentation")
+    units = capability_source_units(document_units)
+    normal = materialize_units(units, settings)
+    if len(normal) <= max_slots:
+        return normal, False
+    compacted = materialize_units([_combined_capability_source(units)], settings)
+    if len(compacted) <= max_slots:
+        return compacted, True
+    raise ExportError(
+        f"mandatory BA/SA documentation needs {len(compacted)} sources after compaction "
+        f"but only {max_slots} slots are available"
+    )
+
+
+def capability_query_index_content(
+    root: Path,
+    documents: Sequence[tuple[Unit, str, str]],
+    source_mapping: dict[str, list[str]],
+    shared_sources: Sequence[tuple[Unit, str, str]],
+    settings: Settings,
+) -> str:
+    lines = [
+        f"# {root.name} — BA／SA 功能查詢索引\n\n",
+        "> 此來源只負責把問題導向現況 BA／SA 文件；所有結論必須回到 capability source。\n\n",
+        "## 回答契約\n\n",
+        "1. 業務目的、角色、觸發、流程、規則、結果與例外先查 BA。\n",
+        "2. 系統邊界、輸入輸出、資料、狀態、介面與錯誤處理先查 SA。\n",
+        "3. 衝突時以程式碼現況為準，並保留 README、規格、測試或註解的差異。\n",
+        "4. 沒有來源支持時回答「Codebase 未提供證據」，不得推測目標需求。\n",
+        f"5. 一次選最相關的 1–{MAX_PRIMARY_SOURCE_GROUPS} 個 capability sources。\n",
+        "6. 共用詞彙或跨 capability 流程先查 shared business context，再回到相關 BA／SA 驗證。\n\n",
+        "## 共用知識路由\n\n",
+        "- 共用詞彙與有證據支持的跨功能流程："
+        + ", ".join(f"`{filename}`" for _, filename, _ in shared_sources)
+        + "\n\n",
+        "## Capability 路由\n\n",
+        "| Capability | BA document | SA document | Upload sources |\n",
+        "| --- | --- | --- | --- |\n",
+    ]
+    by_capability: dict[str, dict[str, tuple[Unit, str, str]]] = {}
+    for item in documents:
+        unit = item[0]
+        capability_id, role = unit.logical_source_id.rsplit(":", 1)
+        by_capability.setdefault(capability_id, {})[role] = item
+    for capability_id in sorted(by_capability):
+        pair = by_capability[capability_id]
+        source_files = sorted(
+            set(source_mapping.get(f"{capability_id}:ba", []))
+            | set(source_mapping.get(f"{capability_id}:sa", []))
+        )
+        lines.append(
+            f"| `{capability_id}` | `{pair['ba'][1]}` | `{pair['sa'][1]}` | "
+            + ", ".join(f"`{path}`" for path in source_files)
+            + " |\n"
+        )
+    lines.extend(
+        [
+            "\n## 單一 Notebook 容量\n\n",
+            f"- 可用 sources：`{settings.available_source_slots}`\n",
+            f"- 每 source safety limit：`{settings.max_source_bytes}` bytes／`{settings.max_source_words}` estimated words\n",
+        ]
+    )
+    return "".join(lines)
+
+
+def capability_project_map_content(
+    root: Path,
+    documents: Sequence[tuple[Unit, str, str]],
+    upload_sources: Sequence[tuple[Unit, str, str]],
+) -> str:
+    capabilities = sorted(
+        {unit.logical_source_id.rsplit(":", 1)[0] for unit, _, _ in documents}
+    )
+    lines = [
+        f"# {root.name} — 現況 BA／SA 專案導覽\n\n",
+        "> 只上傳 `sources/*.md`；`documents/*.md` 是本機可稽核的完整文件。\n\n",
+        "## 文件範圍\n\n",
+        "- 來源只包含當下 Codebase、既有 README、規格與註解所支持的現況。\n",
+        "- 程式碼與其他描述衝突時，以程式碼為準。\n",
+        "- BA 與 SA 皆為每個 capability 的必要配對。\n\n",
+        "## Capability catalog\n\n",
+    ]
+    lines.extend(f"- `{capability_id}`\n" for capability_id in capabilities)
+    lines.extend(["\n## Upload source catalog\n\n"])
+    lines.extend(
+        f"- `{unit.logical_source_id}` — `{filename}` — group `{unit.group}`\n"
+        for unit, filename, _ in upload_sources
+    )
+    return "".join(lines)
+
+
+def _document_source_mapping(
+    documents: Sequence[tuple[Unit, str, str]],
+    sources: Sequence[tuple[Unit, str, str]],
+    compacted: bool,
+) -> dict[str, list[str]]:
+    mapping: dict[str, list[str]] = {}
+    for unit, _, _ in documents:
+        matching = [
+            filename
+            for source, filename, _ in sources
+            if unit.logical_source_id in source.document_ids
+        ]
+        if not matching:
+            raise ExportError(
+                f"BA/SA document has no upload source containing its bytes: "
+                f"{unit.logical_source_id}"
+            )
+        mapping[unit.logical_source_id] = sorted(matching)
+    return dict(sorted(mapping.items()))
+
+
+def plan_ba_sa_sources(
     root: Path,
     pages: Sequence[InputFile],
     settings: Settings,
     business_coverage: dict[str, Any],
     code_coverage: dict[str, Any],
 ) -> dict[str, Any]:
-    """Build the exact BA-only upload payload in memory for preflight and apply."""
+    """Build complete masked BA/SA documents and one-Notebook upload sources."""
 
     available = settings.available_source_slots
-    if available < 3:
+    if available < 4:
         raise ExportError(
-            "at least three source slots are required for query index, project map, and BA documentation"
+            "at least four source slots are required for query index, project map, "
+            "shared business context, and BA/SA documentation"
         )
-    business_pages = pages_for_role(pages, "business")
-    masked_pages, wiki_dlp = mask_dlp_inputs(business_pages, phase="managed_wiki")
-    documents = fit_document_units(wiki_units(masked_pages), settings, available - 2)
+    raw_document_units = capability_document_units(pages)
+    raw_documents, document_metadata = materialize_capability_documents(raw_document_units)
+    documents, documents_dlp = mask_materialized_units(raw_documents, phase="documents")
+    masked_document_units = [unit for unit, _, _ in documents]
+    raw_shared_units = shared_business_context_units(pages)
+    if not raw_shared_units:
+        raise ExportError(
+            "shared business context requires an active business glossary and process catalog"
+        )
+    shared_sources = materialize_units(raw_shared_units, settings)
+    if len(shared_sources) > available - 3:
+        raise ExportError(
+            f"shared business context needs {len(shared_sources)} sources but only "
+            f"{available - 3} slots remain after mandatory navigation and BA/SA sources"
+        )
+    capability_sources, compacted = fit_capability_sources(
+        masked_document_units, settings, available - 2 - len(shared_sources)
+    )
+    mapping = _document_source_mapping(documents, capability_sources, compacted)
+    navigation_inputs = {
+        item.path: item
+        for unit in [*masked_document_units, *raw_shared_units]
+        for item in unit.inputs
+    }
     query_unit = Unit(
         logical_source_id=QUERY_INDEX_SOURCE_ID,
         kind="router",
         group="query",
-        title="BA 功能需求索引",
-        inputs=tuple(masked_pages),
-        content=ba_query_index_content(
-            root, masked_pages, documents, business_coverage, settings
+        title="BA／SA 功能查詢索引",
+        inputs=tuple(navigation_inputs[path] for path in sorted(navigation_inputs)),
+        content=capability_query_index_content(
+            root, documents, mapping, shared_sources, settings
         ),
         priority=2_100_000,
     )
     query_parts = materialize_units([query_unit], settings)
-    preliminary = query_parts + documents
     project_unit = Unit(
         logical_source_id="project-map",
         kind="navigation",
         group="business-core",
-        title="BA 功能需求導覽",
-        inputs=tuple(masked_pages),
-        content=ba_project_map_content(
-            root, preliminary, settings, business_coverage, code_coverage
+        title="BA／SA 現況專案導覽",
+        inputs=query_unit.inputs,
+        content=capability_project_map_content(
+            root, documents, [*shared_sources, *capability_sources]
         ),
         priority=2_000_000,
     )
     project_parts = materialize_units([project_unit], settings)
-    materialized = query_parts + project_parts + documents
-    if len(materialized) > available:
-        compact_slots = available - len(query_parts) - len(project_parts)
-        documents = fit_document_units(wiki_units(masked_pages), settings, compact_slots)
-        query_unit = Unit(
-            logical_source_id=QUERY_INDEX_SOURCE_ID,
-            kind="router",
-            group="query",
-            title="BA 功能需求索引",
-            inputs=tuple(masked_pages),
-            content=ba_query_index_content(
-                root, masked_pages, documents, business_coverage, settings
-            ),
-            priority=2_100_000,
-        )
-        query_parts = materialize_units([query_unit], settings)
-        project_unit = Unit(
-            logical_source_id="project-map",
-            kind="navigation",
-            group="business-core",
-            title="BA 功能需求導覽",
-            inputs=tuple(masked_pages),
-            content=ba_project_map_content(
-                root, query_parts + documents, settings, business_coverage, code_coverage
-            ),
-            priority=2_000_000,
-        )
-        project_parts = materialize_units([project_unit], settings)
-        materialized = query_parts + project_parts + documents
+    materialized = query_parts + project_parts + shared_sources + capability_sources
     if len(materialized) > available:
         raise ExportError(
-            f"BA-only source pack needs {len(materialized)} sources but only {available} slots are available"
+            f"BA/SA source pack needs {len(materialized)} sources but only {available} slots are available"
         )
-    masked_materialized, payload_dlp = mask_materialized_units(materialized)
+    masked_materialized, sources_dlp = mask_materialized_units(
+        materialized, phase="sources"
+    )
     for unit, _, _ in masked_materialized:
         if (
             unit.byte_count > settings.max_source_bytes
@@ -2455,11 +3194,29 @@ def plan_ba_sources(
             )
     return {
         "materialized": masked_materialized,
-        "managed_wiki_dlp": wiki_dlp,
-        "payload_dlp": payload_dlp,
+        "documents": documents,
+        "document_metadata": document_metadata,
+        "document_source_mapping": mapping,
+        "documents_dlp": documents_dlp,
+        "sources_dlp": sources_dlp,
+        # Compatibility names remain readable for callers during schema migration.
+        "managed_wiki_dlp": documents_dlp,
+        "payload_dlp": sources_dlp,
         "source_count": len(masked_materialized),
         "remaining_source_slots": available - len(masked_materialized),
     }
+
+
+def plan_ba_sources(
+    root: Path,
+    pages: Sequence[InputFile],
+    settings: Settings,
+    business_coverage: dict[str, Any],
+    code_coverage: dict[str, Any],
+) -> dict[str, Any]:
+    """Compatibility alias for the schema-v6 BA/SA planner."""
+
+    return plan_ba_sa_sources(root, pages, settings, business_coverage, code_coverage)
 
 
 def select_evidence(
@@ -2926,6 +3683,29 @@ def source_manifest_entry(unit: Unit, filename: str, output_sha: str) -> dict[st
     }
 
 
+def document_manifest_entry(
+    unit: Unit,
+    filename: str,
+    output_sha: str,
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "logical_document_id": unit.logical_source_id,
+        "capability_id": metadata["capability_id"],
+        "role": metadata["role"],
+        "profile": metadata["profile"],
+        "group": unit.group,
+        "file": filename,
+        "byte_count": unit.byte_count,
+        "estimated_words": unit.estimated_words,
+        "output_sha256": output_sha,
+        "inputs": [
+            {"path": item.path, "sha256": item.digest} for item in unit.inputs
+        ],
+        "source_locators": metadata["source_locators"],
+    }
+
+
 def load_previous_manifest(output: Path) -> dict[str, Any] | None:
     _validate_output_tree(output)
     path = output / "manifest.json"
@@ -3229,7 +4009,7 @@ def upload_plan_content(
     migration: dict[str, Any],
 ) -> str:
     lines = [
-        "# NotebookLM BA 業務知識上傳計畫\n\n",
+        "# NotebookLM 現況 BA／SA 知識上傳計畫\n\n",
         f"產生來源數：{source_count}/{available_slots} 個可用 slots。\n\n",
         "只上傳 `sources/` 下的 Markdown。不要把 manifest、upload plan 或 README 當成專案證據。\n\n",
     ]
@@ -3237,7 +4017,7 @@ def upload_plan_content(
         lines.extend(
             [
                 "## 必須一次性完整重建\n\n",
-                "舊 source pack 不是 schema v5 `business-only-ba-v2`。請先刪除同一本 Notebook 中所有舊 static sources，再上傳本次 `sources/*.md`；本次不要只依增量 actions 操作。\n\n",
+                "舊 source pack 不是 schema v6 `codebase-ba-sa-retrieval-v1`。請先刪除同一本 Notebook 中所有舊 static sources，再完整上傳本次 `sources/*.md`；不要把 BA-only 舊來源與新版 BA／SA 來源混用，也不要只依增量 actions 操作。\n\n",
             ]
         )
     labels = (
@@ -3271,18 +4051,19 @@ def upload_plan_content(
 
 
 def readme_content() -> str:
-    return """# NotebookLM Enterprise — BA 功能需求來源包
+    return """# NotebookLM Enterprise — 現況 BA／SA 知識包
 
 此目錄由 `export-notebooklm.py` 產生。
 
-只上傳 `sources/` 下的 Markdown。`manifest.json`、`upload-plan.md` 與本 README
-保留在本機。重新產生後依 upload plan 操作：`unchanged` 不需重傳；`changed`
+只上傳 `sources/` 下的 Markdown。`documents/` 保存每個 capability 的完整 BA／SA，
+供本機審查與追溯；`manifest.json`、`upload-plan.md`、`governance.md` 與本 README
+也保留在本機。重新產生後依 upload plan 操作：`unchanged` 不需重傳；`changed`
 必須先移除 NotebookLM 中的舊 static source，再上傳新檔。
 
 ## 一次性重建既有 Notebook
 
-若要套用 schema v5 `business-only-ba-v2`，請先在同一本 Notebook 刪除舊的 static
-sources，再完整上傳 `sources/` 下的所有 Markdown。Exporter 不會連線、刪除雲端
+若舊 manifest 是 schema v1–v5 或 BA-only contract，請先在同一本 Notebook 刪除舊的
+static sources，再完整上傳 schema v6 `sources/` 下的所有 Markdown。Exporter 不會連線、刪除雲端
 source 或自動上傳；`upload-plan.md` 只是一份本機操作清單。
 
 ## NotebookLM Custom instructions
@@ -3290,26 +4071,60 @@ source 或自動上傳；`upload-plan.md` 只是一份本機操作清單。
 若 NotebookLM Enterprise 介面提供 Custom instructions，請貼上以下內容：
 
 ```text
-你是協助 Business Analyst 理解系統功能需求的查詢器。請只使用目前 Notebook 的 sources。
+你是協助 Business Analyst 與 System Analyst 理解當下系統的查詢器。請只使用目前 Notebook 的 sources。
 
-1. 先使用 `query-index.md` 將問題路由到最相關的 1–5 個業務能力群組。
-2. 第一段以繁體中文業務語言回答功能、角色、條件、流程、規則、結果或驗收條件；不要描述搜尋過程。
-3. 以 functional requirement (`fr-*`) 為主，搭配 process (`bp-*`) 與 rule (`br-*`)。
-4. 回答引用 requirement/process/rule ID 與 Wiki page，並標示 business-confirmed、implementation-observed、inference 或 gap。
-5. 不得把 implementation-observed 說成已核准的業務政策；找不到可靠證據時列出 gap 與應確認角色。
-6. 不要列出 repository path、raw code、secret、token、連線字串或其他技術證據原文。
-7. `query-index.md` 是路由索引，不是業務事實；結論必須引用對應 BA 文件。
+1. 先使用 `query-index.md` 將問題路由到最相關的 1–5 個 capability sources。
+   詢問共用詞彙或跨 capability 流程時，同時查閱 `shared-business-context.md`。
+2. BA 問題回答目的、角色、觸發、流程、規則、結果與例外；SA 問題回答邊界、輸入輸出、資料、狀態、介面與錯誤處理。
+3. 以繁體中文回答，保留 capability ID、API、symbol、設定鍵及必要英文專有名詞。
+4. 程式碼與 README、規格、測試或註解衝突時，以程式碼現況為主並說明差異。
+5. 找不到可靠證據時使用「Codebase 未提供證據」，不得補寫意圖、政策、品質數值或未實作需求。
+6. 不得輸出 secret、token、password、連線字串或其他已遮罩內容。
+7. `query-index.md` 是路由索引；結論必須引用對應 capability 的 BA 或 SA 文件內容，
+   共用流程或詞彙結論也必須引用 shared business context。
 ```
 
 若介面沒有 Custom instructions，請在問題前加上：
-`請先用 query-index.md 路由；以功能需求與業務語言直接回答並標示證據狀態，未知內容明確列為 gap。`
+`請先用 query-index.md 路由；共用詞彙或跨功能流程查 shared-business-context.md，再依問題使用 BA 或 SA 現況文件，以繁體中文直接回答，未知內容標示「Codebase 未提供證據」。`
 
 Exporter 完全離線，不會呼叫 NotebookLM、不會上傳檔案，也不會修改 raw sources
 或 Wiki pages。
 
 Exporter 會在本機分析階段與最終 payload 階段執行
-`notebooklm-enterprise-ba-mask-v1` DLP：命中內容先以規則名稱遮罩，遮罩後若仍有
+`notebooklm-enterprise-ba-sa-mask-v1` DLP：documents 與 sources 的命中內容先以規則名稱遮罩，遮罩後若仍有
 殘留 finding 才會在 commit 前阻擋。報告不包含命中值，raw sources 永不改寫。
+"""
+
+
+def governance_content() -> str:
+    return """# NotebookLM Enterprise 本機交付治理清單
+
+- 產品基準：Google Cloud Gemini Notebook Enterprise。
+- 官方限制與控制查核日期：2026-09-07。
+- 上傳模型：`sources/*.md` 是靜態副本；Codebase 或文件更新後，依 `upload-plan.md` 替換同一 Notebook 的來源。
+
+## 本機已檢查
+
+- 單一 Notebook source 數不超過 300。
+- 每個上傳候選不超過 500 MB 或 500,000 字；匯出器另採設定中的保守 safety limits。
+- `documents/*.md` 與 `sources/*.md` 均已執行本機 Basic DLP 遮罩及 residual scan。
+- BA／SA 配對、來源 locator、hash、文件到 upload source 映射及原子交付已檢查。
+
+本機結果只代表這份離線 pack；不代表 Google Cloud tenant 控制或 NotebookLM 問答品質已驗證。
+
+## 租戶管理員待驗證
+
+- IAM 存取與分享權限是否符合租戶設定。
+- VPC Service Controls 是否適用且已在目標 project／perimeter 生效。
+- CMEK 是否適用且金鑰、權限與 rotation 狀態符合租戶要求。
+- data location／data residency 的選擇與實際資源位置。
+- Sensitive Data Protection 的來源內容政策與檢查狀態。大型檔案另受產品掃描限制，符合來源容量不等同雲端內容掃描完成。
+- Model Armor 的 prompt／response 防護是否適用且已啟用。Model Armor 不取代 Sensitive Data Protection 的來源內容檢查。
+
+## Google 官方來源
+
+- Product overview and limits: https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview
+- Protect sensitive data: https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/protect-sensitive-data
 """
 
 
@@ -3352,7 +4167,12 @@ def _commit_output_unlocked(
             for item in (previous or {}).get("sources", [])
             if isinstance(item, dict) and "file" in item
         }
-        for old_file in old_sources:
+        old_documents = {
+            _validate_pack_file_path(item["file"], output)
+            for item in (previous or {}).get("documents", [])
+            if isinstance(item, dict) and "file" in item
+        }
+        for old_file in old_sources | old_documents:
             assert stage is not None
             old_path = stage / old_file
             if old_path.is_file():
@@ -3409,10 +4229,14 @@ def commit_output(
     output: Path,
     files: dict[str, bytes],
     previous: dict[str, Any] | None,
+    *,
+    pre_commit_check: Callable[[], None] | None = None,
 ) -> None:
     output.absolute().parent.mkdir(parents=True, exist_ok=True)
     try:
         with _OutputTransactionLock(_output_transaction_lock_path(output)):
+            if pre_commit_check is not None:
+                pre_commit_check()
             _commit_output_unlocked(output, files, previous)
     except OSError as exc:
         raise ExportError(f"unable to acquire NotebookLM transaction lock: {output}") from exc
@@ -3461,6 +4285,54 @@ def _settings_fingerprint(settings: Settings, root: Path) -> dict[str, Any]:
     }
 
 
+def _discovery_identity(
+    root: Path, settings: Settings, scan: dict[str, Any]
+) -> tuple[str, str]:
+    """Bind confirmation to raw safe sources and scan policy, excluding Wiki bytes."""
+
+    def is_export_artifact(item: dict[str, Any]) -> bool:
+        path = str(item.get("path", ""))
+        return item.get("reason") in {
+            "export_output",
+            "delivery_execution_evidence",
+        } or _is_transaction_artifact(path)
+
+    material = {
+        "schema_version": DISCOVERY_SCHEMA_VERSION,
+        "knowledge_contract": KNOWLEDGE_CONTRACT,
+        "retrieval_contract": RETRIEVAL_CONTRACT,
+        "settings": _settings_fingerprint(settings, root),
+        "inventory": [
+            {
+                "path": item["path"],
+                "category": item["category"],
+                "byte_count": item["byte_count"],
+                "sha256": item["sha256"],
+            }
+            for item in scan["included"]
+        ],
+        "excluded": [
+            {"path": item["path"], "reason": item["reason"]}
+            for item in scan["excluded"]
+            if not is_export_artifact(item)
+        ],
+        # Directory counts and byte totals intentionally stay out of the ID:
+        # Wiki is a pruned root and its managed rebuild must not invalidate a
+        # confirmation of the raw source scope.
+        "excluded_roots": [
+            {"path": item["path"], "reason": item["reason"]}
+            for item in scan["excluded_roots"]
+            if not is_export_artifact(item)
+        ],
+    }
+    digest = sha256_bytes(
+        json.dumps(
+            material, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+    )
+    return digest, f"sha256:{digest}"
+
+
 def _preflight_identity(
     root: Path,
     settings: Settings,
@@ -3507,13 +4379,33 @@ def _not_run_dlp(phase: str) -> dict[str, Any]:
     }
 
 
+def _normalized_lint_page(item: dict[str, Any]) -> str:
+    return re.sub(r"/+", "/", str(item.get("page", "")).replace("\\", "/"))
+
+
 def _pack_plan_payload(plan: dict[str, Any] | None, error: str | None) -> dict[str, Any]:
     if plan is None:
-        return {"status": "blocked", "error": error, "sources": []}
+        return {
+            "status": "blocked",
+            "error": error,
+            "documents": [],
+            "sources": [],
+            "document_source_mapping": {},
+        }
     return {
         "status": "ready",
         "source_count": plan["source_count"],
         "remaining_source_slots": plan["remaining_source_slots"],
+        "documents": [
+            {
+                "logical_document_id": unit.logical_source_id,
+                "file": filename,
+                "byte_count": unit.byte_count,
+                "estimated_words": unit.estimated_words,
+                "output_sha256": output_sha,
+            }
+            for unit, filename, output_sha in plan["documents"]
+        ],
         "sources": [
             {
                 "logical_source_id": unit.logical_source_id,
@@ -3524,6 +4416,7 @@ def _pack_plan_payload(plan: dict[str, Any] | None, error: str | None) -> dict[s
             }
             for unit, filename, output_sha in plan["materialized"]
         ],
+        "document_source_mapping": plan["document_source_mapping"],
     }
 
 
@@ -3545,17 +4438,27 @@ def _coverage_requirement_issues(
     return sorted(set(issues))
 
 
-def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
+def build_preflight(
+    root: Path,
+    settings: Settings,
+    *,
+    _capture: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     pages, skipped, warnings = collect_wiki_pages(root)
     business_coverage = business_contract_coverage(pages)
+    scan = scan_project(root, settings, pages)
+    capability_coverage = capability_document_coverage(pages, root, scan)
     if business_coverage["unclassified_pages"]:
         warnings.append(
-            "未標示 notebooklm_role 的 Wiki pages 不會進入 BA payload："
+            "未標示 notebooklm_role 的 Wiki pages 不會進入 BA／SA 文件化範圍："
             + ", ".join(
                 f"`{path}`" for path in business_coverage["unclassified_pages"]
             )
         )
-    scan = scan_project(root, settings, pages)
+    discovery_hash, discovery_id = _discovery_identity(root, settings, scan)
+    analyzed_id = analyzed_discovery_id(pages)
+    capability_coverage["analyzed_discovery_id"] = analyzed_id
+    capability_coverage["discovery_id_matches"] = analyzed_id == discovery_id
     scan["coverage_ledger_issues"].extend(
         _coverage_requirement_issues(scan, pages)
     )
@@ -3568,13 +4471,73 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     dlp_message = dlp_warning(analysis_dlp)
     if dlp_message:
         warnings.append(dlp_message)
-    lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root, use_git=False)
+    if capability_coverage["unsafe_source_issues"]:
+        lint_result = {
+            "deterministic_status": "critical",
+            "semantic_status": "review_required",
+            "overall_status": "critical",
+            "summary": {
+                "pages": len(pages),
+                "critical": len(capability_coverage["unsafe_source_issues"]),
+                "warning": 0,
+                "info": 0,
+            },
+            "findings": [
+                {
+                    "severity": "critical",
+                    "code": "unsafe_source",
+                    "message": issue,
+                    "page": "",
+                }
+                for issue in capability_coverage["unsafe_source_issues"]
+            ],
+        }
+    else:
+        lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root, use_git=False)
+    capability_paths = {
+        PurePosixPath(document["path"]).relative_to("wiki").as_posix()
+        for capability in capability_coverage["capabilities"]
+        for document in capability["documents"].values()
+    }
+    capability_source_issues = [
+        item
+        for item in lint_result.get("findings", [])
+        if _normalized_lint_page(item) in capability_paths
+        and item.get("code")
+        in {"frontmatter", "invalid_source", "missing_source", "stale_source"}
+    ]
+    capability_coverage["source_issues"] = capability_source_issues
+    capability_coverage["stale_documents"] = sorted(
+        {
+            f"wiki/{_normalized_lint_page(item)}"
+            for item in capability_source_issues
+            if item.get("code") == "stale_source" and _normalized_lint_page(item)
+        }
+    )
+    if capability_source_issues:
+        capability_coverage["status"] = "gap"
     missing = [path for path, status in scan["required_documents"].items() if status != "active"]
     warnings.extend(f"必要文件尚未完成：{path} ({scan['required_documents'][path]})" for path in missing)
     warnings.extend(
         f"BA 知識契約問題：{issue}"
         for issue in business_coverage["structural_issues"]
     )
+    warnings.extend(
+        f"BA／SA 功能文件問題：{issue}"
+        for issue in capability_coverage["structural_issues"]
+    )
+    warnings.extend(
+        f"尚未完成 BA／SA 分析：{path}"
+        for path in capability_coverage["analysis_gaps"]
+    )
+    warnings.extend(
+        f"BA／SA 功能文件來源尚未同步：wiki/{_normalized_lint_page(item)} ({item['code']})"
+        for item in capability_source_issues
+    )
+    if analyzed_id != discovery_id:
+        warnings.append(
+            "coverage ledger 的 analyzed discovery ID 尚未對應目前完整安全來源快照"
+        )
     if coverage["status"] != "complete":
         warnings.append(
             "完整 codebase disposition 尚未完成："
@@ -3588,7 +4551,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     required_document_issues = [
         item
         for item in lint_result.get("findings", [])
-        if item.get("page") in required_relatives
+        if _normalized_lint_page(item) in required_relatives
         and item.get("code")
         in {"frontmatter", "invalid_source", "missing_source", "stale_source"}
     ]
@@ -3596,6 +4559,10 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
     prerequisites_ready = (
         not missing
         and not business_coverage["structural_issues"]
+        and not capability_coverage["structural_issues"]
+        and not capability_coverage["analysis_gaps"]
+        and not capability_source_issues
+        and analyzed_id == discovery_id
         and not required_document_issues
         and critical_count == 0
         and coverage["status"] == "complete"
@@ -3609,34 +4576,43 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
             )
         except ExportError as exc:
             pack_error = str(exc)
-            warnings.append(f"BA payload 尚未可產生：{pack_error}")
+            warnings.append(f"BA／SA source pack 尚未可產生：{pack_error}")
     else:
         pack_error = "mandatory documents, BA structure, coverage, or deterministic lint is incomplete"
-    managed_wiki_dlp = (
-        pack_plan["managed_wiki_dlp"] if pack_plan else _not_run_dlp("managed_wiki")
+    documents_dlp = (
+        pack_plan["documents_dlp"] if pack_plan else _not_run_dlp("documents")
     )
-    payload_dlp = pack_plan["payload_dlp"] if pack_plan else _not_run_dlp("payload")
+    sources_dlp = pack_plan["sources_dlp"] if pack_plan else _not_run_dlp("sources")
     dlp = {
         "profile": DLP_PROFILE,
         "analysis": analysis_dlp,
-        "managed_wiki": managed_wiki_dlp,
-        "payload": payload_dlp,
+        "documents": documents_dlp,
+        "sources": sources_dlp,
+        # Schema-v5 names remain aliases for one migration cycle.
+        "managed_wiki": documents_dlp,
+        "payload": sources_dlp,
     }
     plan_payload = _pack_plan_payload(pack_plan, pack_error)
-    ready = prerequisites_ready and pack_plan is not None and payload_dlp["status"] in {
-        "passed",
-        "passed_with_masking",
-    }
+    ready = prerequisites_ready and pack_plan is not None and all(
+        report["status"] in {"passed", "passed_with_masking"}
+        for report in (documents_dlp, sources_dlp)
+    )
     inventory_hash, preflight_id = _preflight_identity(
         root, settings, pages, scan, lint_result, dlp, plan_payload
     )
-    return {
+    result = {
         "ok": True,
         "mode": "preflight",
         "preflight_schema_version": PREFLIGHT_SCHEMA_VERSION,
         "audience": AUDIENCE,
         "knowledge_contract": KNOWLEDGE_CONTRACT,
         "retrieval": retrieval_contract_payload(),
+        "discovery_schema_version": DISCOVERY_SCHEMA_VERSION,
+        "discovery_id": discovery_id,
+        "discovery_hash": discovery_hash,
+        "capability_preview": capability_preview(
+            pages, scan, discovery_id, capability_coverage
+        ),
         "preflight_id": preflight_id,
         "inventory_hash": inventory_hash,
         "ready_to_export": ready,
@@ -3670,6 +4646,7 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
         "inventory": scan,
         "coverage": coverage,
         "business_coverage": business_coverage,
+        "capability_coverage": capability_coverage,
         "limits": limits_payload(settings),
         "dlp": dlp,
         "pack_plan": plan_payload,
@@ -3685,56 +4662,69 @@ def build_preflight(root: Path, settings: Settings) -> dict[str, Any]:
         "skipped": skipped,
         "warnings": warnings,
     }
+    if _capture is not None:
+        _capture.clear()
+        _capture.update(
+            {
+                "settings_fingerprint": _settings_fingerprint(settings, root),
+                "pages": tuple(pages),
+                "skipped": tuple(dict(item) for item in skipped),
+                "warnings": tuple(warnings),
+                "scan": scan,
+                "business_coverage": business_coverage,
+                "capability_coverage": capability_coverage,
+                "code_coverage": coverage,
+                "analysis_dlp": analysis_dlp,
+                "plan_result": pack_plan,
+                "preflight": result,
+            }
+        )
+    return result
 
 
-def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
+def build_pack(
+    root: Path,
+    output: Path,
+    settings: Settings,
+    *,
+    prepared: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build from the exact in-memory bytes validated by one readiness pass."""
+
+    captured: dict[str, Any] = {} if prepared is None else prepared
+    if prepared is None:
+        build_preflight(root, settings, _capture=captured)
+    if captured.get("settings_fingerprint") != _settings_fingerprint(settings, root):
+        raise ExportError("prepared export settings do not match apply settings")
+    preflight = captured.get("preflight")
+    if not isinstance(preflight, dict) or not preflight.get("ready_to_export"):
+        raise ExportError("preflight is not ready to export")
+    plan_result = captured.get("plan_result")
+    if not isinstance(plan_result, dict):
+        raise ExportError("prepared export has no complete BA/SA source plan")
+
     _recover_pending_output(output)
-    pages, skipped, warnings = collect_wiki_pages(root)
-    business_coverage = business_contract_coverage(pages)
-    if business_coverage["unclassified_pages"]:
-        warnings.append(
-            "未標示 notebooklm_role 的 Wiki pages 未進入 BA payload："
-            + ", ".join(
-                f"`{path}`" for path in business_coverage["unclassified_pages"]
-            )
-        )
-    scan = scan_project(root, settings, pages)
-    scan["coverage_ledger_issues"].extend(
-        _coverage_requirement_issues(scan, pages)
-    )
-    scan["coverage_ledger_issues"] = sorted(set(scan["coverage_ledger_issues"]))
-    warnings.extend(excluded_root_warnings(scan))
-    code_coverage = coverage_summary(scan)
-    required_coverage = scan["required_documents"]
-    incomplete = [
-        path for path, status in required_coverage.items() if status != "active"
-    ]
-    if incomplete:
-        details = ", ".join(
-            f"{path} ({required_coverage[path]})" for path in incomplete
-        )
-        raise ExportError(f"mandatory Wiki documentation is not active: {details}")
-    if business_coverage["structural_issues"]:
-        raise ExportError(
-            "BA knowledge contract is incomplete: "
-            + "; ".join(business_coverage["structural_issues"])
-        )
-    if code_coverage["status"] != "complete":
-        raise ExportError(
-            "codebase functional coverage is incomplete: "
-            f"uncovered={code_coverage['uncovered_count']}, "
-            f"analysis_gap={code_coverage['analysis_gap_count']}, "
-            f"ledger_issues={len(code_coverage['ledger_issues'])}"
-        )
-    _, analysis_dlp = mask_dlp_inputs(
-        collect_analysis_inputs(root, scan), phase="analysis"
-    )
-    plan_result = plan_ba_sources(
-        root, pages, settings, business_coverage, code_coverage
-    )
+    pages = list(captured["pages"])
+    skipped = [dict(item) for item in captured["skipped"]]
+    warnings = list(captured["warnings"])
+    scan = captured["scan"]
+    business_coverage = captured["business_coverage"]
+    capability_coverage = captured["capability_coverage"]
+    code_coverage = captured["code_coverage"]
+    analysis_dlp = captured["analysis_dlp"]
     materialized = plan_result["materialized"]
+    documents = plan_result["documents"]
 
     entries = [source_manifest_entry(unit, filename, output_sha) for unit, filename, output_sha in materialized]
+    document_entries = [
+        document_manifest_entry(
+            unit,
+            filename,
+            output_sha,
+            plan_result["document_metadata"][unit.logical_source_id],
+        )
+        for unit, filename, output_sha in documents
+    ]
     previous_manifest = load_previous_manifest(output)
     previous = previous_by_id(previous_manifest, output)
     actions = build_actions(entries, previous)
@@ -3755,7 +4745,7 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         "requires_full_rebuild": requires_full_rebuild,
         "from_schema_version": previous_schema,
         "reason": (
-            "previous source pack is not schema v5 business-only-ba-v2"
+            "previous source pack is not schema v6 codebase-ba-sa-retrieval-v1; replace all BA-only or legacy static sources in the same Notebook"
             if requires_full_rebuild
             else None
         ),
@@ -3766,6 +4756,8 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         "schema_version": EXPORT_SCHEMA_VERSION,
         "audience": AUDIENCE,
         "knowledge_contract": KNOWLEDGE_CONTRACT,
+        "discovery_id": preflight["discovery_id"],
+        "preflight_id": preflight["preflight_id"],
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "git_revision": git_revision(root),
         "profile": settings.profile,
@@ -3784,6 +4776,9 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         "dlp": {
             "profile": DLP_PROFILE,
             "analysis": analysis_dlp,
+            "documents": plan_result["documents_dlp"],
+            "sources": plan_result["sources_dlp"],
+            # Schema-v5 names remain aliases for one migration cycle.
             "managed_wiki": plan_result["managed_wiki_dlp"],
             "payload": plan_result["payload_dlp"],
         },
@@ -3794,11 +4789,15 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
                 {
                     unit.group
                     for unit, _, _ in materialized
-                    if unit.kind == "business_documentation"
+                    if unit.kind == "capability_documentation"
                 }
             ),
         },
         "business_coverage": business_coverage,
+        "capability_coverage": capability_coverage,
+        "document_count": len(document_entries),
+        "documents": document_entries,
+        "document_source_mapping": plan_result["document_source_mapping"],
         "source_count": len(entries),
         "sources": entries,
         "omitted_evidence": [],
@@ -3818,7 +4817,9 @@ def build_pack(root: Path, output: Path, settings: Settings) -> dict[str, Any]:
         "manifest.json": _json_bytes(manifest),
         "upload-plan.md": plan.encode("utf-8"),
         "README.md": readme_content().encode("utf-8"),
+        "governance.md": governance_content().encode("utf-8"),
     }
+    files.update({filename: unit.content.encode("utf-8") for unit, filename, _ in documents})
     files.update({filename: unit.content.encode("utf-8") for unit, filename, _ in materialized})
     return {
         "manifest": manifest,
@@ -3841,6 +4842,7 @@ def build_parser() -> argparse.ArgumentParser:
     action.add_argument("--preflight", action="store_true")
     action.add_argument("--apply", action="store_true")
     parser.add_argument("--preflight-id")
+    parser.add_argument("--discovery-id")
     parser.add_argument("--format", choices=("json", "text"), default="text")
     return parser
 
@@ -3879,18 +4881,30 @@ def main(argv: Sequence[str] | None = None) -> int:
         settings = load_settings(root, config_path)
         settings = apply_output_override(root, settings, args.output)
         if args.preflight:
-            if args.preflight_id:
-                raise ExportError("--preflight-id is valid only with --apply")
+            if args.preflight_id or args.discovery_id:
+                raise ExportError(
+                    "--preflight-id and --discovery-id are valid only with --apply"
+                )
             result = build_preflight(root, settings)
         else:
             if not args.apply:
                 raise ExportError(
                     "direct export is disabled; run --preflight, then use "
-                    "--apply --preflight-id <id>"
+                    "--apply --discovery-id <confirmed-id> --preflight-id <latest-id>"
                 )
             if not args.preflight_id:
                 raise ExportError("--apply requires --preflight-id from the latest preflight")
-            preflight = build_preflight(root, settings)
+            if not args.discovery_id:
+                raise ExportError(
+                    "--apply requires --discovery-id from the user-confirmed discovery preview"
+                )
+            prepared: dict[str, Any] = {}
+            preflight = build_preflight(root, settings, _capture=prepared)
+            if args.discovery_id != preflight["discovery_id"]:
+                raise ExportError(
+                    "discovery_id no longer matches the current raw source scope or configuration; "
+                    "run discovery preview and obtain confirmation again"
+                )
             if args.preflight_id != preflight["preflight_id"]:
                 raise ExportError(
                     "preflight_id no longer matches the current Wiki, inventory, or configuration; "
@@ -3899,7 +4913,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if not preflight["ready_to_export"]:
                 plan_error = preflight.get("pack_plan", {}).get("error")
                 raise ExportError(
-                    "preflight is not ready to export; complete mandatory BA documents, full "
+                    "preflight is not ready to export; complete mandatory baselines and BA/SA pairs, full "
                     "codebase disposition, and deterministic lint requirements"
                     + (f"; payload plan: {plan_error}" if plan_error else "")
                 )
@@ -3909,11 +4923,42 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_relative = repo_relative(output, root)
             if output == root or output_relative == ".":
                 raise ExportError("output must be a child directory of repository root")
-            result = build_pack(root, output, settings)
-            commit_output(output, result.pop("files"), load_previous_manifest(output))
+            result = build_pack(root, output, settings, prepared=prepared)
+
+            def verify_unchanged_apply_snapshot() -> None:
+                try:
+                    latest_settings = load_settings(root, config_path)
+                    latest_settings = apply_output_override(root, latest_settings, args.output)
+                except (ExportError, OSError) as exc:
+                    raise ExportError(
+                        f"configuration changed during apply; prior output was preserved: {exc}"
+                    ) from exc
+                if _settings_fingerprint(latest_settings, root) != _settings_fingerprint(
+                    settings, root
+                ):
+                    raise ExportError(
+                        "configuration changed during apply; prior output was preserved"
+                    )
+                latest = build_preflight(root, latest_settings)
+                if (
+                    latest["discovery_id"] != preflight["discovery_id"]
+                    or latest["preflight_id"] != preflight["preflight_id"]
+                    or not latest["ready_to_export"]
+                ):
+                    raise ExportError(
+                        "repository inputs changed during apply; prior output was preserved"
+                    )
+
+            commit_output(
+                output,
+                result.pop("files"),
+                load_previous_manifest(output),
+                pre_commit_check=verify_unchanged_apply_snapshot,
+            )
             result["ok"] = True
             result["mode"] = "apply"
             result["preflight_id"] = preflight["preflight_id"]
+            result["discovery_id"] = preflight["discovery_id"]
     except (ExportError, OSError) as exc:
         result = {"ok": False, "error": str(exc)}
         if args.format == "json":

@@ -61,7 +61,7 @@ class CapabilityRemovalBehaviorTests(unittest.TestCase):
     def test_active_contract_and_platform_adapters_drop_removed_capabilities(self) -> None:
         manifest = json.loads((SKILL_ROOT / "capabilities.json").read_text(encoding="utf-8"))
 
-        self.assertEqual(manifest["contract_version"], 5)
+        self.assertEqual(manifest["contract_version"], 6)
         self.assertEqual(len(manifest["intents"]), 11)
         self.assertEqual(len(manifest["intent_groups"]), 11)
         self.assertTrue({"guide", "delegation"}.isdisjoint(manifest["intents"]))
@@ -105,7 +105,7 @@ class CapabilityRemovalBehaviorTests(unittest.TestCase):
                         / "install-state.json"
                     ).read_text(encoding="utf-8")
                 )
-                self.assertEqual(installed_state["contract_version"], 5)
+                self.assertEqual(installed_state["contract_version"], 6)
                 for relative in REMOVED_PATHS:
                     with self.subTest(surface=surface, fresh_path=relative):
                         self.assertFalse((target / relative).exists())

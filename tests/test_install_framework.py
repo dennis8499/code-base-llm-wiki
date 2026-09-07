@@ -64,7 +64,7 @@ class FrameworkInstallerTests(unittest.TestCase):
             )
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(payload["contract_version"], 5)
+            self.assertEqual(payload["contract_version"], 6)
             self.assertEqual(payload["framework_version"], "0.2.0")
             self.assertEqual(payload["action"], "install")
             self.assertEqual(payload["surface"], "codex")

@@ -29,14 +29,14 @@ flowchart TB
     Wiki --> BA
     Wiki --> SA
     Wiki --> SD
-    Project[Full safe project scan] -->|NotebookLM export| Docs[BA processes, rules, terms, gaps]
+    Project[Full safe project scan] -->|NotebookLM export| Docs[Per-capability current-state BA + SA]
     Docs --> Wiki
-    Docs --> Pack[.notebooklm BA-first pack]
+    Docs --> Pack[.notebooklm single-notebook source pack]
 ```
 
 ## 雙入口與共用契約
 
-`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 5、十一個使用者意圖群組、十一個 machine operations、guard modes 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
+`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 6、使用者意圖群組、machine operations、guard modes 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
 
 - intent routing、frontmatter、log operations 與工作流 references；NotebookLM export 另有離線 source-pack reference；
 - Wiki page templates；
@@ -64,8 +64,8 @@ evidence page 以 `source_digest` 保存內容摘要。頁面之間使用 Obsidi
 新 BA／SA／SD synthesis 另有 `standards_profile` 與
 `coverage_status: covered|partial|gap`；欄位在 validator 中保持選填，以相容未重跑的
 legacy SA。三層使用穩定 ID 形成 `cap/fr/bp/br/AC → SR/NFR/IF → DE/VIEW/ADR`
-追溯。BA 可選擇性成為 NotebookLM business content；SA／SD 固定為 traceability，
-不進入上傳內容。
+追溯。一般 standalone BA／SA／SD 維持各自用途；NotebookLM export 另以專用 current-state
+profiles 為每個 capability 產生 BA／SA pair，只有規整後的 pair sources 會列為上傳候選。
 
 `wiki/index.md` 是導覽入口，`wiki/log.md` 是 append-only 時序紀錄。新增、刪除、改名或重大更新頁面時必須同步 index；Ingest、Lint、ADR、Synthesis、BA／SA／SD 與重大框架更新必須追加 log。既有 `type: guide` 與歷史 `guide` log 保持可讀，但不再提供建立流程。
 
@@ -120,6 +120,6 @@ owner-only DACL 跟著 staged files 移入目標，造成 Codex sandbox account 
 - Query 不連線即時資料庫，也不呼叫資料庫工具或 fallback；需要目前資料庫狀態的問題標示為未驗證 gap。
 - Repo 內的 `.sql`、migration 與 schema 可維持一般唯讀 source evidence。
 - 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
-- NotebookLM export 每次唯讀全量掃描安全 UTF-8 repo text；既有 Wiki 是增量知識基線，不是掃描邊界，非文字業務證據列為 gap。
-- Agent 先以 discovery preflight 確認 BA 文件計畫，更新流程、規則、詞彙與 gaps 後，再以 readiness preflight 的新 ID 確認 apply；本機 `.notebooklm/` 採 BA-first 與原子替換。
-- Export 不呼叫 NotebookLM API，也不自動上傳；敏感、generated/dependency、CI/IaC、Wiki/output 等安全排除不能被設定繞過；standalone BA 存在時可選納入，SA／SD 與技術 traceability 不會上傳。
+- NotebookLM export 每次唯讀全量掃描安全 UTF-8 repo text；既有 Wiki 是增量知識基線，不是掃描邊界，非文字業務證據列為 gap。Discovery ID 與 Wiki readiness ID 分離。
+- Agent 先以 discovery preflight 顯示完整來源、capability、缺口與 BA／SA 文件計畫；使用者一次確認後更新 Wiki，自動取得 readiness ID，再以雙 ID 原子替換本機 `.notebooklm/`。
+- Export 不呼叫 NotebookLM API，也不自動上傳；敏感、generated/dependency、CI/IaC、Wiki/output 等安全排除不能被設定繞過。只有專用 current-state profiles 的每功能 BA／SA 進入 schema-v6 pack；standalone BA／SA、SD 與其他 traceability 不會上傳。

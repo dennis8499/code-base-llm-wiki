@@ -28,6 +28,8 @@ read-only compatibility exception and has no creator asset.
 | `synthesis` (BA) | Standard-aligned Business Analysis document | `assets/business-analysis-template.md` | `standards_profile: business-analysis-aligned-v1`; `coverage_status`; tags include `business-analysis` |
 | `synthesis` (SA) | Solution-neutral System Analysis document | `assets/system-analysis-template.md` | `standards_profile: system-analysis-aligned-v1`; `coverage_status`; tags include `system-analysis` |
 | `synthesis` (SD) | Standard-aligned System Design document | `assets/system-design-template.md` | `standards_profile: system-design-aligned-v1`; `coverage_status`; tags include `system-design` |
+| `synthesis` (NotebookLM capability BA) | Current-state business view for one active `cap-*` | `assets/notebooklm-ba-template.md` | `codebase-business-analysis-v1`; `notebooklm_document: ba`; source locators and reciprocal SA link |
+| `synthesis` (NotebookLM capability SA) | Current-state system view for one active `cap-*` | `assets/notebooklm-sa-template.md` | `codebase-system-analysis-v1`; `notebooklm_document: sa`; source locators and reciprocal BA link |
 | `index` | Wiki navigation root | `assets/index-template.md` | `sources: []`, `tags: [index]` |
 | `log` | Append-only activity history | `assets/log-template.md` | `sources: []`, `tags: [log]` |
 

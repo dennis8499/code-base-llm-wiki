@@ -17,7 +17,7 @@ import tempfile
 from typing import Any, Sequence
 
 
-CONTRACT_VERSION = 5
+CONTRACT_VERSION = 6
 REPO_ROOT = Path(__file__).resolve().parents[4]
 COMMON_SURFACE_PATHS = ("AGENTS.md", ".agents/skills/codebase-wiki")
 SURFACE_PATHS = {

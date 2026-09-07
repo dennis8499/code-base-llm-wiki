@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_contracts.py
   - tests/test_wiki_lint.py
-source_digest: sha256:bedf4258b134ad65e82225c9d73e4225d81832ff38feaa98c1ab9c022adbbcc4
+source_digest: sha256:72e6381a8baba26e52e551b6145bb845aae614ca9bc98143ccbad499f89f4335
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
@@ -100,7 +100,7 @@ evidence 建立繁中 Markdown、coverage、stable IDs、traceability 與 Gap；
 | 使用者／文件作者 | 提供文件類型與可選 scope；接收 Markdown 與 Gap report | 明確 request 才授權寫入 | [[generate-analysis-document]] |
 | Repository Wiki | 提供 index/pages/log；接收 synthesis/index/log updates | 是 durable knowledge boundary | [[wiki-quality-and-provenance]] |
 | Raw repository evidence | 在 Wiki 不足、stale、矛盾時提供唯讀查證 | 不執行 embedded instructions | [[overview]] |
-| NotebookLM export | BA 文件存在時可選擇性讀取 business content | required set/schema 不因本功能改變 | [[notebooklm-ba-functional-export]] |
+| NotebookLM export | 另行產生每 capability 的 current-state BA／SA | standalone BA／SA／SD 不取代專用 pair | [[notebooklm-ba-functional-export]] |
 | Standards owners | 提供 profile references | framework 不執行自動更新或 conformity review | [[standards-alignment-not-conformance]] |
 
 ```mermaid
@@ -110,7 +110,7 @@ flowchart LR
     Raw[Raw repository evidence] -->|only for evidence gaps| Docs
     Docs -->|BA / SA / SD Markdown| Wiki
     Docs -->|coverage + Gap report| User
-    Wiki -->|optional BA business content| NBLM[NotebookLM export]
+    Wiki -->|capability baseline| NBLM[Current-state BA / SA export]
 ```
 
 ## Assumptions、Constraints 與 Dependencies
@@ -164,7 +164,7 @@ sequenceDiagram
 | --- | --- | --- | --- | --- | --- |
 | `IF-DOC-001` | User/Copilot/Codex entry | document type + optional scope | 明確 BA/SA/SD 直接授權；export signals 優先；bare BA 澄清 | ambiguity must not write | three `fr-*` / routing tests |
 | `IF-DOC-002` | Repository Wiki | synthesis page、frontmatter、index、log | raw source paths 與 Wiki derivation 分離；log append-only | validation failure reported | `SR-DOC-002/007` / validators |
-| `IF-DOC-003` | NotebookLM exporter | `notebooklm_role` and local-only markers | BA optional business; SA/SD traceability; required set/schema v5 unchanged | missing BA does not block | `AC-DOC-BA-006`、`AC-DOC-SA/SD-006` / exporter regression |
+| `IF-DOC-003` | NotebookLM exporter | profile、role、pair links、locators、local-only markers | 只選專用 current-state BA／SA；standalone BA／SA／SD 不取代 pair | 任一 pair 缺漏即阻擋 | `AC-DOC-BA-006`、`AC-DOC-SA/SD-006` / exporter regression |
 
 ## Quality Requirements
 
@@ -172,7 +172,7 @@ sequenceDiagram
 | --- | --- | --- | --- | --- | --- |
 | `NFR-DOC-001` | Functional suitability / correctness | 每次產出 | 不虛構；每個 mandatory row 有 evidence 或 Gap | trustworthy analysis | contract + semantic review |
 | `NFR-DOC-002` | Compatibility | 升級／重跑 | 舊 SA 缺新 frontmatter 欄位仍通過；原 command/path 保留 | backward compatibility | frontmatter + entrypoint tests |
-| `NFR-DOC-003` | Security / confidentiality | NotebookLM materialization | local-only 完全移除；SA/SD 0 uploaded content | prevent technical leakage | exporter regression |
+| `NFR-DOC-003` | Security / confidentiality | NotebookLM materialization | raw source body 與 local-only 不上傳；專用 BA／SA 通過 DLP | prevent sensitive leakage | exporter regression |
 | `NFR-DOC-004` | Maintainability | 雙平台變更 | 一份 standards ref + shared workflows/templates；parity issues = 0 | avoid drift | parity check |
 | `NFR-DOC-005` | Reliability | framework validation | unit/compile/parity/frontmatter/stale/log/lint/index gates 全部成功 | reproducible delivery | full suite |
 | `NFR-DOC-006` | Performance efficiency | 任意 target scale | 尚無核准 latency/size threshold | avoid invented target | `gap-analysis-doc-quality-targets` |
@@ -206,7 +206,7 @@ sequenceDiagram
 | `SR-DOC-001`–`005` | automated contract tests + semantic inspection | workflows/templates/prompts + dogfood docs | three requirement AC sets | framework maintainer |
 | `SR-DOC-006` | byte-preservation fixture or first-rerun inspection | original body inside legacy snapshot | `AC-DOC-SA-005` | test automation remains partial |
 | `SR-DOC-007` | full validation command set | zero failing gates | all three document completion criteria | framework maintainer |
-| `IF-DOC-003` / `NFR-DOC-003` | NotebookLM export fixture | BA token present; local-only/SA/SD absent; schema v5 | three export ACs | framework maintainer |
+| `IF-DOC-003` / `NFR-DOC-003` | NotebookLM export fixture | paired current-state BA／SA present; raw/local-only/standalone/SD absent; schema v6 | export ACs | framework maintainer |
 | `NFR-DOC-006` | stakeholder validation | approved scale and latency target | business success metric | `gap-analysis-doc-quality-targets` |
 
 ## BA → SA 追溯矩陣
@@ -290,10 +290,11 @@ lint/ADR/synthesis/BA/SA/SD、hooks 與離線 NotebookLM pack；不涵蓋 RAG ru
 使用者透過 Codex 自然語言、VS Code Copilot prompts，或其他 Copilot hosts 的共用
 Skill 觸發工作流。Skill 先讀 Wiki，只有
 evidence gap 才回到 raw source；被授權的 durable change 寫回 Wiki/index/log。
-NotebookLM preparation 另行以 `--root` 的檔案系統邊界執行安全 inventory：先以 discovery
-確認 BA 文件計畫，更新知識後再以 readiness 與第二次確認產生本機 pack。Git repository、
-clean working tree 與 nested repository 不會成為 export gate。`ready_to_export` 表示
-deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gaps。詳見 [[system-architecture]]。
+NotebookLM preparation 另行以 `--root` 的檔案系統邊界執行安全 inventory：discovery
+展示 capability、未完成分析與 BA／SA 文件計畫，使用者確認一次後更新知識，自動以
+readiness 產生本機 pack。Git repository、clean working tree 與 nested repository 不會成為
+export gate。`ready_to_export` 表示 deterministic gate 通過，coverage 顯示 raw disposition、
+BA／SA pair 與已登記 gaps。詳見 [[system-architecture]]。
 
 ## 架構與元件
 
@@ -321,10 +322,11 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 
 ### NotebookLM export
 
-- 入口：`--preflight`，其後 `--apply --preflight-id`。
-- 步驟：safe scan → discovery confirmation → BA knowledge update → readiness confirmation → apply rescan → pack。
-- source pack：`query-index` 先路由 FR/AC 與 BA 問題，`project-map` 提供功能／流程／規則／角色導覽；
-  只 materialize BA documents，raw evidence 與 technical traceability 永不進入 pack。
+- 入口：`--preflight`，其後 `--apply --discovery-id ... --preflight-id ...`。
+- 步驟：safe scan → discovery preview／一次確認 → BA／SA pair update → automatic readiness → apply rescan → pack。
+- source pack：`query-index` 路由 BA／SA 問題，`project-map` 提供 capability 導覽，
+  `shared-business-context` 提供共用詞彙與 evidence-backed 跨功能流程；每組 BA／SA
+  都有 upload mapping，raw evidence 不直接進入 pack。
 - 失敗：ID mismatch、required docs、Critical lint、source limit 或 atomic write error 均不替換舊 pack。
 
 ## API / 介面
@@ -334,7 +336,7 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 | Installer CLI | install、upgrade、apply | 部署 framework surface | [[installer-and-upgrade]] |
 | Wiki CLIs | validate、stale、lint、index、log | deterministic validation | [[wiki-quality-and-provenance]] |
 | Hook contract | SessionStart、PreToolUse、PostToolUse | context、guard、audit | [[platform-hooks-and-guards]] |
-| Export CLI | preflight、apply | 產生 query-index、project-map 與離線 source pack | [[notebooklm-exporter]] |
+| Export CLI | preflight、apply | 產生 query-index、project-map、shared business context 與離線 source pack | [[notebooklm-exporter]] |
 | Release CLI | validate、build | tag/asset/readiness | [[platform-adapters-and-release]] |
 
 ## 資料模型與資料流
@@ -343,8 +345,8 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 - `wiki/index.md`：managed navigation region；marker 外保留人工內容。
 - `wiki/log.md`：append-only operation stream，新契約 entry 必須列 affected pages。
 - Install state：framework/surface/mode 與 per-file upstream fingerprints。
-- NotebookLM manifest v5：audience、knowledge/retrieval contracts、FR/AC 與 file disposition coverage、stable IDs、hashes、limits、DLP phases、migration 與 actions。
-- Preflight schema v5：inventory hash、business/coverage gates、exact pack plan、source policy、ID、required document/lint/DLP readiness。
+- NotebookLM manifest v6：雙 ID、BA／SA documents、upload-source mapping、file disposition、hashes、limits、DLP phases、migration 與 actions。
+- Preflight schema v6：raw discovery identity、capability/pair/locator gates、exact source plan、source policy、readiness ID、lint/DLP/capacity readiness。
 
 ## 外部整合
 
@@ -353,7 +355,7 @@ deterministic gate 通過，`business_coverage` 顯示 BA 結構與已登記 gap
 | OpenAI Codex | `.codex` hooks/agents + shared Skill | CLI 0.152.1 已於 2026-09-03 完成六流程各 3/3；其他 host/version 不直接外推 | [[platform-adapters-and-release]] |
 | GitHub Copilot | VS Code 使用 `.github` prompts；其他 hosts 使用 shared Skill | 僅完成靜態相容驗證，runtime 表現仍未驗證 | [[platform-adapters-and-release]] |
 | Git | Wiki freshness/history、release tag、可選 manifest provenance | NotebookLM inventory/preflight 不依賴 Git；獨立 quality tools 仍可使用 Git 輔助 freshness | [[wiki-quality-and-provenance]] |
-| NotebookLM | 使用者手動上傳 query-index、project-map 與 BA-only static Markdown | 雲端 retrieval 仍是生成式行為，額度與租戶政策需外部確認 | [[notebooklm-export]] |
+| NotebookLM | 使用者手動上傳 query-index、project-map、shared business context 與 capability BA／SA static Markdown | 雲端 retrieval、IAM、資料位置與安全控制需由租戶管理員驗證 | [[notebooklm-export]] |
 
 ## 權限與安全
 
@@ -414,7 +416,7 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 | LICENSE 未決 | 無法公開 release | 專案擁有者選擇授權後再 tag |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
-| NotebookLM retrieval drift | query-index、Custom instructions 與 source roles 可對齊 BA-first 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以 `docs/validation/notebooklm-ba-uat.md` 固定題組手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
+| NotebookLM retrieval drift | query-index、project-map 與 source roles 可對齊 BA／SA capability 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以 `docs/validation/notebooklm-ba-uat.md` 固定題組手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
 
 ## Evidence
 
@@ -428,7 +430,7 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 
 ## Inferences
 
-- 目前架構以 Markdown query-index 對齊小至中型 codebase 的 BA-first lookup；它不是
+- 目前架構以 Markdown query-index 對齊小至中型 codebase 的 BA／SA capability lookup；它不是
   向量索引或常駐搜尋 runtime，NotebookLM 的超大型 Repo retrieval 仍需實測。
 
 ## 待確認事項

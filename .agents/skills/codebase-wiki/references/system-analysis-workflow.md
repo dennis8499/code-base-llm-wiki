@@ -18,8 +18,10 @@ ISO/IEC 25010:2023 classifies measurable quality requirements.
   `standards_profile: system-analysis-aligned-v1`, and
   `coverage_status: covered | partial | gap`.
 - Required tags: `synthesis`, `system-analysis`, `standards-aligned`.
-- NotebookLM: `notebooklm_role: traceability`; SA never enters the BA upload
-  payload.
+- NotebookLM: `notebooklm_role: traceability`; this solution-neutral standalone
+  SA is not an upload candidate. Schema-v6 export may create a separate
+  current-state per-capability SA with `codebase-system-analysis-v1` and
+  `notebooklm_document: sa`.
 - Format: Traditional Chinese Markdown. Do not generate PDF or DOCX.
 
 ## Analysis Boundary

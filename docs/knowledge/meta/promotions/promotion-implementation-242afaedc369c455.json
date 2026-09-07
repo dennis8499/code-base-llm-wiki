@@ -1,0 +1,18 @@
+{
+  "approval": {
+    "actor": "user",
+    "evidence": "user:2026-09-07:notebooklm-ba-sa-knowledge-r2"
+  },
+  "candidate_ref": "knowledge:candidates/promotion-implementation-242afaedc369c455/candidate.json",
+  "decision": "change",
+  "formal_paths": [],
+  "lint": {
+    "required_outcome": "passed"
+  },
+  "payload_sha256": "fed2c92aa6b1030754be48677add9bac926dcc5445b5d0ede0e3ed31f630a4ad",
+  "promotion_id": "promotion-implementation-242afaedc369c455",
+  "schema": "knowledge-promotion/v1",
+  "stage": "implementation",
+  "status": "Ready",
+  "work_id": "work-20260907-notebooklm-ba-sa-export-18b38958"
+}

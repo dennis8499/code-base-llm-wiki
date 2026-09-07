@@ -60,7 +60,7 @@ remain explicit unverified gaps.
 | `/business-analysis-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned BA 文件，保留人工 notes、明列 Gap，並更新 index 與 log。` |
 | `/system-analysis-doc {scope}` | `請基於目前 wiki 產出 {scope} 的 solution-neutral SA 文件，以 SR/NFR/IF 建立需求與驗證追溯，並更新 index 與 log。` |
 | `/system-design-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned SD 文件，建立 concerns、views、DE/ADR 與 SA 追溯，並更新 index 與 log。` |
-| `/export-notebooklm`          | `請使用 BA-first NotebookLM export：先預覽流程、規則、詞彙、證據與 gaps，確認後更新繁中 BA Wiki；再做 readiness preflight，第二次確認後產生 query-index 與 .notebooklm pack。` |
+| `/export-notebooklm`          | `請使用現況 BA／SA NotebookLM export：全量預覽當下 Codebase 與缺口，取得一次確認後建立每功能 BA／SA，自動 readiness 並產生單一 Notebook 的本機 pack。` |
 | `/update-index`                | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。`                                   |
 
 Codex CLI and IDE slash commands are platform controls. Do not add project-level
@@ -127,17 +127,18 @@ System design document:
 NotebookLM Enterprise export:
 
 ```text
-請使用 $codebase-wiki 執行 BA-only NotebookLM export。先執行唯讀 discovery preflight，
+請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export。先執行唯讀 discovery preflight，
 以 `--root` 為檔案系統邊界，盤點安全 UTF-8 runtime source、config、schema、docs 與
 behavioral tests。依可觀察行為建立 `fr-*`／`cap-*`、`AC-*`、流程、規則、詞彙、證據狀態
 與 gaps，並讓每個安全檔案都有 non-gap disposition；PDF/Office/圖片等只登記 gap。
-列出 inventory、排除、coverage、全量 Wiki regeneration 計畫、DLP masking 與容量後等待確認。
-確認後重建 managed BA sections、保留 user notes，更新 requirement/process/rule pages、六份 BA
-synthesis 文件、local coverage ledger、index 與一筆 log。完成後重新執行 readiness
-preflight，檢查 catalogs、FR/BP/BR/AC IDs、applies_to、full disposition、lint、exact pack plan
-與三階段 DLP，再次等待確認；只以第二次 `preflight_id` 產生 BA-only `.notebooklm` sources、
-schema v5 manifest 與 upload plan。Raw code/config/traceability 不得上傳；schema v1–v4 或舊
-retrieval contract 必須 full rebuild。Exporter 不呼叫雲端 API。
+列出 inventory、排除、coverage、每個功能預計 BA／SA、DLP masking 與容量後等待一次確認。
+確認後重建 managed sections、保留 user notes，更新 requirement/process/rule pages、每個
+`cap-*` 的現況 BA／SA、local coverage ledger、index 與一筆 log，並記錄 confirmed discovery ID。
+完成後自動執行 readiness preflight；只有 raw/config/scope 漂移才重新預覽。以 confirmed
+`discovery_id` 與 latest `preflight_id` 產生 `.notebooklm/documents`、只供上傳的 `sources`、
+  schema v6 manifest、governance 與 upload plan；sources 另包含共用詞彙、流程目錄與
+  active evidence-backed 跨功能流程。Codebase 是唯一內容依據，衝突以程式碼為主；
+v1–v5 或 BA-only retrieval contract 必須 full rebuild。Exporter 不呼叫雲端 API。
 ```
 
 ## Hooks
@@ -207,7 +208,7 @@ python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 python .agents\skills\codebase-wiki\scripts\parity-check.py
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --discovery-id DISCOVERY_ID --preflight-id PREFLIGHT_ID --output .notebooklm --format json
 ```
 
 Ask Codex to confirm setup:

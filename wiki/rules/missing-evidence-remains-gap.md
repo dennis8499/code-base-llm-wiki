@@ -13,7 +13,7 @@ sources:
   - .agents/skills/codebase-wiki/references/business-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
-source_digest: sha256:9274d19d39b46ea4de00d4162271a8c4c49d417c277b65ee638e41a3bdbf8f1f
+source_digest: sha256:035285ae5e891e49038ed713bfca27f525f440c6d56ff8c04833af7727bc77c3
 derived_from: ["[[generate-analysis-document]]"]
 last_updated: 2026-09-04
 tags: [business-rule, evidence, gap, standards-aligned, notebooklm]

@@ -14,7 +14,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
-source_digest: sha256:78592106df5c122c833b832db4e82da0577b5bbcdcce16888c9186de22829074
+source_digest: sha256:075477f3305302a181de93e57f4e2161119563b004fb76837c9ab40be6c6d2b7
 derived_from: ["[[overview]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]"]
 last_updated: 2026-09-04
 tags: [business-process, analysis-document, standards-aligned, notebooklm]
@@ -101,7 +101,8 @@ PDF、DOCX、外部 API 呼叫或自動標準更新。
 - BA IDs：`cap-*`、`fr-*`、`bp-*`、`br-*`、`AC-*`。
 - SA IDs：`SR-*`、`NFR-*`、`IF-*`。
 - SD IDs：`DE-*`、`VIEW-*` 與既有 ADR。
-- BA 可選擇性進入 NotebookLM；SA／SD 是 local traceability。
+- Standalone BA／SA／SD 保留在一般文件工作流；NotebookLM 另由專用 current-state
+  profiles 產生每 capability BA／SA，SD 與一般分析文件維持 local traceability。
 
 ## 成功結果
 

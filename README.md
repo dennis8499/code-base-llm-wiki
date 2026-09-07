@@ -94,8 +94,8 @@ flowchart LR
 
 Copilot prompt files 是 VS Code 本機 Agent 入口，不是 GitHub Copilot coding agent
 或其他 hosts 的通用入口；其他 hosts 直接使用 `.agents/skills/codebase-wiki/`。
-目前 v5 Copilot surface 的驗收狀態是 `static-compatible / runtime-unverified`；
-Codex v5 也完成本機 contract、installer 與 deterministic 驗證，但尚未重跑 host
+目前 v6 Copilot surface 的驗收狀態是 `static-compatible / runtime-unverified`；
+Codex v6 也完成本機 contract、installer 與 deterministic 驗證，但尚未重跑 host
 runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範圍參考
 [VS Code prompt files](https://code.visualstudio.com/docs/agent-customization/prompt-files)、
 [Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)。
@@ -114,7 +114,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 | Business Analysis / BA | 依 29148 與 IIBA profile 產生業務需求、流程、規則、指標與變更影響文件 | 是 |
 | System Analysis / SA | 依 29148／15288／25010 profile 產生 solution-neutral 系統需求與驗證分析 | 是 |
 | System Design / SD | 依 42010／25010 profile 產生 concerns、views、決策與品質策略 | 是 |
-| NotebookLM export | 把流程、規則、詞彙、證據與缺口整理成 BA 可問答的本地 Markdown source pack | 兩次預覽後更新 `wiki/` 與 `.notebooklm/` |
+| NotebookLM export | 以當下完整 Codebase 建立每功能現況 BA／SA，供單一 Notebook 問答 | 一次預覽確認後更新 `wiki/` 與 `.notebooklm/` |
 
 完整的提示詞與驗收條件請參閱 [工作流手冊](docs/workflows/README.md)。
 
@@ -132,13 +132,12 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 - **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、重新 Ingest 或 Lint；不會自動寫入或切換工作流。
 - **安全邊界**：`wiki-only` 安全專用、`coexist` 一般開發共存、`framework`
   框架維護；舊 `target` 是 `wiki-only` alias。
-- **零第三方依賴 installer**：contract v5 提供 managed blocks、fingerprint
+- **零第三方依賴 installer**：contract v6 提供 managed blocks、fingerprint
   manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
-- **NotebookLM BA-first 知識包**：固定 Business Analyst audience；以流程、規則、詞彙、
-  evidence state 與 knowledge gaps 為主文件；standalone BA 存在時可選納入，SA／SD 與
-  技術追溯不會上傳；透過 discovery/readiness 兩次 preflight、DLP masking 與 stable
-  source IDs 保持可驗證。
+- **NotebookLM 現況 BA／SA 知識包**：每次重掃安全 Codebase，以程式碼優先處理來源衝突，
+  為每個 capability 產生互連的 BA／SA；一次確認後自動完成 readiness，透過雙識別碼、
+  DLP masking、容量檢查與 stable source mapping 保持可驗證。
 - **可驗證**：以 Python 3.11/3.14 在隔離 worktree 手動執行 unit、compile、
   parity、frontmatter、digest freshness、log/index 與唯讀 lint；本 Repo 不配置
   GitHub Actions。
@@ -181,7 +180,7 @@ Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的�
 ## 版本與下載
 
 產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.2.0`。Installer 會把目前版本保存到目標 Repo 的
-`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 5` 維持為獨立的
+`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
 installer contract 版本。
 
 本 Repo 尚未由擁有者選定 LICENSE，因此 release validate/build 會刻意阻擋新的
@@ -229,17 +228,18 @@ Codex 的 hooks、recipes 與排錯方式保留在可獨立安裝的 [Codex.md](
 NotebookLM Enterprise 匯出：
 
 ```text
-請使用 $codebase-wiki 執行 BA-first NotebookLM export：先做 discovery preflight，盤點業務流程、
-規則、詞彙、證據狀態與知識缺口，列出納入/排除、BA coverage、文件計畫與容量後等待我確認。
-確認後補齊繁中 BA Wiki，再做 readiness preflight 並再次等待確認；最後產生 query-index、
-project-map 與 .notebooklm source pack；standalone BA 存在時納入，SA／SD 與技術追溯不會上傳。
+請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export：先做完整 safe discovery preflight，
+列出納入/排除、功能、BA／SA 覆蓋、待分析內容、來源差異、DLP 與容量後等待我一次確認。
+確認後依當下 Codebase 全量建立每功能的繁中 BA／SA、保留 user notes，自動完成 readiness
+preflight，再產生 documents、query-index、project-map、shared business context、governance
+與單一 Notebook source pack。
 ```
 
 預覽使用 `export-notebooklm.py --preflight`，以 `--root` 指定的檔案系統目錄為掃描
-邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。第一次 ID 只
-用於 discovery；BA 文件更新後必須重跑，並以第二次 readiness `preflight_id` 執行
-`--apply`。Exporter 僅讀 UTF-8 repo text，不會呼叫雲端 API 或自動上傳；DLP finding
-先遮罩，final payload 仍有殘留才阻擋 apply，且沒有 allowlist。
+邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。確認綁定
+`discovery_id`；Wiki 更新後取得 latest readiness `preflight_id`，以兩者執行 `--apply`。
+Exporter 僅讀 UTF-8 repo text，不會呼叫雲端 API 或自動上傳；documents 與 sources 的
+DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowlist。
 
 ---
 
@@ -274,9 +274,9 @@ project-map 與 .notebooklm source pack；standalone BA 存在時納入，SA／S
 | Windows / PowerShell | 支援 | Installer 與 scripts 使用 Python 3.11+ |
 | macOS / Linux | 支援 | 使用對應的路徑語法執行相同 Python commands |
 | GitHub Copilot | `static-compatible / runtime-unverified` | VS Code 使用 prompts；其他 hosts 使用共用 Skill |
-| OpenAI Codex | `static-compatible / v5 runtime-unverified` | v5 已通過本機契約與 deterministic checks；2026-09-03 的 v4 runtime evidence 只作歷史基線 |
+| OpenAI Codex | `static-compatible / v6 runtime-unverified` | v6 已通過本機契約與 deterministic checks；2026-09-03 的 v4 runtime evidence 只作歷史基線 |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
-| NotebookLM Enterprise | 支援完整 codebase 的 BA-only 功能需求整理與離線匯出 | `fr-*`／`AC-*`、流程／規則／詞彙／gaps、DLP masking、schema v5 manifest；不含 raw evidence 或雲端 API |
+| NotebookLM Enterprise | 支援完整 codebase 的現況 BA／SA 整理與離線匯出 | 一次確認、每功能 BA／SA、完整映射、DLP、schema v6 與 Google 官方治理清單；不含雲端 API |
 
 本框架不提供 RAG、向量資料庫、本機搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
 NotebookLM export 產生的是可供 NotebookLM 使用的 Markdown `query-index`，不是常駐搜尋引擎；

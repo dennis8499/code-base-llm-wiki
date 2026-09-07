@@ -13,7 +13,7 @@ sources:
   - .agents/skills/codebase-wiki/references/business-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
-source_digest: sha256:78592106df5c122c833b832db4e82da0577b5bbcdcce16888c9186de22829074
+source_digest: sha256:075477f3305302a181de93e57f4e2161119563b004fb76837c9ab40be6c6d2b7
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[functional-requirement-catalog]]", "[[business-process-catalog]]", "[[business-rule-catalog]]"]
 last_updated: 2026-09-04
 tags: [synthesis, business-analysis, standards-aligned, notebooklm]
@@ -77,7 +77,7 @@ Analyst、Architect 與 reviewer 能審查自己關心的 abstraction level。�
 
 - 廣義 SA 同時回答系統需求與 solution design，分析者難以辨識哪些是「必須達成」與
   哪些只是「目前如何實作」。
-- `BA` 一詞同時可能指 Business Analysis 文件與 NotebookLM BA export，入口語意不清。
+- `BA` 一詞同時可能指 standalone Business Analysis 文件與 NotebookLM current-state BA，入口必須依 export 語意明確路由。
 - 缺少 BA → SA → SD 的穩定 identity，跨文件追溯容易依賴易變章節名稱。
 - 空白章節常誘發猜測；若沒有統一 Gap contract，文件完整外觀會掩蓋證據不足。
 
@@ -96,7 +96,7 @@ Analyst、Architect 與 reviewer 能審查自己關心的 abstraction level。�
   SR/NFR/IF、conceptual flow、failure 與 V&V needs。
 - BA／SA／SD templates、standards mapping、coverage、traceability、Gap、markers 與
   evidence-gated Mermaid slots。
-- Capability contract v5、frontmatter 相容性、installer、NotebookLM regression、文件與 Wiki。
+- Capability contract v6、frontmatter 相容性、installer、NotebookLM BA／SA regression、文件與 Wiki。
 
 ### Out of scope
 
@@ -119,7 +119,7 @@ Analyst、Architect 與 reviewer 能審查自己關心的 abstraction level。�
 
 | Dimension | Current state | Target state | Difference／Change | Evidence state |
 | --- | --- | --- | --- | --- |
-| BA 文件 | 只有 NotebookLM BA knowledge pages/export | 可單獨產出 standard-aligned BA synthesis | 新 workflow/template/entrypoint | implementation-observed |
+| BA 文件 | standalone BA 與 NotebookLM current-state BA 分屬不同 profile | 可單獨產出 standard-aligned BA；export 另產每 capability 現況 BA | profile／routing contract | implementation-observed |
 | SA 文件 | 混合需求、元件、資料與部署設計 | solution-neutral SR/NFR/IF 與 V&V | 設計內容移交 SD；legacy 原文保留 | implementation-observed |
 | SD 文件 | 無獨立輸出 | 42010-aligned concerns/viewpoints/views/decisions | 新 workflow/template/entrypoint | implementation-observed |
 | 追溯 | 主要依 Wiki links 與 BA IDs | BA IDs → SA IDs → SD IDs/ADR | 新 stable ID contracts | implementation-observed |
@@ -178,10 +178,10 @@ flowchart TD
 
 | Measure ID | Outcome／Metric | Baseline | Target／Timeframe | Measurement owner | Status |
 | --- | --- | --- | --- | --- | --- |
-| M-DOC-001 | Capability manifest operations/groups | 13 / 12 | 11 / 11 in contract v5 | framework maintainer | covered |
+| M-DOC-001 | Capability manifest operations/groups | 13 / 12 | manifest-declared sets remain parity-clean in contract v6 | framework maintainer | covered |
 | M-DOC-002 | 三份 template/workflow/prompt contract tests | BA/SD absent；SA legacy | all required tokens and semantics pass | framework maintainer | covered |
 | M-DOC-003 | Frontmatter compatibility | 無 standards metadata validation | valid new fields + valid legacy omission | framework maintainer | covered |
-| M-DOC-004 | NotebookLM regression | existing schema v5 | optional BA included/local-only stripped; SA/SD excluded; required list unchanged | framework maintainer | covered |
+| M-DOC-004 | NotebookLM regression | schema v5 BA-only | schema v6 requires paired current-state BA／SA, strips local-only, excludes standalone/SD | framework maintainer | covered |
 | M-DOC-005 | Copilot/Codex runtime behavior | new flows not executed | acceptance threshold 待 owner 定義 | project owner | gap |
 
 ## Risks、Assumptions 與 Constraints
@@ -199,8 +199,8 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | SA authors | 在 SA 同時描述需求與設計 | 把 solution choices/views 移到 SD | 首次重跑保存 legacy snapshot | framework maintainer |
 | BA users | `BA` 多半表示 NotebookLM export | 使用 `BA文件` 產出 standalone doc | 裸 `BA` 先澄清；export signals 優先 | knowledge maintainer |
-| Installer users | prior contract resources/adapters | contract v5；removed managed paths 僅列 obsolete | upgrade 不改 target Wiki，也不自動刪舊檔 | repository maintainer |
-| NotebookLM users | 固定 schema-v5 required set | standalone BA 僅 optional business content | 不需 migration | Notebook owner |
+| Installer users | prior contract resources/adapters | contract v6；removed managed paths 僅列 obsolete | upgrade 不改 target Wiki，也不自動刪舊檔 | repository maintainer |
+| NotebookLM users | schema-v5 BA-only source set | schema-v6 每 capability current-state BA／SA | 同一本 Notebook 完整替換舊 static sources | Notebook owner |
 
 ## BA → SA 追溯矩陣
 

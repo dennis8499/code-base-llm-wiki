@@ -1,7 +1,7 @@
 ---
 title: Installer 與 Upgrade
 type: module
-summary: Installer v5 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD 資源
+summary: Installer v6 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源
 notebooklm_group: function-install-upgrade
 notebooklm_role: traceability
 sources:
@@ -10,9 +10,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_install_framework.py
-source_digest: sha256:8f128543110dac5f7a6fc08d2a852e835a5096d0b00eb6af913a96acea223e91
+source_digest: sha256:3798a6607285ac29a3912456629e41eac5c7c1a4d1fc0eda1f88e48c8755efbd
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -36,7 +36,8 @@ status: active
 - Installer source tree 若包含 symlink 或 Windows junction/reparse point 也會 fail closed，避免 framework source 讀取 repo 外內容。
 - Copilot surface 直接枚舉目前 `.github/` 內容；Repo 不再含 workflows，因此 installer
   不需要 CI/release workflow 特例，也不會把 workflow YAML 安裝到目標。
-- v5 隨共用 Skill 安裝三份 standards-aligned templates/workflows，Copilot surface 另取得
+- v6 隨共用 Skill 安裝三份 standards-aligned templates/workflows 與兩份 NotebookLM
+  current-state BA／SA templates，Copilot surface 另取得
   BA／SA／SD 薄 prompt adapters；upgrade 仍不改寫目標 `wiki/`。
 
 ## 對外介面
@@ -50,7 +51,7 @@ install-framework.py install|upgrade
   [--format json|text]
 ```
 
-JSON contract version 為 5，包含 `managed`、`changes`、`preserved`、
+JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 `conflicts` 與 `obsolete_paths`。沒有 `--apply` 時不修改目標 Repo；存在 conflict
 時即使指定 apply 也不套用。
 

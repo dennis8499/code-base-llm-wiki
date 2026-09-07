@@ -27,14 +27,14 @@ status: active
 
 | 業務能力 | 功能需求 | 流程 ID | 流程 | 主要角色 | 觸發 | 業務結果 | 覆蓋狀態 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| BA 功能知識交付 | [[notebooklm-ba-functional-export]] | `bp-notebooklm-ba-knowledge-export` | [[notebooklm-ba-knowledge-export]] | 知識維護者、BA、業務擁有者 | 明確要求建立／更新 NotebookLM pack | 經全量覆蓋與兩次確認的 BA-only source pack | covered |
+| 現況 BA／SA 知識交付 | [[notebooklm-ba-functional-export]] | `bp-notebooklm-ba-knowledge-export` | [[notebooklm-ba-knowledge-export]] | 知識維護者、BA、SA、NotebookLM 管理員 | 明確要求建立／更新 NotebookLM pack | 經全量覆蓋與一次確認的單一 Notebook BA／SA source pack | covered |
 | 標準對齊分析文件 | [[business-analysis-document]]、[[system-analysis-document]]、[[system-design-document]] | `bp-analysis-document-generation` | [[generate-analysis-document]] | 知識維護者、BA、System Analyst、Architect、Reviewer | 明確要求 BA文件／SA文件／SD文件 | 可獨立、可重產、Gap-visible 且可跨層追溯的 Markdown | partial |
 
 ## 跨流程關係
 
 兩個流程都使用一般 Wiki Ingest、index、log、lint 與 source provenance 能力，但這些
-是支援活動，不另宣稱為已完整建模的 BA 端到端流程。Standalone BA 可選擇性成為
-NotebookLM business content；SA／SD 不進入 upload payload。
+是支援活動，不另宣稱為已完整建模的 BA 端到端流程。Standalone 分析文件與 NotebookLM
+專用 current-state BA／SA 使用不同 profile；只有後者會進入 capability upload sources。
 
 ## 未覆蓋與明確排除
 

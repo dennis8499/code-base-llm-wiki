@@ -14,9 +14,9 @@ sources:
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/assets/system-analysis-template.md
   - .github/prompts/system-analysis-doc.prompt.md
-source_digest: sha256:32834275ef80054b8133f0b15b08361d89b6110e6a1735b8765adfc25aafb187
+source_digest: sha256:74763f56f81ee3e98fefd185cab0db086561ea1ced0575b8cae5f51f4f2a9a03
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[business-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [business-requirement, system-analysis, standards-aligned, notebooklm]
 status: active
 ---
@@ -57,8 +57,10 @@ status: active
 
 ## 輸入、輸出與狀態
 
-SA 使用 `notebooklm_role: traceability`，不進入 BA upload payload。設計選型、元件配置、
-protocol、storage 與 deployment topology 必須移交 [[system-design-document]] 或 ADR。
+Standalone SA 使用 `system-analysis-aligned-v1` 與 `notebooklm_role: traceability`，不進入
+capability upload sources；NotebookLM export 另用 `codebase-system-analysis-v1` 產生可上傳的
+現況 SA。設計選型、元件配置、protocol、storage 與 deployment topology 仍移交
+[[system-design-document]] 或 ADR。
 
 ## 驗收條件
 
@@ -67,7 +69,7 @@ protocol、storage 與 deployment topology 必須移交 [[system-design-document
 - `AC-DOC-SA-003`：Given 品質需求，When 分類與描述，Then 使用 ISO/IEC 25010 characteristic 並記錄 condition、measure、target 或 Gap。
 - `AC-DOC-SA-004`：Given BA 缺席，When 產出 SA，Then 建立具體 `gap-*-ba-*` 而不阻擋或虛構上游需求。
 - `AC-DOC-SA-005`：Given 無 markers 的 legacy SA，When 首次重跑，Then 原正文逐字保存在 user-notes legacy 區塊，再產生新 managed 內容。
-- `AC-DOC-SA-006`：Given SA 文件，When NotebookLM export，Then SA 因 traceability role 不進入 upload content。
+- `AC-DOC-SA-006`：Given standalone SA 文件，When NotebookLM export，Then它因 profile／role 不進入 upload content；每 capability 的專用 current-state SA 仍必須與 BA 成對輸出。
 
 ## 關聯流程
 

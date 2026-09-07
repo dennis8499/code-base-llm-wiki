@@ -2,7 +2,7 @@
 profile = "gemini-notebook-enterprise"
 scan_profile = "framework"
 output_directory = ".notebooklm"
-content_mode = "ba_only"
+content_mode = "ba_sa"
 analysis_include_tests = true
 source_limit = 300
 reserved_source_slots = 0
@@ -13,4 +13,4 @@ business_source_paths = [
 ]
 extra_paths = []
 exclude_paths = []
-dlp_profile = "notebooklm-enterprise-ba-mask-v1"
+dlp_profile = "notebooklm-enterprise-ba-sa-mask-v1"

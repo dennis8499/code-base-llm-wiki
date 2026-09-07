@@ -5,7 +5,7 @@
 產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer
 `MAJOR.MINOR.PATCH`；目前版號是 `0.2.0`。Git tag 必須是完全對應的
 `vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
-的本地版本標記；`contract_version: 4` 則是獨立的 installer/API contract。
+的本地版本標記；`contract_version: 6` 則是獨立的 installer/API contract。
 
 公開 Release 前，專案擁有者必須選定並加入明確 `LICENSE`。目前尚未作出
 授權選擇，因此 `tools/release.py validate` 與 `build` 會刻意阻擋本 Repo 的

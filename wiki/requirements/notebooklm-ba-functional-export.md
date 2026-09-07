@@ -1,60 +1,61 @@
 ---
-title: NotebookLM BA 功能需求匯出
+title: NotebookLM 現況 BA／SA 匯出
 type: business-requirement
-summary: 將完整安全 codebase 重新萃取成單一 Notebook 可使用、無 raw code 與敏感原文的 BA 功能需求來源包
+summary: 將當下完整安全 Codebase 重新萃取成每功能 BA／SA 與單一 Notebook 可用的離線來源包
 requirement_id: fr-notebooklm-ba-functional-export
 capability_id: cap-notebooklm-ba-functional-export
 applies_to: ["[[notebooklm-ba-knowledge-export]]"]
 evidence_state: implementation-observed
 notebooklm_group: business-notebooklm-export
 notebooklm_role: business
-notebooklm_terms: [功能需求匯出, BA-only, 完整 codebase 覆蓋, DLP 遮罩, 驗收條件, NotebookLM Enterprise]
+notebooklm_terms: [NotebookLM 匯出, BA, SA, 完整 codebase 覆蓋, 一次確認, DLP 遮罩, NotebookLM Enterprise]
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - tests/test_export_notebooklm.py
-source_digest: sha256:efb9eaaf56a6b2be8fd11834338c59dda36cd3bc3b1b338bfbd8c948b1d9d35e
+source_digest: sha256:a3bc9db7181fd718d6cd21c0753368b4897d6df4fa01b0e1d885533175f74391
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [business-requirement, notebooklm, export, dlp]
 status: active
 ---
 
-# NotebookLM BA 功能需求匯出
+# NotebookLM 現況 BA／SA 匯出
 
 <!-- codebase-wiki:managed:start -->
 ## 業務目的
 
-知識維護者需要把目標專案的完整安全 codebase 重新整理成 Business Analyst 可直接查詢的
-功能需求知識。上傳內容只包含 BA 文件；程式、設定、測試與 schema 只作為本機分析證據，
-不得以 raw text 或技術追溯附錄進入 NotebookLM。
+知識維護者需要把目標專案的當下完整安全 Codebase 重新整理成 Business Analyst 與
+System Analyst 可直接查詢的現況知識。程式、設定、schema、測試、README、規格與註解
+都是唯讀證據；衝突時以程式碼為主，沒有證據時明列 `Codebase 未提供證據`。
 
 ## 角色與權限
 
 | 角色 | 可執行行為 | 可觀察結果 |
 | --- | --- | --- |
-| 知識維護者 | 盤點、萃取、維護 Wiki、執行 preflight 與 apply | 取得完整、可審查的 BA source pack |
+| 知識維護者 | 盤點、萃取、維護 Wiki、執行 preflight 與 apply | 取得完整、可審查的 BA／SA source pack |
 | Business Analyst | 查詢功能、角色、流程、規則、狀態與驗收條件 | 不必閱讀 code 或 repository path 即可理解系統 |
+| System Analyst | 查詢邊界、I/O、資料、狀態、介面與失敗 | 保留必要 identifier 與 source locator 的現況 SA |
+| NotebookLM 管理員 | 查核 tenant IAM、資料位置與安全控制 | 雲端狀態有證據才標示已驗證 |
 | 業務擁有者／PO | 確認政策與 gap | 實作觀察不會被誤稱為正式政策 |
 
 ## 前置條件
 
 - 目標 repository 可讀，且 raw sources 保持唯讀。
-- Wiki schema、必要 BA 文件與 `notebooklm.toml` 已安裝。
-- 交付者使用同一本 Notebook，並只手動上傳 exporter 標記的 BA Markdown sources。
+- Wiki schema、必要 catalogs、coverage ledger 與 `notebooklm.toml` 已安裝。
+- 交付者使用同一本 Notebook，並只手動上傳 exporter 產生的 `sources/*.md`。
 
 ## 功能行為
 
 | 情境 | 系統行為 | 可觀察結果 | 證據狀態 |
 | --- | --- | --- | --- |
 | 執行 discovery | 盤點所有安全 UTF-8 runtime source、config、schema、docs 與 behavioral tests | 每個 included file 都出現在 inventory | implementation-observed |
-| 建立 BA 模型 | 以 `fr-*`、`bp-*`、`br-*` 與 `AC-*` 描述可觀察行為 | BA 能由功能需求追到流程、規則與驗收條件 | implementation-observed |
-| 重新萃取 | 重建 managed sections 並保留 user-notes sections | code 變更可反映於 BA 文件，人工註記不被覆寫 | business-confirmed |
+| 建立 BA／SA 模型 | 每個 active `cap-*` 建立專用 profiles、互連與 locators 的 BA／SA | 業務與系統現況均可追到 Codebase | implementation-observed |
+| 重新萃取 | 重建 managed sections 並保留 user-notes sections | code 變更可反映於文件，人工註記不被覆寫 | business-confirmed |
 | 完整性檢核 | 以 coverage ledger 分類每個安全檔案 | uncovered、analysis-gap 或 dangling requirement 會阻擋匯出 | implementation-observed |
-| DLP 命中 | 在分析副本與最終 payload 以規則名稱遮罩 | 原始敏感值不進入 BA source，raw file 不被修改 | implementation-observed |
-| 產生 pack | 只 materialize BA Wiki、query index 與 project map | source pack 不含 raw code、raw config 或 technical traceability | implementation-observed |
-| Standalone BA | 存在且為 active/business role 時納入；不存在時不列 required gap | BA 可加入 pack，SA／SD traceability 始終排除 | implementation-observed |
+| DLP 命中 | 在 analysis、documents 與 sources 以規則名稱遮罩 | 原始敏感值不進入交付，raw file 不被修改 | implementation-observed |
+| 產生 pack | 產生獨立 BA／SA documents 與無損 upload sources mapping | 只上傳 sources，governance 留在本機 | implementation-observed |
 | 容量檢核 | 依 Enterprise hard limits 與保守 local limits 分割／壓縮 | 超限時在 atomic commit 前失敗並保留舊 pack | implementation-observed |
 
 ## 業務規則與例外
@@ -63,30 +64,31 @@ status: active
 - [[readiness-preflight-required]]
 - `implementation-observed` 不能升格為 `business-confirmed`。
 - 非 UTF-8 或非文字業務證據必須列為 gap，不得假設其內容。
-- 舊 schema v1–v4 或非 `business-only-ba-v2` pack 必須完整重建。
+- 舊 schema v1–v5 或非 `codebase-ba-sa-retrieval-v1` pack 必須完整重建。
 
 ## 輸入、輸出與狀態
 
 | 階段 | 輸入 | 輸出／狀態 |
 | --- | --- | --- |
-| Analysis | 完整安全 inventory、既有 Wiki、設定 | masked working copies、coverage 與 BA regeneration plan |
-| Readiness | 最新 Wiki、coverage ledger、exact source plan | `ready_to_export` 與綁定內容的 `preflight_id` |
-| Apply | 相符 ID 與相同 filesystem state | schema-v5 local pack 與 upload plan |
-| Manual delivery | Exporter 標記的 BA Markdown sources | 單一 Notebook 的 BA 功能需求知識 |
+| Discovery | 完整安全 inventory、既有 Wiki、設定 | preview 與 confirmed `discovery_id` |
+| Analysis | confirmed snapshot | 每功能 BA／SA、coverage ledger 與 preserved notes |
+| Readiness | 最新 Wiki、analyzed discovery ID、exact source plan | `ready_to_export` 與 latest `preflight_id` |
+| Apply | confirmed discovery ID 與 latest readiness ID | schema-v6 local pack、governance 與 upload plan |
+| Manual delivery | `sources/*.md` | 單一 Notebook 的現況 BA／SA 知識 |
 
 ## 驗收條件
 
-- `AC-NBLM-001`：Given 完整目標 repository，When 執行 preflight，Then runtime source、runtime config、data schema、project docs 與 behavioral tests 均被盤點或以安全理由排除。
-- `AC-NBLM-002`：Given 任一安全檔案未分類、標為 `analysis-gap` 或連到不存在的需求，When 計算 readiness，Then `ready_to_export` 為 false。
-- `AC-NBLM-003`：Given 每個可觀察行為已建模，When 產生 BA Wiki，Then 每個 active `fr-*` 均由 functional requirement catalog 連結，且至少包含一個穩定 `AC-*`。
-- `AC-NBLM-004`：Given managed 與 user-notes markers，When 重新萃取，Then managed content 更新且人工 notes 被保留。
-- `AC-NBLM-005`：Given raw analysis input 含 DLP pattern，When 執行 preflight／apply，Then working copy 以 `[MASKED:<RULE>]` 取代命中、報告不含原值、raw file 不變。
-- `AC-NBLM-006`：Given final BA payload，When residual DLP scan 完成，Then零殘留才可 commit；任何殘留均保留上一份 pack。
-- `AC-NBLM-007`：Given 成功匯出，When 檢查 final upload sources，Then只存在 router、navigation 與 business documentation，且不含 raw code／config／repository path／technical traceability。
-- `AC-NBLM-008`：Given Enterprise 設定，When 驗證容量，Then hard limits 為 300 sources、500 MB/source、500,000 words/source，超限設定 fail closed。
-- `AC-NBLM-009`：Given Wiki、inventory、設定或 output identity 在 preflight 後改變，When 使用舊 ID apply，Then apply 被拒絕並要求新 preflight。
-- `AC-NBLM-010`：Given schema v1–v4 的既有 pack，When 產生 schema v5，Then upload plan 要求在同一本 Notebook 移除所有舊 static sources 後完整上傳新 sources。
-- `AC-NBLM-011`：Given standalone BA 存在，When 產生 pack，Then BA 內容會納入且 local-only 區塊移除；Given BA 不存在，Then required documents 與 schema v5 不變；SA／SD 均不會上傳。
+- `AC-NBLM-001`：Given 已有完整 Wiki 但 Codebase 新增功能，When 重新 discovery，Then 新功能出現在預覽與文件計畫，所有安全來源也都有 disposition 或安全排除理由。
+- `AC-NBLM-002`：Given 使用者確認 discovery 預覽一次，When 執行完整流程，Then 系統自動完成文件、readiness 與本機交付，不再要求第二次確認。
+- `AC-NBLM-003`：Given 專案具有多個業務功能，When 文件化完成，Then 每個 active capability 都有 BA／SA 配對、雙向連結、專用 profile 與有效 source locator。
+- `AC-NBLM-004`：Given README、規格、測試或註解與程式碼不一致，When 產生文件，Then 採用程式碼現況並把差異列為可見 gap。
+- `AC-NBLM-005`：Given Codebase 未提供目的、政策或品質指標，When 產生文件，Then 標示 `Codebase 未提供證據`，不產生推測值，也不因此阻擋交付。
+- `AC-NBLM-006`：Given 任一安全檔案尚未分析、`analyzed_discovery_id` 不符，或 capability 缺少 BA／SA，When 執行 readiness，Then `ready_to_export=false` 並列出缺漏。
+- `AC-NBLM-007`：Given 完整 BA／SA upload sources 超出單一 Notebook 容量，When deterministic packing 後仍超限，Then 匯出失敗且不得省略功能或分成多本 Notebook。
+- `AC-NBLM-008`：Given analysis、documents 或 sources 有敏感資料殘留、處理失敗或來源版本漂移，When apply，Then不得替換上一份有效 pack，raw sources 維持不變。
+- `AC-NBLM-009`：Given 本機治理檢查完成但沒有租戶證據，When 產生 governance report，Then IAM、VPC Service Controls、CMEK、data location、Sensitive Data Protection 與 Model Armor 都標示管理員未驗證。
+- `AC-NBLM-010`：Given schema v1–v5 或 BA-only pack，When 升級到 schema v6，Then同一 Notebook 的 upload plan 要求移除所有舊 static sources，再完整上傳新的 BA／SA sources。
+- `AC-NBLM-011`：Given 文件含人工註記與程式識別碼，When 重新萃取及匯出，Then raw sources 與 user-notes 保持完整，敘述使用繁體中文並保留必要 identifier、API 與英文專有名詞。
 
 ## 關聯流程
 

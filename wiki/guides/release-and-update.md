@@ -8,9 +8,9 @@ sources:
   - docs/releases/README.md
   - docs/validation/README.md
   - README.md
-source_digest: sha256:9675c322e6280233aa15794d1f9bd37f4dd0eae9c5924bdb2c8e3ed363da9d6c
+source_digest: sha256:0676dc3048841da9712e70db2340d159b4579ee58f3dd64a35b0a45aad348727
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -26,7 +26,7 @@ notebooklm_role: traceability
 
 - `VERSION` 是唯一產品版號來源，格式為穩定 `X.Y.Z`。
 - Git tag 必須是 `vX.Y.Z`，且必須與 `VERSION` 完全一致。
-- `contract_version: 4` 是 installer/capability contract，不是產品版號。
+- `contract_version: 6` 是 installer/capability contract，不是產品版號。
 - Installer 將版號保存至 `.agents/skills/codebase-wiki/VERSION`。
 - Framework workflow changes, including the shared Query/Lint follow-up action
   contract, must be reflected in the release documentation, ChangeLog, Wiki

@@ -10,7 +10,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:7e52dc1285265a2125451722997d8ef8f902abfa1c750b8ec723229879682044
+source_digest: sha256:7edd60bed58e9022cd6e63bf98b2ca35956025a0f33940c25cb7984ee0333f69
 derived_from: ["[[overview]]"]
 last_updated: 2026-09-04
 tags: [architecture, framework, data-flow, safety]
@@ -32,11 +32,11 @@ operations、十一個 intent groups 與 authorization policy 由
 | 元件 | 職責 | 證據 |
 | --- | --- | --- |
 | Skill 與 references | 意圖路由、授權、不變量、完成條件 | `.agents/skills/codebase-wiki/SKILL.md` |
-| Installer v5 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
+| Installer v6 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
-| NotebookLM exporter | FR/AC 與完整 disposition 閘門、DLP masking、兩階段 preflight、BA-only query-index | [[notebooklm-exporter]] |
+| NotebookLM exporter | 完整 discovery、每 capability BA／SA 配對、雙識別碼、DLP、容量與單一 Notebook source plan | [[notebooklm-exporter]] |
 | Platform/release surface | Copilot 靜態契約、Codex UAT、本機 gates、版本與手動發布 | [[platform-adapters-and-release]] |
 
 ## Data Flow
@@ -48,19 +48,20 @@ User intent
   -> BA why/outcome -> SA solution-neutral requirements -> SD design views
   -> authorized Wiki/framework write
   -> frontmatter + digest + index + append-only log checks
-  -> discovery preflight + first confirmation
-  -> full BA requirement/process/rule/term/gap regeneration + file disposition
-  -> readiness preflight + exact pack plan + DLP masking + second confirmation
-  -> apply with the readiness preflight_id
-  -> query-index / project-map / BA-only docs pack
+  -> full safe discovery + capability/document-gap preview + one confirmation
+  -> current-state BA/SA pair regeneration + file disposition + preserved notes
+  -> automatic readiness + exact source plan + DLP/capacity checks
+  -> apply with confirmed discovery_id + latest preflight_id
+  -> documents + query-index / project-map / shared business context / capability upload sources + governance
 ```
 
 Installer 的資料流是 source framework → dry-run classification → staged writes →
 transaction-journaled atomic replacement；Windows stage 繼承 target parent ACL，避免
 owner-only temporary DACL 使安裝檔無法由 Codex sandbox account 讀取；遇到兩側同時
 變更時不寫入。NotebookLM 先驗證
-Wiki regular tree，以明確 `--root` 讀取安全 inventory；discovery ID 在文件更新後失效，
-readiness 重新建立 identity，apply 再次掃描並檢查 output containment，最後原子替換本機 pack。
+Wiki regular tree，以明確 `--root` 讀取安全 inventory；discovery ID 只綁定 raw snapshot 與
+discovery 設定，文件更新只使 readiness ID 失效。Apply 再次掃描 raw/Wiki、檢查雙 ID 與
+output containment，最後原子替換本機 pack。
 
 ## Deployment
 
@@ -89,7 +90,7 @@ GitHub Release。
 ## Inferences
 
 - 無常駐搜尋服務使安裝與稽核面積較小；NotebookLM export 以 Markdown
-  `query-index` 對齊 BA-first 路由，但超大型 Wiki 的雲端 retrieval 仍是生成式行為，
+  `query-index` 對齊 BA／SA capability 路由，但超大型 Wiki 的雲端 retrieval 仍是生成式行為，
   不能視為 deterministic local search。
 
 ## Gaps

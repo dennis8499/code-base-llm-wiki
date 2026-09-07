@@ -1,43 +1,43 @@
 ---
-title: Readiness preflight 與第二次確認是匯出前置條件
+title: Readiness preflight 與雙識別碼是匯出前置條件
 type: business-rule
-summary: BA 文件更新後必須重跑 readiness preflight，並以第二次確認的最新 ID 才能產生 pack
+summary: 一次確認鎖定 raw discovery；文件更新後自動重跑 readiness，並以相符雙識別碼產生 pack
 rule_id: br-notebooklm-readiness-preflight
 applies_to: ["[[notebooklm-ba-knowledge-export]]"]
 evidence_state: business-confirmed
 notebooklm_group: business-notebooklm-export
 notebooklm_role: business
-notebooklm_terms: [readiness preflight, preflight ID, 第二次確認, ready to export]
+notebooklm_terms: [discovery ID, readiness preflight, preflight ID, 一次確認, ready to export]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:9c5c8fca9fb204a52af15e5c126f8336980a6bc5536b6922bbb200b8e230c2ee
+source_digest: sha256:9773a15c3204402853c0cc370ed89997621f6e8c7296e0a310976f0b9b5c0a32
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [business-rule, notebooklm, readiness]
 status: active
 ---
 
-# Readiness preflight 與第二次確認是匯出前置條件
+# Readiness preflight 與雙識別碼是匯出前置條件
 
 <!-- codebase-wiki:managed:start -->
 
 ## 規則敘述
 
-Discovery preflight 只用來確認 BA 文件計畫。任何 Wiki 更新都會使其 ID 失效；完成文件後
-必須重新 preflight，展示 readiness gates、完整 disposition、exact pack plan、DLP masking、
-migration 與 gaps，取得第二次確認，
-再以該次 ID apply。
+Discovery 預覽用來確認完整 raw source snapshot、capability 與 BA／SA 文件計畫，使用者只需
+確認一次。文件更新完成後，系統自動重跑 readiness，檢查完整 disposition、BA／SA pair、
+source locators、exact pack plan、DLP、容量、migration 與 gaps，再以原 confirmed
+`discovery_id` 及最新 `preflight_id` apply。
 
 ## 條件與結果
 
 | 條件 | 決策／結果 | 例外 | 證據狀態 |
 | --- | --- | --- | --- |
-| 只有 discovery ID | 禁止 apply | 無 | business-confirmed |
-| 必備 requirement/process/rule、coverage ledger 或 lint 未通過 | `ready_to_export=false`，修正後重跑 | 無；uncovered 與 analysis-gap 都必須清零 | business-confirmed |
+| 只有 discovery ID 或只有 preflight ID | 禁止 apply | 無 | business-confirmed |
+| BA／SA pair、coverage ledger、source locator 或 lint 未通過 | `ready_to_export=false`，修正後自動重跑 | 無；uncovered 與 analysis-gap 都必須清零 | business-confirmed |
 | Final payload DLP 遮罩後仍有 finding | 阻擋 commit 並保留舊 pack | 無 allowlist | business-confirmed |
-| readiness 後 Wiki、inventory、設定或 output 改變 | 舊 ID 失效，重跑 preflight 與確認 | 無 | business-confirmed |
-| readiness 成功且第二次確認完成 | 可原子產生 pack | 寫入失敗仍保留上一份有效 pack | business-confirmed |
-| Standalone BA 缺少 | required-document gate 維持可通過 | BA 存在時仍須是 active/business role | business-confirmed |
+| confirmed discovery 後 raw inventory 或 discovery 設定改變 | discovery ID 失效，停止並重新預覽及確認 | 不得混用 snapshot | business-confirmed |
+| 文件或 final source plan 改變 | 保留相符 discovery ID，舊 preflight ID 失效並自動重算 | 不增加人工確認 | business-confirmed |
+| readiness 成功且雙 ID 相符 | 可原子產生 pack | 寫入失敗仍保留上一份有效 pack | business-confirmed |
 
 ## 適用流程
 
@@ -45,9 +45,9 @@ migration 與 gaps，取得第二次確認，
 
 ## 資料與詞彙
 
-- `discovery preflight`：唯讀盤點與 BA 文件計畫預覽。
-- `readiness preflight`：文件完成後的結構、安全、容量與 identity 驗證。
-- `preflight_id`：綁定當下 Wiki、safe inventory、設定與 retrieval contract 的一次性識別。
+- `discovery_id`：只綁定當下安全 raw inventory、discovery 設定與排除，不因 Wiki 文件化而改變。
+- `readiness preflight`：文件完成後的配對、結構、安全、容量與 final plan 驗證。
+- `preflight_id`：綁定 confirmed discovery、最新 Wiki 與 exact upload-source plan 的一次性識別。
 
 ## 待確認事項
 

@@ -4,6 +4,7 @@
 .codex-hook-logs/
 dist/
 .notebooklm/
+.notebooklm-tests-tmp/
 .*.notebooklm-transaction.json
 .*.notebooklm-transaction.lock
 .*.notebooklm-transaction.*.tmp-*

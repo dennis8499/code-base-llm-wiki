@@ -228,8 +228,8 @@ def main() -> int:
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
             issues.append(f"manifest missing surface: {surface}")
-    if manifest.get("contract_version") != 5:
-        issues.append("manifest contract_version must be 5")
+    if manifest.get("contract_version") != 6:
+        issues.append("manifest contract_version must be 6")
     guard_modes = manifest.get("guard_modes", {})
     if guard_modes.get("default") != "wiki-only" or guard_modes.get("installed") != [
         "wiki-only",

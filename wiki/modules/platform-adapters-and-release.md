@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與手動 Release
 type: module
-summary: 以 contract v5、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架
+summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -10,9 +10,9 @@ sources:
   - tests/test_contracts.py
   - tools/release.py
   - docs/releases/README.md
-source_digest: sha256:896a6aa2cb7b7a0b15394234db170a817b7e1384379ad074a365b88c2941d8c1
+source_digest: sha256:620a65eabb8f30c4bb6d46602155a4843f83814fb255f995f04c2ab9363769d7
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -23,7 +23,7 @@ status: active
 
 - 維持 Copilot prompts/hooks 與 Codex recipes/hooks 的共同 intent、
   authorization 與 completion contract。
-- 以 `capabilities.json` contract version 5 描述十一個 operations／十一個 intent groups；
+- 以 `capabilities.json` contract version 6 描述 manifest-declared operations／intent groups；
   BA／SA／SD 與既有操作的
   名稱與 authorization policy 不因平台 adapter 改變。
 - 將 Copilot `.github/prompts/` 限定為 VS Code 本機 Agent 入口；其他 Copilot
@@ -32,15 +32,15 @@ status: active
   Repo-local Wiki agent profiles。
 - 共用 Query workflow 與雙平台代理只接受 Wiki／Repo source evidence；即時資料庫存取、
   資料庫工具及 fallback 由 parity 與 contract regression 明確禁止。
-- Copilot 與 Codex v5 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
-  尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到 v5。
+- Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
+  尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
 - 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，
   手動執行 `gh release create`。
 - 在專案擁有者選定 LICENSE 前阻擋公開 release；本次維護不改版號、不發版。
 
 ## Evidence
 
-- `parity-check.py` 驗證 contract 5、十一項 operation mapping、prompt coupling、built-in
+- `parity-check.py` 驗證 contract 6、operation mapping、prompt coupling、built-in
   prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
   root-resolved hooks，並要求 Repo 不含 GitHub workflow YAML。
 - Copilot prompts（含新增 BA／SD 與保留 SA 入口）是連結 authoritative workflow 的薄
@@ -61,7 +61,7 @@ status: active
 
 - `VERSION=0.2.0` 代表目前產品版號，不代表已取得 LICENSE 或已有可公開的
   `v0.2.0` 資產。
-- 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v5 或
+- 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v6 或
   未測 host/version 的保證。
 
 ## Inferences

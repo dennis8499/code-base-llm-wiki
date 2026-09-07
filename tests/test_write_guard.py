@@ -201,9 +201,20 @@ class WriteGuardTests(unittest.TestCase):
                 self.assertEqual(guard.read_guard_mode("codex"), "wiki-only")
 
     def test_platform_configs_use_canonical_hooks(self) -> None:
-        codex = (REPO_ROOT / ".codex/hooks.json").read_text(encoding="utf-8")
+        codex_path = REPO_ROOT / ".codex/hooks.json"
+        codex = codex_path.read_text(encoding="utf-8")
         self.assertIn(".agents/skills/codebase-wiki/scripts/hooks/", codex.replace("\\", "/"))
         self.assertIn("--platform codex", codex)
+        hooks = json.loads(codex)
+        for handlers in hooks["hooks"].values():
+            for handler_group in handlers:
+                for handler in handler_group["hooks"]:
+                    command = handler["commandWindows"]
+                    self.assertLess(
+                        command.index("[Console]::OutputEncoding"),
+                        command.index("git rev-parse"),
+                    )
+                    self.assertIn("$OutputEncoding = [Console]::OutputEncoding", command)
         for path in (REPO_ROOT / ".github/hooks").glob("*.json"):
             text = path.read_text(encoding="utf-8")
             self.assertIn(".agents/skills/codebase-wiki/scripts/hooks/", text)
@@ -284,7 +295,8 @@ class WriteGuardTests(unittest.TestCase):
             },
         }
         with tempfile.TemporaryDirectory() as directory:
-            temporary = Path(directory).resolve()
+            temporary = (Path(directory) / "使用者 暫存").resolve()
+            temporary.mkdir()
             git_root = temporary / "git fixture"
             non_git_root = temporary / "non git fixture"
             for root in (git_root, non_git_root):

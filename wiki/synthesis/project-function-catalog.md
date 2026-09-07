@@ -28,7 +28,7 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 | Wiki 攝取與品質 | 建立可追溯頁面、偵測 stale/link/index/log 問題 | `$codebase-wiki`、quality CLIs | frontmatter、digest、wikilinks、log entries | [[wiki-quality-and-provenance]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
 | 分析／設計文件 | 獨立產出 standard-aligned BA、solution-neutral SA 與 SD，建立 Gap-visible 三層追溯 | BA／SA／SD prompt/recipe + shared workflows | profiles、coverage、BA/SR/NFR/IF/DE/VIEW/ADR IDs、markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] | partial |
-| NotebookLM 準備 | 建立 BA 流程、規則、詞彙與 gaps，經兩次確認後產生離線 pack | `export-notebooklm.py` | BA coverage、兩階段 preflight ID、business-first retrieval contract、DLP、manifest v5 | [[notebooklm-exporter]] | covered |
+| NotebookLM 準備 | 全量發現後建立每功能現況 BA／SA，一次確認後產生單一 Notebook 離線 pack | `export-notebooklm.py` | discovery/readiness 雙 ID、BA／SA pair、locator、DLP、容量、manifest v6 | [[notebooklm-exporter]] | covered |
 | 平台與發布 | 驗證 Copilot/Codex 契約、建立版本資產 | parity、本機 UAT、`release.py`、`gh` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
 發布功能標為 partial，原因是本機 builder 與手動程序已具備，但專案擁有者尚未
@@ -51,14 +51,14 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 
 ## Contradictions
 
-- 舊 exporter 以 architecture/module/function catalog 作為主要 NotebookLM 文件；schema v5
-  改以 BA overview、functional requirement/process/rule catalogs、glossary、gaps、coverage
-  ledger 與 requirement/process/rule pages 為必要集合。
+- 舊 exporter 以 architecture/module/function catalog，後續 schema v5 以 BA catalogs 作為
+  NotebookLM 主文件；schema v6 改為每 active capability 一組專用 current-state BA／SA，
+  並保留 catalogs 與 coverage ledger 作 discovery 及 completeness 基線。
 
 ## Inferences
 
-- 現有五個功能域是工程產品能力邊界，可用於 technical traceability 與 Wiki owner 分工；
-  NotebookLM BA 主路由改由 [[business-process-catalog]] 與 [[business-rule-catalog]] 定義。
+- 現有工程功能域仍可用於 Wiki owner 分工；NotebookLM 的查詢路由由 capability query index、
+  project map 與每功能 BA／SA pair 共同定義。
 
 ## 未覆蓋與明確排除
 

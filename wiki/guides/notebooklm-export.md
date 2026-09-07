@@ -1,7 +1,7 @@
 ---
-title: NotebookLM BA-only 功能需求匯出指南
+title: NotebookLM 現況 BA／SA 匯出指南
 type: guide
-summary: 依全量 discovery、BA 功能需求重建、readiness 與第二次確認安全產生 schema-v5 source pack
+summary: 依全量 discovery、一次確認、每功能 BA／SA 與自動 readiness 安全產生 schema-v6 source pack
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/check-stale.py
@@ -9,20 +9,20 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/workflows/README.md
-source_digest: sha256:c734eb3e8c94485820847b4f9289d0dfe894d3f81fd738967b32952276ae0775
+source_digest: sha256:b4befd1545d483f25b9cdb12088090888b0717f86c2b9d676598382a2a6a9fcc
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[notebooklm-exporter]]", "[[business-analysis]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [guide, notebooklm, export, ba-first, enterprise]
 status: active
 notebooklm_group: business-notebooklm-export
 notebooklm_role: exclude
 ---
 
-# NotebookLM BA-only 功能需求匯出指南
+# NotebookLM 現況 BA／SA 匯出指南
 
 ## 適用情境
 
-使用者明確要求讓 Business Analyst 透過 NotebookLM 理解某個專案，或刷新既有 BA source
+使用者明確要求讓 Business Analyst 與 System Analyst 透過 NotebookLM 理解某個專案，或刷新既有 source
 pack 時使用。Canonical 功能需求見 [[notebooklm-ba-functional-export]]，業務流程見
 [[notebooklm-ba-knowledge-export]]；本頁只供本機操作者查核，不進入 upload sources。
 
@@ -46,13 +46,14 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
 - included files、file-level exclusions 與 pruned excluded-root summaries；
 - business source paths、現有 requirement/process/rule/term/gap coverage；
 - 每個 included file 的 disposition、uncovered／analysis-gap、DLP masking 與容量；
-- required BA documents、stale/critical findings、exact pack plan 與 migration 狀態；
-- 準備全量重建的 managed BA sections，以及必須保留的 user notes。
+- active capabilities、每個功能的 BA／SA path、待分析與 evidence gaps；
+- required documents、stale/critical findings、exact pack plan 與 migration 狀態；
+- 準備全量重建的 managed sections，以及必須保留的 user notes。
 
-Discovery 尚未具備 BA 文件時，`ready_to_export=false` 是正常訊號；此 ID 只代表當下盤點，
-不得在文件更新後拿去 apply。展示文件計畫並等待第一次確認。
+Discovery 尚未具備 BA／SA 文件時，`ready_to_export=false` 是正常訊號。`discovery_id` 只綁
+raw safe snapshot，不因 Wiki 重建失效。展示文件計畫並等待正常流程的一次確認。
 
-## 第二階段：全量重建 BA 功能知識
+## 第二階段：全量重建 BA／SA 現況知識
 
 第一次確認後，至少建立／更新：
 
@@ -66,10 +67,10 @@ Discovery 尚未具備 BA 文件時，`ready_to_export=false` 是正常訊號；
 - 每個可獨立驗收能力的 `wiki/requirements/*.md`；
 - 每個端到端流程的 `wiki/processes/*.md`；
 - 每條可獨立詢問規則的 `wiki/rules/*.md`。
+- 每個 active `cap-*` 的 `wiki/synthesis/{cap}-ba.md` 與 `{cap}-sa.md`。
 
-Standalone `wiki/synthesis/business-analysis.md` 存在且為 active/business role 時會自動
-進入 pack，但它不是 required document，缺少時不阻擋 readiness。SA／SD 固定為
-`notebooklm_role: traceability`，不會上傳。
+Capability BA／SA 使用專用 current-state profiles、相同 group、互相連結、real sources
+及 `path:line` locators。Standalone BA／SA 與 SD 維持各自 workflow，不會因 role 自動上傳。
 
 BA pages 使用 `notebooklm_role: business`、穩定 `notebooklm_group` 與非空
 `notebooklm_terms`。Requirement/process/rule IDs 必須唯一；requirement 與 rule 的
@@ -77,46 +78,51 @@ BA pages 使用 `notebooklm_role: business`、穩定 `notebooklm_group` 與非�
 Regenerate managed markers，preserve user-notes markers；local-only markers 放技術 provenance。
 工程頁使用 `notebooklm_role: exclude`。同步 index，並只追加一筆合法 log operation。
 
-## 第三階段：Readiness preflight
+完整處理後才把 confirmed `Analyzed discovery ID` 寫入 coverage ledger。
 
-重跑與 discovery 相同的 `--preflight`。確認以下項目後，展示新 ID 並等待第二次確認：
+## 第三階段：Readiness preflight 與自動 apply
+
+重跑與 discovery 相同的 `--preflight`。自動檢查以下項目，不新增人工 gate：
 
 - `business_coverage.status` 無 structural issue；
 - 七份 required documents active、fresh 且 role 正確；coverage ledger 必須是 `exclude`；
 - catalogs、FR/BP/BR/AC IDs、`applies_to`、frontmatter 與 wikilinks 通過；
 - 所有 safe files 有 non-gap disposition；deterministic lint 無 Critical；
-- analysis／managed-Wiki／final-payload DLP masking 完成，final residual 為零；
-- exact `pack_plan` 只有 BA docs 且可容納；
-- schema v1–v4 或舊 retrieval contract 已明列 full rebuild。
-
-## 第四階段：產生與交付 pack
+- 每功能 BA／SA 配對、profiles、互連與 locators 完整；
+- analysis／documents／sources DLP masking 完成，residual 為零；
+- exact `pack_plan` 保留全部 BA／SA 且可容納；
+- schema v1–v5 或舊 retrieval contract 已明列 full rebuild。
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --apply --preflight-id <readiness-id> `
+  --root . --apply --discovery-id <confirmed-discovery-id> `
+  --preflight-id <readiness-id> `
   --output .notebooklm --format json
 ```
 
-只手動上傳 `.notebooklm/sources/*.md`；不要上傳 README、manifest 或 upload plan。
+只手動上傳 `.notebooklm/sources/*.md`；其中 `shared-business-context`
+保留共用詞彙、流程目錄與 active evidence-backed 跨功能流程，`query-index`
+會把相關問題導向它及對應 capability BA／SA。`documents/`、README、manifest、
+upload plan 與 governance 留在本機。
 依 `upload-plan.md` 處理 `added`、`changed`、`deleted`、`unchanged`。若
 `migration.requires_full_rebuild=true`，先清除同一本 Notebook 的所有舊 static sources，
-再上傳全部新 sources 並套用 README 的 BA-only Custom instructions。
+再上傳全部新 sources 並套用 README 的 BA／SA Custom instructions。
 
 ## 設定範例
 
 ```toml
 [notebooklm]
-content_mode = "ba_only"
+content_mode = "ba_sa"
 analysis_include_tests = true
 business_source_paths = ["docs/business/order-cancellation.md"]
 extra_paths = []
-dlp_profile = "notebooklm-enterprise-ba-mask-v1"
+dlp_profile = "notebooklm-enterprise-ba-sa-mask-v1"
 ```
 
 `extra_paths` 與 `business_source_paths` 都只擴充本機分析範圍，raw text 不會上傳。
 舊 `include_evidence`、`include_traceability` 與 `dlp_allowlist` 必須移除。
 
-## BA 驗收
+## BA／SA 驗收
 
 在目標 NotebookLM 依 `docs/validation/notebooklm-ba-uat.md` 的固定十題與 20 分 rubric 驗收。
 答案若只能引用 code/path、把 observed behavior 當政策，或隱藏 gap，即使 exporter 結構檢查
@@ -126,13 +132,15 @@ dlp_profile = "notebooklm-enterprise-ba-mask-v1"
 
 | 症狀 | 原因 | 處理 |
 | --- | --- | --- |
-| `ready_to_export=false` 且 required documents missing | 尚未完成 BA knowledge set | 依 discovery 計畫補頁，再重跑 |
+| `ready_to_export=false` 且 required documents missing | 尚未完成 BA／SA knowledge set | 依 discovery 計畫補頁，再重跑 |
 | Uncovered／analysis-gap | coverage ledger 尚未完整分類 safe file | 補上最精確 disposition 與 requirement link |
 | Dangling requirement/rule | `applies_to` 或 catalog 沒有合法 process link | 修正 wikilink/ID 後重跑 |
-| Preflight ID mismatch | Wiki、inventory、設定或 contract 已改變 | 重新 preflight 並再次確認 |
+| Discovery ID mismatch | Raw source、設定或 scope 已改變 | 重新 preview 並取得一次新確認 |
+| Delivery Outcome（含 `outcome-<revision>`）出現在 inventory | Outcome 是含產品 hashes 的執行證據 | 以 `delivery_execution_evidence` 明確排除；requirements／plans 仍納入 |
+| Readiness ID mismatch | Wiki 或 exact pack plan 已改變 | 自動重跑 readiness；raw snapshot 相同時不再詢問 |
 | DLP residual blocked | final payload 遮罩後仍命中 | 修正 renderer／detector；不可 allowlist |
-| Source budget failure | BA docs 超出 slot/byte/word budget | 改善 deterministic compaction；不可刪功能需求 |
-| Previous schema v1–v4 | retrieval semantics 不相容 | 依 full rebuild 步驟替換全部 static sources |
+| Source budget failure | 完整 BA／SA 超出 slot/byte/word budget | 改善 lossless compaction；不可刪功能需求 |
+| Previous schema v1–v5 | retrieval semantics 不相容 | 依 full rebuild 步驟替換全部 static sources |
 
 ## 相關頁面
 

@@ -4,7 +4,7 @@
 profile = "gemini-notebook-enterprise"
 scan_profile = "target"
 output_directory = ".notebooklm"
-content_mode = "ba_only"
+content_mode = "ba_sa"
 analysis_include_tests = true
 
 # Lower source_limit when the organization's Workspace tier has fewer slots.
@@ -29,6 +29,6 @@ extra_paths = []
 # exclusions. All values must remain relative to the repository root.
 exclude_paths = []
 
-# Offline DLP masks analysis copies and final BA payloads. Any residual match
+# Offline DLP masks analysis copies, BA/SA documents, and upload sources. Any residual match
 # after payload masking blocks commit. Raw repository files are never changed.
-dlp_profile = "notebooklm-enterprise-ba-mask-v1"
+dlp_profile = "notebooklm-enterprise-ba-sa-mask-v1"

@@ -15,7 +15,7 @@ has a separate artifact and authorization contract.
 | Business Analysis / BA | BA文件, 業務分析文件, business analysis document | Generate a standard-aligned Markdown BA document under `wiki/synthesis/` from wiki-first evidence. |
 | System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a solution-neutral, standard-aligned Markdown SA document under `wiki/synthesis/`. |
 | System Design / SD | SD文件, 系統設計, system design, SDD | Generate a standard-aligned Markdown SD document under `wiki/synthesis/` with architecture views and decisions. |
-| NotebookLM export | NotebookLM, export, source pack, upload plan, BA 匯出 | Read Wiki as baseline, scan the full safe text scope, preview BA processes/rules/terms/gaps, update the confirmed knowledge set, then require a second readiness preflight before generating `.notebooklm/`. |
+| NotebookLM export | NotebookLM, export, source pack, upload plan, BA／SA 匯出 | Read Wiki as baseline, scan the full safe text scope, preview capabilities and BA／SA gaps, obtain one confirmation, update the complete confirmed knowledge set, then run readiness and generate `.notebooklm/` automatically. |
 | Archaeology | why, history, legacy, git, 考古 | Trace concrete entrypoints, call paths, and non-destructive git history; separate evidence from inference. |
 
 ## Notes

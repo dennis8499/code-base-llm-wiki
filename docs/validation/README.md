@@ -72,8 +72,8 @@ Contract tests 另固定驗證：
   coverage/traceability/Gap、Mermaid 槽位及 managed/user-notes/local-only markers；
 - SA 是 solution-neutral，首次重跑 legacy SA 的完整原正文保存在 user-notes；
 - frontmatter 接受新欄位的合法值、拒絕非法值，同時允許缺少兩欄的 legacy SA；
-- NotebookLM schema 維持 v5、required-document 清單不變；BA 存在時納入 business
-  content 並移除 local-only，缺席時不阻擋，SA／SD traceability 永不上傳；
+- NotebookLM schema v6 以 `codebase-ba-sa-v1` 驗證每 capability 的 current-state BA／SA
+  pair、雙向連結與 locator，並只把規整後的 `sources/*.md` 列為 upload candidates；
 - Codex 與 Copilot installer 都取得共用 references/templates，Copilot 取得三個薄
   prompt adapters，upgrade 不改寫目標 Wiki。
 

@@ -32,7 +32,7 @@ flowchart LR
 | 9. Business Analysis / BA | `/business-analysis-doc {scope}` | `產出 {scope} BA 文件` | business analysis + standards/coverage/Gap |
 | 10. System Analysis / SA | `/system-analysis-doc {scope}` | `產出 {scope} solution-neutral SA 文件` | system requirements + V&V traceability |
 | 11. System Design / SD | `/system-design-doc {scope}` | `產出 {scope} SD 文件` | concerns/views/decisions + quality strategy |
-| 12. NotebookLM export | `/export-notebooklm` | `盤點業務流程、規則、詞彙與知識缺口，經兩次確認後產生 BA source pack` | BA Wiki 文件 + `.notebooklm/` + manifest + upload plan |
+| 12. NotebookLM export | `/export-notebooklm` | `全量盤點當下 Codebase，預覽後一次確認，產生每功能現況 BA／SA` | BA／SA Wiki + 單一 Notebook pack + governance |
 
 ## Authorization
 
@@ -41,11 +41,11 @@ flowchart LR
 - Query 與預設 Archaeology：唯讀。
 - Lint：先報告，再確認 repairs。
 - ADR、Synthesis、BA、SA、SD：明確建立要求即授權輸出。
-- NotebookLM export：先做 discovery preflight，確認 BA 文件計畫後才更新 Wiki；再做 readiness preflight，第二次確認後才寫 `.notebooklm/`。
+- NotebookLM export：先做完整 discovery preview；一次確認後全量建立每功能 BA／SA，自動 readiness 並寫入 `.notebooklm/`。
 
 ## 1. Install / Upgrade
 
-Installer contract v5 先輸出 dry-run file plan；只有明確 `--apply` 且沒有 conflict
+Installer contract v6 先輸出 dry-run file plan；只有明確 `--apply` 且沒有 conflict
 才原子寫入。兩個 surface 都取得共用 standards reference、BA／SA／SD workflows 與
 templates；Copilot 額外取得三個 prompt adapters，Codex 維持自然語言 recipes。
 `upgrade` 不產生或改寫目標 Repo 的 Wiki，所以既有 BA／SA／SD 與 legacy SA 內容
@@ -123,8 +123,8 @@ Gap register、source appendix，以及 managed/user-notes/local-only markers。
 
 ## 12. NotebookLM Enterprise export
 
-這是「完整 codebase → BA 功能需求 → 離線 BA-only source pack」workflow，固定服務
-Business Analyst，不會連線或上傳 NotebookLM。`--root` 是 filesystem boundary；不要求 Git
+這是「完整 codebase → 每功能現況 BA／SA → 離線單一 Notebook source pack」workflow，服務
+Business Analyst 與 System Analyst，不會連線或上傳 NotebookLM。`--root` 是 filesystem boundary；不要求 Git
 或 clean worktree。Exporter 分析 UTF-8 runtime source、config、schema、project docs 與
 behavioral tests。PDF、Office、圖片或訪談若未轉成可信文字，登記 knowledge gap，不推測。
 
@@ -141,10 +141,10 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
 
 Agent 先依可觀察行為建立 `fr-*`／`cap-*` 與 stable `AC-*`，再連結 actor、trigger、
 happy/alternate/exception paths、state 與 `br-*`。預覽列出 inventory、排除摘要、
-requirement/process/rule coverage、每個 safe file disposition、全量 regeneration plan、DLP
-masking、容量、warnings 與 gaps；使用者確認後才更新 Wiki。
+requirement/process/rule coverage、每功能 BA／SA plan、每個 safe file disposition、DLP、容量、
+warnings 與 gaps；使用者對具體 preview 一次確認後才更新 Wiki。
 
-每個可交付 BA pack 至少包含：
+每次處理至少包含原有 BA catalogs／ledger，並為每個 active `cap-*` 建立：
 
 - `wiki/overview.md`：業務目的、範圍、actors 與能力入口；
 - `wiki/synthesis/functional-requirement-catalog.md`：所有 active `fr-*` 與 AC coverage；
@@ -156,28 +156,34 @@ masking、容量、warnings 與 gaps；使用者確認後才更新 Wiki。
 - `wiki/requirements/*.md`：`type: business-requirement`，包含 FR/capability ID、process links、evidence state 與 `AC-*`；
 - `wiki/processes/*.md`：`type: business-process`，包含 `process_id`、actors、流程、例外與 `coverage_status`；
 - `wiki/rules/*.md`：`type: business-rule`，包含 `rule_id`、`applies_to` 與 `evidence_state`。
+- `wiki/synthesis/{cap}-ba.md`：`codebase-business-analysis-v1`、現況目的／角色／流程／規則／結果／例外；
+- `wiki/synthesis/{cap}-sa.md`：`codebase-system-analysis-v1`、現況邊界／I/O／資料／狀態／介面／錯誤處理。
 
-BA 主文件使用 `notebooklm_role: business`、`notebooklm_group` 與 `notebooklm_terms`；
-技術與 governance 頁使用 `exclude`。證據標籤是 `business-confirmed`、
+Capability BA／SA 使用相同 group、互相連結、真實 sources 與 `path:line` locators；
+BA role 是 `business`，SA role 是 `analysis`。其他技術與 governance 頁使用 `exclude`。證據標籤是 `business-confirmed`、
 `implementation-observed`、`inference` 或 `gap`。每次全量重建 managed markers、保留
 user-notes markers，技術 provenance 放 local-only markers。同步 index，追加一筆合法 log。
 
-文件更新完成後必須重新執行相同的 `--preflight`。第二次 readiness preflight 會檢查必備
+完整處理後把 confirmed discovery ID 寫入 coverage ledger，再執行相同的 `--preflight`。
+Readiness preflight 會檢查必備
 文件、active requirement/process、catalog links、FR/BP/BR/AC IDs、`applies_to`、完整
-non-gap disposition、Critical lint、exact pack plan、DLP masking、容量與設定；展示新的
-`preflight_id` 並再次等待確認。確認後才套用第二次 ID：
+non-gap disposition、BA／SA pair/locator、Critical lint、exact pack plan、DLP、容量與設定；
+它自動產生 latest `preflight_id`，不新增人工 gate。若 raw/config/scope drift 才重新 preview：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --apply --preflight-id <readiness-id> --output .notebooklm --format json
+  --root . --apply --discovery-id <confirmed-discovery-id> `
+  --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-輸出只含 `sources/query-index.md`、`sources/project-map.md` 與 BA `docs:<group>`，另有本機
-schema v5 manifest、upload plan 與 README。Retrieval contract 是 `business-only-ba-v2`；
-raw code/config/business evidence/traceability 永不 materialize。Schema v1–v4 或其他舊 contract
+輸出包含完整 `documents/{cap}-ba.md`／`-sa.md`、只供上傳的 `sources/query-index.md`、
+`sources/project-map.md`、`sources/shared-business-context.md` 與 capability sources；
+shared source 收錄共用詞彙、流程目錄與 active 且有證據支持的跨功能流程。另有本機 schema v6 manifest、upload plan、
+README 與 governance。Retrieval contract 是 `codebase-ba-sa-retrieval-v1`；
+raw code/config 不會直接 materialize。Schema v1–v5 或其他舊 contract
 必須在同一本 Notebook full rebuild。
 
-`notebooklm-enterprise-ba-mask-v1` 在 analysis copy、managed Wiki 與 exact final payload 執行；
+`notebooklm-enterprise-ba-sa-mask-v1` 在 analysis copy、documents 與 sources 執行；
 finding 先遮罩，final residual 才阻擋，沒有 allowlist。Apply 重新掃描 Wiki、inventory、
 coverage 與設定；ID 漂移就拒絕。只手動上傳 `sources/*.md`，依 plan 處理 added/changed/deleted/
 unchanged。Hard limits 為 300 sources、每 source 500 MB / 500,000 words，safety limits 為

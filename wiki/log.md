@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [log]
 status: active
 ---
@@ -535,3 +535,32 @@ status: active
 - Capability／installer contract 升級至 v5（11 operations／11 intent groups）；移除 Guide creator resources、兩平台 Wiki custom-agent profiles 與 Codex fan-out 設定，保留 prompts 改用 built-in `agent`。
 - Fresh install 不再帶入 14 個舊路徑；upgrade 只列為 `obsolete_paths` 並保留原 bytes。既有 `type: guide`、Guides index、歷史 `guide` log 與 NotebookLM `project-guides` mapping 保持可讀。
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[business-analysis]]、[[system-analysis]]、[[system-design]]、[[codebase-functional-coverage]]
+
+## [2026-09-07] update | 新工作區帶入已核准 NotebookLM BA／SA 需求草案
+
+- 在使用者核准的獨立 worktree 中原樣保存 `docs/requirements/2026-09-07-notebooklm-ba-sa-export.md`；主工作區草案與 log 原樣保留。
+- Work ID：`work-20260907-notebooklm-ba-sa-export-18b38958`；正式需求 Candidate 僅封存於 host temp，尚未套用或進入實作。
+- 受影響頁面：[[log]]；未新增或重大更新 Wiki 知識頁面，索引不需更新。
+
+## [2026-09-07] update | 正式保存 NotebookLM BA／SA 匯出需求
+
+- 依使用者核准套用 `docs/work/work-20260907-notebooklm-ba-sa-export-18b38958/requirements.md` 與配套 knowledge promotion，post-apply lint 通過，交付進入 planning/active。
+- 受影響頁面：[[log]]；產品行為與 Wiki 知識頁未變更，索引不需更新。
+
+## [2026-09-07] update | NotebookLM schema v6 現況 BA／SA 單一 Notebook 匯出
+
+- Exporter 每次重新盤點當下完整安全 Codebase；使用者確認一次 discovery 預覽後，系統以相符 `discovery_id`／`preflight_id` 自動完成 readiness 與原子本機交付。
+- 每個 active capability 新增互連、可定位的 current-state BA／SA，schema v6 產生本機 `documents/`、upload-only `sources/`、完整 mapping、migration plan 與 Google 官方產品限制／安全控制治理清單。
+- 受影響頁面：[[index]]、[[overview]]、[[notebooklm-ba-functional-export]]、[[notebooklm-ba-knowledge-export]]、[[ba-knowledge-precedes-traceability]]、[[readiness-preflight-required]]、[[functional-requirement-catalog]]、[[business-process-catalog]]、[[business-rule-catalog]]、[[business-glossary]]、[[business-knowledge-gaps]]、[[codebase-functional-coverage]]、[[cap-notebooklm-ba-functional-export-ba]]、[[cap-notebooklm-ba-functional-export-sa]]、[[cap-analysis-document-generation-ba]]、[[cap-analysis-document-generation-sa]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[system-architecture]]、[[framework-introduction]]、[[business-analysis]]、[[system-analysis]]、[[system-design]]
+
+## [2026-09-07] update | NotebookLM 最終審查修正
+
+- Upload sources 新增 `shared-business-context`，實際收錄共用詞彙、流程目錄及 active evidence-backed 跨功能流程；query index 同步提供查詢路由。
+- Delivery Outcome 在完整 inventory 中明列為 `delivery_execution_evidence`，但不參與業務 discovery identity，以避免含產品 hashes 的 Outcome 形成自我參照；requirements 與 plans 仍照常納入。
+- Codex Windows hooks 在 Git root 探測前固定 UTF-8 console encoding；全量測試 runner 明列環境 skips。
+- 受影響頁面：[[notebooklm-exporter]]、[[notebooklm-export]]、[[ba-knowledge-precedes-traceability]]、[[system-architecture]]、[[system-analysis]]、[[log]]
+
+## [2026-09-07] update | 同步目前 installer contract v6 文件
+
+- 將 README、release 說明、[[release-and-update]] 與 [[installer-and-upgrade]] 的現行 installer/capability contract 宣告同步為 v6，並加入回歸檢查避免公開版本再次落後於 manifest。
+- 受影響頁面：[[release-and-update]]、[[installer-and-upgrade]]、[[log]]；未新增、刪除或更名 Wiki 頁面，索引不需更新。

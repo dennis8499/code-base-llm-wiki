@@ -8,6 +8,9 @@
 
 ### Added
 
+- **NotebookLM 每功能現況 BA／SA**：新增 `codebase-business-analysis-v1` 與
+  `codebase-system-analysis-v1` templates、BA／SA pair/locator gates、完整本機
+  `documents/`、upload-only `sources/` mapping，以及 Google 官方產品限制與安全控制治理清單。
 - **BA／SD standard-aligned 文件工作流**：新增獨立 Business Analysis 與 System
   Design workflows、templates、Copilot prompt adapters 與 Codex recipes；以版本化
   profiles 對齊 ISO/IEC/IEEE 29148:2018、42010:2022、ISO/IEC 25010:2023、
@@ -23,6 +26,12 @@
 
 ### Changed
 
+- **NotebookLM Exporter schema v6**：每次以當下安全 Codebase 重新 discovery，包含
+  README、規格、測試與註解，衝突時以程式碼為主；使用者確認一次後自動完成 BA／SA
+  文件化、readiness 與原子本機交付。`discovery_id` 與 `preflight_id` 分離，單一 Notebook
+  超限時 fail closed，schema v1–v5／BA-only packs 必須完整替換。Upload sources 包含
+  共用詞彙、流程目錄與 active evidence-backed 跨功能流程；delivery Outcome 以明確
+  exclusion 避免自我參照 discovery cycle。
 - **SA 改為 solution-neutral 分析**：保留 `/system-analysis-doc` 與既有路徑，移除
   技術選型、元件配置與部署設計責任，改由 SD 承接；首次重跑無 markers 的 legacy
   SA 時，完整原正文會先保存在 user-notes legacy 區塊。
@@ -66,6 +75,10 @@
   Repo 內的 `.sql`、migration 與 schema 仍維持唯讀 source evidence。
 
 ### Fixed
+
+- **NotebookLM 最終 readiness 與 Windows UTF-8 hooks**：delivery Outcome 改列
+  `delivery_execution_evidence`，不參與業務 discovery identity；Codex Windows hooks
+  在 Git root 探測前固定 UTF-8 console encoding，全量 runner 逐項列出環境 skip。
 
 - **六流程 Codex UAT 修復**：18 個有效 Task Tracker runs 保存 JSONL tool events、
   before/after hashes 與 deterministic checks；首輪發現的 Windows installer DACL、

@@ -35,13 +35,18 @@ Lint 先回報 Info，不作為 schema failure。
 | 欄位 | 型別 | 必填 | 說明 | 範例 |
 | --- | --- | --- | --- | --- |
 | `notebooklm_group` | string | NotebookLM preparation 建立或更新的頁面必填；其他頁面選填 | 穩定的業務能力群組，使用 kebab-case | `business-order-cancellation` |
-| `notebooklm_role` | enum | NotebookLM preparation 建立或更新的頁面必填；其他頁面選填 | `business` / `traceability` / `exclude` | `business` |
+| `notebooklm_role` | enum | NotebookLM preparation 建立或更新的頁面必填；其他頁面選填 | `business` / `analysis` / `traceability` / `exclude` | `business` |
 | `notebooklm_terms` | string[] | `notebooklm_role: business` 時必填且不可為空 | BA 查詢用角色、流程、規則與詞彙 | `[訂單取消, 客服]` |
+| `notebooklm_document` | enum | schema-v6 per-capability export 文件必填 | `ba` / `sa` | `sa` |
+| `source_locators` | string[] | schema-v6 per-capability export 文件必填 | real source 的 `path:line` 定位；有 source 時不可為空 | `["src/orders.py:42"]` |
 
 允許值必須符合 `^[a-z0-9]+(?:-[a-z0-9]+)*$`。同一功能域重跑時沿用既有值；
 BA 高階頁面使用 `business-core`，流程／規則與其追溯頁面共用
 `business-{capability}`。缺少 `notebooklm_role` 的舊頁面不會自動成為 BA source；
-exporter 會省略並回報 warning。
+exporter 會省略並回報 warning。Current-state BA／SA export pages 另需
+`capability_id`、固定 `{capability}-ba.md`／`-sa.md` path、專用 profile、相同 group、
+雙向 wikilink 與可驗證 locators；SA 使用 `notebooklm_role: analysis`。Standalone
+standards-aligned BA／SA 不因 role 自動成為 schema-v6 upload candidate。
 
 ### Standard-aligned synthesis metadata（選填、增量採用）
 

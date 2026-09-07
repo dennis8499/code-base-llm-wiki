@@ -17,14 +17,16 @@ Load `analysis-document-standards.md` completely and apply
   `standards_profile: business-analysis-aligned-v1`, and
   `coverage_status: covered | partial | gap`.
 - Required tags: `synthesis`, `business-analysis`, `standards-aligned`.
-- NotebookLM: `notebooklm_role: business`, stable
-  `notebooklm_group`, and non-empty `notebooklm_terms`.
+- NotebookLM taxonomy: `notebooklm_role: business`, stable
+  `notebooklm_group`, and non-empty `notebooklm_terms`; schema-v6 export selection
+  additionally requires the dedicated current-state export profile and
+  `notebooklm_document: ba`.
 - Format: Traditional Chinese Markdown. Do not generate PDF or DOCX.
 
-The standalone BA document is optional for NotebookLM readiness. When present,
-its business-role content is included by the existing exporter and its
-`notebooklm:local-only` blocks are removed. Never add it to NotebookLM's
-required-document list or change schema v5 for this workflow.
+The standalone BA document is not a schema-v6 upload candidate and remains
+optional for NotebookLM readiness. The export workflow creates a separate
+per-capability current-state BA using `codebase-business-analysis-v1`; do not
+silently reinterpret this standards-aligned BA as that export document.
 
 ## Source Order
 

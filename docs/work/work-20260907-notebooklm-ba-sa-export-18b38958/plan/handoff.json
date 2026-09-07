@@ -1,0 +1,1318 @@
+{
+  "schema": "ready-plan/v1",
+  "candidate": {
+    "revision": "notebooklm-ba-sa-r1",
+    "payload_sha256": "27efd89ac79d8df1f042f35c337fcb70511b43a4c399cb24109d03d3c633224f"
+  },
+  "approval": {
+    "status": "Ready",
+    "actor": "workspace-user",
+    "confirmed_at": "2026-09-07T01:45:17.1817283Z",
+    "evidence": "user:2026-09-07:notebooklm-ba-sa-plan-r1"
+  },
+  "planning_baseline": {
+    "repo_id": "3a6b11d008ffd5ef15f38f901249bf99b363ea4742fe8c587add45cd96949ab9",
+    "head_sha": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+    "status_sha256": "44c3afc94485626bfc75882191a3c807ce30059793b63b6ebae47eb26e5d62f0"
+  },
+  "primary_plan": {
+    "path": "docs/work/work-20260907-notebooklm-ba-sa-export-18b38958/plan/plan.md",
+    "sha256": "eca0ed7a5d07dc601c2d51235d35e3da2d6862dae1a907374df0de690c056f45"
+  },
+  "artifacts": [
+    {
+      "path": "docs/work/work-20260907-notebooklm-ba-sa-export-18b38958/plan/plan.md",
+      "role": "primary",
+      "approval_status": "Ready",
+      "sha256": "eca0ed7a5d07dc601c2d51235d35e3da2d6862dae1a907374df0de690c056f45"
+    },
+    {
+      "path": "docs/work/work-20260907-notebooklm-ba-sa-export-18b38958/plan/research.md",
+      "role": "supporting",
+      "approval_status": "Ready",
+      "sha256": "4745a3e7597f977997acd92d2606c006550e8dbb069cf779bec7730b6f87616f"
+    },
+    {
+      "path": "docs/work/work-20260907-notebooklm-ba-sa-export-18b38958/plan/handoff.json",
+      "role": "handoff",
+      "approval_status": "Ready",
+      "sha256": null
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-001",
+      "kind": "spec",
+      "location": "docs/work/work-20260907-notebooklm-ba-sa-export-18b38958/requirements.md",
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "72582556467c76b93a1e7581eac2e44d25c0095af53fbb5a7ce634f725f4f8a3",
+      "plan_refs": [
+        "CON-001",
+        "TD-001",
+        "TD-002",
+        "TD-003"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "source_id": "SRC-002",
+      "kind": "governance",
+      "location": "AGENTS.md",
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "fdc378ba84fe11daa5bef21e06d4d030e88a1f956f11fc240504fc69ebc1d0ce",
+      "plan_refs": [
+        "CON-002",
+        "SEAM-003"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "source_id": "SRC-003",
+      "kind": "project",
+      "location": ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py",
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "6cb73879045a626c923df575a19d68164aab4e421a95eb8f9bc8213f47da53a5",
+      "plan_refs": [
+        "MOD-001",
+        "MOD-002",
+        "MOD-003"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002"
+      ]
+    },
+    {
+      "source_id": "SRC-004",
+      "kind": "contract",
+      "location": ".agents/skills/codebase-wiki/references/notebooklm-export-workflow.md",
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "84824e9ad08535ecccb7085fa270d6e7de732268f12d43c35a1d554671baf541",
+      "plan_refs": [
+        "TD-001",
+        "TD-002"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "source_id": "SRC-005",
+      "kind": "project",
+      "location": "tests/test_export_notebooklm.py",
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "e01b8ccd0a0ce31955df460a11fe69482df25c3c764f41c96ce37ed7c1a15210",
+      "plan_refs": [
+        "BDD-FWK-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002"
+      ]
+    },
+    {
+      "source_id": "SRC-006",
+      "kind": "contract",
+      "location": ".agents/skills/codebase-wiki/references/frontmatter-spec.md",
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "253e02fccacae3e44e7e3d017fea5c47d54bff8717642ae5e844835dc3d8ca5a",
+      "plan_refs": [
+        "TD-001",
+        "MOD-002"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-003"
+      ]
+    },
+    {
+      "source_id": "SRC-007",
+      "kind": "governance",
+      "location": "docs/validation/README.md",
+      "revision": "71e7d0289ff04ebb45eb0f09e7e14052cb9f4cd1",
+      "sha256": "75a2655ac1f35ff1712503b72d5af21b376b308d68e4d9a0368dca3e0a7ff7a8",
+      "plan_refs": [
+        "SEAM-003"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "source_id": "SRC-008",
+      "kind": "supporting",
+      "location": "docs/work/work-20260907-notebooklm-ba-sa-export-18b38958/plan/research.md",
+      "revision": "2026-09-07",
+      "sha256": "4745a3e7597f977997acd92d2606c006550e8dbb069cf779bec7730b6f87616f",
+      "plan_refs": [
+        "TD-001",
+        "TD-002",
+        "TD-003",
+        "BDD-FWK-001"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    }
+  ],
+  "contract_index": [
+    {
+      "contract_id": "BDD-FWK-001",
+      "kind": "bdd-framework",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "BDD-001",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "TEST-001",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-001",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "BDD-002",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "TEST-002",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-002",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-002",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "BDD-003",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "TEST-003",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-003",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-003",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "BDD-004",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "TEST-004",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-004",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-004",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "BDD-005",
+      "kind": "bdd-scenario",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-004",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "TEST-005",
+      "kind": "inner-test",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-004",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-005",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-004",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-TDD-005",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-004",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-DISCOVERY",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BDD-FULL",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-RELATED",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-BUILD-FULL",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-TEST-FULL",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "CMD-GOVERNANCE",
+      "kind": "command",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001",
+        "WP-002",
+        "WP-003"
+      ]
+    },
+    {
+      "contract_id": "WP-001",
+      "kind": "work-package",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-001"
+      ]
+    },
+    {
+      "contract_id": "WP-002",
+      "kind": "work-package",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-002"
+      ]
+    },
+    {
+      "contract_id": "WP-003",
+      "kind": "work-package",
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-004",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "wp_refs": [
+        "WP-003"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "command_id": "CMD-BDD-001",
+      "purpose": "bdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --scenario BDD-001",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Exactly BDD-001 selected and executed; all variant assertions accounted for."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-TDD-001",
+      "purpose": "tdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --inner TEST-001",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "TEST-001 contract class discovered and fully executed; 0 skipped; count >0."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-BDD-002",
+      "purpose": "bdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --scenario BDD-002",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Exactly BDD-002 selected and executed; all variant assertions accounted for."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-TDD-002",
+      "purpose": "tdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --inner TEST-002",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "TEST-002 contract class discovered and fully executed; 0 skipped; count >0."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-BDD-003",
+      "purpose": "bdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --scenario BDD-003",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Exactly BDD-003 selected and executed; all variant assertions accounted for."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-TDD-003",
+      "purpose": "tdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --inner TEST-003",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "TEST-003 contract class discovered and fully executed; 0 skipped; count >0."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-BDD-004",
+      "purpose": "bdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --scenario BDD-004",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Exactly BDD-004 selected and executed; all variant assertions accounted for."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-TDD-004",
+      "purpose": "tdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --inner TEST-004",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "TEST-004 contract class discovered and fully executed; 0 skipped; count >0."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-BDD-005",
+      "purpose": "bdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --scenario BDD-005",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Exactly BDD-005 selected and executed; all variant assertions accounted for."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-TDD-005",
+      "purpose": "tdd-focused",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --inner TEST-005",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "TEST-005 contract class discovered and fully executed; 0 skipped; count >0."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-DISCOVERY",
+      "purpose": "bdd-discovery",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --list",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Exactly BDD-001 through BDD-005 listed; executed=0; no fixture writes."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-BDD-FULL",
+      "purpose": "bdd-full",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --all",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Five BDD IDs discovered/executed; failed=errors=skipped=0."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-RELATED",
+      "purpose": "related",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --related",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 1800,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Discover and run all exporter, contract, installer and new acceptance/inner tests; report actual IDs/counts and zero unexpected skips."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-BUILD-FULL",
+      "purpose": "build-full",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --build",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 300,
+      "network_policy": "forbidden",
+      "allowed_writes": [],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Compile every Git-eligible Python file in memory and parse every JSON schema; report exact inventories; zero omissions."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-TEST-FULL",
+      "purpose": "test-full",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --unit-all",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 1800,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Discover entire tests directory; executed=discovered; all mandatory tests run; any host-inapplicable existing test must be explicitly inventoried with reason, never silently omitted."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    },
+    {
+      "command_id": "CMD-GOVERNANCE",
+      "purpose": "governance",
+      "status": "Proposed",
+      "cwd": ".",
+      "command": "python -X utf8 -B tests/notebooklm_acceptance.py --governance",
+      "environment_prerequisites": [
+        "Python >=3.11; unittest built in; test-only runner and fixtures implemented."
+      ],
+      "timeout_seconds": 1800,
+      "network_policy": "forbidden",
+      "allowed_writes": [
+        {
+          "path": ".notebooklm-tests-tmp/",
+          "kind": "ignored",
+          "cleanup": "Runner cleans only owned fixtures after raw evidence collection."
+        }
+      ],
+      "external_side_effects": [],
+      "success_criteria": [
+        "Exit 0; no failed/errors/unexpected skips."
+      ],
+      "completeness_criteria": [
+        "Parity, frontmatter, stale, log, index --check and Wiki lint all run; no new Critical/error/stale; semantic findings have separate review evidence."
+      ],
+      "absence_evidence": [
+        {
+          "probe": "Path tests/notebooklm_acceptance.py exists",
+          "outcome": "False on 2026-09-07; runner is Proposed.",
+          "source_ref": "SRC-008"
+        }
+      ]
+    }
+  ],
+  "work_packages": [
+    {
+      "wp_id": "WP-001",
+      "blocked_by": [],
+      "contract_refs": [
+        "BDD-FWK-001",
+        "BDD-001",
+        "TEST-001",
+        "CMD-BDD-001",
+        "CMD-TDD-001",
+        "BDD-002",
+        "TEST-002",
+        "CMD-BDD-002",
+        "CMD-TDD-002",
+        "CMD-DISCOVERY",
+        "CMD-BDD-FULL",
+        "CMD-RELATED",
+        "CMD-BUILD-FULL",
+        "CMD-TEST-FULL",
+        "CMD-GOVERNANCE",
+        "WP-001"
+      ],
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-006",
+        "SRC-008"
+      ],
+      "command_refs": [
+        "CMD-BDD-001",
+        "CMD-TDD-001",
+        "CMD-BDD-002",
+        "CMD-TDD-002",
+        "CMD-DISCOVERY",
+        "CMD-BDD-FULL",
+        "CMD-RELATED",
+        "CMD-BUILD-FULL",
+        "CMD-TEST-FULL",
+        "CMD-GOVERNANCE"
+      ]
+    },
+    {
+      "wp_id": "WP-002",
+      "blocked_by": [
+        "WP-001"
+      ],
+      "contract_refs": [
+        "BDD-FWK-001",
+        "BDD-003",
+        "TEST-003",
+        "CMD-BDD-003",
+        "CMD-TDD-003",
+        "BDD-004",
+        "TEST-004",
+        "CMD-BDD-004",
+        "CMD-TDD-004",
+        "CMD-DISCOVERY",
+        "CMD-BDD-FULL",
+        "CMD-RELATED",
+        "CMD-BUILD-FULL",
+        "CMD-TEST-FULL",
+        "CMD-GOVERNANCE",
+        "WP-002"
+      ],
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-003",
+        "SRC-004",
+        "SRC-005",
+        "SRC-008"
+      ],
+      "command_refs": [
+        "CMD-BDD-003",
+        "CMD-TDD-003",
+        "CMD-BDD-004",
+        "CMD-TDD-004",
+        "CMD-DISCOVERY",
+        "CMD-BDD-FULL",
+        "CMD-RELATED",
+        "CMD-BUILD-FULL",
+        "CMD-TEST-FULL",
+        "CMD-GOVERNANCE"
+      ]
+    },
+    {
+      "wp_id": "WP-003",
+      "blocked_by": [
+        "WP-002"
+      ],
+      "contract_refs": [
+        "BDD-FWK-001",
+        "BDD-005",
+        "TEST-005",
+        "CMD-BDD-005",
+        "CMD-TDD-005",
+        "CMD-DISCOVERY",
+        "CMD-BDD-FULL",
+        "CMD-RELATED",
+        "CMD-BUILD-FULL",
+        "CMD-TEST-FULL",
+        "CMD-GOVERNANCE",
+        "WP-003"
+      ],
+      "source_refs": [
+        "SRC-001",
+        "SRC-002",
+        "SRC-004",
+        "SRC-006",
+        "SRC-007",
+        "SRC-008"
+      ],
+      "command_refs": [
+        "CMD-BDD-005",
+        "CMD-TDD-005",
+        "CMD-DISCOVERY",
+        "CMD-BDD-FULL",
+        "CMD-RELATED",
+        "CMD-BUILD-FULL",
+        "CMD-TEST-FULL",
+        "CMD-GOVERNANCE"
+      ]
+    }
+  ],
+  "revision_impact": {
+    "revision": "notebooklm-ba-sa-r1",
+    "changes": [
+      {
+        "changed_ref": "SRC-001",
+        "scope": "global-baseline",
+        "affected_wp_refs": [
+          "WP-001",
+          "WP-002",
+          "WP-003"
+        ]
+      }
+    ]
+  }
+}

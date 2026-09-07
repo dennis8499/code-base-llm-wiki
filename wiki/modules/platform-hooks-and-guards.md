@@ -10,7 +10,7 @@ sources:
   - .codex/hooks.json
   - .github/hooks/
   - tests/test_write_guard.py
-source_digest: sha256:f3ebded31caadf44dc2750e65a1a707c94fc154cfafb35434507d3279ad33877
+source_digest: sha256:8956d86714e1c77cde25a91afa4fba07911014979b2c1a69b0647c5e636d88ff
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-04
 tags: [module, hooks, guard, codex, copilot]

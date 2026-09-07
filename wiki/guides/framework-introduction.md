@@ -8,9 +8,9 @@ sources:
   - docs/setup/README.md
   - docs/workflows/README.md
   - docs/validation/README.md
-source_digest: sha256:c42d20db79db8e8caf339e3529c8b622a06f59583fb8bb69eef6a8158cf16c4f
+source_digest: sha256:9447d81adbc410e642c273e1abf72215531a80ae2069b620eca41191170f815c
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -50,7 +50,7 @@ notebooklm_role: traceability
 
 雙入口的能力相同，但平台 adapter 不相同。Codex 不使用 project-level slash prompts；
 Copilot prompt files 也不會被假裝成非 VS Code host 功能。Copilot 驗收標示為
-`static-compatible / runtime-unverified`；Codex v5 也完成本機契約與 deterministic
+`static-compatible / runtime-unverified`；Codex v6 也完成本機契約與 deterministic
 驗證，但尚未重跑 host runtime UAT。2026-09-03 的 v4 Codex evidence 只作歷史基線。
 
 ## 2. 先 Dry-run 再安裝
@@ -115,7 +115,7 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | Business Analysis / BA | 業務問題、現況／目標、能力、流程、規則、成功指標與 change impact | synthesis + index + log |
 | System Analysis / SA | solution-neutral 邊界、needs、SR/NFR/IF 與 verification needs | synthesis + index + log |
 | System Design / SD | concerns/viewpoints、決策、元件、runtime、資料、介面、部署、安全與品質策略 | synthesis + index + log |
-| NotebookLM export | 全量盤點 codebase 並重建 FR/AC、流程、規則、詞彙與 gaps | BA-only 文件、`.notebooklm/`、schema v5 manifest、upload plan；不自動上傳 |
+| NotebookLM export | 全量盤點當下 Codebase 並重建每功能現況 BA／SA | `.notebooklm/` documents、upload sources、schema v6、governance；不自動上傳 |
 
 完整提示詞與輸出契約位於 `docs/workflows/README.md`。
 
@@ -126,33 +126,34 @@ boundary 掃描安全 UTF-8 repo text（behavioral tests 預設包含）；非�
 `business_source_paths` 可精確指定 dev-tooling 下的業務文字，但不能繞過敏感、產物、
 CI/IaC、Wiki/output 等安全排除。
 
-第一次 discovery preflight 取得 inventory、BA coverage、文件計畫、DLP、容量與 gaps：
+Discovery preflight 取得 inventory、capabilities、BA／SA coverage、文件計畫、DLP、容量與 gaps：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --preflight --format json
 ```
 
-先等待第一次確認，再全量重建繁中 overview、functional requirement/process/rule catalogs、
-glossary、knowledge gaps、coverage ledger，以及每個 `business-requirement`／process／rule
-page。BA pages 使用 `notebooklm_role: business`、穩定 `notebooklm_group`、FR/AC IDs 與
-evidence state；工程頁使用 `exclude`。同步 index 與一筆 log 後，重新執行相同 preflight。展示 readiness gates
-與新 ID，等待第二次確認，最後才 apply：
+使用者檢視完整預覽並確認一次後，全量更新 catalogs、knowledge gaps、coverage ledger，
+並為每個 active `cap-*` 建立互連的繁中 `{cap}-ba.md` 與 `{cap}-sa.md`。BA／SA 使用專用
+current-state profiles、真實 sources 與 `path:line` locators；同步 index 與一筆 log，將
+confirmed discovery ID 寫入 ledger。系統接著自動重跑 readiness，取得最新 ID 後 apply：
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-  --root . --apply --preflight-id <readiness-id> --output .notebooklm --format json
+  --root . --apply --discovery-id <confirmed-discovery-id> `
+  --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-只手動上傳 `.notebooklm/sources/*.md`。Schema v5 `manifest.json` 記錄 audience、FR/AC 與
-file disposition coverage、hash、三階段 DLP、migration 與 stable IDs；`upload-plan.md` 列出
-`added`、`changed`、`deleted`、`unchanged`。Raw evidence 與 traceability 永不進入 pack；
-舊 schema v1–v4 或 retrieval contract 必須 full rebuild。預設 pack 使用 450 MB /
+只手動上傳 `.notebooklm/sources/*.md`。Schema v6 `manifest.json` 記錄 discovery/readiness、
+BA／SA documents、source mapping、coverage、DLP、migration 與 stable IDs；`governance.md`
+區分本機檢查與待管理員驗證的雲端控制。Raw evidence 不直接進入 pack；舊 schema v1–v5
+或 retrieval contract 必須在同一本 Notebook full rebuild。預設 pack 使用 450 MB /
 450,000 words safety limits，且不超過 Enterprise 的 300 sources、500 MB /
 500,000 words hard limits；不同 Workspace tier 請在 `notebooklm.toml` 下調。
 
-Exporter 在本機執行 `notebooklm-enterprise-ba-mask-v1` DLP；finding 先遮罩，final payload
-有殘留才阻擋 apply，報告只顯示安全 metadata。詳細步驟與 BA UAT 見 [[notebooklm-export]]。
+Exporter 在 analysis copy、documents 與 sources 執行 `notebooklm-enterprise-ba-sa-mask-v1`
+DLP；finding 先遮罩，final payload 有殘留才阻擋 apply，報告只顯示安全 metadata。詳細
+步驟與 BA／SA UAT 見 [[notebooklm-export]]。
 
 ## 6. Guard modes
 
@@ -182,7 +183,7 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
-python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --preflight-id ID --output .notebooklm --format json
+python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --discovery-id DISCOVERY_ID --preflight-id PREFLIGHT_ID --output .notebooklm --format json
 ```
 
 三個 path-based quality CLI 都接受標準 `--help`；獨立執行時 `check-stale.py` 的
@@ -225,7 +226,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 ## 相關頁面
 
 - [[overview]] — 框架定位、產品結構與核心設計
-- [[installer-and-upgrade]] — v5 managed blocks、manifest 與 atomic apply
+- [[installer-and-upgrade]] — v6 managed blocks、manifest 與 atomic apply
 - [[platform-hooks-and-guards]] — 三種 guard mode 與跨平台 hook contract
 - [[business-analysis]] — 業務分析與 BA traceability
 - [[system-analysis]] — solution-neutral 系統分析與 verification needs

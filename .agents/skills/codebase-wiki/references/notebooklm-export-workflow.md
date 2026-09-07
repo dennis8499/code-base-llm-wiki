@@ -1,11 +1,11 @@
-# NotebookLM Enterprise BA Functional Export Workflow
+# NotebookLM Enterprise Current-state BA／SA Export Workflow
 
 Use this workflow for NotebookLM export preparation. The fixed outcome is one
-NotebookLM Enterprise notebook whose uploaded static sources contain only BA
-functional documentation derived from the full safe codebase.
+NotebookLM Enterprise notebook whose static sources contain current-state BA
+and SA documents derived from the full safe codebase.
 
-Schema v5 uses knowledge contract `business-functional-requirements-v2` and
-retrieval contract `business-only-ba-v2`.
+Schema v6 uses knowledge contract `codebase-ba-sa-v1` and retrieval contract
+`codebase-ba-sa-retrieval-v1`.
 
 ## Scope and authorization
 
@@ -20,7 +20,13 @@ discovery. Even when the Wiki is clean, show the functional-requirement,
 process, rule, and file-disposition coverage preview
 and wait for confirmation before updating Wiki or writing the local pack.
 
-After confirmation, re-analyze the entire safe scope and regenerate managed BA
+The displayed discovery plan has one human confirmation（一次確認）. After that
+confirmation, full analysis, Wiki regeneration, readiness checks, and local
+apply run without another approval gate. The codebase is the only content
+authority, including README, specifications, tests, and comments; when sources
+conflict, implemented code wins and the documents record the difference.
+
+After confirmation, re-analyze the entire safe scope and regenerate managed BA／SA
 sections; do not limit work to previously stale pages. Preserve user-authored
 notes, synchronize `wiki/index.md`, and append one valid operation selected from
 `log-operations.md` (normally `ingest`, or `update` for framework maintenance)
@@ -33,7 +39,7 @@ Include every UTF-8 project-owned text file in these categories:
 - runtime source and production entrypoints;
 - runtime-required config and dependency manifests;
 - database schemas, migrations, messages, and interface schemas;
-- existing project documentation;
+- existing README, specifications, and project documentation;
 - behavioral tests and acceptance specifications (included by default).
 
 `notebooklm.toml` may designate exact repo-relative UTF-8 files or directories
@@ -46,7 +52,13 @@ record them as explicit knowledge gaps.
 
 Exclude CI/CD, IaC, build/development tooling, dependency and generated
 directories, binaries, credentials/secrets, the Wiki and export output, and
-installed Codebase LLM Wiki adapter/schema files. A production entrypoint is
+installed Codebase LLM Wiki adapter/schema files. Versioned requirements and
+plans remain documentation inputs. Generated
+`docs/work/<work-id>/implementation/outcome.{json,md}` and consecutive
+`outcome-<revision>.{json,md}` successors attest delivery hashes, so they are
+reported as `delivery_execution_evidence` exclusions and stay out of the
+business discovery identity; including their self-referential hashes would
+make a stable readiness identity impossible. A production entrypoint is
 runtime source even if it lives under a scripts directory. Walk the filesystem
 top-down beneath the explicit `--root`, pruning an excluded directory before
 enumerating its descendants; this keeps the fallback bounded without dropping
@@ -78,10 +90,12 @@ functional-requirement link, or a dangling requirement link.
      --root . --preflight --format json
    ```
 
-Treat this first result as the discovery preflight. Its ID becomes invalid when
-the confirmed documentation update changes Wiki content; do not reuse it for
-apply. `ready_to_export` is true only when all mandatory BA documents are active,
-the BA structural contract and full file-disposition ledger are complete,
+Treat this first result as the discovery preflight. Its `discovery_id` binds raw
+safe sources, exclusion policy, scan configuration, and semantic contracts; Wiki
+bytes are deliberately excluded so regenerated documentation does not invalidate
+the user's confirmed source scope. `ready_to_export` is true only when all
+mandatory BA／SA documents are active, the structural contract and full
+file-disposition ledger are complete,
 required-document evidence is fresh, deterministic lint has no Critical
 findings, and the exact post-mask payload fits the configured limits.
 
@@ -96,7 +110,7 @@ findings, and the exact post-mask payload fits the configured limits.
    coverage, Wiki pages to regenerate, disposition results, capacity estimate, and every
    unresolved gap. A truncated or unreadable excluded-root summary is a
    warning, not evidence that the root was included. Wait for confirmation.
-6. After confirmation, create or update the required BA documentation set:
+6. After confirmation, create or update the required current-state documentation set:
    - `wiki/overview.md`;
    - `wiki/synthesis/functional-requirement-catalog.md`;
    - `wiki/synthesis/business-process-catalog.md`;
@@ -107,68 +121,80 @@ findings, and the exact post-mask payload fits the configured limits.
    - one `wiki/requirements/` page per independently testable capability;
    - one `wiki/processes/` page per cataloged end-to-end process;
    - one `wiki/rules/` page per independently queryable business rule.
-   A standalone `wiki/synthesis/business-analysis.md`, when present and active
-   with `notebooklm_role: business`, is included by the normal role-based
-   selection but remains optional and is not added to the required-document
-   gate. System Analysis and System Design use `notebooklm_role: traceability`
-   and are never upload candidates.
+   For every active `cap-*`, also create exactly
+   `wiki/synthesis/{cap}-ba.md` from `notebooklm-ba-template.md` and
+   `wiki/synthesis/{cap}-sa.md` from `notebooklm-sa-template.md`. These export
+   profiles are current-state codebase documents. Standalone BA/SA and System
+   Design retain their separate workflows and do not become upload candidates.
 7. Each requirement uses stable `fr-*` and `cap-*` IDs, links at least one
    process, and contains `## 驗收條件` with stable `AC-*` IDs. Use stable
-   `business-{capability}` `notebooklm_group` values. Only BA pages use `notebooklm_role: business`;
-   local governance and technical pages use `exclude`. Narrative content is
-   Traditional Chinese.
+   `business-{capability}` `notebooklm_group` values. Capability BA uses
+   `codebase-business-analysis-v1`, `notebooklm_document: ba`, role `business`;
+   capability SA uses `codebase-system-analysis-v1`, `notebooklm_document: sa`,
+   role `analysis`. Both declare real sources and `path:line` locators, link each
+   other, and use Traditional Chinese while retaining identifiers/API names.
 8. Label claims as `business-confirmed`, `implementation-observed`, `inference`,
    or `gap`. Code/config/schema can prove observed behavior, not approved policy.
-   Registered business gaps are allowed; unlabeled or dangling knowledge is not.
+   When the repository supplies no evidence, write exactly `Codebase 未提供證據`;
+   `尚未完成分析` is a blocking processing gap and cannot be exported.
 9. Regenerate content inside `codebase-wiki:managed` markers, preserve content
    inside `codebase-wiki:user-notes` markers, and place reviewer-only paths or
    symbols inside `notebooklm:local-only` markers. Synchronize index/log and
-   rerun Wiki checks. Then run a second readiness preflight and use its new ID
-   for apply:
+   rerun Wiki checks. Record the confirmed discovery ID in the coverage ledger
+   only after the full snapshot is processed. Then run a readiness preflight and
+   use its new ID for apply:
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
      --root . --preflight --format json
    ```
 
-10. Show the second result, including readiness gates, exact `pack_plan`,
-    capacity, DLP masking status, and migration mode, then wait for a second
-    confirmation. Apply only with the
-    second ID:
+10. Check the readiness result, exact `pack_plan`, capacity, DLP masking status,
+    and migration mode automatically. Do not request another confirmation. Apply
+    with the confirmed discovery ID and latest readiness ID:
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
-     --root . --apply --preflight-id <id> --output .notebooklm --format json
+     --root . --apply --discovery-id <confirmed-id> `
+     --preflight-id <latest-id> --output .notebooklm --format json
    ```
 
-   Apply rescans the Wiki, safe inventory, and configuration. Any later change makes
-   the ID invalid and requires a new preflight. Direct export without
+   Apply rescans the Wiki, safe inventory, and configuration. Raw/config/scope
+   drift requires a new preview and confirmation; Wiki-only rebuilds retain the
+   discovery ID and use a new readiness ID. Direct export without
    `--preflight` followed by `--apply` is rejected.
 
 ## Output contract
 
 The exporter owns `.notebooklm/manifest.json`, `.notebooklm/upload-plan.md`,
-`.notebooklm/README.md`, and generated `.notebooklm/sources/*.md`. Unknown files
-inside the output directory are preserved.
+`.notebooklm/README.md`, local-only `.notebooklm/governance.md`, complete
+`.notebooklm/documents/{cap}-ba.md`／`-sa.md`, and upload candidates in
+`.notebooklm/sources/*.md`. Unknown files inside the output directory are preserved.
 
 Each generated source has a stable `logical_source_id`:
 
-- `query-index` for the BA functional-requirement router;
+- `query-index` for the BA／SA capability router;
 - `project-map` for the generated navigation source;
-- `docs:<business-group>` for complete curated BA Wiki documentation;
-- `docs:combined` only when slot pressure requires deterministic compaction;
+- `shared-business-context` for the shared glossary, process catalog, and
+  active evidence-backed cross-capability process bodies;
+- `capability:<capability-id>` for one complete BA／SA pair;
+- `capability:combined` only when slot pressure requires lossless compaction;
 - `#part-###` suffixes for sources split at safe boundaries.
 
-The exporter accepts previous schema-v1/v2/v3/v4 manifests. The first export
+Each document records its role, export profile, capability, group, locators,
+hashes, and upload paths in `document_source_mapping`. Both BA and SA map to all
+source parts that contain their paired capability.
+
+The exporter accepts previous schema-v1 through v5 manifests. The first export
 from an older schema or retrieval contract sets
 `migration.requires_full_rebuild=true` and
 instructs the uploader to remove all old static sources before uploading the new
-pack. The schema-v5 manifest records audience `business-analyst`, source roles,
+pack. The schema-v6 manifest records audience `business-and-system-analyst`, source roles,
 functional/business coverage, and scan summary, including
 file-level exclusions and pruned excluded-root summaries,
 requirement/process/rule coverage, file dispositions, input/output hashes,
 limits, the offline DLP profile/safe finding summary, and the
-`business-only-ba-v2` retrieval contract. The retrieval contract points
+`codebase-ba-sa-retrieval-v1` retrieval contract. The retrieval contract points
 to `query-index.md`, limits the primary route to at most five source groups, and
 keeps the copy/paste Custom instructions in the local README. The upload plan
 contains:
@@ -178,7 +204,8 @@ contains:
 - `deleted`: remove the old source;
 - `unchanged`: no NotebookLM action.
 
-Do not upload `manifest.json`, `upload-plan.md`, or the README as evidence.
+Only upload `sources/*.md`. Do not upload `documents/`, `manifest.json`,
+`upload-plan.md`, `governance.md`, or the README as Notebook sources.
 
 The generated README also documents a one-time rebuild procedure: remove old
 static sources from the same NotebookLM notebook, upload every Markdown file
@@ -196,10 +223,11 @@ individually and non-Han, non-whitespace token runs are counted separately, so
 mixed Traditional Chinese and code content is not underestimated. A different
 Workspace tier must lower `source_limit` in `notebooklm.toml`.
 
-The query index, project map, and BA documentation are mandatory. Raw business
+The query index, project map, shared business context, and every capability
+BA／SA pair are mandatory. Raw business
 evidence, source code, configuration, and technical traceability are never
-upload candidates. If the BA documents cannot fit, compact/split them
-deterministically or fail; never silently omit functional knowledge.
+direct upload candidates. If complete BA／SA content cannot fit, combine/split it
+losslessly or fail; never omit a capability or required content.
 
 Excluded-root summaries use a fixed metadata entry bound. They may report
 `truncated` or metadata errors, but they never inspect file content and do not
@@ -210,8 +238,9 @@ or any source remains oversized, the exporter fails before committing a new
 pack and preserves the previous pack.
 
 `notebooklm.toml` may set `scan_profile = "target" | "framework"`,
-`content_mode = "ba_only"`, `analysis_include_tests`, and
-`business_source_paths`. Schema v5 rejects legacy `include_traceability`,
+`content_mode = "ba_sa"`, `analysis_include_tests`, and
+`business_source_paths`. Schema v6 rejects `ba_only` with full-rebuild guidance
+and rejects legacy `include_traceability`,
 `include_evidence`, and `dlp_allowlist` settings with a migration message.
 `target` is
 the default and excludes installed framework adapters. The framework repository
@@ -221,33 +250,38 @@ exclusions.
 
 ## Offline DLP masking
 
-The exporter runs a local deterministic DLP profile during analysis, managed
-Wiki materialization, and exact final-payload planning. It does not call Google
-Cloud, Model Armor, or NotebookLM. The
-`notebooklm-enterprise-ba-mask-v1` profile checks high-confidence
+The exporter runs a local deterministic DLP profile during analysis, final
+`documents/` materialization, and exact `sources/` planning. It does not call
+Google Cloud, Model Armor, or NotebookLM. The
+`notebooklm-enterprise-ba-sa-mask-v1` profile checks high-confidence
 `CREDIT_CARD_NUMBER`, `FINANCIAL_ACCOUNT_NUMBER`, `GCP_CREDENTIALS`,
 `GCP_API_KEY`, and `PASSWORD` patterns. Existing sensitive filename exclusions
 remain a separate safety layer.
 
 Analysis operates on an in-memory copy and replaces matches with
-`[MASKED:<RULE>]`; raw repository files are never modified. Managed Wiki inputs
-are masked before materialization. The exact final payload is masked again,
-hashed again, and rescanned; any residual finding blocks commit and preserves
+`[MASKED:<RULE>]`; raw repository files are never modified. Documents and upload
+sources are masked, hashed, and independently rescanned; any residual finding blocks commit and preserves
 the previous pack. Reports contain only path, line, rule, severity, and a
 SHA-256 fingerprint; matched values and surrounding text are never persisted.
 There is no allowlist.
 
-For tenant-specific behavior, verify the current [Google Cloud Gemini Notebook
-Enterprise limits](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview)
-and [NotebookLM source type and sync rules](https://support.google.com/notebooklm/answer/16215270).
+The local-only `governance.md` separates local checks from tenant-admin
+verification for IAM, VPC Service Controls, CMEK, data location, and Sensitive
+Data Protection. Sensitive Data Protection governs source content; Model Armor
+governs prompt/response interaction when applicable. Neither is declared enabled
+without tenant evidence. Verify the current [Google Cloud Gemini Notebook Enterprise limits](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview)
+and [sensitive data controls](https://docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/protect-sensitive-data).
 
 ## Completion Criterion
 
-Export is complete only when the entire safe scope was regenerated into the BA
-model, user notes were preserved, every safe file has a non-gap disposition,
+Export is complete only when the entire safe scope was regenerated into paired
+current-state BA／SA documents, user notes were preserved, every safe file has a non-gap disposition,
 every active requirement is cataloged and has stable acceptance criteria, Wiki
 checks pass, the exact final payload passes post-mask DLP and capacity limits,
-`query-index` and `project-map` are present, the schema-v5 manifest and upload
+`query-index`, `project-map`, and `shared-business-context` are present,
+the shared source contains the glossary and every active evidence-backed
+cross-capability process, every document has a source mapping,
+the schema-v6 manifest and upload
 plan were written atomically, and the final report lists actions, coverage, DLP
 masking counts, migration mode, and unresolved business-confirmation gaps.
 Preflight alone never writes `.notebooklm/`.

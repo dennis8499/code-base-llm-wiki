@@ -14,9 +14,9 @@ sources:
   - .agents/skills/codebase-wiki/references/business-analysis-workflow.md
   - .agents/skills/codebase-wiki/assets/business-analysis-template.md
   - .github/prompts/business-analysis-doc.prompt.md
-source_digest: sha256:ce59a1de869f1e15b96d0d056615d36fa689c4c2879d1dd6d2e0940572db6c16
+source_digest: sha256:53e3ac941a892821beee900c35675d4dd94783ea54ad5bac6ac34474e65531a4
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [business-requirement, business-analysis, standards-aligned, notebooklm]
 status: active
 ---
@@ -59,8 +59,9 @@ status: active
 ## 輸入、輸出與狀態
 
 輸入是 Wiki-first evidence 與必要時的唯讀 raw sources。輸出是繁中 Markdown
-synthesis、index 更新與 append-only log；BA 使用 `notebooklm_role: business`，存在時
-可進入既有 schema-v5 pack，但不成為 required document。
+synthesis、index 更新與 append-only log。這類 standalone BA 使用
+`business-analysis-aligned-v1`；NotebookLM schema v6 只選取另行產生的
+`codebase-business-analysis-v1` capability BA，因此兩種用途不會混合。
 
 ## 驗收條件
 
@@ -69,7 +70,7 @@ synthesis、index 更新與 append-only log；BA 使用 `notebooklm_role: busine
 - `AC-DOC-BA-003`：Given 已有 `cap-*`／`fr-*`／`bp-*`／`br-*`／`AC-*`，When 建立追溯，Then 重用穩定 ID 而不建立重複身分。
 - `AC-DOC-BA-004`：Given 缺少 stakeholder、target state、KPI 或流程證據，When 產出文件，Then 保留 coverage／Mermaid 槽位並建立具體 `gap-*`，不得臆造。
 - `AC-DOC-BA-005`：Given 已有人工作者註記，When 重跑 BA，Then user-notes 原文完整保留，技術追溯留在 local-only。
-- `AC-DOC-BA-006`：Given BA 文件存在，When 建立 NotebookLM pack，Then business 內容納入且 local-only 移除；Given BA 不存在，Then readiness 不受阻擋且 required documents 不變。
+- `AC-DOC-BA-006`：Given standalone BA 文件存在或缺席，When 建立 NotebookLM schema-v6 pack，Then它不取代也不阻擋每 capability 的 current-state BA／SA pair。
 
 ## 關聯流程
 

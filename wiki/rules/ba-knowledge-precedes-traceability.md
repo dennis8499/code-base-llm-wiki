@@ -1,41 +1,45 @@
 ---
-title: NotebookLM 只接收 BA 功能知識
+title: NotebookLM 只接收 Codebase 現況 BA／SA 知識
 type: business-rule
-summary: NotebookLM source pack 只能包含功能需求、流程、規則、詞彙、驗收條件與缺口
+summary: NotebookLM source pack 只包含由當下 Codebase 支持的每功能 BA／SA 與導覽，不直接上傳 raw source
 rule_id: br-notebooklm-ba-knowledge-first
 applies_to: ["[[notebooklm-ba-knowledge-export]]"]
 evidence_state: business-confirmed
 notebooklm_group: business-notebooklm-export
 notebooklm_role: business
-notebooklm_terms: [BA-only, functional requirement, acceptance criteria, raw code exclusion]
+notebooklm_terms: [BA, SA, codebase-only, code wins, source locator, raw code exclusion]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:9c5c8fca9fb204a52af15e5c126f8336980a6bc5536b6922bbb200b8e230c2ee
+source_digest: sha256:9773a15c3204402853c0cc370ed89997621f6e8c7296e0a310976f0b9b5c0a32
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-07
 tags: [business-rule, notebooklm, evidence]
 status: active
 ---
 
-# NotebookLM 只接收 BA 功能知識
+# NotebookLM 只接收 Codebase 現況 BA／SA 知識
 
 <!-- codebase-wiki:managed:start -->
 
 ## 規則敘述
 
-NotebookLM source pack 只能保留 BA 功能需求文件。回答以 `fr-*` 需求與 `AC-*` 驗收條件為
-主，再說明流程、規則、詞彙、資料語意與 gaps。Raw code、raw config、class、function、API、
-table、repository path 與 technical traceability appendix 均不得成為 upload source。
+NotebookLM source pack 只保留每個 active capability 的現況 BA／SA、跨功能 query index、
+project map，以及共用詞彙與有證據支持的跨功能流程來源。內容只來自當下 Codebase 的
+程式、設定、schema、測試、README、規格與註解；
+衝突時以程式碼為主並揭露差異。每份文件可保留必要 identifier、API 與受控 source locator，
+但 raw code body、raw config 與未規整的 repository content 不得成為 upload source。
 
 ## 條件與結果
 
 | 條件 | 決策／結果 | 例外 | 證據狀態 |
 | --- | --- | --- | --- |
-| BA 文件超過 source budget | deterministic compaction／splitting 後仍超限就整體失敗 | 保留上一份 pack，不可省略功能需求 | business-confirmed |
+| BA／SA 文件超過 source budget | deterministic pairing／splitting 後仍超限就整體失敗 | 保留上一份 pack，不可省略 capability | business-confirmed |
 | 問題詢問正式政策 | 優先引用 business-confirmed evidence | 只有 implementation observation 時必須如此標示 | business-confirmed |
 | Raw source 含敏感 pattern | 分析副本與 final payload 先遮罩 | 遮罩後仍有殘留即阻擋 commit | business-confirmed |
-| Standalone BA 存在 | 依 business role 納入並移除 local-only | 它不是 required document；缺少時不阻擋 | business-confirmed |
-| SA／SD 存在 | 保留本機 traceability，不 materialize | 無 | business-confirmed |
+| Codebase 缺少某項目的或品質證據 | 文件明列 `Codebase 未提供證據` | 不可自行補成政策或目標 | business-confirmed |
+| 分析尚未完成或缺少 BA／SA pair | readiness 阻擋 | 不得以 knowledge gap 當成完成 | business-confirmed |
+| System Design 或一般 Wiki traceability 存在 | 保留本機，不成為 capability upload document | BA／SA 文件內的受控 locator 仍保留 | business-confirmed |
+| Delivery Outcome 含產品 hashes | 在 inventory 中明列為 delivery execution evidence | 不參與業務 discovery identity，避免自我參照 | business-confirmed |
 
 ## 適用流程
 
@@ -43,8 +47,9 @@ table、repository path 與 technical traceability appendix 均不得成為 uplo
 
 ## 資料與詞彙
 
-- `BA-only`：upload source 只含 BA 能理解與驗收的功能知識，不含原始技術證據。
-- `local-only traceability`：留在 Wiki／manifest 供維護者查核，但匯出 renderer 會移除。
+- `codebase-only`：文件內容的唯一事實依據是本次 discovery 所盤點的專案來源。
+- `source locator`：供 SA 與維護者定位證據的 repo-relative path 加行號／symbol，不包含 raw code body。
+- `local-only traceability`：governance、完整 documents 與 mapping 留在本機；只有 `sources/*.md` 是上傳候選。
 
 ## 待確認事項
 

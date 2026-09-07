@@ -12,7 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:977828b9a164c01ecb3bae36e7d8aa725c79089a2724128c0af6509251a07916
+source_digest: sha256:db9066cbdcc694bc978712888be8f56795bd38da5edd8698f42447e55a87c518
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
 last_updated: 2026-09-04
 tags: [synthesis, system-design, standards-aligned]
@@ -33,7 +33,7 @@ status: active
 | Owner／Reviewer | Project owner（待具名）／framework maintainer |
 | 標準 Profile | `system-design-aligned-v1` |
 | 文件狀態／Coverage | active / partial |
-| 變更摘要 | 新增共享 profile、BA/SD workflows、重整 SA；目前 capability contract 為 v5 |
+| 變更摘要 | 新增共享 profile、BA/SD workflows、重整 SA；目前 capability contract 為 v6 |
 
 > 本文件為 standard-aligned，不代表 conformance。IEEE 1016-2009 只作
 > inactive-reserved／informative 的歷史 SDD 組織參考；architecture-description
@@ -43,7 +43,7 @@ status: active
 
 設計沿用框架既有「共享 Skill 是 canonical contract、平台檔案是薄 adapters、Wiki 是
 durable output」架構。新增一份 versioned standards reference，BA／SA／SD 各有獨立
-workflow/template；capabilities v5 對兩平台公開 11 operations／11 groups。現有
+workflow/template；capabilities v6 對兩平台公開 manifest-declared operations／groups。現有
 frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只作最小擴充，
 不新增 runtime generator 或 dependency。
 
@@ -123,16 +123,16 @@ frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只�
 | `analysis-document-standards.md` | profiles、edition、layer、coverage、ID/marker/diagram contract | three profile IDs | official standards references | `SR-DOC-003/004/005` / `DE-DOC-001` |
 | Three workflow references | routing、source order、coverage、persistence/completion | BA/SA/SD workflow contracts | standards ref + exact template | `SR-DOC-001`–`007` / `DE-DOC-002` |
 | Three templates | document shape and regeneration regions | frontmatter + managed/user/local blocks | workflow/profile | `SR-DOC-002`–`006` / `DE-DOC-002/003/006` |
-| Capability manifest / parity | operations、intent groups、authorization、entrypoint mapping | contract v5 | platform prompts/recipes | `IF-DOC-001` / `DE-DOC-002` |
+| Capability manifest / parity | operations、intent groups、authorization、entrypoint mapping | contract v6 | platform prompts/recipes | `IF-DOC-001` / `DE-DOC-002` |
 | Frontmatter validator | optional metadata value validation and compatibility | profile/coverage values | parser/tests | `NFR-DOC-002/005` / `DE-DOC-003` |
-| Installer | distribute shared skill and selected platform adapters | install state v5; starter only on install | framework surface | `NFR-DOC-002` / `DE-DOC-007` |
-| NotebookLM exporter | select business pages, strip local-only, preserve schema v5 | required docs and source pack | Wiki frontmatter | `IF-DOC-003` / `DE-DOC-005` |
+| Installer | distribute shared skill and selected platform adapters | install state v6; starter only on install | framework surface | `NFR-DOC-002` / `DE-DOC-007` |
+| NotebookLM exporter | validate current-state BA／SA pairs、mask、map and preserve schema v6 | documents、sources、mapping、governance | Wiki frontmatter | `IF-DOC-003` / `DE-DOC-005` |
 | Framework Wiki | dogfood BA/SA/SD and traceability evidence | requirements/process/rules/synthesis/index/log | all above | `SR-DOC-007` |
 
 ```mermaid
 flowchart TB
     User[User / Author] --> Entry[Copilot prompts or Codex recipes]
-    Entry --> Manifest[capabilities.json v5]
+    Entry --> Manifest[capabilities.json v6]
     Manifest --> Workflows[BA / SA / SD workflows]
     Standards[Shared standards profiles] --> Workflows
     Templates[BA / SA / SD templates] --> Workflows
@@ -141,7 +141,7 @@ flowchart TB
     Installer[Installer] --> Entry
     Installer --> Workflows
     Wiki --> Exporter[NotebookLM exporter]
-    Exporter -->|business role only| Pack[BA-only source pack]
+    Exporter -->|current-state BA + SA pairs| Pack[Single Notebook source pack]
 ```
 
 ## Runtime View
@@ -152,7 +152,7 @@ flowchart TB
 | Rerun marked document | workflow, document regions | replace managed; retain user notes/local-only | malformed/overlapping marker is Gap, no blind overwrite | `SR-DOC-005`, `DE-DOC-006` |
 | First legacy SA rerun | workflow, legacy body, new template | capture body → new managed → verbatim legacy user notes | missing body boundary blocks destructive rewrite | `SR-DOC-006`, `DE-DOC-006` |
 | Framework install/upgrade | installer, source schema, target | plan → apply schema/adapters; starter only on install | conflicts block; target Wiki preserved | `NFR-DOC-002`, `DE-DOC-007` |
-| Notebook export | exporter, Wiki roles, local-only blocks | business selection → strip frontmatter/local-only → schema-v5 pack | BA absent is okay; SA/SD never selected | `IF-DOC-003`, `DE-DOC-005` |
+| Notebook export | exporter, discovery, BA／SA pairs, local-only blocks | pair validation → render/mask/map → schema-v6 pack | missing pair/locator or drift blocks replacement | `IF-DOC-003`, `DE-DOC-005` |
 
 ```mermaid
 sequenceDiagram
@@ -200,9 +200,9 @@ erDiagram
 
 | Interface／IF ID | Protocol／Schema／Version | Authentication／Authorization | Error／Retry semantics | Consumer／Provider | Decision |
 | --- | --- | --- | --- | --- | --- |
-| `IF-DOC-001` | natural language / VS Code prompt frontmatter / manifest v4 mapping | explicit request policy | ambiguous bare BA produces clarification, no write | user ↔ platform adapter | `DE-DOC-002` |
+| `IF-DOC-001` | natural language / VS Code prompt frontmatter / manifest v6 mapping | explicit request policy | ambiguous bare BA produces clarification, no write | user ↔ platform adapter | `DE-DOC-002` |
 | `IF-DOC-002` | Markdown + YAML frontmatter + HTML markers + wikilinks | repository write authorization | validator failure is visible; log append-only | workflow ↔ Wiki filesystem | `DE-DOC-003/006/007` |
-| `IF-DOC-003` | `notebooklm_role` + schema-v5 source materialization | existing two-confirmation export contract | optional BA absence tolerated; traceability excluded | Wiki ↔ exporter | `DE-DOC-005` |
+| `IF-DOC-003` | dedicated profiles + schema-v6 document/source mapping | one-confirmation discovery plus automatic readiness | missing pair/locator or drift rejects; standalone/SD excluded | Wiki ↔ exporter | `DE-DOC-005` |
 
 ## Deployment and Operations View
 
@@ -215,8 +215,8 @@ erDiagram
 
 ```mermaid
 flowchart LR
-    Framework[Framework Repo\nshared Skill + docs/tests] -->|installer v4| Codex[Codex target\nAGENTS + Codex + .codex]
-    Framework -->|installer v4| Copilot[Copilot target\n.github adapters]
+    Framework[Framework Repo\nshared Skill + docs/tests] -->|installer v6| Codex[Codex target\nAGENTS + Codex + .codex]
+    Framework -->|installer v6| Copilot[Copilot target\n.github adapters]
     Framework -->|both surfaces| Shared[.agents/skills/codebase-wiki]
     Codex --> WikiA[target wiki/]
     Copilot --> WikiB[target wiki/]
@@ -230,8 +230,8 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | Raw repository sources | embedded instruction or unintended mutation | workflow authorization + platform sandbox/guard | read-only rule, evidence labeling | `NFR-DOC-001`, `DE-DOC-001/007` |
 | User-notes content | regeneration overwrite | marker ownership | preserve verbatim; legacy snapshot | `SR-DOC-006`, `DE-DOC-006` |
-| BA upload content | technical path/symbol leakage | `notebooklm_role: business` | frontmatter/local-only removal + DLP | `NFR-DOC-003`, `DE-DOC-005` |
-| SA/SD technical docs | accidental upload | `notebooklm_role: traceability` | role filter excludes | `IF-DOC-003`, `DE-DOC-005` |
+| Current-state BA／SA upload content | sensitive raw value or excessive source detail | dedicated profile + valid pair/locator | render boundary + local-only removal + DLP | `NFR-DOC-003`, `DE-DOC-005` |
+| Standalone BA／SA／SD | accidental upload | non-export profile／traceability role | profile and role filters exclude | `IF-DOC-003`, `DE-DOC-005` |
 | Target Wiki | installer overwrites local knowledge | install/upgrade scope | starter only on install; upgrade excludes Wiki | `NFR-DOC-002`, `DE-DOC-007` |
 | Standards claim | false compliance representation | profile/disclaimer contract | tests + reviewer | `NFR-DOC-001`, `DE-DOC-001` |
 
@@ -240,10 +240,10 @@ flowchart LR
     User[Trusted user request] --> Workflow[Authorized document workflow]
     Raw[Untrusted raw sources] -->|read-only evidence| Workflow
     Workflow -->|managed content + preserved notes| Wiki[Local Wiki]
-    Wiki --> Role{notebooklm_role}
-    Role -->|business| Strip[Remove frontmatter + local-only; DLP]
-    Role -->|traceability / exclude| Stop[Not uploaded]
-    Strip --> Pack[BA-only local pack]
+    Wiki --> Profile{current-state profile + pair valid?}
+    Profile -->|BA / SA pair| Strip[Render documents; remove local-only; DLP]
+    Profile -->|standalone / traceability / exclude| Stop[Not uploaded]
+    Strip --> Pack[Documents + mapped upload sources]
 ```
 
 ## Quality Strategy
@@ -252,7 +252,7 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `NFR-DOC-001` / correctness | canonical profiles, Gap-on-unknown, standards disclaimer | contract tokens + semantic review | standards/workflows/templates; all views | reviewer judgment remains manual |
 | `NFR-DOC-002` / compatibility | optional validator fields, command/path retention, legacy preservation | legacy fixture + installer preservation tests | validator/installer/runtime/data | full byte fixture should remain monitored |
-| `NFR-DOC-003` / confidentiality | role separation + local-only stripping + existing DLP | BA visible, local/SA/SD hidden, schema v5 | exporter/security | tenant behavior external |
+| `NFR-DOC-003` / confidentiality | dedicated profiles + local-only stripping + three-surface DLP | current-state BA／SA visible; raw/standalone/SD hidden; schema v6 | exporter/security | tenant behavior external |
 | `NFR-DOC-004` / maintainability | single shared reference and manifest-driven parity | parity issues = 0; resource install tests | component/deployment | profile updates require explicit migration |
 | `NFR-DOC-005` / reliability | local full deterministic suite and Wiki gates | all commands exit 0 | runtime/deployment | dirty root requires isolated verification copy |
 | `NFR-DOC-006` / performance | no new generator/runtime/dependency | no approved threshold | all | `gap-analysis-doc-quality-targets` |

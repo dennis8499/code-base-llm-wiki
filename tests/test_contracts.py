@@ -15,14 +15,14 @@ REPO_ROOT = Path(__file__).parents[1]
 
 
 class ContractTests(unittest.TestCase):
-    def test_capability_manifest_declares_installer_contract_v5(self) -> None:
+    def test_capability_manifest_declares_installer_contract_v6(self) -> None:
         manifest = json.loads(
             (REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "capabilities.json").read_text(
                 encoding="utf-8"
             )
         )
 
-        self.assertEqual(manifest["contract_version"], 5)
+        self.assertEqual(manifest["contract_version"], 6)
         self.assertEqual(manifest["guard_modes"]["default"], "wiki-only")
         self.assertEqual(manifest["guard_modes"]["installed"], ["wiki-only", "coexist"])
         self.assertEqual(manifest["surfaces"], ["copilot", "codex"])
@@ -37,11 +37,11 @@ class ContractTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["intents"]["notebooklm_export"]["confirmation_stages"],
-            ["discovery_plan", "readiness_apply"],
+            ["discovery_plan"],
         )
         self.assertEqual(
             manifest["intents"]["notebooklm_export"]["audience"],
-            "business-analyst",
+            "business-and-system-analyst",
         )
         self.assertEqual(len(manifest["intents"]), 11)
         self.assertEqual(len(manifest["intent_groups"]), 11)
@@ -71,6 +71,21 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(set(manifest["cli"]), {"install", "upgrade"})
         self.assertIn("install-framework.py install", manifest["cli"]["install"])
         self.assertIn("install-framework.py upgrade", manifest["cli"]["upgrade"])
+
+    def test_current_public_docs_declare_installer_contract_v6(self) -> None:
+        expected_claims = {
+            "README.md": "`contract_version: 6` 維持為獨立的",
+            "docs/releases/README.md": "`contract_version: 6` 則是獨立的",
+            "wiki/guides/release-and-update.md": (
+                "`contract_version: 6` 是 installer/capability contract"
+            ),
+            "wiki/modules/installer-and-upgrade.md": "JSON contract version 為 6",
+        }
+
+        for relative, expected in expected_claims.items():
+            with self.subTest(path=relative):
+                content = (REPO_ROOT / relative).read_text(encoding="utf-8")
+                self.assertIn(expected, content)
 
     def test_ba_sa_sd_standard_aligned_document_contract(self) -> None:
         skill_root = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"
@@ -447,15 +462,16 @@ class ContractTests(unittest.TestCase):
             self.assertIn("notebooklm_group", text)
         self.assertIn("full safe project", workflow.lower())
         self.assertRegex(prompt, r"全專案|整個專案")
-        self.assertIn("business-only-ba-v2", workflow)
-        self.assertIn("business-functional-requirements-v2", workflow)
+        self.assertIn("codebase-ba-sa-retrieval-v1", workflow)
+        self.assertIn("codebase-ba-sa-v1", workflow)
         self.assertIn("business_source_paths", workflow)
         self.assertIn("analysis_include_tests", workflow)
         self.assertIn("codebase-functional-coverage.md", workflow)
-        self.assertIn("notebooklm-enterprise-ba-mask-v1", workflow)
+        self.assertIn("notebooklm-enterprise-ba-sa-mask-v1", workflow)
         self.assertIn("500 MB", workflow)
-        self.assertIn("second readiness preflight", workflow)
-        self.assertIn("第二次確認", prompt)
+        self.assertIn("discovery_id", workflow)
+        self.assertIn("一次確認", prompt)
+        self.assertNotIn("第二次確認", prompt)
         self.assertTrue((skill_root / "scripts" / "notebooklm_exporter.py").is_file())
         for template in (
             "business-process-template.md",
@@ -467,6 +483,8 @@ class ContractTests(unittest.TestCase):
             "business-glossary-template.md",
             "business-knowledge-gaps-template.md",
             "codebase-functional-coverage-template.md",
+            "notebooklm-ba-template.md",
+            "notebooklm-sa-template.md",
         ):
             self.assertTrue((skill_root / "assets" / template).is_file())
 
