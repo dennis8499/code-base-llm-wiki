@@ -564,3 +564,9 @@ status: active
 
 - 將 README、release 說明、[[release-and-update]] 與 [[installer-and-upgrade]] 的現行 installer/capability contract 宣告同步為 v6，並加入回歸檢查避免公開版本再次落後於 manifest。
 - 受影響頁面：[[release-and-update]]、[[installer-and-upgrade]]、[[log]]；未新增、刪除或更名 Wiki 頁面，索引不需更新。
+
+## [2026-09-07] update | 保存 NotebookLM BA／SA 匯出需求草案
+
+- 依使用者對完整版本及精確路徑的確認，新增 `docs/requirements/2026-09-07-notebooklm-ba-sa-export.md`，維持 Draft—Not ready，記錄全量盤點、一次確認、每功能 BA／SA 配對、程式碼優先、單一 Notebook 與 Google 官方治理基準。
+- 本次只保存需求，未變更現行匯出器行為；既有交付紀錄 `INVALID_RECORD` 仍待處理，未宣告 Ready 或實作完成。
+- 受影響頁面：[[log]]；未新增或重大更新 Wiki 知識頁面，`wiki/index.md` 不需更新。
