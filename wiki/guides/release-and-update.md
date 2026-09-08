@@ -5,10 +5,10 @@ summary: 以 VERSION、本機驗證、手動 GitHub Release 與授權 gate 管�
 sources:
   - VERSION
   - tools/release.py
-  - docs/releases/README.md
-  - docs/validation/README.md
+  - docs/operations/releases/README.md
+  - docs/operations/validation/README.md
   - README.md
-source_digest: sha256:0676dc3048841da9712e70db2340d159b4579ee58f3dd64a35b0a45aad348727
+source_digest: sha256:06f61a2625af8cb88ddf62fe5f4166da8bf35c97ffef1a90fa973066da13b011
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-09-07
 tags: [guide, release, version, extension]

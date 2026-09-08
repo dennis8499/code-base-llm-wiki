@@ -26,7 +26,6 @@ status: active
 | Path or prefix | Disposition | Functional requirements |
 | --- | --- | --- |
 | `.agents/skills/codebase-wiki/` | functional-evidence | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
-| `.agents/skills/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `.codex/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `.github/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
 | `docs/` | supporting-technical | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |
@@ -43,7 +42,7 @@ status: active
 
 ## Gate 結果
 
-Analyzed discovery ID: `sha256:5190d9cd43bb5d634adfd388df43fc61334ac7735820c58f209751805df2fd45`
+Analyzed discovery ID: `sha256:fda059d57e7c56dffe9806c4f370698283048321f3ac01cdb26be3961cdde61e`
 - Uncovered safe files：0
 - Analysis gaps：0
 - Dangling requirement links：0

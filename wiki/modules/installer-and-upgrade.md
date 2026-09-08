@@ -9,8 +9,8 @@ sources:
   - .agents/skills/codebase-wiki/references/install-workflow.md
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
-  - tests/test_install_framework.py
-source_digest: sha256:3798a6607285ac29a3912456629e41eac5c7c1a4d1fc0eda1f88e48c8755efbd
+  - tests/installer/test_install_framework.py
+source_digest: sha256:d13f6825940fc63be1235deabb24d0c22674250ae46d03b1c928762c02d3cfdb
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-07
 tags: [module, installer, upgrade, atomicity]
@@ -69,7 +69,7 @@ JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
   後恢復原檔並清理 stage/backup。
 - `_TransactionLock` 以 Windows `msvcrt` 或 POSIX `fcntl` 保護同一 target 的整段
   plan/apply；`test_atomic_install_rejects_concurrent_writer` 驗證持鎖時不會開始第二次寫入。
-- `tests/test_install_framework.py::test_atomic_install_recovers_after_process_kill` 以
+- `tests/installer/test_install_framework.py::test_atomic_install_recovers_after_process_kill` 以
   子程序在第一個新檔替換後終止，驗證 journal recovery 保留舊檔且不留下孤兒暫存目錄。
 - `_target_path_is_safe()` 在 plan 與 atomic write 邊界檢查 target path 的實際解析位置。
 - `_target_path_is_safe()` 也拒絕跨平台 drive-qualified target path，避免 Windows state

@@ -46,21 +46,16 @@ Include every UTF-8 project-owned text file in these categories:
 as `business_source_paths`. These are business-owned requirements, process
 definitions, decision tables, or acceptance specifications. They may opt
 selected text into the scan from dev-tooling scope, but never override
-secret, binary/generated/dependency, configured exclusion, Wiki, canonical
-`docs/knowledge/`, output, or symlink/reparse safety boundaries. PDF, Word,
+secret, binary/generated/dependency, configured exclusion, Wiki, output, or
+symlink/reparse safety boundaries. PDF, Word,
 and Excel are not parsed in v1;
 record them as explicit knowledge gaps.
 
 Exclude CI/CD, IaC, build/development tooling, dependency and generated
-directories, binaries, credentials/secrets, the Wiki, canonical
-`docs/knowledge/` layer, export output, and installed Codebase LLM Wiki
-adapter/schema files. Versioned requirements and plans remain documentation
-inputs. Generated
-`docs/work/<work-id>/implementation/outcome.{json,md}` and consecutive
-`outcome-<revision>.{json,md}` successors attest delivery hashes, so they are
-reported as `delivery_execution_evidence` exclusions and stay out of the
-business discovery identity; including their self-referential hashes would
-make a stable readiness identity impossible. A production entrypoint is
+directories, binaries, credentials/secrets, the Wiki, export output, and
+installed Codebase LLM Wiki adapter/schema files. Versioned product
+requirements, historical change summaries, and plans remain normal
+documentation inputs. A production entrypoint is
 runtime source even if it lives under a scripts directory. Walk the filesystem
 top-down beneath the explicit `--root`, pruning an excluded directory before
 enumerating its descendants; this keeps the fallback bounded without dropping

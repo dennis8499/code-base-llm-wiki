@@ -10,7 +10,7 @@ notebooklm_role: business
 notebooklm_terms: [BA, SA, codebase-only, code wins, source locator, raw code exclusion]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:35a31655241118279815e3d73fa1c86b9831de192a6975b7271248010b67b526
+source_digest: sha256:5330275f0c3241738d8c8af24b1f9b2d242b13ff8a5aee84a80a5ebb3f41e0a2
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
 last_updated: 2026-09-08
 tags: [business-rule, notebooklm, evidence]
@@ -24,8 +24,8 @@ status: active
 ## 規則敘述
 
 NotebookLM source pack 只保留每個 active capability 的現況 BA／SA、跨功能 query index、
-project map，以及共用詞彙與有證據支持的跨功能流程來源。Wiki 與 canonical
-`docs/knowledge/` 只作本機治理，不成為 raw discovery 或 upload source。內容只來自當下 Codebase 的
+project map，以及共用詞彙與有證據支持的跨功能流程來源。Wiki 只作本機治理，不成為
+raw discovery 或 upload source。內容只來自當下 Codebase 的
 程式、設定、schema、測試、README、規格與註解；
 衝突時以程式碼為主並揭露差異。每份文件可保留必要 identifier、API 與受控 source locator，
 但 raw code body、raw config 與未規整的 repository content 不得成為 upload source。
@@ -39,8 +39,7 @@ project map，以及共用詞彙與有證據支持的跨功能流程來源。Wik
 | Raw source 含敏感 pattern | 分析副本與 final payload 先遮罩 | 遮罩後仍有殘留即阻擋 commit | business-confirmed |
 | Codebase 缺少某項目的或品質證據 | 文件明列 `Codebase 未提供證據` | 不可自行補成政策或目標 | business-confirmed |
 | 分析尚未完成或缺少 BA／SA pair | readiness 阻擋 | 不得以 knowledge gap 當成完成 | business-confirmed |
-| System Design、一般 Wiki 或 canonical `docs/knowledge/` traceability 存在 | 保留本機，不成為 capability upload document | BA／SA 文件內的受控 locator 仍保留 | business-confirmed |
-| Delivery Outcome 含產品 hashes | 在 inventory 中明列為 delivery execution evidence | 不參與業務 discovery identity，避免自我參照 | business-confirmed |
+| System Design、一般 Wiki 或其他 traceability 存在 | 保留本機，不成為 capability upload document | BA／SA 文件內的受控 locator 仍保留 | business-confirmed |
 
 ## 適用流程
 

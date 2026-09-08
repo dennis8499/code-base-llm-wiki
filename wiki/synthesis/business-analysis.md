@@ -239,5 +239,5 @@ flowchart TD
 - Capability：`.agents/skills/codebase-wiki/capabilities.json`
 - Standards／workflows：`.agents/skills/codebase-wiki/references/analysis-document-standards.md` 與三份 document workflows
 - Templates／adapters：`.agents/skills/codebase-wiki/assets/*-analysis-template.md`、`.agents/skills/codebase-wiki/assets/system-design-template.md`、`.github/prompts/*-doc.prompt.md`
-- Tests：`tests/test_contracts.py`、`tests/test_wiki_lint.py`、`tests/test_export_notebooklm.py`、`tests/test_install_framework.py`
+- Tests：`tests/contracts/test_contracts.py`、`tests/wiki/test_wiki_lint.py`、`tests/notebooklm/test_export_notebooklm.py`、`tests/installer/test_install_framework.py`
 <!-- notebooklm:local-only:end -->

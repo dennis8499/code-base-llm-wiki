@@ -12,7 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:8140b9dc7c4777cd3ac63e222cd8ad46521f1e6a167e3a126f42af355bb3d3b9
+source_digest: sha256:eb497a7a34f452e2b1cea9adda4cad4942a01ad3f481d7278c3834f9b7f14d35
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
 last_updated: 2026-09-08
 tags: [synthesis, system-design, standards-aligned]
@@ -53,7 +53,7 @@ frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只�
 | 共用 standards 與 layer boundary | `SR-DOC-003`、`NFR-DOC-004` | 單一 `analysis-document-standards.md` + versioned profile IDs | must |
 | 不完整 evidence 不得被隱藏 | `SR-DOC-005`、`NFR-DOC-001` | coverage/Gap/diagram gate in every template | must |
 | 向後相容 | `SR-DOC-006`、`NFR-DOC-002` | optional schema fields + legacy SA preservation procedure | must |
-| NotebookLM 不變 | `IF-DOC-003`、`NFR-DOC-003` | role-based selection and local-only stripping reused; Wiki 與 canonical `docs/knowledge/` 不進 raw discovery identity | must |
+| NotebookLM 不變 | `IF-DOC-003`、`NFR-DOC-003` | role-based selection and local-only stripping reused; Wiki 不進 raw discovery identity | must |
 | 可驗證交付 | `SR-DOC-007`、`NFR-DOC-005` | contract/frontmatter/export/installer tests + standard Wiki checks | must |
 | 正式架構決策權責 | `gap-analysis-doc-formal-adr` | `DE-*` 標為 observed，未冒稱 accepted ADR | open risk |
 
@@ -311,5 +311,5 @@ flowchart LR
 
 - Shared profile/workflow：`.agents/skills/codebase-wiki/references/analysis-document-standards.md`、`.agents/skills/codebase-wiki/references/system-design-workflow.md`
 - Runtime components：`.agents/skills/codebase-wiki/scripts/install-framework.py`、`.agents/skills/codebase-wiki/scripts/validate-frontmatter.py`、`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py`
-- Contract evidence：`.agents/skills/codebase-wiki/scripts/parity-check.py`、`tests/test_contracts.py`、`tests/test_wiki_lint.py`、`tests/test_export_notebooklm.py`、`tests/test_install_framework.py`
+- Contract evidence：`.agents/skills/codebase-wiki/scripts/parity-check.py`、`tests/contracts/test_contracts.py`、`tests/wiki/test_wiki_lint.py`、`tests/notebooklm/test_export_notebooklm.py`、`tests/installer/test_install_framework.py`
 <!-- notebooklm:local-only:end -->

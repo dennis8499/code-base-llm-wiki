@@ -10,7 +10,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:de8efb52bb7c0706587d5a79dddec07f0a8170ab942c6b82046badacb3724754
+source_digest: sha256:865619021fd7f9c32d7edff355f551d03030c31ca5ae2717ac87af4e2a7b86b0
 derived_from: ["[[overview]]"]
 last_updated: 2026-09-08
 tags: [architecture, framework, data-flow, safety]
@@ -58,8 +58,7 @@ User intent
 Installer 的資料流是 source framework → dry-run classification → staged writes →
 transaction-journaled atomic replacement；Windows stage 繼承 target parent ACL，避免
 owner-only temporary DACL 使安裝檔無法由 Codex sandbox account 讀取；遇到兩側同時
-變更時不寫入。NotebookLM 先驗證
-Wiki 與 canonical `docs/knowledge/` regular trees，以明確 `--root` 讀取安全 inventory；
+變更時不寫入。NotebookLM 先驗證 Wiki regular tree，再以明確 `--root` 讀取安全 inventory；
 discovery ID 只綁定 raw snapshot 與 discovery 設定，文件更新只使 readiness ID 失效。Apply
 再次掃描 raw/Wiki，檢查雙 ID 與 output containment，最後原子替換本機 pack。
 

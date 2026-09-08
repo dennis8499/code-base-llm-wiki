@@ -14,14 +14,14 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .github/prompts/export-notebooklm.prompt.md
   - notebooklm.toml
-  - tests/test_notebooklm_acceptance.py
-source_digest: sha256:f3ae9c0076a1dbbabd77f4649d3ac5169e9053cc27be2b79625722e09a3763a3
+  - tests/notebooklm/test_notebooklm_acceptance.py
+source_digest: sha256:c66f70ffcb51137874078862c4f2da1feb2d07e9aa70fae9f710417cbdeb15ba
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4172"
   - ".agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:1"
   - ".github/prompts/export-notebooklm.prompt.md:1"
   - "notebooklm.toml:1"
-  - "tests/test_notebooklm_acceptance.py:1"
+  - "tests/notebooklm/test_notebooklm_acceptance.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-sa]]"]
 last_updated: 2026-09-08
 tags: [synthesis, business-analysis, codebase-as-is, notebooklm]
@@ -37,7 +37,7 @@ status: active
 
 ## 流程與規則
 
-1. `--preflight` 唯讀重掃完整安全 UTF-8 scope，不以既有 Wiki 或 canonical `docs/knowledge/` 作為 discovery 邊界。
+1. `--preflight` 唯讀重掃完整安全 UTF-8 scope，不以既有 Wiki 作為 discovery 邊界。
 2. Preview 顯示 `discovery_id`、功能清單、BA／SA 覆蓋、待分析、證據差異、排除／無法讀取、DLP 與容量。
 3. 使用者對具體 preview 確認一次；確認前不修改 Wiki 或建立 pack。
 4. 確認後重讀完整 snapshot、保留 user notes，更新 catalogs／ledger，並為每個 active capability 建立可追溯的 BA／SA 配對。
@@ -57,7 +57,7 @@ status: active
 - `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:1`
 - `.github/prompts/export-notebooklm.prompt.md:1`
 - `notebooklm.toml:1`
-- `tests/test_notebooklm_acceptance.py:1`
+- `tests/notebooklm/test_notebooklm_acceptance.py:1`
 
 ## 對應 SA
 

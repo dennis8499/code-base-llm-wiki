@@ -9,8 +9,8 @@ sources:
   - .agents/skills/codebase-wiki/references/hooks-specification.md
   - .codex/hooks.json
   - .github/hooks/
-  - tests/test_write_guard.py
-source_digest: sha256:8956d86714e1c77cde25a91afa4fba07911014979b2c1a69b0647c5e636d88ff
+  - tests/wiki/test_write_guard.py
+source_digest: sha256:0cbb1e22216f65d3c873fe98c4d23435f151315f5cad160bd52c92fe281111c0
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-04
 tags: [module, hooks, guard, codex, copilot]
@@ -44,7 +44,7 @@ root 啟動時才回退目前目錄。Windows wrapper 以 `Get-Location` 與 `Jo
 ## Evidence
 
 - `common.py` 正規化 Codex/Copilot payload 與 apply-patch paths。
-- `tests/test_write_guard.py` 覆蓋 Codex/Copilot payload shape、各 path key、malformed
+- `tests/wiki/test_write_guard.py` 覆蓋 Codex/Copilot payload shape、各 path key、malformed
   input、legacy guard mode、coexist audit context 與 fail-closed decisions。
 - 三個 canonical hook 都先處理 malformed/non-object input；PreToolUse 對無法解析
   的 write payload fail closed，PostToolUse 對無效 payload 安全 no-op。
@@ -56,7 +56,7 @@ root 啟動時才回退目前目錄。Windows wrapper 以 `Get-Location` 與 `Jo
   非 UTF-8 檔案安全跳過，維持 bounded context 而不讀取外部內容或拋出 traceback。
 - `wiki-write-guard.py` 對 coexist 只允許 repository-relative targets。
 - `.codex/hooks.json` 對三個事件使用共享腳本與明確 `--platform codex`，並涵蓋 compact 後續上下文。
-- `tests/test_write_guard.py` 直接呼叫設定中的三個 Codex commands，覆蓋 Git repo
+- `tests/wiki/test_write_guard.py` 直接呼叫設定中的三個 Codex commands，覆蓋 Git repo
   root、Git 子目錄與非 Git root，共九種 event/location 組合；每次都必須回傳有效
   JSON 且 exit 0。
 - Query、Lint 與 Archaeology 的 authorization 由共用 capability/workflow contract

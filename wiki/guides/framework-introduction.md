@@ -5,10 +5,10 @@ summary: 從安裝、Wiki-first 操作到驗證與升級的框架使用路線
 sources:
   - README.md
   - Codex.md
-  - docs/setup/README.md
-  - docs/workflows/README.md
-  - docs/validation/README.md
-source_digest: sha256:9447d81adbc410e642c273e1abf72215531a80ae2069b620eca41191170f815c
+  - docs/operations/setup/README.md
+  - docs/product/workflows/README.md
+  - docs/operations/validation/README.md
+source_digest: sha256:90ce605d236a790c4bd3979a35d022003e132e2013d723e77086c248e99959b6
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-09-07
 tags: [guide, onboarding, framework, copilot, codex]
@@ -75,7 +75,7 @@ Wiki。只有沒有 `conflicts` 時才 apply，且不會自動刪除 legacy
 `update-manifest.json`。未來
 Extension 可比較本地版本與 manifest 版本，驗證 checksum 後呼叫 `upgrade`；
 目前 Extension updater 尚未包含在框架內。完整 tag、發佈與 manifest 契約請看
-`docs/releases/README.md`。
+`docs/operations/releases/README.md`。
 
 ## 3. 第一次 Ingest
 
@@ -117,7 +117,7 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | System Design / SD | concerns/viewpoints、決策、元件、runtime、資料、介面、部署、安全與品質策略 | synthesis + index + log |
 | NotebookLM export | 全量盤點當下 Codebase 並重建每功能現況 BA／SA | `.notebooklm/` documents、upload sources、schema v6、governance；不自動上傳 |
 
-完整提示詞與輸出契約位於 `docs/workflows/README.md`。
+完整提示詞與輸出契約位於 `docs/product/workflows/README.md`。
 
 ## NotebookLM Enterprise export
 
@@ -217,10 +217,10 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 ## 進一步閱讀
 
 - 文件總覽：`docs/README.md`
-- 架構與資料流：`docs/architecture/README.md`
-- 安裝、升級與排錯：`docs/setup/README.md`
-- 12 個操作情境：`docs/workflows/README.md`
-- 本機 deterministic checks 與手動驗收：`docs/validation/README.md`
+- 架構與資料流：`docs/product/architecture/README.md`
+- 安裝、升級與排錯：`docs/operations/setup/README.md`
+- 11 個操作情境：`docs/product/workflows/README.md`
+- 本機 deterministic checks 與手動驗收：`docs/operations/validation/README.md`
 - Codex 獨立手冊：`Codex.md`
 
 ## 相關頁面

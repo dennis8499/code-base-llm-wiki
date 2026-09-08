@@ -92,5 +92,5 @@ capability upload sources；NotebookLM export 另用 `codebase-system-analysis-v
 
 - Workflow：`.agents/skills/codebase-wiki/references/system-analysis-workflow.md`
 - Template：`.agents/skills/codebase-wiki/assets/system-analysis-template.md`
-- Contract tests：`tests/test_contracts.py`、`tests/test_wiki_lint.py`
+- Contract tests：`tests/contracts/test_contracts.py`、`tests/wiki/test_wiki_lint.py`
 <!-- notebooklm:local-only:end -->

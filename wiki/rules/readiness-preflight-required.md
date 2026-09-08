@@ -10,7 +10,7 @@ notebooklm_role: business
 notebooklm_terms: [discovery ID, readiness preflight, preflight ID, 一次確認, ready to export]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:35a31655241118279815e3d73fa1c86b9831de192a6975b7271248010b67b526
+source_digest: sha256:5330275f0c3241738d8c8af24b1f9b2d242b13ff8a5aee84a80a5ebb3f41e0a2
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
 last_updated: 2026-09-08
 tags: [business-rule, notebooklm, readiness]
@@ -45,7 +45,7 @@ source locators、exact pack plan、DLP、容量、migration 與 gaps，再以�
 
 ## 資料與詞彙
 
-- `discovery_id`：只綁定當下安全 raw inventory、discovery 設定與排除，不因 Wiki 或 canonical `docs/knowledge/` 文件化而改變。
+- `discovery_id`：只綁定當下安全 raw inventory、discovery 設定與排除，不因 Wiki 文件化而改變。
 - `readiness preflight`：文件完成後的配對、結構、安全、容量與 final plan 驗證。
 - `preflight_id`：綁定 confirmed discovery、最新 Wiki 與 exact upload-source plan 的一次性識別。
 

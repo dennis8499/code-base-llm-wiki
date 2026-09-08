@@ -10,8 +10,8 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
-  - tests/test_export_notebooklm.py
-source_digest: sha256:01a23fed5f08e4abfdafb738a8d399e9eb563200f54521d19e863a5056a34421
+  - tests/notebooklm/test_export_notebooklm.py
+source_digest: sha256:98f171ed1a56afc18cfa0c3bdd0c877074a57b2d3b772ad2159ce24b80340fb1
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
 last_updated: 2026-09-08
 tags: [module, notebooklm, exporter, ba-first, traceability]
@@ -65,7 +65,7 @@ Preflight 的 `business_coverage` 驗證：
 ## Discovery/readiness identity 與一次確認
 
 Discovery 與 readiness 使用同一個唯讀命令，但有不同身分。`discovery_id` 綁定 safe raw
-inventory、設定、排除與語意契約，不含 Wiki 或 canonical `docs/knowledge/` bytes；
+inventory、設定、排除與語意契約，不含 Wiki bytes；
 `preflight_id` 另綁 Wiki、coverage、DLP 與 exact pack plan。使用者確認 discovery preview
 一次後，Wiki 重建、knowledge promotion 與 readiness/apply 自動完成；raw/config/scope
 drift 才需要新 preview。
@@ -100,12 +100,9 @@ dispositions、source policy、input/output hashes、limits、DLP phases 與 upl
 ## 安全、容量與原子性
 
 - Top-down walker 在進入排除樹前剪枝，只回報 bounded metadata summary，不讀取其內容。
-- Canonical `docs/knowledge/` 以 `canonical_knowledge_layer` 明確排除，promotion 前後不會
-  改變 raw discovery identity。
-- Requirements／plans 仍屬文件 evidence；implementation `outcome.json`／`outcome.md`
-  與後續連續的 `outcome-<revision>.json`／`.md` 是含產品 hashes 的 delivery
-  attestations，會以 `delivery_execution_evidence` 明確列入排除清單，避免 readiness
-  自我參照。
+- Wiki 是唯一持久知識層，明確排除且不進 raw discovery 或 upload source。
+- Product requirements、歷史變更摘要與其他專案文件都是正常 documentation evidence；
+  不再依賴已移除的工作紀錄或 delivery outcome 特殊路徑。
 - 只解析 UTF-8 text；非 UTF-8 或 malformed config/manifest/journal 回傳受控錯誤。
 - 本機 `notebooklm-enterprise-ba-sa-mask-v1` 在 analysis copy、documents 與 sources
   檢查高信心金融、GCP credential/API key 與明文 password patterns；先遮罩，final residual
@@ -117,12 +114,12 @@ dispositions、source policy、input/output hashes、limits、DLP phases 與 upl
 
 ## 驗證證據
 
-- `tests/test_export_notebooklm.py` 與新 acceptance/contract runner 覆蓋 schema v6、discovery、
+- `tests/notebooklm/test_export_notebooklm.py` 與 acceptance/contract runner 覆蓋 schema v6、discovery、
   BA／SA pairing/mapping、完整 disposition、legacy migration、DLP、容量、path safety、
   process-kill recovery、並行 writer 與 500-page compaction。
-- `tests/test_contracts.py::test_framework_notebooklm_preflight_is_ready` 固定本框架 Wiki 本身
+- `tests/contracts/test_contracts.py::test_framework_notebooklm_preflight_is_ready` 固定本框架 Wiki 本身
   必須通過 BA readiness gate。
-- 固定答案品質驗收見 `docs/validation/notebooklm-ba-uat.md`；這是手動 tenant UAT，不由
+- 固定答案品質驗收見 `docs/operations/validation/notebooklm-ba-uat.md`；這是手動 tenant UAT，不由
   exporter 假裝驗證生成式回答。
 
 ## 相關頁面

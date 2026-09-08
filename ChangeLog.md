@@ -26,6 +26,12 @@
 
 ### Changed
 
+- **Codebase LLM Wiki-only 目錄分層**：文件依 product／operations／history 分類，測試依
+  contracts、installer、NotebookLM、release、samples 與 Wiki 責任分組；所有公開路徑、
+  Wiki sources 與驗證入口同步更新。
+- **NotebookLM discovery 邊界收斂**：Wiki 是唯一持久知識層；一般產品文件照常納入安全
+  discovery，不再依賴 `docs/knowledge`、`docs/work` 或 delivery outcome 的 AI SDLC 特殊排除。
+
 - **NotebookLM Exporter schema v6**：每次以當下安全 Codebase 重新 discovery，包含
   README、規格、測試與註解，衝突時以程式碼為主；使用者確認一次後自動完成 BA／SA
   文件化、readiness 與原子本機交付。`discovery_id` 與 `preflight_id` 分離，單一 Notebook
@@ -62,6 +68,9 @@
   workflow、舊 retrieval contract full-rebuild migration，以及固定 BA 驗收題組。
 
 ### Removed
+
+- **AI SDLC 工作流本體**：移除 repo-local AI SDLC skills、canonical knowledge/work records、
+  formal requirements records 與指定 benchmark scratch；保留兩份 Codebase LLM Wiki 產品變更摘要。
 
 - **Durable Guide 與 Explicit Delegation active capabilities**：capability contract 升至
   v5，收斂為 11 operations／11 intent groups；移除 Guide workflow/template/prompts、

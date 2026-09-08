@@ -10,9 +10,9 @@ sources:
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
-  - tests/test_contracts.py
-  - tests/test_wiki_lint.py
-source_digest: sha256:72e6381a8baba26e52e551b6145bb845aae614ca9bc98143ccbad499f89f4335
+  - tests/contracts/test_contracts.py
+  - tests/wiki/test_wiki_lint.py
+source_digest: sha256:ec550a5a00aaaef943e4926a0fbaa9b3c7a1520202acfeac117e188b694d2d0c
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
 last_updated: 2026-09-07
 tags: [synthesis, system-analysis, standards-aligned]
@@ -397,7 +397,7 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 | 安全性 | raw read-only、guard、secret exclusion、local Basic DLP、two-phase export | host/sandbox 與租戶 Advanced DLP 政策在框架外 |
 | 可恢復性 | installer/exporter stage + rollback；active/committed journal、同一 target/output 的 transaction lock 與子程序終止 regression 覆蓋未完成 replacement recovery | 突然斷電、metadata durability 與所有 host-specific termination windows 尚未完整驗證 |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |
-| 效能 | 無常駐服務與第三方 runtime；`query-index` 為 bounded Markdown router；`tests/test_wiki_scale.py` 覆蓋 200-page lint；`tests/test_export_notebooklm.py` 覆蓋 500 個 synthetic module 的 full preflight/apply | 尚無真實 NotebookLM retrieval benchmark |
+| 效能 | 無常駐服務與第三方 runtime；`query-index` 為 bounded Markdown router；`tests/wiki/test_wiki_scale.py` 覆蓋 200-page lint；`tests/notebooklm/test_export_notebooklm.py` 覆蓋 500 個 synthetic module 的 full preflight/apply | 尚無真實 NotebookLM retrieval benchmark |
 
 ## 錯誤與失敗模式
 
@@ -416,7 +416,7 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 | LICENSE 未決 | 無法公開 release | 專案擁有者選擇授權後再 tag |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
-| NotebookLM retrieval drift | query-index、project-map 與 source roles 可對齊 BA／SA capability 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以 `docs/validation/notebooklm-ba-uat.md` 固定題組手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
+| NotebookLM retrieval drift | query-index、project-map 與 source roles 可對齊 BA／SA capability 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以 `docs/operations/validation/notebooklm-ba-uat.md` 固定題組手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
 
 ## Evidence
 
@@ -436,14 +436,14 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 ## 待確認事項
 
 - [ ] 專案擁有者選定 LICENSE，解除公開 release gate。
-- [ ] 在 NotebookLM Enterprise 以 `docs/validation/notebooklm-ba-uat.md` 固定題組驗證答案、引用與 gap 行為。
+- [ ] 在 NotebookLM Enterprise 以 `docs/operations/validation/notebooklm-ba-uat.md` 固定題組驗證答案、引用與 gap 行為。
 - [ ] 在實際 Copilot host 驗證 prompts、permission 與 coexist audit context 呈現。
 
 ## 來源附錄
 
 - Wiki：[[overview]]、[[system-architecture]]、[[project-function-catalog]]
 - Source：`README.md`、`.agents/skills/codebase-wiki/capabilities.json`、
-  `tests/test_export_notebooklm.py`、`tests/test_wiki_scale.py`
+  `tests/notebooklm/test_export_notebooklm.py`、`tests/wiki/test_wiki_scale.py`
 
 <!-- codebase-wiki:user-notes:end -->
 
@@ -452,6 +452,6 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 
 - Normative workflow：`.agents/skills/codebase-wiki/references/system-analysis-workflow.md`
 - Profile：`.agents/skills/codebase-wiki/references/analysis-document-standards.md`
-- Contract/validator evidence：`tests/test_contracts.py`、`tests/test_wiki_lint.py`
+- Contract/validator evidence：`tests/contracts/test_contracts.py`、`tests/wiki/test_wiki_lint.py`
 - Downstream design：[[system-design]]
 <!-- notebooklm:local-only:end -->

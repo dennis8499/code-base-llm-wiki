@@ -42,5 +42,5 @@ append-only log coupling 全部完成後，才回報 durable task 完成。
 
 目前 Copilot 驗收標籤為 `static-compatible / runtime-unverified`：parity 驗證
 metadata、最小 tools、authorization 與 completion coupling，但不冒稱 host runtime
-已執行。框架 Repo 不使用 GitHub Actions；維護時依 `docs/validation/README.md`
+已執行。框架 Repo 不使用 GitHub Actions；維護時依 `docs/operations/validation/README.md`
 執行本機 checks。

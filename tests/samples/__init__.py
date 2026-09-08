@@ -1,0 +1,1 @@
+"""Sample-project contract tests."""

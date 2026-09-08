@@ -7,10 +7,10 @@ notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/parity-check.py
-  - tests/test_contracts.py
+  - tests/contracts/test_contracts.py
   - tools/release.py
-  - docs/releases/README.md
-source_digest: sha256:620a65eabb8f30c4bb6d46602155a4843f83814fb255f995f04c2ab9363769d7
+  - docs/operations/releases/README.md
+source_digest: sha256:734296b37cabd2a1ebddde53a52dffe9261a2477e4b8f67f12b03a5a311e8f6a
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-07
 tags: [module, adapters, validation, release, parity]
@@ -46,7 +46,7 @@ status: active
 - Copilot prompts（含新增 BA／SD 與保留 SA 入口）是連結 authoritative workflow 的薄
   adapter，不複製完整規則；
   Interactive/Batch authorization 與 Query/Lint/Archaeology completion coupling
-  都由 `tests/test_contracts.py` 固定。
+  都由 `tests/contracts/test_contracts.py` 固定。
 - Codex v4 的 18 個歷史 Task Tracker fixture runs 保存 JSONL tool events、前後 hashes、
   Git 狀態、情境 assertions 與 deterministic outputs；受修復影響的情境皆捨棄首輪
   結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。

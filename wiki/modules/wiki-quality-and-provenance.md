@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - .agents/skills/codebase-wiki/scripts/check-stale.py
   - .agents/skills/codebase-wiki/scripts/validate-log.py
-  - tests/test_stale.py
-  - tests/test_wiki_lint.py
-source_digest: sha256:71ca68167641e3d6fcc70a330f8348246610caf0254681b44a6e416da419fb56
+  - tests/wiki/test_stale.py
+  - tests/wiki/test_wiki_lint.py
+source_digest: sha256:99b909d8437b1be6ad826d02c1911fd42b2bc5023935251d8ee3be500763bf2e
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-04
 tags: [module, lint, provenance, frontmatter, freshness]
@@ -77,12 +77,12 @@ completeness 是兩個獨立判定。持久化 archaeology page 還必須由相�
   在讀取 Wiki pages 前拒絕 symlink/reparse tree，避免 health tools 跟隨外部頁面。
 - `lint-wiki.py` CLI 也在 `resolve()` 前驗證 caller-provided Wiki root，避免 CLI
   canonicalization 繞過同一 regular-tree boundary。
-- `tests/test_stale.py` 與 `tests/test_wiki_lint.py` 也驗證 quality CLI 的成功、warning、
+- `tests/wiki/test_stale.py` 與 `tests/wiki/test_wiki_lint.py` 也驗證 quality CLI 的成功、warning、
   invalid input 與 unsafe-tree exit contracts，避免只測 library path 而漏掉使用者入口。
-- `tests/test_stale.py` 明確建立 Repo 外 escape target；另固定 Repo 內 symlink 的 resolved
+- `tests/wiki/test_stale.py` 明確建立 Repo 外 escape target；另固定 Repo 內 symlink 的 resolved
   digest 必須隨 target 內容變化。無建立 symlink 權限的平台會 skip fixture，而 Linux
   clean-run 必須執行該契約。
-- `tests/test_wiki_lint.py` 固定 overview 缺 index 時回報 `index_missing`，同時不把
+- `tests/wiki/test_wiki_lint.py` 固定 overview 缺 index 時回報 `index_missing`，同時不把
   overview 誤報為 orphan。
 
 ## Contradictions

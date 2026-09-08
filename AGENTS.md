@@ -19,7 +19,7 @@ knowledge over time.
 | ----------- | ------------------------------------------------------- | ---------------------------------------------------------------- |
 | Raw Sources | Source code, config, existing docs                      | Read-only during wiki tasks                                      |
 | Wiki        | `wiki/`                                                 | Codex-generated and maintained knowledge base                    |
-| Schema      | `AGENTS.md`, `.agents/skills/codebase-wiki/`, `.codex/` | Rules, workflows, templates, scripts, hooks, and optional agents |
+| Schema      | `AGENTS.md`, `.agents/skills/codebase-wiki/`, `.codex/` | Rules, workflows, templates, scripts, and hooks |
 
 ## Routing
 

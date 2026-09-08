@@ -886,29 +886,6 @@ def _is_transaction_artifact(relative: str) -> bool:
     return False
 
 
-def _is_delivery_execution_evidence(relative: str) -> bool:
-    """Keep delivery receipts visible as exclusions without treating them as domain input.
-
-    An implementation Outcome contains hashes of the files it attests. Including
-    those bytes in the discovery identity would create a self-referential cycle:
-    refreshing the coverage ledger changes the Outcome, which changes discovery
-    again. Requirements and plans remain normal documentation inputs; only the
-    final execution attestations are classified as generated delivery evidence.
-    """
-
-    parts = PurePosixPath(relative.lower()).parts
-    return (
-        len(parts) == 5
-        and parts[0:2] == ("docs", "work")
-        and parts[3] == "implementation"
-        and re.fullmatch(
-            r"outcome(?:-(?:[2-9]|[1-9][0-9]+))?\.(?:json|md)",
-            parts[4],
-        )
-        is not None
-    )
-
-
 def _is_business_source_path(relative: str, settings: Settings) -> bool:
     return _has_prefix(relative, settings.business_source_paths)
 
@@ -928,8 +905,6 @@ def _exclusion_reason_for_relative(
     output = settings.output_directory.lower()
     if _is_transaction_artifact(relative):
         return "binary_or_generated"
-    if _is_delivery_execution_evidence(relative):
-        return "delivery_execution_evidence"
     if path.name.lower().endswith(
         (OUTPUT_TRANSACTION_SUFFIX, OUTPUT_TRANSACTION_LOCK_SUFFIX)
     ):
@@ -938,8 +913,6 @@ def _exclusion_reason_for_relative(
         return "export_output"
     if lower == "wiki" or lower.startswith("wiki/"):
         return "wiki_knowledge_layer"
-    if lower == "docs/knowledge" or lower.startswith("docs/knowledge/"):
-        return "canonical_knowledge_layer"
     if parts & DEFAULT_GENERATED_PARTS or parts & DEFAULT_DEPENDENCY_PARTS:
         return "binary_or_generated"
     if (
@@ -4290,15 +4263,11 @@ def _settings_fingerprint(settings: Settings, root: Path) -> dict[str, Any]:
 def _discovery_identity(
     root: Path, settings: Settings, scan: dict[str, Any]
 ) -> tuple[str, str]:
-    """Bind confirmation to raw safe sources, excluding managed knowledge bytes."""
+    """Bind confirmation to the raw safe source inventory."""
 
     def is_export_artifact(item: dict[str, Any]) -> bool:
         path = str(item.get("path", ""))
-        return item.get("reason") in {
-            "export_output",
-            "delivery_execution_evidence",
-            "canonical_knowledge_layer",
-        } or _is_transaction_artifact(path)
+        return item.get("reason") == "export_output" or _is_transaction_artifact(path)
 
     material = {
         "schema_version": DISCOVERY_SCHEMA_VERSION,
@@ -4319,9 +4288,7 @@ def _discovery_identity(
             for item in scan["excluded"]
             if not is_export_artifact(item)
         ],
-        # Directory counts and byte totals intentionally stay out of the ID:
-        # Wiki is a pruned root and its managed rebuild must not invalidate a
-        # confirmation of the raw source scope.
+        # Directory counts and byte totals intentionally stay out of the ID.
         "excluded_roots": [
             {"path": item["path"], "reason": item["reason"]}
             for item in scan["excluded_roots"]

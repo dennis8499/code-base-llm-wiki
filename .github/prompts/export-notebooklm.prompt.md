@@ -10,8 +10,8 @@ argument-hint: "可選：匯出範圍；預設為整個目前專案"
 ## 任務
 
 準備目前專案給 NotebookLM Enterprise 使用。預設範圍是 `--root` 指定的整個專案目錄及其
-全部子目錄。既有 Wiki 是知識基線，`docs/knowledge/` 是 canonical knowledge layer，
-兩者均不得作為 raw discovery 邊界；每次都必須重新建立完整安全範圍清單，並全量重建
+全部子目錄。既有 Wiki 是知識基線，但不作為 raw discovery 邊界；每次都必須重新建立
+完整安全範圍清單，並全量重建
 managed BA／SA sections、保留 user notes。當下
 Codebase 是唯一內容依據，包含 README、規格、測試與註解；衝突時以程式碼為主，沒有
 證據時寫 `Codebase 未提供證據`。掃描以檔案系統

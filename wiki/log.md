@@ -582,3 +582,9 @@ status: active
 - 更新 project-knowledge portability 的固定 functional oracle，讓 deterministic benchmark 反映 `docs/knowledge/index.md` 的相對連結契約。
 - 同步 `codebase-functional-coverage` 的 analyzed discovery ID；raw sources、Wiki 與 canonical knowledge layer 的邊界保持不變。
 - 受影響頁面：[[codebase-functional-coverage]]、[[notebooklm-exporter]]、[[log]]；未新增、刪除或更名 Wiki 頁面，索引不需更新。
+
+## [2026-09-08] update | Codebase LLM Wiki-only 目錄重整
+
+- 移除 AI SDLC skills、專用 records 與 benchmark 產物，只保留 Codebase LLM Wiki 的共用 Skill、installer surface v6 與既有 Wiki。
+- 重新整理產品文件與測試責任目錄，更新 Markdown links、測試 import、NotebookLM acceptance runner 與 exporter discovery 邊界；`wiki/` 維持唯一持久知識層。
+- 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[notebooklm-exporter]]、[[notebooklm-ba-knowledge-export]]、[[notebooklm-ba-functional-export]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[wiki-quality-and-provenance]]、[[codebase-functional-coverage]]、[[log]]；未新增、刪除或更名 Wiki 頁面，索引不需更新。

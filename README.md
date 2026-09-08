@@ -35,16 +35,24 @@ code-base-llm-wiki/
 ├── .agents/skills/codebase-wiki/  # Copilot/Codex 共用 Skill、規格、模板與腳本
 ├── .codex/                        # Codex hooks 與設定
 ├── .github/                       # Copilot VS Code prompts、hooks 與 instructions
-├── docs/                          # 文件總覽、架構、工作流、驗證、發布與歷史
+├── docs/                          # 產品文件、操作文件與歷史材料
 │   ├── README.md                  # 文件入口與建議閱讀順序
-│   ├── architecture/              # 元件、資料流與安全邊界
-│   ├── setup/                     # 安裝、升級與平台設定
-│   ├── workflows/                 # 使用者意圖與工作流契約
-│   ├── validation/                # 本機 deterministic checks 與 E2E 驗收
-│   ├── releases/                  # 版本、發布資產與更新契約
-│   └── history/                   # 上游概念 attribution 與歷史材料
+│   ├── product/                   # 架構與使用者工作流
+│   │   ├── architecture/          # 元件、資料流與安全邊界
+│   │   └── workflows/             # 使用者意圖與工作流契約
+│   ├── operations/                # 安裝、驗證與發布
+│   │   ├── setup/                 # 安裝、升級與平台設定
+│   │   ├── validation/            # deterministic checks 與 E2E 驗收
+│   │   └── releases/              # 版本、發布資產與更新契約
+│   └── history/                   # 上游 attribution 與產品變更摘要
 ├── samples/task-tracker/          # 可操作的無第三方依賴 E2E 樣例
-├── tests/                         # Installer、contract、guard 與 Repo 格式測試
+├── tests/                         # 依責任分組的 contract、installer、Wiki 與產品測試
+│   ├── contracts/                 # 公開 contract 與 repository shape
+│   ├── installer/                 # Copilot／Codex installer surface
+│   ├── notebooklm/                # NotebookLM exporter 與 acceptance
+│   ├── release/                   # Release builder
+│   ├── samples/                   # E2E sample contract
+│   └── wiki/                      # Wiki quality、hooks 與 provenance
 ├── tools/release.py               # Release asset 與更新 manifest builder
 ├── wiki/                          # 持久 Markdown 知識庫與活動紀錄
 ├── .notebooklm/                   # 本地產生的 NotebookLM source pack（預設忽略）
@@ -56,7 +64,7 @@ code-base-llm-wiki/
 ```
 
 文件總覽請先參閱 [docs/README.md](docs/README.md)；詳細元件關係與資料流請參閱
-[架構文件](docs/architecture/README.md)。
+[架構文件](docs/product/architecture/README.md)。
 
 ---
 
@@ -116,7 +124,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 | System Design / SD | 依 42010／25010 profile 產生 concerns、views、決策與品質策略 | 是 |
 | NotebookLM export | 以當下完整 Codebase 建立每功能現況 BA／SA，供單一 Notebook 問答 | 一次預覽確認後更新 `wiki/` 與 `.notebooklm/` |
 
-完整的提示詞與驗收條件請參閱 [工作流手冊](docs/workflows/README.md)。
+完整的提示詞與驗收條件請參閱 [工作流手冊](docs/product/workflows/README.md)。
 
 ---
 
@@ -170,7 +178,7 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py install --targe
 
 安裝器會把 user-only 變更列為 `preserved`，只在同一受管內容同時有 upstream 與
 local 變更時回報 `conflicts`。Root instructions 只更新 managed marker block。
-完整安裝、升級與排錯說明請看 [安裝手冊](docs/setup/README.md)。
+完整安裝、升級與排錯說明請看 [安裝手冊](docs/operations/setup/README.md)。
 
 Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的其他 Skills
 不會外帶。`upgrade` 只同步 framework surface，既有 `wiki/` 保持不變。
@@ -197,7 +205,7 @@ installer contract 版本。
 `--surface codex` 執行既有 installer。未來 Extension 可讀取 update manifest、
 比較本地版本、驗證 SHA-256，再呼叫 `upgrade`；本 Repo 目前不包含 updater。
 
-完整發佈流程請參閱 [版本、發佈與更新契約](docs/releases/README.md)。
+完整發佈流程請參閱 [版本、發佈與更新契約](docs/operations/releases/README.md)。
 
 ---
 
@@ -256,11 +264,11 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 | 文件 | 說明 |
 | --- | --- |
 | [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
-| [架構與資料流](docs/architecture/README.md) | 三層模型、雙入口、Hooks、Installer 與安全邊界 |
-| [安裝與升級](docs/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/workflows/README.md) | 十一類意圖、12 個操作情境、平台對照與輸出契約 |
-| [驗證手冊](docs/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
-| [版本、發佈與更新契約](docs/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
+| [架構與資料流](docs/product/architecture/README.md) | 三層模型、雙入口、Hooks、Installer 與安全邊界 |
+| [安裝與升級](docs/operations/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
+| [工作流手冊](docs/product/workflows/README.md) | 十一類意圖、11 個操作情境、平台對照與輸出契約 |
+| [驗證手冊](docs/operations/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
+| [版本、發佈與更新契約](docs/operations/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
 | [ChangeLog.md](ChangeLog.md) | 框架重要變更 |
 | [歷史方法論](docs/history/llm-wiki.md) | 上游概念的 attribution、原創摘要與權威來源連結 |

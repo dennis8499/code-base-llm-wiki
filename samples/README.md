@@ -125,4 +125,4 @@ python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
 
 每次保存 command、stdout、stderr、exit code 與 assertion 結果。任一次失敗就不判定
 該情境通過；修正後重跑完整 3/3。Raw `src/` 與 `config/` before/after hashes
-必須完全相同。完整框架 gates 見[本機驗證手冊](../docs/validation/README.md)。
+必須完全相同。完整框架 gates 見[本機驗證手冊](../docs/operations/validation/README.md)。

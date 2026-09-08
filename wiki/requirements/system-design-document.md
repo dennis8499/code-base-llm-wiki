@@ -91,5 +91,5 @@ upload payload。
 
 - Workflow：`.agents/skills/codebase-wiki/references/system-design-workflow.md`
 - Template：`.agents/skills/codebase-wiki/assets/system-design-template.md`
-- Contract tests：`tests/test_contracts.py`、`tests/test_install_framework.py`
+- Contract tests：`tests/contracts/test_contracts.py`、`tests/installer/test_install_framework.py`
 <!-- notebooklm:local-only:end -->

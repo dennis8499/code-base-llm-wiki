@@ -93,5 +93,5 @@ synthesis、index 更新與 append-only log。這類 standalone BA 使用
 
 - Workflow：`.agents/skills/codebase-wiki/references/business-analysis-workflow.md`
 - Template：`.agents/skills/codebase-wiki/assets/business-analysis-template.md`
-- Contract tests：`tests/test_contracts.py`、`tests/test_export_notebooklm.py`
+- Contract tests：`tests/contracts/test_contracts.py`、`tests/notebooklm/test_export_notebooklm.py`
 <!-- notebooklm:local-only:end -->

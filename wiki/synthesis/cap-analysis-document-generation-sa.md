@@ -14,14 +14,14 @@ sources:
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
-  - tests/test_contracts.py
-source_digest: sha256:9b325e1c99f26645ae91b9401109e809273f8c951a965e3edb888f59f4c38f29
+  - tests/contracts/test_contracts.py
+source_digest: sha256:3f3a56840104e33705fafd0f002a0724ed1b3514dbf4bec933dfa3f234c39177
 source_locators:
   - ".agents/skills/codebase-wiki/references/business-analysis-workflow.md:12"
   - ".agents/skills/codebase-wiki/references/system-analysis-workflow.md:13"
   - ".agents/skills/codebase-wiki/references/system-design-workflow.md:14"
   - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215"
-  - "tests/test_contracts.py:1"
+  - "tests/contracts/test_contracts.py:1"
 derived_from: ["[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[cap-analysis-document-generation-ba]]"]
 last_updated: 2026-09-07
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
@@ -51,7 +51,7 @@ Codebase 未提供背景服務、資料庫、網路 API 或自動文件生成 ru
 - `.agents/skills/codebase-wiki/references/system-analysis-workflow.md:13`
 - `.agents/skills/codebase-wiki/references/system-design-workflow.md:14`
 - `.agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215`
-- `tests/test_contracts.py:1`
+- `tests/contracts/test_contracts.py:1`
 
 ## 對應 BA
 

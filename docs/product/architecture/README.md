@@ -1,0 +1,125 @@
+# Codebase LLM Wiki 架構
+
+本文件說明 Codebase LLM Wiki 的三層模型、Copilot/Codex 雙入口、執行責任、Hooks、Installer 與資料流。文件總覽請先閱讀 [docs/README](../../README.md)；日常使用與快速開始請從根目錄 [README](../../../README.md) 開始。
+
+## 三層模型
+
+| 層 | 內容 | 寫入規則 |
+| --- | --- | --- |
+| Raw Sources | 目標專案的原始碼、設定、既有文件與 Git history | Wiki 任務只能讀取 |
+| Wiki | `wiki/` 下的 Markdown 頁面、索引與活動紀錄 | 依工作流建立或更新 |
+| Schema | `AGENTS.md`、`.agents/`、`.github/`、`.codex/` | 只有框架安裝或維護才變更 |
+
+```mermaid
+flowchart TB
+    User[使用者意圖] --> Entry{平台入口}
+    Entry -->|Copilot| GH[.github instructions / prompts / hooks]
+    Entry -->|Codex| CX[AGENTS.md / Codex.md / .codex hooks]
+    GH --> Skill[.agents/skills/codebase-wiki]
+    CX --> Skill
+    Skill --> Index[wiki/index.md]
+    Index --> Pages[1-5 個相關 Wiki 頁面]
+    Pages --> Enough{證據足夠且未過時?}
+    Enough -->|是| Result[回答或產出]
+    Enough -->|否| Sources[唯讀檢查 raw sources]
+    Sources --> Result
+    Result -->|持久化工作流| Wiki[更新頁面 / index / append-only log]
+    BA[BA: objectives / cap / fr / bp / br / AC] --> SA[SA: SR / NFR / IF]
+    SA --> SD[SD: DE / VIEW / ADR]
+    Wiki --> BA
+    Wiki --> SA
+    Wiki --> SD
+    Project[Full safe project scan] -->|NotebookLM export| Docs[Per-capability current-state BA + SA]
+    Docs --> Wiki
+    Docs --> Pack[.notebooklm single-notebook source pack]
+```
+
+## 雙入口與共用契約
+
+`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 6、使用者意圖群組、machine operations、guard modes 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
+
+- intent routing、frontmatter、log operations 與工作流 references；NotebookLM export 另有離線 source-pack reference；
+- Wiki page templates；
+- installer、parity、frontmatter、stale-source、唯讀 lint 與統計 scripts；
+- Raw Sources 唯讀、Wiki-first、append-only log 與 evidence-backed 的核心規則。
+
+平台 adapter 不需要逐 byte 相同；`parity-check.py` 驗證兩邊仍公開相同能力且沒有指向已移除的舊路徑。
+Copilot 的 `.github/prompts/` 是 VS Code 本機 adapter；其他 Copilot hosts 直接
+使用共用 Skill。v6 的 Copilot 與 Codex 都完成本機 contract 與 deterministic
+驗證；host runtime UAT 尚未重跑。2026-09-03 的 v4 Codex 實機矩陣只作歷史基線。
+
+## 執行責任
+
+目前 Agent 依 `SKILL.md` 路由到單一 authoritative workflow，再按該 workflow 的
+authorization policy 執行。Copilot prompt files 與 Codex recipes 都是薄入口，不另設
+Repo-local Wiki agent profiles，也不改變寫入權限。
+
+## Wiki 資料模型
+
+每頁必須有 `title`、`type`、`sources`、`last_updated`、`tags` 與 `status`。
+Raw evidence 使用 `sources`，Wiki 衍生關係使用 `derived_from`，新增或重大更新的
+evidence page 以 `source_digest` 保存內容摘要。頁面之間使用 Obsidian-compatible
+`[[wikilink]]`。
+
+新 BA／SA／SD synthesis 另有 `standards_profile` 與
+`coverage_status: covered|partial|gap`；欄位在 validator 中保持選填，以相容未重跑的
+legacy SA。三層使用穩定 ID 形成 `cap/fr/bp/br/AC → SR/NFR/IF → DE/VIEW/ADR`
+追溯。一般 standalone BA／SA／SD 維持各自用途；NotebookLM export 另以專用 current-state
+profiles 為每個 capability 產生 BA／SA pair，只有規整後的 pair sources 會列為上傳候選。
+
+`wiki/index.md` 是導覽入口，`wiki/log.md` 是 append-only 時序紀錄。新增、刪除、改名或重大更新頁面時必須同步 index；Ingest、Lint、ADR、Synthesis、BA／SA／SD 與重大框架更新必須追加 log。既有 `type: guide` 與歷史 `guide` log 保持可讀，但不再提供建立流程。
+
+## Hooks 與安全邊界
+
+兩個平台各自配置相同目的的三個 hook，但共用
+`.agents/skills/codebase-wiki/scripts/hooks/` 的 canonical implementation：
+
+| Hook | 時機 | 作用 |
+| --- | --- | --- |
+| `wiki-session-init` | Session start | 產生 Wiki 狀態與近期活動的 audit 摘要 |
+| `wiki-write-guard` | Edit tool 前 | 依 guard mode 拒絕超出範圍的寫入 |
+| `wiki-log-reminder` | Edit tool 後 | 記錄可能需要追加 log 的 Wiki 變更 |
+
+`wiki-only` 只允許 `wiki/`；`coexist` 允許 Repo 內的一般 coding edit 並回報
+audit context；`framework` 允許本 Repo 的 Wiki、schema、adapters、文件、樣例、
+測試與 tools。舊 `target` 映射到 `wiki-only`，無效或缺失設定也 fail closed 至此。
+
+Hooks 是 deterministic guardrail，不取代平台 sandbox，也不授權 Agent 修改 raw sources。
+Codex hook 是以 session cwd 啟動，因此 POSIX 與 Windows commands 先用
+`git rev-parse --show-toplevel` 定位 canonical script；若安裝目標不是 Git Repo，
+只有從 Repo root 啟動時才回退目前目錄。Windows `commandWindows` 使用
+PowerShell wrapper 與 `Join-Path`，可安全處理空白和非 ASCII root path。
+
+## Installer
+
+`.agents/skills/codebase-wiki/scripts/install-framework.py` 只使用 Python 標準函式庫：
+
+1. `install` 或 `upgrade` 預設只產生 contract-v6 file plan；
+2. 指定 `--apply` 且沒有 conflicts 時才寫入；
+3. `--surface copilot|codex` 決定平台入口；
+4. `--guard-mode wiki-only|coexist` 明確選擇目標工作階段；
+5. `install` 建立乾淨 Wiki starter；`upgrade` 永遠保留既有 `wiki/`；
+6. 只安裝 `codebase-wiki` Skill，不外帶同層其他 Skills；
+7. Managed blocks 保留 root instructions 的人工內容；fingerprint manifest 區分
+   upstream-only、user-only 與 two-sided changes；
+8. 全部輸出先 staging，套用失敗 rollback；starter 日期由 install date 產生；
+9. 舊 `.codebase-wiki/` 只透過 `obsolete_paths` 回報，不自動刪除。
+
+Windows staging 目錄繼承 target parent 的 ACL，避免 Python 3.13+ `mkdtemp()` 的
+owner-only DACL 跟著 staged files 移入目標，造成 Codex sandbox account 無法讀取。
+
+框架 Repo 根目錄的 `wiki/` 是框架自己的持久知識，不會複製到目標專案；目標 Wiki 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 的乾淨骨架建立。`docs/`、`samples/` 與 `tests/` 同樣不屬於 installer surface。
+
+## 設計邊界
+
+- 不建立向量資料庫、SQLite source index 或 Tree-sitter cache。
+- Query 不因讀取而自動持久化結果。
+- BA／SA／SD 只宣稱 standard-aligned；不宣稱 conformance、認證或稽核通過，也不複製付費標準原文。
+- SA 保持 solution-neutral；technology/component/deployment design 只進 SD 或 ADR。
+- 三份文件皆可在上游缺失時產出，但必須以具體 Gap 降級，不產生虛構 Mermaid。
+- Query 不連線即時資料庫，也不呼叫資料庫工具或 fallback；需要目前資料庫狀態的問題標示為未驗證 gap。
+- Repo 內的 `.sql`、migration 與 schema 可維持一般唯讀 source evidence。
+- 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
+- NotebookLM export 每次唯讀全量掃描安全 UTF-8 repo text；既有 Wiki 是增量知識基線，不是掃描邊界，非文字業務證據列為 gap。Discovery ID 與 Wiki readiness ID 分離。
+- Agent 先以 discovery preflight 顯示完整來源、capability、缺口與 BA／SA 文件計畫；使用者一次確認後更新 Wiki，自動取得 readiness ID，再以雙 ID 原子替換本機 `.notebooklm/`。
+- Export 不呼叫 NotebookLM API，也不自動上傳；敏感、generated/dependency、CI/IaC、Wiki/output 等安全排除不能被設定繞過。只有專用 current-state profiles 的每功能 BA／SA 進入 schema-v6 pack；standalone BA／SA、SD 與其他 traceability 不會上傳。
