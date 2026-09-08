@@ -33,7 +33,7 @@ QUERY_TOKENS = (
 )
 # This oracle is intentionally fixed after the first reviewed fixture run. A
 # platform-specific path, newline, encoding, or ordering change must alter it.
-EXPECTED_FUNCTIONAL_SHA256 = "bae0d3eee98a4ba39967ca26e3b60fd1d2f5f1d781b7dca8e00b8d385c615f83"
+EXPECTED_FUNCTIONAL_SHA256 = "07acda244b618cde969302db4cc1fa1621ff80aa97b0a5fb0ddf2964280ec790"
 
 
 def _write(path: Path, value: bytes) -> None:

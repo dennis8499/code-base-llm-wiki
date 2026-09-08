@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [log]
 status: active
 ---
@@ -576,3 +576,9 @@ status: active
 - `docs/knowledge/` 現在以 `canonical_knowledge_layer` 剪枝並退出 raw discovery identity，避免 promotion 將已確認的 coverage ID 變成 stale。
 - Knowledge index renderer 改用相對於 `docs/knowledge/index.md` 的連結，確保 Markdown 導覽可解析；新增 promotion 後 discovery 與 index link 回歸測試。
 - 受影響頁面：[[notebooklm-exporter]]、[[cap-notebooklm-ba-functional-export-sa]]、[[log]]；未新增、刪除或更名 Wiki 頁面，索引不需更新。
+
+## [2026-09-08] update | 同步索引連結後的 portability oracle
+
+- 更新 project-knowledge portability 的固定 functional oracle，讓 deterministic benchmark 反映 `docs/knowledge/index.md` 的相對連結契約。
+- 同步 `codebase-functional-coverage` 的 analyzed discovery ID；raw sources、Wiki 與 canonical knowledge layer 的邊界保持不變。
+- 受影響頁面：[[codebase-functional-coverage]]、[[notebooklm-exporter]]、[[log]]；未新增、刪除或更名 Wiki 頁面，索引不需更新。

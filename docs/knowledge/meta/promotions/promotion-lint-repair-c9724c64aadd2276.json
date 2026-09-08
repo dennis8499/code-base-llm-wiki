@@ -1,0 +1,18 @@
+{
+  "approval": {
+    "actor": "user",
+    "evidence": "user:2026-09-08:notebooklm-index-repair-r1"
+  },
+  "candidate_ref": "knowledge:candidates/promotion-lint-repair-c9724c64aadd2276/candidate.json",
+  "decision": "change",
+  "formal_paths": [],
+  "lint": {
+    "required_outcome": "passed"
+  },
+  "payload_sha256": "983c8f554953b56188fbe86250b604c292043f61f2e9190745a9fe576b0ea222",
+  "promotion_id": "promotion-lint-repair-c9724c64aadd2276",
+  "schema": "knowledge-promotion/v1",
+  "stage": "lint-repair",
+  "status": "Ready",
+  "work_id": "repair"
+}

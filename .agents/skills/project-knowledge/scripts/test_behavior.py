@@ -1695,7 +1695,7 @@ def benchmark_reports_fresh_cold_and_compatible_warm_samples(
         mock.patch.object(
             knowledge_benchmark,
             "EXPECTED_FUNCTIONAL_SHA256",
-            "6310a73a73d1beb175615d927b429bce350694a95a131a1c68356a69d9f6ba32",
+            "e63d4e47c0e60da3d91acf5b82406d2ec363ec3c64bf739b3423fb0a8287fb11",
         ),
     ):
         report = knowledge_benchmark.run_benchmark(
