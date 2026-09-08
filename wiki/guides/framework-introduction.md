@@ -8,9 +8,9 @@ sources:
   - docs/operations/setup/README.md
   - docs/product/workflows/README.md
   - docs/operations/validation/README.md
-source_digest: sha256:90ce605d236a790c4bd3979a35d022003e132e2013d723e77086c248e99959b6
+source_digest: sha256:9cb0fdc1ba609996e2a730216b2dc3698edce4216d0cfd749c3c205b250be546
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -19,8 +19,8 @@ notebooklm_role: traceability
 
 # Codebase LLM Wiki — 使用指南
 
-> 本頁是既有 `type: guide` 的 legacy 相容資料，仍可查詢、驗證與匯出；v5 不再
-> 提供新 Guide 建立流程。以下內容提供框架使用者最短的安裝、操作與驗收路線。
+> 本頁是既有 `type: guide` 的 legacy 相容資料，仍可查詢、驗證與匯出；目前不再
+> 提供新的 Guide 建立流程。以下內容提供框架使用者最短的安裝、操作與驗收路線。
 > 架構背景請先閱讀 [[overview]]。
 
 ## 適用讀者

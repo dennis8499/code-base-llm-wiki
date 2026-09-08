@@ -16,12 +16,12 @@ Copilot runtime 不可用時，狀態固定停在 `static-compatible / runtime-u
 
 ## 目前驗收結果
 
-2026-09-04 的 v5 驗收以本機 contract、installer、behavior、Wiki governance 與完整
-deterministic suite 為準；host runtime 尚未重跑。2026-09-03 的 v4 Codex CLI 0.152.1
+截至 2026-09-08 的 v6 驗收以本機 contract、installer、behavior、Wiki governance 與
+deterministic suite 為準；Codex host runtime 尚未重跑。2026-09-03 的 v4 Codex CLI 0.152.1
 歷史驗收曾在彼此獨立的 Task Tracker Git fixtures
 完成 18 個有效 runs：Interactive ingest、Batch ingest、Wiki-first query、Lint、
 Code archaeology 與當時仍存在的 Guide 情境各 3/3。這是歷史基線，不代表 Guide 是
-當時的 v5 active capability。每個 run 都保存 JSONL tool events、
+目前的 active capability。每個 run 都保存 JSONL tool events、
 前後 hashes、Git 狀態、情境 assertions 與 deterministic check 輸出；raw sources
 全程不變。證據保存在專用的隔離本機驗收目錄，不提交 session data 或 generated Wiki。
 

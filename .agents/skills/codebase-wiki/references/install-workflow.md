@@ -18,7 +18,7 @@ the framework surface and preserves the target Wiki byte-for-byte. Both actions
 install only `.agents/skills/codebase-wiki/`; unrelated local Skills are outside
 the surface.
 
-Contract v3 stores `.agents/skills/codebase-wiki/install-state.json` with the
+Contract v6 stores `.agents/skills/codebase-wiki/install-state.json` with the
 upstream fingerprints needed to distinguish upstream-only, user-only, and
 two-sided changes. Root agent instructions use a managed marker block so local
 content around the block survives upgrades. Writes are staged and rolled back

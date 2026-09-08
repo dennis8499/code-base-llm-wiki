@@ -92,7 +92,8 @@ LICENSE、不改 `VERSION`、不建立 tag，也不執行上述實際發佈命�
 
 - 缺少 LICENSE、`VERSION` 不是三段數字，或 tag 不等於 `v` 加上 `VERSION` 時，
   `release.py` 會在建立資產前失敗。
-- 任一 deterministic check 或六項 Codex UAT 未達 3/3 時，不得發版。
+- 任一 deterministic check 或五項 active Codex UAT 未達 3/3 時，不得發版；目前
+  Codex v6 host runtime 尚未重跑，不能宣告 `runtime-verified`。
 - `gh release create` 前若 tag 未推送，`--verify-tag` 會拒絕發布。
 - 下載後應先驗證 `SHA256SUMS`，再執行 installer。
 - `upgrade` 發現目標檔案有人工修改時會回報 conflict，不會覆寫 Wiki 或其他

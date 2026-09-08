@@ -70,7 +70,7 @@ Lint 與報告保持唯讀；任何 repair 或 re-Ingest 都要等待使用者�
 | 欄位           | 要求                                                                                                       |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
 | `title`        | 必填，非空字串                                                                                             |
-| `type`         | 必填，值為 module / entity / pattern / decision / dependency / guide / synthesis / overview / architecture / index / log |
+| `type`         | 必填，值為 module / entity / pattern / decision / dependency / guide / synthesis / overview / architecture / business-process / business-requirement / business-rule / index / log |
 | `sources`      | 必填，陣列（可為空陣列 `[]`，但不可省略）                                                                  |
 | `last_updated` | 必填，YYYY-MM-DD 格式                                                                                      |
 | `tags`         | 必填，陣列                                                                                                 |

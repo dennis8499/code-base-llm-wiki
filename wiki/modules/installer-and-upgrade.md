@@ -10,9 +10,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/installer/test_install_framework.py
-source_digest: sha256:d13f6825940fc63be1235deabb24d0c22674250ae46d03b1c928762c02d3cfdb
+source_digest: sha256:b22d8a1156f78e35045c57748f3543b7e26df3e92ba935939594dd64873fe1a9
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---

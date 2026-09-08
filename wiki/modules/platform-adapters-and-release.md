@@ -10,9 +10,9 @@ sources:
   - tests/contracts/test_contracts.py
   - tools/release.py
   - docs/operations/releases/README.md
-source_digest: sha256:734296b37cabd2a1ebddde53a52dffe9261a2477e4b8f67f12b03a5a311e8f6a
+source_digest: sha256:aca138dbf5fda1fa3e83e1c57d238d600555ad841f85b8399df271ed6c4e643f
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [module, adapters, validation, release, parity]
 status: active
 ---

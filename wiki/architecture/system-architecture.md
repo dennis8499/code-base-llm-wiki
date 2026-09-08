@@ -77,8 +77,9 @@ GitHub Release。
 - `analysis-document-standards.md` 固定 BA／SA／SD profiles、邊界、coverage 與追溯契約。
 - Installer、lint、exporter 與 hooks 皆位於共享 Skill，平台設定只負責調用。
 - Canonical installer、lint、exporter 與 hook 程式承載可由測試直接驗證的核心行為。
-- Codex CLI 0.152.1 已於 2026-09-03 在獨立 fixtures 完成六項流程各 3/3；
-  Copilot 維持 `static-compatible / runtime-unverified`。
+- Codex CLI 0.152.1 於 2026-09-03 在獨立 fixtures 完成六項流程各 3/3，這是
+  contract v4 的歷史基線；目前 contract v6 已完成本機 deterministic 驗證，host
+  runtime 尚未重跑。Copilot 維持 `static-compatible / runtime-unverified`。
 
 ## Contradictions
 

@@ -15,7 +15,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
 source_digest: sha256:075477f3305302a181de93e57f4e2161119563b004fb76837c9ab40be6c6d2b7
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[functional-requirement-catalog]]", "[[business-process-catalog]]", "[[business-rule-catalog]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-08
 tags: [synthesis, business-analysis, standards-aligned, notebooklm]
 status: active
 ---
@@ -63,7 +63,7 @@ Analyst、Architect 與 reviewer 能審查自己關心的 abstraction level。�
 | Business context, problem, opportunity | covered | [[overview]]、既有 [[system-analysis]] legacy snapshot |
 | Scope and outcomes | covered | [[business-analysis-document]]、[[system-analysis-document]]、[[system-design-document]] |
 | Stakeholders and needs | partial | 使用者與文件角色已知；`gap-analysis-doc-owner-approval` |
-| Current and target state | covered | capability contract v3→v4 與三工作流差異 |
+| Current and target state | covered | capability contract v6 與三工作流差異 |
 | Capabilities and requirements | covered | `cap-analysis-document-generation` 與三個 `fr-*` |
 | Business processes and rules | covered | [[generate-analysis-document]] 與兩條 `br-*` |
 | Business information and glossary | covered | [[business-glossary]] |
@@ -178,10 +178,10 @@ flowchart TD
 
 | Measure ID | Outcome／Metric | Baseline | Target／Timeframe | Measurement owner | Status |
 | --- | --- | --- | --- | --- | --- |
-| M-DOC-001 | Capability manifest operations/groups | 13 / 12 | manifest-declared sets remain parity-clean in contract v6 | framework maintainer | covered |
-| M-DOC-002 | 三份 template/workflow/prompt contract tests | BA/SD absent；SA legacy | all required tokens and semantics pass | framework maintainer | covered |
+| M-DOC-001 | Capability manifest operations/groups | 11 / 11 | manifest-declared sets remain parity-clean in contract v6 | framework maintainer | covered |
+| M-DOC-002 | 三份 template/workflow/prompt contract tests | BA／SA／SD workflows、templates 與 prompts 已建立 | all required tokens and semantics pass | framework maintainer | covered |
 | M-DOC-003 | Frontmatter compatibility | 無 standards metadata validation | valid new fields + valid legacy omission | framework maintainer | covered |
-| M-DOC-004 | NotebookLM regression | schema v5 BA-only | schema v6 requires paired current-state BA／SA, strips local-only, excludes standalone/SD | framework maintainer | covered |
+| M-DOC-004 | NotebookLM regression | schema v5 BA-only（歷史 baseline） | schema v6 requires paired current-state BA／SA, strips local-only, excludes standalone/SD | framework maintainer | covered |
 | M-DOC-005 | Copilot/Codex runtime behavior | new flows not executed | acceptance threshold 待 owner 定義 | project owner | gap |
 
 ## Risks、Assumptions 與 Constraints
