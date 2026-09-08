@@ -10,9 +10,9 @@ notebooklm_role: business
 notebooklm_terms: [NotebookLM 匯出, 全量萃取, discovery ID, readiness preflight, BA, SA, 單一 Notebook]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:9773a15c3204402853c0cc370ed89997621f6e8c7296e0a310976f0b9b5c0a32
+source_digest: sha256:35a31655241118279815e3d73fa1c86b9831de192a6975b7271248010b67b526
 derived_from: ["[[overview]]", "[[notebooklm-export]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [business-process, notebooklm, export]
 status: active
 ---
@@ -74,7 +74,7 @@ upload plan，不包含雲端操作自動化。
 
 | 階段 | 輸入 | 狀態 | 輸出 |
 | --- | --- | --- | --- |
-| Discovery | 安全 raw inventory、設定、既有 Wiki baseline | `discovery_pending` → `plan_confirmed` | capability、缺口與 BA／SA 文件計畫、`discovery_id` |
+| Discovery | 安全 raw inventory、設定、既有 Wiki 與 canonical `docs/knowledge/` baseline | `discovery_pending` → `plan_confirmed` | capability、缺口與 BA／SA 文件計畫、`discovery_id` |
 | Knowledge update | confirmed snapshot、來源證據 | `knowledge_updating` → `knowledge_ready` | BA／SA Wiki、coverage、index、log |
 | Readiness | 最新 Wiki、相同 raw snapshot、設定 | `readiness_pending` → `ready_to_export` | exact source plan 與 `preflight_id` |
 | Delivery | confirmed `discovery_id` 與 latest `preflight_id` | `ready_to_export` → `pack_generated` | schema-v6 local pack |

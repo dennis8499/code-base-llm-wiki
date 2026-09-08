@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:db9066cbdcc694bc978712888be8f56795bd38da5edd8698f42447e55a87c518
+source_digest: sha256:8140b9dc7c4777cd3ac63e222cd8ad46521f1e6a167e3a126f42af355bb3d3b9
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-08
 tags: [synthesis, system-design, standards-aligned]
 status: active
 ---
@@ -53,7 +53,7 @@ frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只�
 | 共用 standards 與 layer boundary | `SR-DOC-003`、`NFR-DOC-004` | 單一 `analysis-document-standards.md` + versioned profile IDs | must |
 | 不完整 evidence 不得被隱藏 | `SR-DOC-005`、`NFR-DOC-001` | coverage/Gap/diagram gate in every template | must |
 | 向後相容 | `SR-DOC-006`、`NFR-DOC-002` | optional schema fields + legacy SA preservation procedure | must |
-| NotebookLM 不變 | `IF-DOC-003`、`NFR-DOC-003` | role-based selection and local-only stripping reused; constants unchanged | must |
+| NotebookLM 不變 | `IF-DOC-003`、`NFR-DOC-003` | role-based selection and local-only stripping reused; Wiki 與 canonical `docs/knowledge/` 不進 raw discovery identity | must |
 | 可驗證交付 | `SR-DOC-007`、`NFR-DOC-005` | contract/frontmatter/export/installer tests + standard Wiki checks | must |
 | 正式架構決策權責 | `gap-analysis-doc-formal-adr` | `DE-*` 標為 observed，未冒稱 accepted ADR | open risk |
 

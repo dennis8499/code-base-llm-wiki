@@ -8,9 +8,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
-source_digest: sha256:37e5b89d5497d53df5562aaad429039d1bafef5c4ef171ae736edd62dff01495
+source_digest: sha256:86ed4b811bdae1a6ada215acb2e4a9402c67da2fbb1b3f0494ecbfa8c766eed2
 derived_from: []
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -32,8 +32,9 @@ Codebase LLM Wiki 讓團隊把散落在程式、設定、既有文件與人員�
 規則、詞彙與已知缺口開始理解系統。
 
 NotebookLM Exporter 每次從當下完整安全 Codebase 重新盤點，以 Wiki 作比對與持久化基線，
-再為每個 capability 建立互連的現況 BA／SA，整理成離線單一 Notebook source pack。它不會
-自行上傳或修改 NotebookLM；交付者先審查本機 pack，再依 upload plan 手動更新 Notebook。
+再為每個 capability 建立互連的現況 BA／SA，整理成離線單一 Notebook source pack。Wiki 與
+canonical `docs/knowledge/` 都是本機治理資料，不進 raw discovery identity。它不會自行上傳
+或修改 NotebookLM；交付者先審查本機 pack，再依 upload plan 手動更新 Notebook。
 
 ## 主要角色與價值
 

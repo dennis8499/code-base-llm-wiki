@@ -682,9 +682,9 @@ def _build_contradiction_fixture(root: Path) -> Path:
     _write(
         repo / "docs/knowledge/index.md",
         "# Knowledge Index\n\n"
-        "- [Storage Quorum Alpha](docs/knowledge/decisions/quorum-alpha.md) — "
+        "- [Storage Quorum Alpha](decisions/quorum-alpha.md) — "
         "`page-storage-quorum-alpha` — `current`\n"
-        "- [Storage Quorum Beta](docs/knowledge/decisions/quorum-beta.md) — "
+        "- [Storage Quorum Beta](decisions/quorum-beta.md) — "
         "`page-storage-quorum-beta` — `current`\n",
     )
     _git(repo, "add", ".")

@@ -46,14 +46,16 @@ Include every UTF-8 project-owned text file in these categories:
 as `business_source_paths`. These are business-owned requirements, process
 definitions, decision tables, or acceptance specifications. They may opt
 selected text into the scan from dev-tooling scope, but never override
-secret, binary/generated/dependency, configured exclusion, Wiki/output, or
-symlink/reparse safety boundaries. PDF, Word, and Excel are not parsed in v1;
+secret, binary/generated/dependency, configured exclusion, Wiki, canonical
+`docs/knowledge/`, output, or symlink/reparse safety boundaries. PDF, Word,
+and Excel are not parsed in v1;
 record them as explicit knowledge gaps.
 
 Exclude CI/CD, IaC, build/development tooling, dependency and generated
-directories, binaries, credentials/secrets, the Wiki and export output, and
-installed Codebase LLM Wiki adapter/schema files. Versioned requirements and
-plans remain documentation inputs. Generated
+directories, binaries, credentials/secrets, the Wiki, canonical
+`docs/knowledge/` layer, export output, and installed Codebase LLM Wiki
+adapter/schema files. Versioned requirements and plans remain documentation
+inputs. Generated
 `docs/work/<work-id>/implementation/outcome.{json,md}` and consecutive
 `outcome-<revision>.{json,md}` successors attest delivery hashes, so they are
 reported as `delivery_execution_evidence` exclusions and stay out of the

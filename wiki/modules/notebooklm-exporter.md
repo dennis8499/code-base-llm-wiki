@@ -11,9 +11,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/test_export_notebooklm.py
-source_digest: sha256:c38e68f1a4d4fcdeeaa7ee9b388e157f4bf49bd31638b8dde4e464645263e826
+source_digest: sha256:01a23fed5f08e4abfdafb738a8d399e9eb563200f54521d19e863a5056a34421
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
@@ -65,9 +65,10 @@ Preflight 的 `business_coverage` 驗證：
 ## Discovery/readiness identity 與一次確認
 
 Discovery 與 readiness 使用同一個唯讀命令，但有不同身分。`discovery_id` 綁定 safe raw
-inventory、設定、排除與語意契約，不含 Wiki bytes；`preflight_id` 另綁 Wiki、coverage、
-DLP 與 exact pack plan。使用者確認 discovery preview 一次後，Wiki 重建與 readiness/apply
-自動完成；raw/config/scope drift 才需要新 preview。
+inventory、設定、排除與語意契約，不含 Wiki 或 canonical `docs/knowledge/` bytes；
+`preflight_id` 另綁 Wiki、coverage、DLP 與 exact pack plan。使用者確認 discovery preview
+一次後，Wiki 重建、knowledge promotion 與 readiness/apply 自動完成；raw/config/scope
+drift 才需要新 preview。
 
 ```text
 export-notebooklm.py --root . --preflight --format json
@@ -99,6 +100,8 @@ dispositions、source policy、input/output hashes、limits、DLP phases 與 upl
 ## 安全、容量與原子性
 
 - Top-down walker 在進入排除樹前剪枝，只回報 bounded metadata summary，不讀取其內容。
+- Canonical `docs/knowledge/` 以 `canonical_knowledge_layer` 明確排除，promotion 前後不會
+  改變 raw discovery identity。
 - Requirements／plans 仍屬文件 evidence；implementation `outcome.json`／`outcome.md`
   與後續連續的 `outcome-<revision>.json`／`.md` 是含產品 hashes 的 delivery
   attestations，會以 `delivery_execution_evidence` 明確列入排除清單，避免 readiness

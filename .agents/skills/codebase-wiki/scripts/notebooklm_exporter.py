@@ -938,6 +938,8 @@ def _exclusion_reason_for_relative(
         return "export_output"
     if lower == "wiki" or lower.startswith("wiki/"):
         return "wiki_knowledge_layer"
+    if lower == "docs/knowledge" or lower.startswith("docs/knowledge/"):
+        return "canonical_knowledge_layer"
     if parts & DEFAULT_GENERATED_PARTS or parts & DEFAULT_DEPENDENCY_PARTS:
         return "binary_or_generated"
     if (
@@ -4288,13 +4290,14 @@ def _settings_fingerprint(settings: Settings, root: Path) -> dict[str, Any]:
 def _discovery_identity(
     root: Path, settings: Settings, scan: dict[str, Any]
 ) -> tuple[str, str]:
-    """Bind confirmation to raw safe sources and scan policy, excluding Wiki bytes."""
+    """Bind confirmation to raw safe sources, excluding managed knowledge bytes."""
 
     def is_export_artifact(item: dict[str, Any]) -> bool:
         path = str(item.get("path", ""))
         return item.get("reason") in {
             "export_output",
             "delivery_execution_evidence",
+            "canonical_knowledge_layer",
         } or _is_transaction_artifact(path)
 
     material = {

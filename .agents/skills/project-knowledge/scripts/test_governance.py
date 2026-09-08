@@ -947,6 +947,23 @@ class GovernanceTests(unittest.TestCase):
                     )
                 self.assertEqual("PAGE_CONTRACT_INVALID", raised.exception.code)
 
+    def test_render_index_uses_links_relative_to_the_index_file(self) -> None:
+        import knowledge_governance
+
+        rendered = knowledge_governance.render_index(
+            [
+                {
+                    "content_path": "docs/knowledge/topics/example.md",
+                    "page_id": "page-example",
+                    "title": "Example",
+                    "lifecycle": "current",
+                }
+            ]
+        ).decode("utf-8")
+
+        self.assertIn("[Example](topics/example.md)", rendered)
+        self.assertNotIn("(docs/knowledge/topics/example.md)", rendered)
+
     def test_complete_lint_reports_every_rule_family_read_only(self) -> None:
         repo = _build_complete_lint_fixture(self.fixture_root)
         registry = self.fixture_root / "registry"

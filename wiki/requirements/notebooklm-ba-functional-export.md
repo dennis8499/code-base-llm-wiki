@@ -14,9 +14,9 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - tests/test_export_notebooklm.py
-source_digest: sha256:a3bc9db7181fd718d6cd21c0753368b4897d6df4fa01b0e1d885533175f74391
+source_digest: sha256:2cfd9cce67dd2eb68a3054fe7cde3df456ba855a46eded2acecf29ec3b83489b
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [business-requirement, notebooklm, export, dlp]
 status: active
 ---
@@ -70,7 +70,7 @@ System Analyst 可直接查詢的現況知識。程式、設定、schema、測�
 
 | 階段 | 輸入 | 輸出／狀態 |
 | --- | --- | --- |
-| Discovery | 完整安全 inventory、既有 Wiki、設定 | preview 與 confirmed `discovery_id` |
+| Discovery | 完整安全 inventory、既有 Wiki、canonical `docs/knowledge/` 與設定 | preview 與 confirmed `discovery_id` |
 | Analysis | confirmed snapshot | 每功能 BA／SA、coverage ledger 與 preserved notes |
 | Readiness | 最新 Wiki、analyzed discovery ID、exact source plan | `ready_to_export` 與 latest `preflight_id` |
 | Apply | confirmed discovery ID 與 latest readiness ID | schema-v6 local pack、governance 與 upload plan |

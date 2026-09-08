@@ -15,7 +15,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/test_notebooklm_acceptance.py
   - tests/test_notebooklm_contract.py
-source_digest: sha256:06bc73f2fdf64fe4eeb1d44bfbb1078c3fd4faa34c97039abf3b84000e76b1d1
+source_digest: sha256:10c0d85baf8423294caefc20d9d8fe492a70f65d7dbe125af12e9c8e9aa2f252
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1922"
   - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215"
@@ -23,7 +23,7 @@ source_locators:
   - "tests/test_notebooklm_acceptance.py:1"
   - "tests/test_notebooklm_contract.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-ba]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-08
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -37,7 +37,7 @@ status: active
 
 ## 資料與狀態
 
-Discovery identity 由 sorted safe raw path、category、bytes、SHA-256、排除處置、設定與語意契約組成，不含 Wiki bytes、輸出目錄或 exporter transaction artifacts。Readiness identity 另包含 Wiki hashes、lint、DLP 與 exact pack plan。Coverage ledger 的 analyzed discovery ID 必須等於 apply 當下 raw snapshot。
+Discovery identity 由 sorted safe raw path、category、bytes、SHA-256、排除處置、設定與語意契約組成，不含 Wiki、canonical `docs/knowledge/` bytes、輸出目錄或 exporter transaction artifacts。Readiness identity 另包含 Wiki hashes、lint、DLP 與 exact pack plan。Coverage ledger 的 analyzed discovery ID 必須等於 apply 當下 raw snapshot。
 
 每個 active `cap-*` 必須有唯一 BA／SA，固定 path、profiles、roles、相同 group、雙向 link、real sources 與有效 `path:line` locators。Renderer 移除 local-only 區塊、保留 managed 內容與 user notes；DLP 分別遮罩 analysis copy、`documents/` 和 `sources/`，再執行 residual scan。
 

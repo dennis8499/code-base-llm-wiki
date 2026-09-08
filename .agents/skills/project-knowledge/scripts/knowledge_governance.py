@@ -15,7 +15,7 @@ import sys
 import tempfile
 import uuid
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from knowledge_query import (
@@ -763,11 +763,16 @@ def render_index(pages: list[dict[str, Any]]) -> bytes:
             continue
         try:
             content_path = normalized_path(content_path)
+            index_path = PurePosixPath(content_path).relative_to(
+                PurePosixPath("docs/knowledge")
+            ).as_posix()
         except KnowledgeError:
+            continue
+        except ValueError:
             continue
         rows.append(
             (
-                content_path,
+                index_path,
                 title.replace("\r", " ").replace("\n", " "),
                 page_id,
                 lifecycle,

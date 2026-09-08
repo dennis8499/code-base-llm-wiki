@@ -2069,6 +2069,45 @@ with module._OutputTransactionLock(Path({lock_path_literal})):
                     excluded,
                 )
 
+    def test_canonical_knowledge_does_not_change_discovery_identity(self) -> None:
+        module = load_canonical_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_fixture(root)
+            settings = module.load_settings(root)
+            before = module.build_preflight(root, settings)
+
+            knowledge = root / "docs/knowledge"
+            (knowledge / "topics").mkdir(parents=True)
+            (knowledge / "meta/pages").mkdir(parents=True)
+            (knowledge / "index.md").write_text(
+                "# Knowledge Index\n", encoding="utf-8"
+            )
+            (knowledge / "topics/example.md").write_text(
+                "# Generated knowledge\n", encoding="utf-8"
+            )
+            (knowledge / "meta/pages/page-example.json").write_text(
+                "{}\n", encoding="utf-8"
+            )
+
+            after = module.build_preflight(root, settings)
+
+            self.assertEqual(before["discovery_id"], after["discovery_id"])
+            self.assertTrue(after["capability_coverage"]["discovery_id_matches"])
+            self.assertFalse(
+                any(
+                    item["path"].startswith("docs/knowledge/")
+                    for item in after["inventory"]["included"]
+                )
+            )
+            self.assertIn(
+                ("docs/knowledge", "canonical_knowledge_layer"),
+                {
+                    (item["path"], item["reason"])
+                    for item in after["inventory"]["excluded_roots"]
+                },
+            )
+
     def test_shared_glossary_and_evidence_backed_processes_are_uploadable(self) -> None:
         module = load_exporter()
         with tempfile.TemporaryDirectory() as directory:
