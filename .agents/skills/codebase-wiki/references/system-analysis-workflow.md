@@ -48,6 +48,15 @@ stakeholder need, requirement, observed behavior, inference, and Gap.
 4. Inspect raw sources only when Wiki evidence is missing, stale,
    contradictory, or too vague for a testable requirement.
 
+When the SA is paired with a current-state NotebookLM export, trace each
+scenario from entrypoint through the observable call chain. Retain the
+preconditions, step order, data and state changes, interface handoffs,
+success result, failure branch, and retry/rollback behavior with source
+locators. Classify unfinished tracing as `analysis-gap`, absent source
+evidence as `evidence-gap`, and unconfirmed operational policy as
+`business-confirmation`; preserve observed behavior in the latter two cases
+without turning it into a requirement or policy.
+
 An absent BA does not block SA. Create stable `gap-{scope}-ba-*` records for
 missing business objectives, actors, policies, or success criteria and proceed
 with the evidence that exists.
@@ -87,6 +96,10 @@ source/upstream ID, verification method, and coverage state. Minimum chain:
 
 Do not invent a requirement to make traceability complete. Use a Gap row and
 name the stakeholder or source needed to resolve it.
+
+Do not reduce a cross-functional scenario to a title or four-step summary.
+Include the concrete interface, state, data, and failure details that allow
+the paired BA and shared business source to be read independently.
 
 ## Required Mermaid Slots
 

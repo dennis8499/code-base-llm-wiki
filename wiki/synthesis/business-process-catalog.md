@@ -7,7 +7,7 @@ notebooklm_role: business
 notebooklm_terms: [業務流程, 業務能力, 知識包, Business Analyst, NotebookLM 匯出, BA文件, SA文件, SD文件]
 sources: []
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[generate-analysis-document]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-09
 tags: [synthesis, business-process-catalog, notebooklm]
 status: active
 ---
@@ -22,6 +22,11 @@ status: active
 狀態的端到端流程。一般 Ingest／Query／Lint 等框架功能目前保留在技術功能目錄，尚未
 全部轉成 BA process pages，並已列入 [[business-knowledge-gaps]]；分析文件產出則由
 [[generate-analysis-document]] 統一描述三種可獨立工作流。
+
+流程頁的完整度另由 `analysis_status`／`gap_classification` 與 exporter 的 flow-integrity
+檢查負責：主流程必須逐步保留條件、資料／狀態、結果、例外、失敗去向與定位；適用需求／規則
+正文會在 shared business context 一併提供。`analysis-gap` 會阻擋，`evidence-gap` 與
+`business-confirmation` 則保留已知實作行為並列出待補證據。
 
 ## 業務流程覆蓋矩陣
 

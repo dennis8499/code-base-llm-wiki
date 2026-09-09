@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/product/workflows/README.md
-source_digest: sha256:bedd5a25e9c6a83c32ab6f12cf1ea026da3d41abfe8aaf408131cfd6762f968d
+source_digest: sha256:31646656cf37232adc51ea7745a97f8a02887c80431d16c06dd5c18fcab00753
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[notebooklm-exporter]]", "[[business-analysis]]"]
 last_updated: 2026-09-09
 tags: [guide, notebooklm, export, ba-first, enterprise]
@@ -78,6 +78,12 @@ BA pages 使用 `notebooklm_role: business`、穩定 `notebooklm_group` 與非�
 Regenerate managed markers，preserve user-notes markers；local-only markers 放技術 provenance。
 工程頁使用 `notebooklm_role: exclude`。同步 index，並只追加一筆合法 log operation。
 
+流程頁要從入口追到實際呼叫鏈，逐步保留觸發／前置條件、處理內容、資料讀寫、狀態前後值、
+成功結果、例外、失敗去向與 source locator；適用的 requirement／rule 正文會在
+`shared-business-context` 一併出現。只有標題、四步摘要或規則 Wiki 連結不算完整。
+`analysis-gap`（尚未追查完成）阻擋；`evidence-gap`（已查但沒有證據）與
+`business-confirmation`（實作可見但營運政策待確認）分開列出並保留已知行為。
+
 完整處理後才把 confirmed `Analyzed discovery ID` 寫入 coverage ledger。
 
 ## 第三階段：Readiness preflight 與自動 apply
@@ -91,6 +97,7 @@ Regenerate managed markers，preserve user-notes markers；local-only markers �
 - 每功能 BA／SA 配對、profiles、互連與 locators 完整；
 - analysis／documents／sources DLP masking 完成，residual 為零；
 - exact `pack_plan` 保留全部 BA／SA 且可容納；
+- exact `sources/*.md` 的 flow-integrity report 保留每個流程步驟、條件、分支、資料／狀態與適用規則正文；
 - schema v1–v5 或舊 retrieval contract 已明列 full rebuild。
 
 ```powershell
@@ -128,7 +135,8 @@ dlp_profile = "notebooklm-enterprise-ba-sa-mask-v1"
 
 在目標 NotebookLM 依 `docs/operations/validation/notebooklm-ba-uat.md` 的固定題組與 20 分 rubric 驗收。
 答案若只能引用 code/path、把 observed behavior 當政策，或隱藏 gap，即使 exporter 結構檢查
-通過仍不算交付完成。先修正 BA Wiki，再重跑 readiness 與 upload plan。
+通過仍不算交付完成；flow-integrity 只證明實際 sources 保留內容與追溯，未進行 tenant 問答前
+仍標示 `runtime-unverified`。先修正 BA Wiki，再重跑 readiness 與 upload plan。
 
 ## 常見失敗
 

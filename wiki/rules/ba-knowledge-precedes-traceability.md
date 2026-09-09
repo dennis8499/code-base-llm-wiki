@@ -10,7 +10,7 @@ notebooklm_role: business
 notebooklm_terms: [BA, SA, codebase-only, code wins, source locator, raw code exclusion]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:5330275f0c3241738d8c8af24b1f9b2d242b13ff8a5aee84a80a5ebb3f41e0a2
+source_digest: sha256:83f0b22e00e098dbe3034b62a2b347621e01fa59cdcd009cb19ad6d1dc2f6db1
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
 last_updated: 2026-09-08
 tags: [business-rule, notebooklm, evidence]

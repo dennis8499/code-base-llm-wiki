@@ -7,9 +7,9 @@ read-only compatibility exception and has no creator asset.
 | Type | Use when | Asset | Extra required fields |
 | --- | --- | --- | --- |
 | `overview` | High-level codebase purpose and major areas | `assets/overview-template.md` | — |
-| `business-process` | An end-to-end actor/trigger/outcome business flow | `assets/business-process-template.md` | `process_id`, `actors`, `coverage_status`, NotebookLM metadata |
-| `business-requirement` | A testable BA-facing system behavior | `assets/business-requirement-template.md` | `requirement_id`, `capability_id`, `applies_to`, `evidence_state`, stable `AC-*` IDs, NotebookLM metadata |
-| `business-rule` | A condition/decision/exception rule applied to business processes | `assets/business-rule-template.md` | `rule_id`, `applies_to`, `evidence_state`, NotebookLM metadata |
+| `business-process` | An end-to-end actor/trigger/outcome business flow | `assets/business-process-template.md` | `process_id`, `actors`, `coverage_status`, NotebookLM metadata; new process traces also set `analysis_status` and `gap_classification` |
+| `business-requirement` | A testable BA-facing system behavior | `assets/business-requirement-template.md` | `requirement_id`, `capability_id`, `applies_to`, `evidence_state`, stable `AC-*` IDs, NotebookLM metadata; new traces set `analysis_status` and `gap_classification` |
+| `business-rule` | A condition/decision/exception rule applied to business processes | `assets/business-rule-template.md` | `rule_id`, `applies_to`, `evidence_state`, NotebookLM metadata; new traces set `analysis_status` and `gap_classification` |
 | `architecture` | Components, data flow, or deployment | `assets/architecture-template.md` | — |
 | `module` | A logical directory, package, or bounded area | `assets/module-template.md` | — |
 | `entity` | A key class, service, endpoint, or table | `assets/entity-template.md` | — |
@@ -28,8 +28,8 @@ read-only compatibility exception and has no creator asset.
 | `synthesis` (BA) | Standard-aligned Business Analysis document | `assets/business-analysis-template.md` | `standards_profile: business-analysis-aligned-v1`; `coverage_status`; tags include `business-analysis` |
 | `synthesis` (SA) | Solution-neutral System Analysis document | `assets/system-analysis-template.md` | `standards_profile: system-analysis-aligned-v1`; `coverage_status`; tags include `system-analysis` |
 | `synthesis` (SD) | Standard-aligned System Design document | `assets/system-design-template.md` | `standards_profile: system-design-aligned-v1`; `coverage_status`; tags include `system-design` |
-| `synthesis` (NotebookLM capability BA) | Current-state business view for one active `cap-*` | `assets/notebooklm-ba-template.md` | `codebase-business-analysis-v1`; `notebooklm_document: ba`; source locators and reciprocal SA link |
-| `synthesis` (NotebookLM capability SA) | Current-state system view for one active `cap-*` | `assets/notebooklm-sa-template.md` | `codebase-system-analysis-v1`; `notebooklm_document: sa`; source locators and reciprocal BA link |
+| `synthesis` (NotebookLM capability BA) | Current-state business view for one active `cap-*` | `assets/notebooklm-ba-template.md` | `codebase-business-analysis-v1`; `notebooklm_document: ba`; source locators, reciprocal SA link, `analysis_status`, and `gap_classification` |
+| `synthesis` (NotebookLM capability SA) | Current-state system view for one active `cap-*` | `assets/notebooklm-sa-template.md` | `codebase-system-analysis-v1`; `notebooklm_document: sa`; source locators, reciprocal BA link, `analysis_status`, and `gap_classification` |
 | `index` | Wiki navigation root | `assets/index-template.md` | `sources: []`, `tags: [index]` |
 | `log` | Append-only activity history | `assets/log-template.md` | `sources: []`, `tags: [log]` |
 

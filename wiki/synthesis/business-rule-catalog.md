@@ -7,7 +7,7 @@ notebooklm_role: business
 notebooklm_terms: [業務規則, codebase-only, code wins, readiness preflight, 證據優先序, standard-aligned, Gap]
 sources: []
 derived_from: ["[[business-process-catalog]]", "[[notebooklm-ba-knowledge-export]]", "[[generate-analysis-document]]"]
-last_updated: 2026-09-04
+last_updated: 2026-09-09
 tags: [synthesis, business-rule-catalog, notebooklm]
 status: active
 ---
@@ -26,6 +26,11 @@ status: active
 | `br-analysis-missing-evidence-gap` | [[missing-evidence-remains-gap]] | [[generate-analysis-document]] | business-confirmed | Gap 可存在但不可被推測取代 |
 
 ## 規則衝突與例外
+
+NotebookLM shared business context 不只列規則名稱：每個 active process 所適用的規則正文、
+條件、例外與結果都會在最終 `sources/*.md` 中獨立呈現；若正文未進入 payload，flow-integrity
+檢查會阻擋。規則查不到事實標 `evidence-gap`，流程尚未追查完則標 `analysis-gap`，不可混為
+`Codebase 未提供證據`。
 
 - Raw evidence 永不直接進入 upload sources；每 capability 的 BA／SA 也不可靜默省略。
 - DLP finding 必須在 analysis、documents 與 sources 遮罩，final payload 有殘留時阻擋；沒有 allowlist。

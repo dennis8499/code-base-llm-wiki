@@ -42,10 +42,12 @@ status: active
 
 ## Gate 結果
 
-Analyzed discovery ID: `sha256:257de7c8633fd870f4aed3d626a818306c002d8d7646777d66aa5ce8af0d25d3`
+Analyzed discovery ID: `sha256:a274e10e9bd8a6f07e4f6224743391a011de02019579d55e2a49d0d7d7290b65`
 - Uncovered safe files：0
 - Analysis gaps：0
 - Dangling requirement links：0
+- Process flow analysis：all active framework processes traced; `analysis-gap` blocks readiness, while `evidence-gap` and `business-confirmation` remain explicit.
+- Final source integrity：the masked `shared-business-context` must retain each process step, branch, state/data change, and applicable requirement/rule body; this does not verify NotebookLM answers.
 <!-- codebase-wiki:managed:end -->
 
 <!-- codebase-wiki:user-notes:start -->

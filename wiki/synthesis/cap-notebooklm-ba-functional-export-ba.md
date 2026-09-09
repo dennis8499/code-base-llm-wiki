@@ -4,6 +4,8 @@ type: synthesis
 summary: 依 exporter 現況整理全量 discovery、一次確認、文件化與單一 Notebook 本機交付。
 standards_profile: codebase-business-analysis-v1
 coverage_status: partial
+analysis_status: traced
+gap_classification: none
 capability_id: cap-notebooklm-ba-functional-export
 notebooklm_document: ba
 notebooklm_group: business-notebooklm-export
@@ -15,7 +17,7 @@ sources:
   - .github/prompts/export-notebooklm.prompt.md
   - notebooklm.toml
   - tests/notebooklm/test_notebooklm_acceptance.py
-source_digest: sha256:c66f70ffcb51137874078862c4f2da1feb2d07e9aa70fae9f710417cbdeb15ba
+source_digest: sha256:8ef9f4f5d3ff48627314c263b0da302b64881dac3775dda4fb7dc05ac59acba0
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4172"
   - ".agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:1"
@@ -23,7 +25,7 @@ source_locators:
   - "notebooklm.toml:1"
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-sa]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [synthesis, business-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -35,15 +37,21 @@ status: active
 
 知識維護者發起 Export NotebookLM 時，框架把當下 Codebase 整理成 Business Analyst 與 System Analyst 可在單一 Notebook 搜尋、問答的現況知識。Codebase 包含程式、設定、資料結構、behavioral tests、README、規格與註解；內容衝突時以程式碼為主。
 
-## 流程與規則
+## 前置條件、流程與規則
 
-1. `--preflight` 唯讀重掃完整安全 UTF-8 scope，不以既有 Wiki 作為 discovery 邊界。
-2. Preview 顯示 `discovery_id`、功能清單、BA／SA 覆蓋、待分析、證據差異、排除／無法讀取、DLP 與容量。
-3. 使用者對具體 preview 確認一次；確認前不修改 Wiki 或建立 pack。
-4. 確認後重讀完整 snapshot、保留 user notes，更新 catalogs／ledger，並為每個 active capability 建立可追溯的 BA／SA 配對。
-5. 完整處理後記錄 analyzed discovery ID，自動執行 readiness preflight，再以 confirmed discovery ID 與 latest preflight ID 原子產生本機 pack；readiness 不新增人工 gate。
+| 步驟 | 觸發／條件 | 處理與資料／狀態變更 | 結果 | 失敗去向／定位 |
+| --- | --- | --- | --- | --- |
+| 1 | 執行 `--preflight` | 讀取完整安全 UTF-8 scope，建立 inventory 與 `discovery_id` | 形成功能、覆蓋、排除、DLP 與容量 preview | 未分類或不可讀來源列 gap；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5018` |
+| 2 | preview 已建立 | 使用者讀取 BA／SA 覆蓋與待分析差異，確認一次 | `discovery_pending` → `plan_confirmed` | 範圍變更須重新 preview；`.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:88` |
+| 3 | `plan_confirmed` | 沿入口追蹤呼叫鏈，將每一步的條件、資料讀寫、狀態、結果、失敗分支與 locator 寫入 managed Wiki；保留 user notes | 每個 capability 有可追溯 BA／SA pair | `analysis-gap`、uncovered、dangling link 阻擋；`.agents/skills/codebase-wiki/references/business-analysis-workflow.md:45` |
+| 4 | ledger 與 Wiki 已更新 | 再讀 Wiki、inventory、exact masked payload，檢查 source integrity、DLP、容量與 migration | 取得 latest `preflight_id` | stale、規則正文缺漏或 residual 時保留舊 pack；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5012` |
+| 5 | discovery／readiness ID 相符 | 原子寫入 documents、sources、mapping、manifest 與 plan | `ready_to_export` → `pack_generated` | 超限、ID drift 或 boundary 失敗不替換舊 pack；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:3725` |
 
-沒有證據的現況使用 `Codebase 未提供證據`；`尚未完成分析`、缺配對、無效 locator、uncovered 或 analysis-gap 會阻擋。Raw/config/scope drift 需要重新 preview 與確認；Wiki-only 重建沿用原 discovery 確認。
+流程問題要保留觸發、前置條件、每一步行為、資料／狀態與失敗去向；只有標題、四步摘要或規則連結不算完整。沒有證據的現況使用 `Codebase 未提供證據`；`analysis-gap` 代表尚未追查完成並阻擋，`evidence-gap` 代表已查來源但沒有該事實，`business-confirmation` 代表實作可見但營運政策仍待確認。Raw/config/scope drift 需要重新 preview 與確認；Wiki-only 重建沿用原 discovery 確認。
+
+## 輸入、輸出與狀態
+
+輸入是安全 raw inventory、Wiki baseline、設定與確認後的兩個 identity；輸出是帶有完整流程正文與適用規則／需求正文的 `sources/*.md`、本機 documents、mapping、manifest 與 upload plan。`analysis-gap` → `knowledge_ready` 前不可進入 `ready_to_export`；`evidence-gap` 與 `business-confirmation` 要保留已知的 implementation-observed 行為。
 
 ## 結果、例外與治理
 

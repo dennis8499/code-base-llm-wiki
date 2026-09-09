@@ -147,8 +147,9 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --root . --preflight --format json
 ```
 
-Agent 先依可觀察行為建立 `fr-*`／`cap-*` 與 stable `AC-*`，再連結 actor、trigger、
-happy/alternate/exception paths、state 與 `br-*`。預覽列出 inventory、排除摘要、
+Agent 先依可觀察行為建立 `fr-*`／`cap-*` 與 stable `AC-*`，從入口沿實際呼叫鏈逐步追查，
+在每一步保留 trigger/condition、資料讀寫、state before/after、結果、失敗去向、重試／回復
+與 locator，再連結 actor、happy/alternate/exception paths、state 與 `br-*`。預覽列出 inventory、排除摘要、
 requirement/process/rule coverage、每功能 BA／SA plan、每個 safe file disposition、DLP、容量、
 warnings 與 gaps；使用者對具體 preview 一次確認後才更新 Wiki。
 
@@ -162,7 +163,7 @@ warnings 與 gaps；使用者對具體 preview 一次確認後才更新 Wiki。
 - `wiki/synthesis/business-knowledge-gaps.md`：缺口、影響與待確認對象；
 - `wiki/synthesis/codebase-functional-coverage.md`：local-only full disposition gate；
 - `wiki/requirements/*.md`：`type: business-requirement`，包含 FR/capability ID、process links、evidence state 與 `AC-*`；
-- `wiki/processes/*.md`：`type: business-process`，包含 `process_id`、actors、流程、例外與 `coverage_status`；
+- `wiki/processes/*.md`：`type: business-process`，包含 `process_id`、actors、逐步流程（條件、資料／狀態、結果、失敗去向與 locator）、例外與 `coverage_status`；
 - `wiki/rules/*.md`：`type: business-rule`，包含 `rule_id`、`applies_to` 與 `evidence_state`。
 - `wiki/synthesis/{cap}-ba.md`：`codebase-business-analysis-v1`、現況目的／角色／流程／規則／結果／例外；
 - `wiki/synthesis/{cap}-sa.md`：`codebase-system-analysis-v1`、現況邊界／I/O／資料／狀態／介面／錯誤處理。
@@ -187,7 +188,10 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
 輸出包含完整 `.notebooklm/documents/{cap}-ba.md`／`-sa.md`、只供上傳的
 `.notebooklm/sources/query-index.md`、`.notebooklm/sources/project-map.md`、
 `.notebooklm/sources/shared-business-context.md` 與
-capability sources；shared source 收錄共用詞彙、流程目錄與 active 且有證據支持的跨功能流程。
+capability sources；shared source 收錄共用詞彙、流程目錄、active 且有證據支持的跨功能流程
+完整步驟／分支，以及適用需求與規則正文。Exporter 在遮罩與分割後檢查實際 upload bytes，
+阻擋只有標題、四步摘要、缺少分支或只有規則連結的內容；這項結構檢查不宣稱 NotebookLM
+生成式問答已驗證。
 另有本機 `.notebooklm/manifest.json`、`.notebooklm/upload-plan.md`、`.notebooklm/README.md`
 與 `.notebooklm/governance.md`。
 Retrieval contract 是 `codebase-ba-sa-retrieval-v1`；
@@ -199,6 +203,10 @@ finding 先遮罩，final residual 才阻擋，沒有 allowlist。Apply 重新�
 coverage 與設定；ID 漂移就拒絕。只手動上傳 `sources/*.md`，依 plan 處理 added/changed/deleted/
 unchanged。Hard limits 為 300 sources、每 source 500 MB / 500,000 words，safety limits 為
 450 MB / 450,000 words；字數採 `han_characters_plus_non_han_tokens`。
+
+流程缺口分為 `analysis-gap`（尚未完成呼叫鏈追查，阻擋匯出）、`evidence-gap`（已查來源
+但沒有該事實）與 `business-confirmation`（實作行為可見，但營運政策、責任、重跑權限或 SLA
+仍待確認）。後兩者要保留已知行為；只有真正沒有來源證據時才寫 `Codebase 未提供證據`。
 
 ## 交付檢查
 

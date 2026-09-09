@@ -151,8 +151,10 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
   manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
 - **NotebookLM 現況 BA／SA 知識包**：每次重掃安全 Codebase，以程式碼優先處理來源衝突，
-  為每個 capability 產生互連的 BA／SA；一次確認後自動完成 readiness，透過雙識別碼、
-  DLP masking、容量檢查與 stable source mapping 保持可驗證。
+  為每個 capability 產生互連的 BA／SA；流程會沿入口追到呼叫鏈，保留條件、資料／狀態、
+  結果與失敗分支，並在實際上傳 bytes 檢查規則正文是否存在。一次確認後自動完成 readiness，
+  透過雙識別碼、DLP masking、容量檢查與 stable source mapping 保持可驗證；這不等於已驗證
+  NotebookLM 生成式問答。
 - **可驗證**：以 Python 3.11/3.14 在隔離 worktree 手動執行 unit、compile、
   parity、frontmatter、digest freshness、log/index 與唯讀 lint；本 Repo 不配置
   GitHub Actions。
@@ -261,7 +263,8 @@ NotebookLM Enterprise 匯出：
 ```text
 請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export：先做完整 safe discovery preflight，
 列出納入/排除、功能、BA／SA 覆蓋、待分析內容、來源差異、DLP 與容量後等待我一次確認。
-確認後依當下 Codebase 全量建立每功能的繁中 BA／SA、保留 user notes，自動完成 readiness
+確認後依當下 Codebase 全量建立每功能的繁中 BA／SA；流程從入口沿呼叫鏈逐步記錄條件、資料／狀態、
+結果與失敗分支，保留 user notes，自動完成 readiness
 preflight，再產生 `.notebooklm/documents/`、只供上傳的
 `.notebooklm/sources/query-index.md`、`.notebooklm/sources/project-map.md`、
 `.notebooklm/sources/shared-business-context.md`、manifest 與 governance。
@@ -272,6 +275,8 @@ preflight，再產生 `.notebooklm/documents/`、只供上傳的
 `discovery_id`；Wiki 更新後取得 latest readiness `preflight_id`，以兩者執行 `--apply`。
 Exporter 僅讀 UTF-8 repo text，不會呼叫雲端 API 或自動上傳；documents 與 sources 的
 DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowlist。
+流程缺口分為 `analysis-gap`（尚未追查完成，阻擋匯出）、`evidence-gap`（已查但無來源證據）
+與 `business-confirmation`（實作已知但營運政策待確認）；後兩者保留已知行為。
 
 ---
 

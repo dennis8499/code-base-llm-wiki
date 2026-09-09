@@ -151,7 +151,9 @@ NotebookLM Enterprise export:
 請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export。先執行唯讀 discovery preflight，
 以 `--root` 為檔案系統邊界，盤點安全 UTF-8 runtime source、config、schema、docs 與
 behavioral tests。依可觀察行為建立 `fr-*`／`cap-*`、`AC-*`、流程、規則、詞彙、證據狀態
-與 gaps，並讓每個安全檔案都有 non-gap disposition；PDF/Office/圖片等只登記 gap。
+與 gaps，從入口沿實際呼叫鏈逐步記錄觸發／條件、資料讀寫、狀態變更、結果、失敗分支與
+來源定位；不要只留下四步摘要或規則連結。讓每個安全檔案都有 non-gap disposition；
+PDF/Office/圖片等只登記 gap。
 列出 inventory、排除、coverage、每個功能預計 BA／SA、DLP masking 與容量後等待一次確認。
 確認後重建 managed sections、保留 user notes，更新 requirement/process/rule pages、每個
 `cap-*` 的現況 BA／SA、local coverage ledger、index 與一筆 log，並記錄 confirmed discovery ID。
@@ -160,8 +162,9 @@ behavioral tests。依可觀察行為建立 `fr-*`／`cap-*`、`AC-*`、流程�
 `.notebooklm/sources/query-index.md`、`.notebooklm/sources/project-map.md`、
 `.notebooklm/sources/shared-business-context.md`、capability sources、
   schema v6 `.notebooklm/manifest.json`、`.notebooklm/governance.md` 與 `.notebooklm/upload-plan.md`；
-  sources 另包含共用詞彙、
-  流程目錄與 active evidence-backed 跨功能流程。Codebase 是唯一內容依據，衝突以程式碼為主；
+  sources 另包含共用詞彙、流程目錄、active evidence-backed 跨功能流程的完整步驟／分支，
+  以及適用需求與規則正文。將 `analysis-gap`（尚未追查完成）、`evidence-gap`（已查但無證據）、
+  `business-confirmation`（實作已知但營運政策待確認）分開；只有第一種阻擋匯出。Codebase 是唯一內容依據，衝突以程式碼為主；
 v1–v5 或 BA-only retrieval contract 必須 full rebuild。Exporter 不呼叫雲端 API。
 ```
 

@@ -5,14 +5,16 @@ summary: 知識維護者以當下完整安全 Codebase 全量萃取每功能 BA�
 process_id: bp-notebooklm-ba-knowledge-export
 actors: [知識維護者, Business Analyst, System Analyst, NotebookLM 管理員]
 coverage_status: covered
+analysis_status: traced
+gap_classification: business-confirmation
 notebooklm_group: business-notebooklm-export
 notebooklm_role: business
 notebooklm_terms: [NotebookLM 匯出, 全量萃取, discovery ID, readiness preflight, BA, SA, 單一 Notebook]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:5330275f0c3241738d8c8af24b1f9b2d242b13ff8a5aee84a80a5ebb3f41e0a2
+source_digest: sha256:83f0b22e00e098dbe3034b62a2b347621e01fa59cdcd009cb19ad6d1dc2f6db1
 derived_from: ["[[overview]]", "[[notebooklm-export]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [business-process, notebooklm, export]
 status: active
 ---
@@ -45,14 +47,14 @@ upload plan，不包含雲端操作自動化。
 
 ## 主流程
 
-| 步驟 | 角色 | 業務行為 | 結果 | 證據狀態 |
-| --- | --- | --- | --- | --- |
-| 1 | 知識維護者 | 執行唯讀 discovery，盤點全部安全來源、排除、既有文件覆蓋與差異 | 形成 capability、待萃取內容、gap 與預計文件的預覽 | business-confirmed |
-| 2 | 使用者 | 審查 discovery 預覽 | 唯一一次確認，或要求調整後重新預覽 | business-confirmed |
-| 3 | 知識維護者 | 依 confirmed `discovery_id` 全量重建 managed BA／SA、保留 user notes 並完成 disposition | 每個 active capability 都有現況 BA／SA pair | implementation-observed |
-| 4 | 知識維護者 | 自動執行 readiness，檢查 analyzed ID、配對、locator、DLP、容量與 migration | 取得與最新 Wiki 及 exact pack plan 綁定的 `preflight_id` | implementation-observed |
-| 5 | 知識維護者 | 以 confirmed discovery ID 與 latest preflight ID 原子產生 schema-v6 pack | 取得 documents、upload sources、mapping、governance 與 upload plan | implementation-observed |
-| 6 | 交付者 | 依 upload plan 在同一本 Notebook 完整替換 static sources | 完成可跨功能查詢的現況 BA／SA 資料集 | business-confirmed |
+| 步驟 | 觸發／條件 | 角色 | 業務行為 | 資料讀寫 | 狀態前／後 | 成功結果 | 失敗／下一步 | 證據定位 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 使用者要求建立或更新 source pack | 知識維護者 | 執行唯讀 discovery，盤點安全來源、排除、Wiki 覆蓋與差異 | 讀取 repo、Wiki、設定；建立 inventory | `discovery_pending`／`preview_ready` | 形成 capability、gap 與文件計畫 | 不可讀或未分類來源列 gap，停止 readiness | `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:75` |
+| 2 | preview 已產生且 discovery ID 穩定 | 使用者 | 審查納入／排除、流程深度、BA／SA 配對與容量 | 讀取 preflight JSON；寫入確認意圖 | `preview_ready`／`plan_confirmed` | 取得唯一一次確認 | 範圍有疑問時修改計畫並重新 preview | `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:88` |
+| 3 | `plan_confirmed` | 知識維護者 | 從入口沿呼叫鏈追查流程，重建 managed BA／SA、保留 user notes，完成 disposition | 讀取 runtime/config/schema/docs/tests；寫入 Wiki、index、log、ledger | `plan_confirmed`／`knowledge_ready` | 每個 active capability 有 pair，流程保留條件、資料／狀態、分支與 locator | `analysis-gap`、uncovered 或 dangling link 阻擋；先補證據再重跑 | `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:131` |
+| 4 | 完整 snapshot 已寫入 coverage ledger | 知識維護者 | 執行 readiness，檢查 analyzed ID、配對、locator、流程完整性、DLP、容量與 migration | 讀取 Wiki、inventory、exact masked payload；產生 plan | `knowledge_ready`／`readiness_pending`／`ready_to_export` | 取得 latest `preflight_id` 與 flow-integrity report | stale、流程正文缺漏或 DLP residual 時保留舊 pack並修正 | `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5012` |
+| 5 | `ready_to_export` 且兩個 ID 相符 | 知識維護者 | 原子產生 schema-v6 pack，確認 sources 含完整流程與適用規則正文 | 寫入 `.notebooklm/documents/`、`sources/`、manifest、plan、governance | `ready_to_export`／`pack_generated` | documents、upload sources、mapping 與 governance 完整 | 超限、ID drift 或輸出邊界不安全時不替換舊 pack | `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:3725` |
+| 6 | `pack_generated` | 交付者 | 依 upload plan 在同一本 Notebook 完整替換 static sources | 讀取 `sources/*.md` 與 plan；手動上傳 tenant | `pack_generated`／`tenant_validation_pending` | 來源可供跨功能查詢 | NotebookLM 問答與租戶控制仍須人工驗證，不能由本機檢查代替 | `docs/operations/validation/notebooklm-ba-uat.md:1` |
 
 ## 替代與例外流程
 
@@ -64,8 +66,12 @@ upload plan，不包含雲端操作自動化。
   超過單一 Notebook 容量，或 output boundary 不安全，保留上一份 pack。
 - 若上一份 manifest 是 schema v1–v5 或非 `codebase-ba-sa-retrieval-v1`，採 full rebuild，不混用舊來源。
 - 無可靠 Codebase 證據的欄位明列 `Codebase 未提供證據`；這是可交付知識狀態，不是未完成分析。
+- 已查到實作但沒有營運政策、核准角色、重跑權限或 SLA 時標成 `business-confirmation`，保留已知行為；來源查過仍不存在的事實標成 `evidence-gap`。兩者都不應抹去程式已證明的結果。
 
 ## 業務規則
+
+`ba-knowledge-precedes-traceability`：先確立業務目的、流程與規則，再補技術定位；
+`readiness-preflight-required`：完成分析、同步 ledger 後，必須通過最新 readiness preflight 才能產生 pack。
 
 - [[ba-knowledge-precedes-traceability]]
 - [[readiness-preflight-required]]
@@ -87,7 +93,8 @@ upload plan，不包含雲端操作自動化。
 ## 成功結果
 
 BA 與 SA 能以 capability ID 跨查目的、角色、流程、規則、邊界、I/O、資料、狀態、介面、
-錯誤與 gaps。每份文件保留受控 locator，但不含 raw code body；交付者另在 tenant 驗證
+錯誤與 gaps。shared business context 會保留流程的完整步驟、條件、狀態／資料變更、失敗去向，
+以及適用需求／規則正文。每份文件保留受控 locator，但不含 raw code body；交付者另在 tenant 驗證
 存取、安全控制與問答品質，本機報告不代替該項驗證。
 
 ## 待確認事項

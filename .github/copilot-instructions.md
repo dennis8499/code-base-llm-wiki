@@ -28,7 +28,7 @@ workflow、schema、template 與 hook logic 的共同來源。
 - Interactive/Batch Ingest 與 Code Archaeology 可依
   `references/source-discovery-workflow.md` 使用 Windows x64 tgrep wrapper 作候選 locator；
   形成 claim 前必須直接重讀目前 source，Query 維持 Wiki-first 且不使用 tgrep 或 CLI fallback。
-- NotebookLM export 每次以 Wiki 為基線做全專案安全 preflight；`--root` 指定的檔案系統目錄是掃描邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。預覽功能 Ingest 並確認後才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。
+- NotebookLM export 每次以 Wiki 為基線做全專案安全 preflight；`--root` 指定的檔案系統目錄是掃描邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。預覽功能 Ingest 並確認後才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。流程分析要從入口追到實際呼叫鏈，保留每一步的條件、資料／狀態變更、成功與失敗分支；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開標示，不能以四步摘要或規則連結代替正文。
 - BA／SA／SD 文件載入共用 standards profile；SA 保持 solution-neutral，證據不足以具體 Gap 降級，不產生虛構 Mermaid 或設計。
 
 ## Copilot Adapter

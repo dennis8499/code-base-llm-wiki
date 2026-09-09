@@ -4,6 +4,8 @@ type: synthesis
 summary: 依框架現況整理分析文件產生的系統邊界、輸入輸出、狀態、介面與失敗行為。
 standards_profile: codebase-system-analysis-v1
 coverage_status: partial
+analysis_status: traced
+gap_classification: none
 capability_id: cap-analysis-document-generation
 notebooklm_document: sa
 notebooklm_group: business-analysis-documents
@@ -15,7 +17,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - tests/contracts/test_contracts.py
-source_digest: sha256:a5c9f773227c6baae8d3de1f4fa49bfa2b305c2f139fc535d5883f03fec78bda
+source_digest: sha256:139f2b5977eb8de23df31c5a44e89f11e4b3ecd579a19061f4c8f042c23b44d5
 source_locators:
   - ".agents/skills/codebase-wiki/references/business-analysis-workflow.md:12"
   - ".agents/skills/codebase-wiki/references/system-analysis-workflow.md:13"
@@ -35,7 +37,7 @@ status: active
 
 此能力由共享 Skill 的三份 workflow、對應 Markdown templates、Copilot prompts、Codex recipes 與 Wiki validators 組成。輸入是使用者文件類型與 scope、既有 Wiki、必要的唯讀 raw evidence；輸出是 `wiki/synthesis/` 下的 BA、SA 或 SD 文件以及 index/log 變更。
 
-## 資料與狀態
+## 資料、狀態與轉換
 
 文件以 YAML frontmatter 保存 `type`、`standards_profile`、`coverage_status`、`sources`、`derived_from`、日期、tags 與 status。正文以 managed、user-notes、local-only marker 分隔可重建內容、人工內容與本機追溯。需求及追溯使用 `cap-*`、`fr-*`、`SR-*`、`NFR-*`、`IF-*`、`VIEW-*`、`DE-*`、`AC-*` 和 `gap-*` 等穩定識別碼。
 
@@ -44,6 +46,10 @@ status: active
 平台 adapter 只把意圖導向共享 workflow；installer 將同一 Skill 與 templates 複製至 target。Frontmatter、stale、link/index、log 與 lint scripts 驗證檔案契約。缺來源時 workflow 產生 Gap；不合法 frontmatter、錯誤路徑、marker 遺失或 Wiki checks 失敗時不得宣稱完成。
 
 Codebase 未提供背景服務、資料庫、網路 API 或自動文件生成 runtime；實際內容由 agent 依 workflow 在本機檔案系統操作。Codebase 也未提供兩個平台完整 runtime UAT 的持續自動證據。
+
+## 失敗、例外與重試
+
+缺少上游 BA、來源證據或驗證目標時保留具體 Gap；legacy SA 首次轉換把原正文放入 user-notes。frontmatter、marker、index、log 或 lint 檢查失敗時不宣稱完成，也不把本機靜態檢查當成平台 runtime 或 NotebookLM 問答驗證。
 
 ## 來源定位
 

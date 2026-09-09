@@ -29,6 +29,8 @@
 
 ### Changed
 
+- **NotebookLM 流程深度與來源完整性**：流程分析工作流、BA／SA 與業務頁模板現在要求從入口沿呼叫鏈記錄觸發條件、逐步行為、資料／狀態變更、結果、失敗去向與來源定位；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開處理。Exporter 在遮罩與安全分割後檢查實際 `sources/*.md` 是否保留流程正文、分支及適用 requirement／rule 正文，並以反例測試拒絕標題或四步摘要；結構檢查不宣稱 NotebookLM 問答已驗證。
+
 - **Installer 與 Release bundle metadata**：Copilot/Codex 共用 surface 同步安裝 tgrep
   wrapper、manifest 與 binary；release `update-manifest.json` 新增 `bundled_tools`，建置
   前驗證固定版本、路徑與 SHA-256，並排除 target 的 `.tgrep/` generated state。

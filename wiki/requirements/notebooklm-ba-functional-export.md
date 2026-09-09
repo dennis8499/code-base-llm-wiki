@@ -6,6 +6,8 @@ requirement_id: fr-notebooklm-ba-functional-export
 capability_id: cap-notebooklm-ba-functional-export
 applies_to: ["[[notebooklm-ba-knowledge-export]]"]
 evidence_state: implementation-observed
+analysis_status: traced
+gap_classification: none
 notebooklm_group: business-notebooklm-export
 notebooklm_role: business
 notebooklm_terms: [NotebookLM 匯出, BA, SA, 完整 codebase 覆蓋, 一次確認, DLP 遮罩, NotebookLM Enterprise]
@@ -14,9 +16,9 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: sha256:2165ae78c2a217cd4a46d496246261614e7bfb4857c9af27eddfa4099ef41c11
+source_digest: sha256:5e811523f35dd7f3c040d0d17e1b265d0439cdcf0cb886432ad14d332d4b6872
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [business-requirement, notebooklm, export, dlp]
 status: active
 ---
@@ -58,6 +60,12 @@ System Analyst 可直接查詢的現況知識。程式、設定、schema、測�
 | 產生 pack | 產生獨立 BA／SA documents 與無損 upload sources mapping | 只上傳 sources，governance 留在本機 | implementation-observed |
 | 容量檢核 | 依 Enterprise hard limits 與保守 local limits 分割／壓縮 | 超限時在 atomic commit 前失敗並保留舊 pack | implementation-observed |
 
+## 完整流程與失敗分支
+
+入口從 discovery preflight 開始，沿 safe-scope inventory、Wiki coverage、BA／SA 配對與 exact masked payload 逐步前進。流程完整性檢查要求每個 active evidence-backed process 保留觸發／前置條件、每一步行為、資料讀寫、狀態變更、成功結果、替代／例外與失敗去向，並把適用的 requirement／rule 正文放入 `sources/shared-business-context.md`。只有標題、四步摘要或 `[[rule-page]]` 連結不算完整。
+
+分析缺口分為 `analysis-gap`（呼叫鏈尚未追查完成，阻擋 readiness）、`evidence-gap`（來源已查但沒有該事實）與 `business-confirmation`（實作行為已觀察但營運政策、責任、重跑權限或 SLA 待確認）。後兩者仍要保留程式已證明的行為；只有來源沒有該事實時才寫 `Codebase 未提供證據`。
+
 ## 業務規則與例外
 
 - [[ba-knowledge-precedes-traceability]]
@@ -89,6 +97,9 @@ System Analyst 可直接查詢的現況知識。程式、設定、schema、測�
 - `AC-NBLM-009`：Given 本機治理檢查完成但沒有租戶證據，When 產生 governance report，Then IAM、VPC Service Controls、CMEK、data location、Sensitive Data Protection 與 Model Armor 都標示管理員未驗證。
 - `AC-NBLM-010`：Given schema v1–v5 或 BA-only pack，When 升級到 schema v6，Then同一 Notebook 的 upload plan 要求移除所有舊 static sources，再完整上傳新的 BA／SA sources。
 - `AC-NBLM-011`：Given 文件含人工註記與程式識別碼，When 重新萃取及匯出，Then raw sources 與 user-notes 保持完整，敘述使用繁體中文並保留必要 identifier、API 與英文專有名詞。
+- `AC-NBLM-012`：Given active process 有完整入口、分支與適用規則，When 建立 upload sources，Then shared business context 保留每一步的條件、資料／狀態、結果、失敗去向與規則正文；只有標題、四步摘要或規則連結時 readiness 必須失敗。
+- `AC-NBLM-013`：Given 流程追查尚未完成，When 標記 `analysis-gap`，Then readiness 阻擋；Given 已查來源但缺事實或只缺營運政策，When 標記 `evidence-gap`／`business-confirmation`，Then 保留已知 implementation-observed 行為並明列未知，不捏造核准角色、重跑權限或 SLA。
+- `AC-NBLM-014`：Given 結構完整性檢查通過，When 尚未在 NotebookLM tenant 實際提問，Then report 明確標示問答品質為未驗證，不宣稱 NotebookLM 一定能回答。
 
 ## 關聯流程
 

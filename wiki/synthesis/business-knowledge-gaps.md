@@ -7,7 +7,7 @@ notebooklm_role: business
 notebooklm_terms: [業務知識缺口, 待確認, 非文字證據, NotebookLM 驗收, 文件 owner, runtime UAT, architecture decision, quality target]
 sources: []
 derived_from: ["[[business-process-catalog]]", "[[business-rule-catalog]]", "[[notebooklm-ba-knowledge-export]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]"]
-last_updated: 2026-09-07
+last_updated: 2026-09-09
 tags: [synthesis, business-knowledge-gaps, notebooklm]
 status: active
 ---
@@ -31,7 +31,9 @@ status: active
 目前無。解決後保留原 Gap ID，補上確認來源、日期與結果，不刪除歷史脈絡。
 
 `analysis-gap` 不列在本表。它表示納入來源尚未完成分析或缺少 BA／SA pair，readiness
-必須阻擋；本表只保存 Codebase 已檢查後仍無可靠證據，或需要外部驗證的 durable gap。
+必須阻擋；`evidence-gap` 表示來源已查但仍沒有該事實，`business-confirmation` 表示
+程式已證明目前行為但營運政策、責任、核准角色、重跑權限或 SLA 仍需確認。本表只保存
+後兩類的 durable gap；不以 `Codebase 未提供證據` 掩蓋尚未完成的追查。
 <!-- codebase-wiki:managed:end -->
 
 <!-- codebase-wiki:user-notes:start -->

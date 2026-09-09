@@ -18,6 +18,7 @@ notebooklm_role: exclude
 
 - BA 先從 [[overview]]、[[business-analysis]]、[[business-process-catalog]] 與 [[business-rule-catalog]] 理解目的、流程與規則。
 - 名詞邊界與未確認事項分別查 [[business-glossary]]、[[business-knowledge-gaps]]。
+- 完整流程問題要查 [[notebooklm-ba-knowledge-export]] 與 [[notebooklm-exporter]]：逐步條件、資料／狀態、失敗分支與適用規則正文都必須進入實際 source；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開保留。
 - 需求與設計追溯依序查 [[system-analysis]] 與 [[system-design]]；需要實作定位時再進入 [[notebooklm-exporter]]、[[system-architecture]] 與 Ingest／Archaeology 的 tgrep source-discovery reference。
 
 <!-- codebase-wiki:index:start -->

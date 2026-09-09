@@ -601,3 +601,10 @@ status: active
 - 公開文件補齊 `tests/tgrep/` 測試面，統一 12 個操作情境、NotebookLM schema-v6 輸出路徑與只上傳 `sources/*.md` 的邊界。
 - 回歸契約固定 tgrep 的文件可見範圍與 Query 不使用 tgrep 的規則；本次未改變 API、CLI、installer 行為或產品版號。
 - 受影響頁面：[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[platform-adapters-and-release]]、[[codebase-functional-coverage]]、[[cap-analysis-document-generation-sa]]、[[system-analysis]]
+
+## [2026-09-09] update | 改善 NotebookLM 匯出流程知識深度
+
+- 更新 NotebookLM exporter、分析工作流、BA／SA 與業務頁模板，要求從入口沿呼叫鏈保留逐步條件、資料／狀態變更、結果、失敗去向與來源定位；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開記錄，未完成追查阻擋匯出。
+- shared business context 現在把 active 流程的適用 requirement／rule 正文帶入實際 upload source；新增遮罩／分割後的 flow-integrity 檢查與虛構關帳反例測試，拒絕只有標題、四步摘要、缺分支或只有規則連結的內容。
+- 同步框架 README、Codex／Copilot adapters、工作流／驗收文件、ChangeLog 與相關 Wiki；結構檢查只宣稱內容與追溯完整，NotebookLM tenant 問答仍標示未驗證。
+- 受影響頁面：[[index]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[notebooklm-ba-functional-export]]、[[notebooklm-ba-knowledge-export]]、[[generate-analysis-document]]、[[cap-notebooklm-ba-functional-export-ba]]、[[cap-notebooklm-ba-functional-export-sa]]、[[cap-analysis-document-generation-ba]]、[[cap-analysis-document-generation-sa]]、[[codebase-functional-coverage]]、[[log]]

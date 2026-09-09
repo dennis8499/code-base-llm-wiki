@@ -47,6 +47,19 @@ ALLOWED_EVIDENCE_STATES = {
     "inference",
     "gap",
 }
+ALLOWED_ANALYSIS_STATUSES = {
+    "untraced",
+    "traced",
+    "complete",
+    "evidence-gap",
+    "business-confirmation",
+}
+ALLOWED_GAP_CLASSIFICATIONS = {
+    "none",
+    "analysis-gap",
+    "evidence-gap",
+    "business-confirmation",
+}
 NOTEBOOKLM_GROUP_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 STANDARDS_PROFILE_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SOURCE_DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -188,6 +201,19 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
         errors.append(
             f"{rel}: coverage_status must be one of "
             f"{', '.join(sorted(ALLOWED_COVERAGE_STATUS))}; got {coverage_status!r}"
+        )
+
+    analysis_status = fm.get("analysis_status")
+    if analysis_status is not None and analysis_status not in ALLOWED_ANALYSIS_STATUSES:
+        errors.append(
+            f"{rel}: analysis_status must be one of "
+            f"{', '.join(sorted(ALLOWED_ANALYSIS_STATUSES))}; got {analysis_status!r}"
+        )
+    gap_classification = fm.get("gap_classification")
+    if gap_classification is not None and gap_classification not in ALLOWED_GAP_CLASSIFICATIONS:
+        errors.append(
+            f"{rel}: gap_classification must be one of "
+            f"{', '.join(sorted(ALLOWED_GAP_CLASSIFICATIONS))}; got {gap_classification!r}"
         )
 
     summary = fm.get("summary")

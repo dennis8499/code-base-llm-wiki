@@ -40,9 +40,10 @@ repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-
    preflight 納入的其他 UTF-8 runtime code、必要設定/manifests、schema/migrations、
    behavioral tests 與既有文件。排除 CI/CD、IaC、build/dev tooling、
    dependencies/generated、binary、credentials、framework adapters、Wiki 與 output。
-4. 依可觀察行為建立 stable `fr-*`／`cap-*` 與 `AC-*`，再連結角色、觸發、前置條件、
-   主／例外流程、業務結果、規則與狀態轉換，
-   不要只照目錄切頁，也不要把實作行為當成正式政策。回報 included file counts、
+4. 依可觀察行為建立 stable `fr-*`／`cap-*` 與 `AC-*`，從入口沿實際呼叫鏈逐步追查，
+   為每一步記錄觸發／條件、角色、處理、資料讀寫、狀態前後值、成功結果、阻擋原因、
+   失敗去向與重試／回復，再連結主／例外流程、業務結果與規則。不要只照目錄切頁、
+   只列四步摘要，或把實作行為當成正式政策。回報 included file counts、
    file-level exclusion reasons、pruned excluded-root counts/summaries、業務流程／規則／詞彙
    requirement/process/rule coverage、每個 safe file disposition、預計重建的 Wiki
    pages、容量估計、DLP masking status 與 gaps，然後等待使用者確認。
@@ -69,7 +70,9 @@ repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-
 
 7. 確認 exporter 產生完整 `documents/{cap}-ba.md`／`-sa.md`、
    `sources/query-index.md`、`sources/project-map.md` 與 document/source mapping；
-   `query-index.md` 必須同時路由 BA 與 SA 問題。
+   `sources/shared-business-context.md` 必須包含流程的具體步驟、條件、分支、資料／
+   狀態變更及適用需求／規則正文，而非只有標題或 Wiki 連結；`query-index.md` 必須
+   同時路由 BA 與 SA 問題。結構檢查只代表內容與追溯完整，不代表 NotebookLM 問答已驗證。
 8. 報告 `.notebooklm/upload-plan.md` 的 `added`、`changed`、`deleted`、
    `unchanged`、skipped、coverage、DLP masking counts、
    migration/full-rebuild status、warnings 與剩餘 slots，
@@ -84,6 +87,9 @@ repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-
 - NotebookLM 問答以 `query-index.md` 路由到最多五個業務能力群組；先以 `fr-*`、`AC-*`
   與業務語言回答，不得列 raw code、config、path/API 或 traceability，也不得把
   implementation-observed 說成核准政策。
+- 將缺口分為 `analysis-gap`（尚未追查完成，阻擋匯出）、`evidence-gap`（已查來源但
+  沒有證據）與 `business-confirmation`（實作行為已知但營運政策／責任待確認）。後兩者
+  必須保留已知行為；只有真正沒有來源證據時才寫 `Codebase 未提供證據`。
 - changed 的本地 static source 必須在 NotebookLM 移除舊檔後重新上傳；unchanged 不需重傳。
 - 每個功能的 BA／SA 都必須映射到 source pack。完整內容或單檔無法符合 300 sources、500 MB /
   500,000 words hard limits

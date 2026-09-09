@@ -14,7 +14,7 @@ sources:
   - .agents/skills/codebase-wiki/references/business-analysis-workflow.md
   - .agents/skills/codebase-wiki/assets/business-analysis-template.md
   - .github/prompts/business-analysis-doc.prompt.md
-source_digest: sha256:53e3ac941a892821beee900c35675d4dd94783ea54ad5bac6ac34474e65531a4
+source_digest: sha256:982afc35742de97a81b9fc7d95548748f1b12f012b0207c289ef82499bfaf4c8
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]"]
 last_updated: 2026-09-07
 tags: [business-requirement, business-analysis, standards-aligned, notebooklm]

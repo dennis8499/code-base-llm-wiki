@@ -52,7 +52,9 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
      加速候選定位，仍須直接讀取目前檔案
    - 若由 NotebookLM preparation 觸發，先讀 `business_source_paths` 與現有業務文件，
      再依 safe-scope contract 掃描 runtime/config/schema/docs；以角色、觸發、前置條件、
-     業務結果、例外、規則與狀態轉換建立端到端業務流程
+     業務結果、例外、規則與狀態轉換建立端到端業務流程。沿入口追蹤實際呼叫鏈，
+     每一步保留條件、資料讀寫、狀態前後值、成功結果、失敗去向、重試／回復與來源定位；
+     不以標題、四步摘要或規則連結代替流程正文
 2. **排序階段**：
    - 按依賴關係排序：先處理被依賴最多的底層模組
    - 若無明確依賴關係，按目錄結構由外而內
@@ -74,7 +76,10 @@ business glossary、business knowledge gaps，以及每個流程／規則頁。B
 `notebooklm_role: business`；選定的 module/entity/architecture pages 使用
 `traceability`，只作技術追溯。每項敘述標示 `business-confirmed`、
 `implementation-observed`、`inference` 或 `gap`。文件完成後必須再跑 readiness
-preflight，apply 使用第二次 ID。一次確認後的整批更新只追加一筆 `ingest` log。
+preflight，apply 使用第二次 ID。流程缺口另外標成 `analysis-gap`（尚未追查完成）、
+`evidence-gap`（已查來源但沒有證據）或 `business-confirmation`（已知實作行為但政策／
+責任待確認）；前者阻擋匯出，後兩者保留已知行為。一次確認後的整批更新只追加一筆
+`ingest` log。
 
 ---
 

@@ -9,6 +9,8 @@ evidence_state: implementation-observed
 notebooklm_group: "business-{capability-slug}"
 notebooklm_role: business
 notebooklm_terms: ["{功能名稱}", "{角色}", "{業務結果}"]
+analysis_status: untraced
+gap_classification: analysis-gap
 sources:
   - "{path/to/implementation-evidence}"
 derived_from: ["[[overview]]", "[[{business-process-page}]]"]
@@ -21,6 +23,17 @@ status: active
 # {功能需求名稱}
 
 <!-- codebase-wiki:managed:start -->
+## 分析狀態與缺口分類
+
+| 欄位 | 值 |
+| --- | --- |
+| Evidence trace | `untraced`／`traced` |
+| Gap classification | `analysis-gap`／`evidence-gap`／`business-confirmation`／`none` |
+
+完成需求分析前，須把入口、條件、主流程、例外、資料／狀態與可驗收結果逐一追查；
+營運政策或權限若只需要外部確認，保留已知 implementation-observed 行為並標成
+`business-confirmation`。
+
 ## 業務目的
 
 ## 角色與權限
@@ -32,6 +45,12 @@ status: active
 | 情境 | 系統行為 | 可觀察結果 | 證據狀態 |
 | --- | --- | --- | --- |
 | {scenario} | {behavior} | {outcome} | business-confirmed / implementation-observed / inference / gap |
+
+## 完整流程與失敗分支
+
+| 步驟 | 觸發／前置條件 | 行為與資料變更 | 狀態前後值 | 成功結果 | 例外／重跑 | 證據狀態／locator |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | {condition} | {observable action} | {before → after} | {result} | {failure branch} | {state} / {path:line} |
 
 ## 業務規則與例外
 

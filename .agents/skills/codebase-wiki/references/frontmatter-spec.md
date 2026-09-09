@@ -24,6 +24,8 @@
 | `source_digest` | string | `sha256:<64 lowercase hex>`；新增或重大更新且 `sources` 非空的頁面必填。 |
 | `standards_profile` | string | 選填、kebab-case；新 BA／SA／SD 工作流必填，legacy SA 缺少時仍相容。 |
 | `coverage_status` | enum | 選填 `covered` / `partial` / `gap`；新 BA／SA／SD 與 business-process 必填。 |
+| `analysis_status` | enum | 選填 `untraced` / `traced` / `complete` / `evidence-gap` / `business-confirmation`；更新後的流程與 BA／SA 文件用來標示追查是否完成。 |
+| `gap_classification` | enum | 選填 `none` / `analysis-gap` / `evidence-gap` / `business-confirmation`；分開標示未追查、來源缺證據與待業務確認。 |
 
 `source_digest` 對排序後的 `repo-relative-path + NUL + file-sha256` records
 再做 SHA-256。目錄來源展開 Git tracked 與 non-ignored untracked files，並排除
@@ -58,7 +60,11 @@ standards-aligned BA／SA 不因 role 自動成為 schema-v6 upload candidate。
 `analysis-document-standards.md`。
 
 `status: active` 只代表 Wiki freshness；`coverage_status` 描述文件證據是否完整，
-兩者不得互相代替。
+兩者不得互相代替。`analysis_status: untraced` 或 `gap_classification: analysis-gap`
+代表追查尚未完成，會阻擋 NotebookLM 匯出；`evidence-gap` 與
+`business-confirmation` 會保留已知的實作內容並明確標示未知政策，不得改寫成
+「Codebase 未提供證據」。未標示 `analysis_status` 的舊頁面仍以 legacy 相容模式處理，
+但新模板產生的流程、BA／SA 文件應填寫這兩欄。
 
 ### `type` 允許值
 
@@ -148,6 +154,8 @@ standards-aligned BA／SA 不因 role 自動成為 schema-v6 upload candidate。
 | `process_id` | string | ✅ | 穩定 kebab-case ID，建議 `bp-{domain}-{process}` |
 | `actors` | string[] | ✅ | 參與角色；未知時可為空並在 body 登錄 gap |
 | `coverage_status` | enum | ✅ | `covered` / `partial` / `gap` |
+| `analysis_status` | enum | 新頁面建議 | `traced` 表示已沿呼叫鏈完成追查；`untraced` 會阻擋匯出 |
+| `gap_classification` | enum | 新頁面建議 | `none` / `analysis-gap` / `evidence-gap` / `business-confirmation` |
 | `notebooklm_group` | string | ✅ | `business-{capability}` |
 | `notebooklm_role` | enum | ✅ | 固定為 `business` |
 | `notebooklm_terms` | string[] | ✅ | 非空的流程、角色、觸發與同義詞 |
@@ -235,3 +243,7 @@ page-shape source of truth.
 18. `standards_profile` 若存在，必須是非空 kebab-case 字串。
 19. `coverage_status` 若存在，必須是 `covered` / `partial` / `gap`；
     business-process 仍強制必填，新 BA／SA／SD 由工作流契約強制必填。
+20. `analysis_status` 若存在，必須是 `untraced` / `traced` / `complete` /
+    `evidence-gap` / `business-confirmation`。
+21. `gap_classification` 若存在，必須是 `none` / `analysis-gap` /
+    `evidence-gap` / `business-confirmation`。

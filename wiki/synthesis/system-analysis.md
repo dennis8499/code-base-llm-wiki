@@ -12,7 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/contracts/test_contracts.py
   - tests/wiki/test_wiki_lint.py
-source_digest: sha256:c5625de3abea2fd534195a9d6db91a84417c625620e57c14b27fe76753aa7f4b
+source_digest: sha256:ade252018355e6d88e279b01e60641cb55eef0c1befa4a0a8007442f3dbe03d5
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
 last_updated: 2026-09-09
 tags: [synthesis, system-analysis, standards-aligned]

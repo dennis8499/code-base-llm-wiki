@@ -264,6 +264,42 @@ ANALYZED_DISCOVERY_PATTERN = re.compile(
     r"(?mi)^Analyzed discovery ID:\s*`?(sha256:[0-9a-f]{64})`?\s*$"
 )
 
+# ``analysis_status`` is deliberately separate from ``coverage_status``.  The
+# former says whether the analyst has completed the evidence trace; the latter
+# says how much of the business baseline is supported.  Existing Wiki pages may
+# omit the field and are treated as legacy pages during migration.  New pages
+# created from the templates carry the field and therefore receive the strict
+# flow checks below.
+FLOW_ANALYSIS_STATUSES = {
+    "untraced",
+    "traced",
+    "complete",  # accepted alias for hand-authored pages
+    "evidence-gap",
+    "business-confirmation",
+}
+FLOW_GAP_CLASSIFICATIONS = {
+    "none",
+    "analysis-gap",
+    "evidence-gap",
+    "business-confirmation",
+}
+FLOW_STRICT_STATUSES = {"traced", "complete", "evidence-gap", "business-confirmation"}
+FLOW_BLOCKING_STATUSES = {"untraced"}
+FLOW_SECTION_ALIASES = {
+    "purpose_scope": ("業務目的與範圍", "業務目的", "功能目的"),
+    "actors": ("角色", "角色與權限", "利害關係人與角色"),
+    "trigger_preconditions": ("觸發與前置條件", "觸發、前置條件", "前置條件"),
+    "main_flow": ("主流程", "主要流程", "端到端流程"),
+    "alternate_exceptions": ("替代與例外流程", "替代流程與例外", "例外流程"),
+    "rules": ("業務規則", "規則", "業務規則與例外"),
+    "state_data": ("輸入、輸出與狀態轉換", "輸入、輸出與狀態", "資料、狀態與轉換"),
+    "downstream": ("上下游影響", "下游影響", "跨功能影響"),
+    "success": ("成功結果", "結果與例外", "業務結果"),
+    "gaps": ("待確認事項", "缺口與待確認", "分析缺口"),
+}
+FLOW_REQUIRED_SECTIONS = tuple(FLOW_SECTION_ALIASES)
+ANALYSIS_STATUS_ALIASES = {"complete": "traced"}
+
 
 class ExportError(ValueError):
     """Raised when a safe, complete documentation pack cannot be produced."""
@@ -1776,6 +1812,249 @@ def _wiki_link_targets(text: str) -> set[str]:
     }
 
 
+def _markdown_h2_sections(text: str) -> dict[str, str]:
+    """Collect level-two Markdown sections while retaining nested content."""
+
+    sections: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in text.splitlines():
+        match = re.match(r"^##\s+(.+?)\s*$", line)
+        if match:
+            current = _clean_query_value(match.group(1))
+            sections.setdefault(current, [])
+            continue
+        if current is not None:
+            sections[current].append(line)
+    return {heading: "\n".join(lines).strip() for heading, lines in sections.items()}
+
+
+def _section_for_key(sections: dict[str, str], key: str) -> tuple[str, str] | None:
+    aliases = FLOW_SECTION_ALIASES[key]
+    for heading, content in sections.items():
+        normalized = re.sub(r"[：:、，,\s]", "", heading).lower()
+        for alias in aliases:
+            alias_normalized = re.sub(r"[：:、，,\s]", "", alias).lower()
+            if normalized == alias_normalized or alias_normalized in normalized:
+                return heading, content
+    return None
+
+
+def _meaningful_flow_text(text: str) -> bool:
+    """Return whether a section contains analysis rather than a blank template."""
+
+    if not text:
+        return False
+    value = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    value = re.sub(r"^\s*\|?\s*:?-{2,}:?\s*\|.*$", "", value, flags=re.MULTILINE)
+    value = re.sub(r"^\s*(?:保留|請填寫|待填寫|TODO|TBD)\b.*$", "", value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r"^\s*[-*]?\s*\[\[[^\]]+\]\]\s*$", "", value, flags=re.MULTILINE)
+    value = re.sub(r"\{[^}\n]+\}", "", value)
+    value = re.sub(r"^\s*[-*]\s*$", "", value, flags=re.MULTILINE)
+    return bool(value.strip())
+
+
+def _flow_step_count(text: str) -> int:
+    """Count concrete process rows or numbered/listed steps in a flow section."""
+
+    table_rows = 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not (stripped.startswith("|") and stripped.endswith("|")):
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if not cells or all(re.fullmatch(r":?-{2,}:?", cell) for cell in cells):
+            continue
+        first = cells[0].lower()
+        if first in {"步驟", "step", "序號", "#"}:
+            continue
+        concrete = [cell for cell in cells if cell and not re.fullmatch(r"\{[^}]+\}", cell)]
+        if len(cells) >= 3 and len(concrete) >= 3:
+            table_rows += 1
+    if table_rows:
+        return table_rows
+    return sum(
+        1
+        for line in text.splitlines()
+        if re.match(r"^\s*(?:\d+[.)]|[-*])\s+\S+", line)
+    )
+
+
+def _flow_step_detail_present(text: str) -> bool:
+    """Require step-level evidence fields instead of accepting a short outline."""
+
+    detail_lines: list[str] = []
+    data_rows: list[list[str]] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("|") and stripped.endswith("|"):
+            cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+            if not cells or cells[0].lower() in {"步驟", "step", "序號", "#"}:
+                continue
+            if all(re.fullmatch(r":?-{2,}:?", cell) for cell in cells):
+                continue
+            data_rows.append(cells)
+        detail_lines.append(line)
+    detail_signals = (
+        ("觸發", "條件", "前置"),
+        ("資料", "讀取", "寫入", "輸入", "輸出"),
+        ("狀態", "轉換", "前狀態", "後狀態"),
+        ("成功", "結果", "回傳"),
+        ("失敗", "例外", "阻擋", "重試", "回復", "回滾"),
+        ("來源", "定位", "evidence", "`"),
+    )
+    normalized = "\n".join(detail_lines).lower()
+    signal_count = sum(
+        1
+        for signals in detail_signals
+        if any(signal.lower() in normalized for signal in signals)
+    )
+    if signal_count >= 4:
+        return True
+    for cells in data_rows:
+        concrete = [cell for cell in cells[1:] if cell and not re.fullmatch(r"\{[^}]+\}", cell)]
+        if len(cells) >= 7 and len(concrete) >= 4:
+            return True
+    return False
+
+
+def _flow_analysis_status(frontmatter: dict[str, Any]) -> str:
+    value = frontmatter.get("analysis_status")
+    if value is None:
+        return "legacy"
+    if not isinstance(value, str):
+        return "invalid"
+    normalized = ANALYSIS_STATUS_ALIASES.get(value, value)
+    return normalized if normalized in FLOW_ANALYSIS_STATUSES else "invalid"
+
+
+def _flow_gap_classification(frontmatter: dict[str, Any], status: str) -> str:
+    value = frontmatter.get("gap_classification")
+    if isinstance(value, str) and value in FLOW_GAP_CLASSIFICATIONS:
+        return value
+    if status == "untraced":
+        return "analysis-gap"
+    if status == "evidence-gap":
+        return "evidence-gap"
+    if status == "business-confirmation":
+        return "business-confirmation"
+    return "none"
+
+
+def process_flow_quality(page: InputFile) -> dict[str, Any]:
+    """Assess the depth of one business-process page.
+
+    Legacy pages without ``analysis_status`` remain readable and do not block
+    an existing pack.  Pages produced from the updated template opt into the
+    strict contract: every flow section must be present, the main flow must
+    contain a concrete step, and an unfinished trace is a processing gap.
+    """
+
+    frontmatter = parse_frontmatter_text(page.text)
+    status = _flow_analysis_status(frontmatter)
+    classification = _flow_gap_classification(frontmatter, status)
+    sections = _markdown_h2_sections(_without_frontmatter(page.text))
+    missing_sections: list[str] = []
+    section_headings: dict[str, str] = {}
+    section_content: dict[str, str] = {}
+    for key in FLOW_REQUIRED_SECTIONS:
+        match = _section_for_key(sections, key)
+        if match is None or not _meaningful_flow_text(match[1]):
+            missing_sections.append(key)
+            continue
+        section_headings[key] = match[0]
+        section_content[key] = match[1]
+
+    step_count = _flow_step_count(section_content.get("main_flow", ""))
+    issues: list[str] = []
+    if status == "invalid":
+        issues.append(f"invalid analysis_status in business process: {page.path}")
+    elif status in FLOW_BLOCKING_STATUSES:
+        issues.append(f"flow analysis not completed: {page.path}")
+    elif status in FLOW_STRICT_STATUSES:
+        if classification == "analysis-gap":
+            issues.append(f"analysis-gap classification conflicts with completed flow: {page.path}")
+        if missing_sections:
+            issues.append(
+                f"flow is incomplete: {page.path}; missing sections: "
+                + ", ".join(missing_sections)
+            )
+        if step_count < 1:
+            issues.append(f"flow has no concrete main-flow step: {page.path}")
+        elif not _flow_step_detail_present(section_content.get("main_flow", "")):
+            issues.append(
+                f"flow lacks step-level trigger/data/state/failure detail: {page.path}"
+            )
+
+    return {
+        "path": page.path,
+        "analysis_status": status,
+        "gap_classification": classification,
+        "strict": status in FLOW_STRICT_STATUSES or status in FLOW_BLOCKING_STATUSES,
+        "missing_sections": missing_sections,
+        "step_count": step_count,
+        "section_headings": section_headings,
+        "blocking_issues": sorted(set(issues)),
+    }
+
+
+def process_flow_coverage(pages: Sequence[InputFile]) -> dict[str, Any]:
+    """Return process-depth coverage and the distinct reasons for any gap."""
+
+    active = [
+        page
+        for page in pages
+        if parse_frontmatter_text(page.text).get("type") == "business-process"
+        and parse_frontmatter_text(page.text).get("status") == "active"
+    ]
+    items = [process_flow_quality(page) for page in active]
+    blocking = sorted(
+        {
+            issue
+            for item in items
+            for issue in item["blocking_issues"]
+        }
+    )
+    by_status = Counter(item["analysis_status"] for item in items)
+    analysis_gaps = sorted(
+        item["path"]
+        for item in items
+        if item["gap_classification"] == "analysis-gap"
+    )
+    evidence_gaps = sorted(
+        item["path"]
+        for item in items
+        if item["gap_classification"] == "evidence-gap"
+    )
+    business_confirmation_gaps = sorted(
+        item["path"]
+        for item in items
+        if item["gap_classification"] == "business-confirmation"
+    )
+    if blocking:
+        status = "gap"
+    elif analysis_gaps or evidence_gaps or business_confirmation_gaps or by_status.get("legacy"):
+        status = "partial"
+    else:
+        status = "covered"
+    return {
+        "status": status,
+        "total": len(
+            [
+                page
+                for page in pages
+                if parse_frontmatter_text(page.text).get("type") == "business-process"
+            ]
+        ),
+        "active": len(active),
+        "by_analysis_status": dict(sorted(by_status.items())),
+        "items": items,
+        "blocking_issues": blocking,
+        "analysis_gaps": analysis_gaps,
+        "evidence_gaps": evidence_gaps,
+        "business_confirmation_gaps": business_confirmation_gaps,
+    }
+
+
 def business_contract_coverage(pages: Sequence[InputFile]) -> dict[str, Any]:
     """Validate the structural BA knowledge contract without judging semantics."""
 
@@ -1796,6 +2075,26 @@ def business_contract_coverage(pages: Sequence[InputFile]) -> dict[str, Any]:
         if parse_frontmatter_text(page.text).get("type") == "business-requirement"
     ]
     issues: list[str] = []
+    process_quality = process_flow_coverage(pages)
+    issues.extend(process_quality["blocking_issues"])
+    analysis_gaps = list(process_quality["analysis_gaps"])
+    evidence_gaps = list(process_quality["evidence_gaps"])
+    business_confirmation_gaps = list(process_quality["business_confirmation_gaps"])
+
+    # Requirements and rules use the same optional trace markers as process
+    # pages.  Legacy pages without a marker remain compatible, while a new
+    # page explicitly marked unfinished must stop readiness as well.
+    for page in [*requirements, *rules]:
+        frontmatter = parse_frontmatter_text(page.text)
+        trace_status = _flow_analysis_status(frontmatter)
+        classification = _flow_gap_classification(frontmatter, trace_status)
+        if trace_status in {"invalid", "untraced"} or classification == "analysis-gap":
+            analysis_gaps.append(page.path)
+            issues.append(f"business evidence analysis not completed: {page.path}")
+        elif classification == "evidence-gap":
+            evidence_gaps.append(page.path)
+        elif classification == "business-confirmation":
+            business_confirmation_gaps.append(page.path)
 
     for path in REQUIRED_BA_DOCUMENTS:
         page = by_path.get(path)
@@ -1927,6 +2226,10 @@ def business_contract_coverage(pages: Sequence[InputFile]) -> dict[str, Any]:
     return {
         "status": status,
         "required_documents": required_document_coverage(pages),
+        "process_quality": process_quality,
+        "analysis_gaps": sorted(set(analysis_gaps)),
+        "evidence_gaps": sorted(set(evidence_gaps)),
+        "business_confirmation_gaps": sorted(set(business_confirmation_gaps)),
         "processes": {
             "total": len(processes),
             "active": len(active_processes),
@@ -2018,6 +2321,65 @@ def _source_locator_issues(
     return sorted(set(issues)), sorted(set(unsafe))
 
 
+CAPABILITY_SECTION_ALIASES = {
+    "ba": {
+        "purpose": ("功能目的、角色與觸發", "功能目的", "業務目的"),
+        "flow": ("前置條件、流程與規則", "前置條件與完整流程", "流程與規則", "逐步業務流程", "主流程"),
+        "outcome": ("結果與例外", "結果、例外與治理", "結果與例外", "結果、狀態與例外"),
+        "state": ("輸入、輸出與狀態", "狀態與資料變更", "資料、狀態與轉換", "結果、狀態與例外"),
+    },
+    "sa": {
+        "boundary": ("系統邊界、輸入與輸出", "系統邊界", "邊界、輸入輸出與狀態"),
+        "data": ("資料、狀態與轉換", "資料、狀態與轉換"),
+        "interface": ("介面、依賴與錯誤處理", "介面、依賴與錯誤處理", "資料、介面與錯誤處理"),
+        "failure": ("失敗、例外與重試", "失敗與例外處理", "逐步執行與失敗分支", "錯誤處理"),
+    },
+}
+
+
+def capability_document_quality(page: InputFile, role: str) -> dict[str, Any]:
+    """Check the depth marker and minimum independent-reading sections."""
+
+    frontmatter = parse_frontmatter_text(page.text)
+    status = _flow_analysis_status(frontmatter)
+    sections = _markdown_h2_sections(_without_frontmatter(page.text))
+    aliases = CAPABILITY_SECTION_ALIASES[role]
+    missing: list[str] = []
+    for key, values in aliases.items():
+        match = None
+        for heading, content in sections.items():
+            normalized = re.sub(r"[：:、，,\s]", "", heading).lower()
+            if any(
+                re.sub(r"[：:、，,\s]", "", alias).lower() in normalized
+                for alias in values
+            ) and _meaningful_flow_text(content):
+                match = heading
+                break
+        if match is None:
+            missing.append(key)
+    issues: list[str] = []
+    if status == "invalid":
+        issues.append(f"invalid analysis_status in capability document: {page.path}")
+    elif status == "untraced":
+        issues.append(f"capability document analysis not completed: {page.path}")
+    elif status in FLOW_STRICT_STATUSES:
+        if _flow_gap_classification(frontmatter, status) == "analysis-gap":
+            issues.append(f"analysis-gap classification conflicts with completed capability document: {page.path}")
+        if missing:
+            issues.append(
+                f"capability document is incomplete: {page.path}; missing sections: "
+                + ", ".join(missing)
+            )
+    return {
+        "path": page.path,
+        "role": role,
+        "analysis_status": status,
+        "gap_classification": _flow_gap_classification(frontmatter, status),
+        "missing_sections": missing,
+        "blocking_issues": sorted(set(issues)),
+    }
+
+
 def capability_document_coverage(
     pages: Sequence[InputFile], root: Path, scan: dict[str, Any]
 ) -> dict[str, Any]:
@@ -2028,7 +2390,9 @@ def capability_document_coverage(
     issues: list[str] = []
     analysis_gaps: list[str] = []
     evidence_gaps: list[str] = []
+    business_confirmation_gaps: list[str] = []
     unsafe_source_issues: list[str] = []
+    document_quality: list[dict[str, Any]] = []
     safe_inventory = {item["path"]: item for item in scan.get("included", [])}
     for page in pages:
         frontmatter = parse_frontmatter_text(page.text)
@@ -2097,6 +2461,17 @@ def capability_document_coverage(
                 evidence_gaps.append(page.path)
             if frontmatter.get("coverage_status") == "gap":
                 analysis_gaps.append(page.path)
+            quality = capability_document_quality(page, document_role)
+            document_quality.append(quality)
+            if quality["analysis_status"] in {"invalid", "untraced"}:
+                analysis_gaps.append(page.path)
+            if quality["blocking_issues"]:
+                analysis_gaps.append(page.path)
+                issues.extend(quality["blocking_issues"])
+            elif quality["gap_classification"] == "evidence-gap":
+                evidence_gaps.append(page.path)
+            elif quality["gap_classification"] == "business-confirmation":
+                business_confirmation_gaps.append(page.path)
             documents[document_role] = {
                 "path": page.path,
                 "profile": profile,
@@ -2134,6 +2509,8 @@ def capability_document_coverage(
         "structural_issues": sorted(set(issues)),
         "analysis_gaps": sorted(set(analysis_gaps)),
         "evidence_gaps": sorted(set(evidence_gaps)),
+        "business_confirmation_gaps": sorted(set(business_confirmation_gaps)),
+        "document_quality": sorted(document_quality, key=lambda item: item["path"]),
         "unsafe_source_issues": sorted(set(unsafe_source_issues)),
     }
 
@@ -2264,6 +2641,15 @@ def _business_wikilink(match: re.Match[str]) -> str:
 
 def _redact_inline_path(match: re.Match[str]) -> str:
     value = match.group(1).strip()
+    # API method/path pairs are business-facing identifiers, not local file
+    # paths.  Keep them readable in the portable BA/SA source while the DLP
+    # pass continues to mask credentials and other sensitive values.
+    if re.fullmatch(
+        r"(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+(?:\?[^\s]+)?",
+        value,
+        flags=re.IGNORECASE,
+    ):
+        return match.group(0)
     if (
         "/" in value
         or "\\" in value
@@ -2370,72 +2756,381 @@ def capability_document_units(pages: Sequence[InputFile]) -> list[Unit]:
 
 
 def shared_business_context_units(pages: Sequence[InputFile]) -> list[Unit]:
-    """Build the mandatory glossary and evidence-backed process source.
+    """Build an independently readable glossary/process/rule source.
 
-    The source is shared across capability pairs. Process pages are eligible
-    only when active, business-facing, and backed by at least one concrete
-    source or derived Wiki evidence; gap-only process drafts stay local.
+    A process page that only links to a rule page used to leave NotebookLM
+    with the rule's title but none of its conditions or outcomes.  This source
+    now embeds each active requirement and rule related to every selected
+    process.  The original pages remain inputs so locators and hashes still
+    describe the exact evidence used to build the source.
     """
 
-    selected: list[InputFile] = []
-    for page in pages:
+    active_business = [
+        page
+        for page in pages
+        if parse_frontmatter_text(page.text).get("status") == "active"
+        and notebooklm_role(page) == "business"
+    ]
+    by_stem = {Path(page.path).stem: page for page in active_business}
+    baseline_paths = {
+        "wiki/synthesis/business-glossary.md",
+        "wiki/synthesis/business-process-catalog.md",
+        "wiki/synthesis/business-rule-catalog.md",
+        "wiki/synthesis/functional-requirement-catalog.md",
+        "wiki/synthesis/business-knowledge-gaps.md",
+    }
+    processes = [
+        page
+        for page in active_business
+        if parse_frontmatter_text(page.text).get("type") == "business-process"
+        and parse_frontmatter_text(page.text).get("coverage_status") in {"covered", "partial"}
+        and (
+            _frontmatter_strings(parse_frontmatter_text(page.text).get("sources"))
+            or _frontmatter_strings(parse_frontmatter_text(page.text).get("derived_from"))
+        )
+    ]
+    requirements = [
+        page
+        for page in active_business
+        if parse_frontmatter_text(page.text).get("type") == "business-requirement"
+    ]
+    rules = [
+        page
+        for page in active_business
+        if parse_frontmatter_text(page.text).get("type") == "business-rule"
+    ]
+    process_stems = {Path(page.path).stem for page in processes}
+
+    def applies_to(page: InputFile, process_stem: str) -> bool:
         frontmatter = parse_frontmatter_text(page.text)
-        if (
-            frontmatter.get("status") != "active"
-            or notebooklm_role(page) != "business"
-        ):
-            continue
-        if page.path in {
-            "wiki/synthesis/business-glossary.md",
-            "wiki/synthesis/business-process-catalog.md",
-        }:
-            selected.append(page)
-            continue
-        if (
-            frontmatter.get("type") == "business-process"
-            and frontmatter.get("coverage_status") in {"covered", "partial"}
-            and (
-                _frontmatter_strings(frontmatter.get("sources"))
-                or _frontmatter_strings(frontmatter.get("derived_from"))
-            )
-        ):
-            selected.append(page)
+        values = _frontmatter_strings(frontmatter.get("applies_to"))
+        return process_stem in _wiki_link_targets(" ".join(values))
+
+    related_requirements = {
+        Path(page.path).stem: page
+        for page in requirements
+        if any(applies_to(page, stem) for stem in process_stems)
+    }
+    related_rules = {
+        Path(page.path).stem: page
+        for page in rules
+        if any(applies_to(page, stem) for stem in process_stems)
+    }
+    selected_by_path: dict[str, InputFile] = {
+        page.path: page for page in active_business if page.path in baseline_paths
+    }
+    for page in processes:
+        selected_by_path[page.path] = page
+    # Keep active requirements/rules that are not attached to a process visible
+    # as standalone business evidence, while related pages are embedded beside
+    # the process that gives them meaning.
+    embedded_paths = set(related_requirements) | set(related_rules)
+    for page in [*requirements, *rules]:
+        if Path(page.path).stem not in embedded_paths:
+            selected_by_path[page.path] = page
+    selected = list(selected_by_path.values())
     if not selected:
         return []
     priority = {
         "wiki/synthesis/business-glossary.md": 0,
         "wiki/synthesis/business-process-catalog.md": 1,
+        "wiki/synthesis/business-rule-catalog.md": 2,
+        "wiki/synthesis/functional-requirement-catalog.md": 3,
+        "wiki/synthesis/business-knowledge-gaps.md": 4,
     }
-    selected.sort(key=lambda page: (priority.get(page.path, 2), page.path))
+    selected.sort(
+        key=lambda page: (
+            priority.get(page.path, 10 if parse_frontmatter_text(page.text).get("type") == "business-process" else 20),
+            page.path,
+        )
+    )
     body = [
         "# 共用業務詞彙與跨功能流程\n\n",
-        "> 本來源補足所有 capability BA／SA 共用的詞彙與端到端流程語境；",
-        "內容只取自目前 Codebase 支持的 active Wiki evidence。\n\n",
+        "> 本來源補足所有 capability BA／SA 共用的詞彙、需求、端到端流程與規則正文；",
+        "內容只取自目前 Codebase 支持的 active Wiki evidence。每個流程段落會一併帶出其",
+        "適用的需求與規則，避免只剩規則名稱或 Wiki 連結。\n\n",
         f"> Logical source ID: `{SHARED_BUSINESS_CONTEXT_SOURCE_ID}`\n\n",
     ]
     for page in selected:
         frontmatter = parse_frontmatter_text(page.text)
-        title = _clean_query_value(
-            str(frontmatter.get("title", Path(page.path).stem))
-        )
-        body.extend(
-            [
-                f"## {title}\n\n",
-                render_business_page(page).rstrip(),
-                "\n\n",
-            ]
-        )
+        title = _clean_query_value(str(frontmatter.get("title", Path(page.path).stem)))
+        body.extend([f"## {title}\n\n", render_business_page(page).rstrip(), "\n\n"])
+        if page in processes:
+            process_stem = Path(page.path).stem
+            for label, related in (
+                ("功能需求正文", sorted(related_requirements.values(), key=lambda item: item.path)),
+                ("業務規則正文", sorted(related_rules.values(), key=lambda item: item.path)),
+            ):
+                matches = [item for item in related if applies_to(item, process_stem)]
+                if not matches:
+                    continue
+                body.append(f"### {label}（適用於 {title}）\n\n")
+                for related_page in matches:
+                    related_title = _clean_query_value(
+                        str(parse_frontmatter_text(related_page.text).get("title", Path(related_page.path).stem))
+                    )
+                    body.extend(
+                        [
+                            f"#### {related_title}\n\n",
+                            render_business_page(related_page).rstrip(),
+                            "\n\n",
+                        ]
+                    )
     return [
         Unit(
             logical_source_id=SHARED_BUSINESS_CONTEXT_SOURCE_ID,
             kind="shared_business_context",
             group="business-core",
             title="共用業務詞彙與跨功能流程",
-            inputs=tuple(selected),
+            inputs=tuple(
+                selected
+                + [
+                    item
+                    for item in [*related_requirements.values(), *related_rules.values()]
+                    if item.path not in selected_by_path
+                ]
+            ),
             content="".join(body),
             priority=1_500_000,
         )
     ]
+
+
+def _materialized_part_key(item: tuple[Unit, str, str]) -> tuple[str, int]:
+    """Sort split source parts numerically instead of lexicographically."""
+
+    logical_id = item[0].logical_source_id
+    match = re.search(r"#part-(\d+)$", logical_id)
+    return (logical_id.split("#part-", 1)[0], int(match.group(1)) if match else 0)
+
+
+def _normalized_source_match(text: str) -> str:
+    """Normalize Markdown enough to compare content across source wrappers."""
+
+    value = re.sub(r"\[\[([^|#\]]+)(?:#[^|\]]+)?(?:\|[^\]]+)?\]\]", r"\1", text)
+    value = re.sub(r"[`*_]", "", value)
+    return re.sub(r"\s+", "", value).lower()
+
+
+def _flow_anchor_lines(page: InputFile) -> list[str]:
+    """Return headings and substantive lines used by the final-source oracle."""
+
+    rendered = render_business_page(page)
+    anchors: list[str] = []
+    for line in rendered.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith(">") or stripped.startswith("<!--"):
+            continue
+        if re.fullmatch(r"\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?", stripped):
+            continue
+        if stripped.startswith("#") or stripped.startswith("|") or re.match(r"^\d+[.)]\s", stripped):
+            anchors.append(stripped)
+            continue
+        if len(stripped) >= 12 and not stripped.startswith("[程式碼區塊"):
+            anchors.append(stripped)
+    return anchors
+
+
+def _portable_body_has_content(page: InputFile) -> bool:
+    """Reject a source that contains only a title, headings, or Wiki links."""
+
+    lines = render_business_page(page).splitlines()
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if re.fullmatch(
+            r"\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?", stripped
+        ):
+            continue
+        if re.fullmatch(r"[-*]?\s*\[\[[^\]]+\]\]\s*", stripped):
+            continue
+        if stripped.startswith("|") and stripped.endswith("|"):
+            cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+            if index + 1 < len(lines) and re.fullmatch(
+                r"\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?",
+                lines[index + 1].strip(),
+            ):
+                continue
+            concrete = [
+                cell for cell in cells if cell and not re.fullmatch(r"\{[^}]+\}", cell)
+            ]
+            if len(concrete) >= 2:
+                return True
+            continue
+        if stripped.startswith(">"):
+            stripped = stripped.lstrip("> ")
+        if _meaningful_flow_text(stripped):
+            return True
+    return False
+
+
+def process_source_integrity(
+    pages: Sequence[InputFile],
+    materialized: Sequence[tuple[Unit, str, str]],
+    business_coverage: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Verify that complete process/requirement/rule content survives into upload sources.
+
+    This is intentionally a payload check rather than a structural Wiki check:
+    it operates on the exact (already masked) source units that will be written
+    under ``sources/``.  A process may be linked from a catalog and still fail
+    here if only its title or a short summary made it into the payload.
+    """
+
+    active_business = [
+        page
+        for page in pages
+        if parse_frontmatter_text(page.text).get("status") == "active"
+        and notebooklm_role(page) == "business"
+    ]
+    processes = [
+        page
+        for page in active_business
+        if parse_frontmatter_text(page.text).get("type") == "business-process"
+        and parse_frontmatter_text(page.text).get("coverage_status") in {"covered", "partial"}
+        and (
+            _frontmatter_strings(parse_frontmatter_text(page.text).get("sources"))
+            or _frontmatter_strings(parse_frontmatter_text(page.text).get("derived_from"))
+        )
+    ]
+    requirements = [
+        page
+        for page in active_business
+        if parse_frontmatter_text(page.text).get("type") == "business-requirement"
+    ]
+    rules = [
+        page
+        for page in active_business
+        if parse_frontmatter_text(page.text).get("type") == "business-rule"
+    ]
+
+    shared_parts = sorted(
+        [
+            item
+            for item in materialized
+            if item[0].kind == "shared_business_context"
+        ],
+        key=_materialized_part_key,
+    )
+    shared_text = "".join(unit.content for unit, _, _ in shared_parts)
+    normalized_shared = _normalized_source_match(shared_text)
+    shared_inputs = {
+        input_file.path
+        for unit, _, _ in shared_parts
+        for input_file in unit.inputs
+    }
+    issues: list[str] = []
+    checked: list[dict[str, Any]] = []
+    embedded_requirements: set[str] = set()
+    embedded_rules: set[str] = set()
+    blocking: list[str] = []
+
+    def applies_to(page: InputFile, process_stem: str) -> bool:
+        values = _frontmatter_strings(parse_frontmatter_text(page.text).get("applies_to"))
+        return process_stem in _wiki_link_targets(" ".join(values))
+
+    def rendered_variants(page: InputFile) -> tuple[str, ...]:
+        variants = [_normalized_source_match(render_business_page(page))]
+        masked_pages, _ = mask_dlp_inputs((page,), phase="source_integrity")
+        if masked_pages:
+            variants.append(_normalized_source_match(render_business_page(masked_pages[0])))
+        return tuple(value for value in variants if value)
+
+    for process in processes:
+        process_stem = Path(process.path).stem
+        quality = process_flow_quality(process)
+        blocking.extend(quality["blocking_issues"])
+        item: dict[str, Any] = {
+            "path": process.path,
+            "analysis_status": quality["analysis_status"],
+            "gap_classification": quality["gap_classification"],
+            "step_count": quality["step_count"],
+            "source_present": process.path in shared_inputs,
+            "missing_requirements": [],
+            "missing_rules": [],
+            "content_present": False,
+        }
+        if process.path not in shared_inputs:
+            issues.append(f"process missing from shared upload source: {process.path}")
+        normalized_rendered = rendered_variants(process)
+        item["content_present"] = bool(
+            any(value in normalized_shared for value in normalized_rendered)
+        )
+        if quality["strict"] and not _portable_body_has_content(process):
+            issues.append(f"process has no substantive body: {process.path}")
+        if not item["content_present"]:
+            missing_anchors = [
+                anchor
+                for anchor in _flow_anchor_lines(process)
+                if _normalized_source_match(anchor) not in normalized_shared
+            ]
+            issues.append(
+                f"process content missing from shared upload source: {process.path}"
+            )
+            item["missing_anchors"] = missing_anchors[:8]
+        related_requirements = [
+            requirement
+            for requirement in requirements
+            if applies_to(requirement, process_stem)
+        ]
+        for requirement in related_requirements:
+            embedded_requirements.add(requirement.path)
+            if requirement.path not in shared_inputs:
+                item["missing_requirements"].append(requirement.path)
+                issues.append(
+                    f"requirement missing from shared upload source: {requirement.path} (for {process.path})"
+                )
+                continue
+            if not any(value in normalized_shared for value in rendered_variants(requirement)):
+                item["missing_requirements"].append(requirement.path)
+                issues.append(
+                    f"requirement body missing from shared upload source: {requirement.path}"
+                )
+            elif quality["strict"] and not _portable_body_has_content(requirement):
+                item["missing_requirements"].append(requirement.path)
+                issues.append(
+                    f"requirement body has no substantive content: {requirement.path}"
+                )
+        related_rules = [rule for rule in rules if applies_to(rule, process_stem)]
+        for rule in related_rules:
+            embedded_rules.add(rule.path)
+            if rule.path not in shared_inputs:
+                item["missing_rules"].append(rule.path)
+                issues.append(
+                    f"rule missing from shared upload source: {rule.path} (for {process.path})"
+                )
+                continue
+            if not any(value in normalized_shared for value in rendered_variants(rule)):
+                item["missing_rules"].append(rule.path)
+                issues.append(f"rule body missing from shared upload source: {rule.path}")
+            elif quality["strict"] and not _portable_body_has_content(rule):
+                item["missing_rules"].append(rule.path)
+                issues.append(f"rule body has no substantive content: {rule.path}")
+        checked.append(item)
+
+    quality = (business_coverage or {}).get("process_quality", {})
+    blocking.extend(quality.get("blocking_issues", []))
+    status = "blocked" if issues or blocking else "complete"
+    classifications = Counter(
+        str(item.get("gap_classification", "none"))
+        for item in checked
+    )
+    return {
+        "status": status,
+        "process_count": len(processes),
+        "checked_processes": checked,
+        "embedded_requirement_count": len(embedded_requirements),
+        "embedded_rule_count": len(embedded_rules),
+        "gap_classifications": dict(sorted(classifications.items())),
+        "issues": sorted(set(issues)),
+        "blocking_analysis_issues": sorted(set(blocking)),
+    }
+
+
+# Descriptive alias for callers that use the coverage terminology used by the
+# preflight report.
+flow_integrity_coverage = process_source_integrity
 
 
 def wiki_units(pages: Iterable[InputFile]) -> list[Unit]:
@@ -3006,7 +3701,8 @@ def capability_query_index_content(
         "3. 衝突時以程式碼現況為準，並保留 README、規格、測試或註解的差異。\n",
         "4. 沒有來源支持時回答「Codebase 未提供證據」，不得推測目標需求。\n",
         f"5. 一次選最相關的 1–{MAX_PRIMARY_SOURCE_GROUPS} 個 capability sources。\n",
-        "6. 共用詞彙或跨 capability 流程先查 shared business context，再回到相關 BA／SA 驗證。\n\n",
+        "6. 完整流程問題必須依序列出觸發、前置條件、每一步行為、資料／狀態變更、結果與失敗分支；不得只給四步摘要。\n",
+        "7. 共用詞彙或跨 capability 流程先查 shared business context，再回到相關 BA／SA 驗證；該來源包含相關規則正文。\n\n",
         "## 共用知識路由\n\n",
         "- 共用詞彙與有證據支持的跨功能流程："
         + ", ".join(f"`{filename}`" for _, filename, _ in shared_sources)
@@ -3167,6 +3863,14 @@ def plan_ba_sa_sources(
             raise ExportError(
                 f"source still exceeds limits after splitting: {unit.logical_source_id}"
             )
+    flow_integrity = process_source_integrity(
+        pages, masked_materialized, business_coverage
+    )
+    if flow_integrity["status"] == "blocked":
+        details = flow_integrity["issues"] + flow_integrity["blocking_analysis_issues"]
+        raise ExportError(
+            "process flow source integrity failed: " + "; ".join(details)
+        )
     return {
         "materialized": masked_materialized,
         "documents": documents,
@@ -3179,6 +3883,7 @@ def plan_ba_sa_sources(
         "payload_dlp": sources_dlp,
         "source_count": len(masked_materialized),
         "remaining_source_slots": available - len(masked_materialized),
+        "flow_integrity": flow_integrity,
     }
 
 
@@ -3377,7 +4082,8 @@ def query_index_content(
         "3. 先用 business docs，並依 evidence state 區分正式政策與目前實作。\n",
         "4. 使用 process/rule ID、`[[wiki-page]]` 與 business-confirmed / implementation-observed / inference / gap 標籤。\n",
         "5. 不得把 implementation-observed 說成已核准的業務政策；找不到時直接列 gap。\n",
-        "6. 只有使用者要求技術查核時，才在答案最後加入『技術追溯』與 repo-relative paths。\n\n",
+        "6. 完整流程問題必須依時間順序列出觸發、前置條件、每一步行為、資料／狀態變更、結果與失敗分支，不得只給四步摘要。\n",
+        "7. 只有使用者要求技術查核時，才在答案最後加入『技術追溯』與 repo-relative paths。\n\n",
         "## 問題路由\n\n",
         "| 問題訊號 | 先查 | 必要時查 | 回答形態 |\n",
         "| --- | --- | --- | --- |\n",
@@ -3557,7 +4263,8 @@ def ba_query_index_content(
         f"2. 一次只選最相關的 1–{MAX_PRIMARY_SOURCE_GROUPS} 個業務群組。\n",
         "3. 以 `fr-*`、`bp-*`、`br-*` ID 與 evidence state 引用依據。\n",
         "4. `implementation-observed` 只代表目前 code 行為；不得宣稱為已核准政策。\n",
-        "5. 找不到可靠證據時直接列為 gap，不補造答案。\n\n",
+        "5. 找不到可靠證據時直接列為 gap，不補造答案。\n",
+        "6. 完整流程必須逐步回答觸發、條件、資料／狀態變更、成功結果、替代／例外與可重跑性；不要只列流程標題或摘要。\n\n",
         "## 問題路由\n\n",
         "| 問題 | 優先來源 | 回答重點 |\n",
         "| --- | --- | --- |\n",
@@ -3982,6 +4689,7 @@ def upload_plan_content(
     omitted_evidence: list[dict[str, str]],
     warnings: list[str],
     migration: dict[str, Any],
+    flow_integrity: dict[str, Any] | None = None,
 ) -> str:
     lines = [
         "# NotebookLM 現況 BA／SA 知識上傳計畫\n\n",
@@ -4019,6 +4727,18 @@ def upload_plan_content(
         lines.extend(["## 未匯出項目\n\n"])
         lines.extend(f"- {item['reason']}\n" for item in omitted_evidence)
         lines.append("\n")
+    if flow_integrity is not None:
+        lines.extend(
+            [
+                "## 流程來源完整性\n\n",
+                f"- Status：`{flow_integrity.get('status', 'unknown')}`\n",
+                f"- Checked processes：`{flow_integrity.get('process_count', 0)}`\n",
+                f"- Embedded requirements：`{flow_integrity.get('embedded_requirement_count', 0)}`\n",
+                f"- Embedded rules：`{flow_integrity.get('embedded_rule_count', 0)}`\n",
+                f"- Gap classifications：`{flow_integrity.get('gap_classifications', {})}`\n",
+                "- 這項檢查只確認實際 `sources/*.md` 的流程／規則內容與追溯完整，不代表 NotebookLM 問答已驗證。\n\n",
+            ]
+        )
     if warnings:
         lines.extend(["## Warnings\n\n"])
         lines.extend(f"- {warning}\n" for warning in warnings)
@@ -4057,10 +4777,12 @@ source 或自動上傳；`upload-plan.md` 只是一份本機操作清單。
 6. 不得輸出 secret、token、password、連線字串或其他已遮罩內容。
 7. `query-index.md` 是路由索引；結論必須引用對應 capability 的 BA 或 SA 文件內容，
    共用流程或詞彙結論也必須引用 shared business context。
+8. 使用者詢問「完整流程」時，先說觸發與前置條件，再逐步列出每個可觀察行為、讀取／寫入的資料、狀態變更、成功結果、阻擋條件、例外、失敗後續與重跑行為；每一步都要能在 BA／SA 或 shared business context 找到證據，不能用四步摘要取代。
+9. 將未知分成三種：`analysis-gap` 代表尚未完成追查、`evidence-gap` 代表已檢查來源但沒有證據、`business-confirmation` 代表實作可見但營運政策或責任仍需業務確認。第一種不可當成「Codebase 未提供證據」；後兩種要保留已知的實作行為。
 ```
 
 若介面沒有 Custom instructions，請在問題前加上：
-`請先用 query-index.md 路由；共用詞彙或跨功能流程查 shared-business-context.md，再依問題使用 BA 或 SA 現況文件，以繁體中文直接回答，未知內容標示「Codebase 未提供證據」。`
+`請先用 query-index.md 路由；共用詞彙或跨功能流程查 shared-business-context.md，再依問題使用 BA 或 SA 現況文件。若詢問完整流程，逐步列出條件、資料／狀態變更與所有例外；以繁體中文直接回答，未知內容依 analysis-gap、evidence-gap、business-confirmation 分類。`
 
 Exporter 完全離線，不會呼叫 NotebookLM、不會上傳檔案，也不會修改 raw sources
 或 Wiki pages。
@@ -4361,6 +5083,16 @@ def _pack_plan_payload(plan: dict[str, Any] | None, error: str | None) -> dict[s
             "documents": [],
             "sources": [],
             "document_source_mapping": {},
+            "flow_integrity": {
+                "status": "not_run",
+                "process_count": 0,
+                "checked_processes": [],
+                "embedded_requirement_count": 0,
+                "embedded_rule_count": 0,
+                "gap_classifications": {},
+                "issues": [],
+                "blocking_analysis_issues": [],
+            },
         }
     return {
         "status": "ready",
@@ -4387,6 +5119,7 @@ def _pack_plan_payload(plan: dict[str, Any] | None, error: str | None) -> dict[s
             for unit, filename, output_sha in plan["materialized"]
         ],
         "document_source_mapping": plan["document_source_mapping"],
+        "flow_integrity": plan.get("flow_integrity", {}),
     }
 
 
@@ -4567,6 +5300,20 @@ def build_preflight(
         report["status"] in {"passed", "passed_with_masking"}
         for report in (documents_dlp, sources_dlp)
     )
+    flow_integrity = (
+        pack_plan.get("flow_integrity", {})
+        if pack_plan
+        else {
+            "status": "blocked" if business_coverage["process_quality"]["blocking_issues"] else "not_run",
+            "process_count": 0,
+            "checked_processes": [],
+            "embedded_requirement_count": 0,
+            "embedded_rule_count": 0,
+            "gap_classifications": {},
+            "issues": [],
+            "blocking_analysis_issues": business_coverage["process_quality"]["blocking_issues"],
+        }
+    )
     inventory_hash, preflight_id = _preflight_identity(
         root, settings, pages, scan, lint_result, dlp, plan_payload
     )
@@ -4617,6 +5364,7 @@ def build_preflight(
         "coverage": coverage,
         "business_coverage": business_coverage,
         "capability_coverage": capability_coverage,
+        "flow_integrity": flow_integrity,
         "limits": limits_payload(settings),
         "dlp": dlp,
         "pack_plan": plan_payload,
@@ -4768,6 +5516,7 @@ def build_pack(
         "document_count": len(document_entries),
         "documents": document_entries,
         "document_source_mapping": plan_result["document_source_mapping"],
+        "flow_integrity": plan_result.get("flow_integrity", {}),
         "source_count": len(entries),
         "sources": entries,
         "omitted_evidence": [],
@@ -4782,6 +5531,7 @@ def build_pack(
         [],
         warnings,
         migration,
+        plan_result.get("flow_integrity"),
     )
     files: dict[str, bytes] = {
         "manifest.json": _json_bytes(manifest),

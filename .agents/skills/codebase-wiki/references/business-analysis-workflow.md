@@ -38,6 +38,16 @@ silently reinterpret this standards-aligned BA as that export document.
    contradictory, or too vague. Treat code/config as
    `implementation-observed`, not approved business policy.
 
+For any process that will feed a current-state NotebookLM BA, follow the
+entrypoint through the complete call chain. Record each observable step's
+trigger/condition, actor, business action, data read/write, state transition,
+result, failure destination, retry/rollback behavior, and source locator.
+Cross-capability steps must name their upstream and downstream handoffs. Keep
+`analysis-gap` (trace not finished), `evidence-gap` (sources checked but the
+fact is absent), and `business-confirmation` (behavior observed but policy or
+responsibility is unconfirmed) as separate states; only the first is an
+unfinished analysis.
+
 ## Coverage Map
 
 Build this map before writing and retain it in the output:
@@ -95,6 +105,9 @@ unknown target state into a factual diagram.
   raw evidence. Separate fact, inference, assumption, and Gap.
 - Never invent stakeholders, business policy, target state, KPI threshold,
   requirement, rule, or process step.
+- A process summary is incomplete when it has only a title, a short step list,
+  or a rule link. Preserve the concrete conditions, branches, state/data
+  changes, and applicable rule text needed for an independent reader.
 
 ## Persistence Steps
 

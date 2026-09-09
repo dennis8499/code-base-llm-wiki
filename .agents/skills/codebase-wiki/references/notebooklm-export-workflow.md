@@ -99,9 +99,14 @@ findings, and the exact post-mask payload fits the configured limits.
 4. Read designated business sources first, then project documentation,
    use-case entrypoints, orchestration/services, state/data boundaries,
    messages, public interfaces, and integrations. Identify functional
-   requirements by observable behavior, then connect actor, trigger,
-   precondition, outcome, rule, exception, state transition, and stable
-   acceptance criteria rather than mirroring directory shape.
+   requirements by observable behavior, then trace every end-to-end process
+   from its entrypoint through the actual call chain. For each step record the
+   trigger or condition, actor, operation, data read/write, state before and
+   after, success result, blocking condition, failure destination, retry or
+   rollback behavior, and a source locator. Connect actor, precondition,
+   outcome, rule, exception, state transition, and stable acceptance criteria
+   across capability boundaries; do not replace the trace with a short
+   directory summary or a four-step outline.
 5. Preview included file counts and reasons, pruned excluded-root counts and
    bounded metadata summaries, requirement/capability/process/rule/term
    coverage, Wiki pages to regenerate, disposition results, capacity estimate, and every
@@ -131,15 +136,25 @@ findings, and the exact post-mask payload fits the configured limits.
    role `analysis`. Both declare real sources and `path:line` locators, link each
    other, and use Traditional Chinese while retaining identifiers/API names.
 8. Label claims as `business-confirmed`, `implementation-observed`, `inference`,
-   or `gap`. Code/config/schema can prove observed behavior, not approved policy.
-   When the repository supplies no evidence, write exactly `Codebase 未提供證據`;
-   `尚未完成分析` is a blocking processing gap and cannot be exported.
+   or `gap`. Track the analysis state separately from evidence coverage:
+   `analysis-gap` means the call chain has not been traced to completion and
+   blocks export; `evidence-gap` means the sources were checked but do not
+   provide the fact; `business-confirmation` means implementation behavior is
+   observable but an operational policy, owner, approval role, retry right, or
+   SLA still needs business confirmation. Code/config/schema can prove
+   observed behavior, not approved policy. When the repository supplies no
+   evidence, write exactly `Codebase 未提供證據`; do not use that phrase to
+   hide an unfinished analysis.
 9. Regenerate content inside `codebase-wiki:managed` markers, preserve content
    inside `codebase-wiki:user-notes` markers, and place reviewer-only paths or
    symbols inside `notebooklm:local-only` markers. Synchronize index/log and
-   rerun Wiki checks. Record the confirmed discovery ID in the coverage ledger
-   only after the full snapshot is processed. Then run a readiness preflight and
-   use its new ID for apply:
+   rerun Wiki checks. Before declaring readiness, verify the exact masked
+   `sources/*.md` payload: every active evidence-backed process must retain
+   its concrete steps, conditions, data/state changes, branches, and applicable
+   requirement/rule bodies. A title, a four-step summary, or a rule link without
+   the rule text fails this check. Record the confirmed discovery ID in the
+   coverage ledger only after the full snapshot is processed. Then run a
+   readiness preflight and use its new ID for apply:
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
@@ -173,7 +188,8 @@ Each generated source has a stable `logical_source_id`:
 - `query-index` for the BA／SA capability router;
 - `project-map` for the generated navigation source;
 - `shared-business-context` for the shared glossary, process catalog, and
-  active evidence-backed cross-capability process bodies;
+  active evidence-backed cross-capability process bodies, with applicable
+  requirement and rule 正文 included for independent reading;
 - `capability:<capability-id>` for one complete BA／SA pair;
 - `capability:combined` only when slot pressure requires lossless compaction;
 - `#part-###` suffixes for sources split at safe boundaries.
@@ -234,6 +250,14 @@ If mandatory documentation cannot fit after deterministic compaction/splitting,
 or any source remains oversized, the exporter fails before committing a new
 pack and preserves the previous pack.
 
+The final-source flow-integrity check runs after masking and splitting, against
+the exact bytes planned for `sources/`. It blocks an unfinished trace, a
+process whose concrete content is absent, a missing failure branch, or an
+applicable rule that is represented only by a title or Wiki link. It reports
+structural content and traceability coverage; it does not claim that NotebookLM
+will answer every question correctly, which still requires tenant-side
+question-and-answer validation.
+
 `notebooklm.toml` may set `scan_profile = "target" | "framework"`,
 `content_mode = "ba_sa"`, `analysis_include_tests`, and
 `business_source_paths`. Schema v6 rejects `ba_only` with full-rebuild guidance
@@ -277,7 +301,9 @@ every active requirement is cataloged and has stable acceptance criteria, Wiki
 checks pass, the exact final payload passes post-mask DLP and capacity limits,
 `query-index`, `project-map`, and `shared-business-context` are present,
 the shared source contains the glossary and every active evidence-backed
-cross-capability process, every document has a source mapping,
+cross-capability process with concrete steps, conditions, branches, and its
+applicable requirement/rule 正文, every document has a source mapping,
+the final-source flow-integrity report is complete,
 the schema-v6 manifest and upload
 plan were written atomically, and the final report lists actions, coverage, DLP
 masking counts, migration mode, and unresolved business-confirmation gaps.

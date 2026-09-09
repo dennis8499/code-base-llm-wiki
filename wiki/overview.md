@@ -11,7 +11,7 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:e8b9d686e8f8315cef0b29a8981ae50d26b2a9b9bdd7b8dbf1e71045ea838a5c
+source_digest: sha256:ff9a0dac504b91eeb96d86db30d2956db0feedbee5cc2301b933630ff0c1e9e0
 derived_from: []
 last_updated: 2026-09-09
 tags: [framework, business-knowledge, wiki, notebooklm]

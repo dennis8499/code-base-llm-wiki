@@ -5,6 +5,8 @@ summary: 使用者以明確請求選擇 BA、SA 或 SD，系統依 Wiki-first �
 process_id: bp-analysis-document-generation
 actors: [知識維護者, Business Analyst, System Analyst, Architect, Reviewer]
 coverage_status: partial
+analysis_status: traced
+gap_classification: none
 notebooklm_group: business-analysis-documents
 notebooklm_role: business
 notebooklm_terms: [文件產出, BA文件, SA文件, SD文件, 標準對齊, coverage, traceability, Gap]
@@ -14,7 +16,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
-source_digest: sha256:361a7f820fbe2e8d2d7f2bce6f09ad4b3304bb37d1d642e4ee1f9665b6332bfa
+source_digest: sha256:158b44b338d2d15f27df7d3f593f7d0dccd19d1c3c9c76f62a00b4e2ccff406a
 derived_from: ["[[overview]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]"]
 last_updated: 2026-09-09
 tags: [business-process, analysis-document, standards-aligned, notebooklm]
@@ -50,15 +52,15 @@ solution-neutral System Analysis 或 System Design。三份文件可以單獨產
 
 ## 主流程
 
-| 步驟 | 角色 | 業務行為 | 結果 | 證據狀態 |
-| --- | --- | --- | --- | --- |
-| 1 | 知識維護者 | 確認文件類型、scope 與固定輸出路徑 | BA／SA／SD workflow 被唯一選定 | implementation-observed |
-| 2 | 系統 | 讀 index、近期 log 與相關 Wiki | 建立 Wiki-first evidence baseline | implementation-observed |
-| 3 | 系統 | 必要時唯讀查證 raw sources | 補足 missing/stale/contradictory evidence | implementation-observed |
-| 4 | Analyst／Architect | 建立 standards matrix、coverage map、IDs、traceability 與 Gap | 不完整資訊仍可審查 | implementation-observed |
-| 5 | 系統 | 有證據才產生指定 Mermaid slots | supported diagram 或 concrete Gap | implementation-observed |
-| 6 | 系統 | 更新 managed、保留 user-notes/local-only | 文件可安全重產 | implementation-observed |
-| 7 | 知識維護者 | 同步 index、append log 並執行 checks | 可驗證的 durable Markdown | implementation-observed |
+| 步驟 | 觸發／條件 | 角色 | 業務行為 | 資料讀寫 | 狀態前／後 | 成功結果 | 失敗／下一步 | 證據定位 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 明確提出 BA／SA／SD 文件請求 | 知識維護者 | 確認文件類型、scope 與固定輸出路徑 | 讀取使用者請求；選擇 workflow | `request_received`／`route_selected` | 唯一 workflow 被選定 | 裸稱 BA 時先澄清；含 NotebookLM 時改走專用流程 | `.agents/skills/codebase-wiki/references/intent-routing.md:1` |
+| 2 | `route_selected` | 系統 | 讀 index、近期 log 與相關 Wiki | 讀取 `wiki/index.md`、頁面與 log | `route_selected`／`evidence_baseline` | 建立 Wiki-first evidence baseline | 缺頁或 stale 時標 gap 並唯讀回溯 raw source | `.agents/skills/codebase-wiki/references/business-analysis-workflow.md:45` |
+| 3 | Wiki evidence 缺漏、過期或矛盾 | 系統 | 唯讀查證 raw sources，沿入口追呼叫鏈與資料／失敗分支 | 讀取 code/config/schema/tests；不寫 raw source | `evidence_baseline`／`evidence_checked` | 補足可觀察行為與 locator | 沒有證據標 `evidence-gap`，未完成追查標 `analysis-gap` | `.agents/skills/codebase-wiki/references/system-analysis-workflow.md:48` |
+| 4 | evidence 已整理 | Analyst／Architect | 建立 standards matrix、coverage map、stable IDs、traceability 與 Gap | 寫入 synthesis 文件內容；讀取標準與模板 | `evidence_checked`／`document_draft` | 不完整資訊仍可審查 | 不得編造需求、政策或步驟，列具體 Gap | `.agents/skills/codebase-wiki/references/business-analysis-workflow.md:75` |
+| 5 | 文件章節與參與者有證據 | 系統 | 產生 Mermaid slots；檢查 actor、狀態、轉換 | 讀取 coverage map；寫入 managed block | `document_draft`／`diagram_checked` | supported diagram 或 concrete Gap | 關係未被證據支持時保留 Gap，不畫推測圖 | `.agents/skills/codebase-wiki/references/system-analysis-workflow.md:101` |
+| 6 | draft 通過 marker 規則 | 系統 | 更新 managed，保留 user-notes/local-only | 讀寫 Wiki；local-only 保存技術 provenance | `diagram_checked`／`document_ready` | 文件可安全重產且人工 notes 不變 | marker／frontmatter 不合法時停止寫入並修正 | `.agents/skills/codebase-wiki/references/business-analysis-workflow.md:111` |
+| 7 | 文件 ready | 知識維護者 | 同步 index、append log 並執行 checks | 寫入 `wiki/index.md`、`wiki/log.md`；讀取驗證結果 | `document_ready`／`published` | 可驗證的 durable Markdown | checks 失敗則保留現況並回報未完成項目 | `.agents/skills/codebase-wiki/references/business-analysis-workflow.md:123` |
 
 ```mermaid
 flowchart LR
@@ -79,8 +81,13 @@ flowchart LR
 - 證據不足：保留章節與 Mermaid 槽位，以 Gap 說明所需來源，不畫圖。
 - Legacy SA 無 markers：首次重跑先逐字保存原正文到 user-notes legacy snapshot。
 - 重跑已有 markers 文件：只替換 managed，人工 notes 不變。
+- `analysis-gap` 代表呼叫鏈尚未追查完成，`evidence-gap` 代表來源查過但沒有事實，
+  `business-confirmation` 代表實作可見但政策／責任待確認；後兩種保留已知觀察。
 
 ## 業務規則
+
+`standards-alignment-not-conformance`：文件對齊標準不等於取得外部認證；
+`missing-evidence-remains-gap`：來源未支持的事實必須保留具體 Gap，不得補造答案。
 
 - [[standards-alignment-not-conformance]]
 - [[missing-evidence-remains-gap]]

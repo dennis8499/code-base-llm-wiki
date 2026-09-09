@@ -13,7 +13,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
-source_digest: sha256:b48d61cb4f693549cecb3baffc79322fc133340d87480079acd99f5ca427946f
+source_digest: sha256:be0f57f5fbc3799a630a75fadc1f4a6298f07bfcb7455fdc3cb1855c0cbfd3b8
 derived_from: ["[[overview]]"]
 last_updated: 2026-09-09
 tags: [architecture, framework, data-flow, safety]

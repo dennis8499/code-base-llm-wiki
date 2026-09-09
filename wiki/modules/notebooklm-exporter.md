@@ -11,9 +11,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: sha256:98f171ed1a56afc18cfa0c3bdd0c877074a57b2d3b772ad2159ce24b80340fb1
+source_digest: sha256:940487342b9f3fc6226a473638b161141dd5ef4412db2f31931f4e77e234a1ab
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
@@ -56,6 +56,9 @@ Preflight 的 `business_coverage` 驗證：
 - 每個 requirement 有 `## 驗收條件` 與至少一個 stable `AC-*`；
 - business page 有穩定 `notebooklm_group` 與非空 `notebooklm_terms`；
 - 規則證據狀態只使用 `business-confirmed`、`implementation-observed`、`inference` 或 `gap`。
+- active process 另有 `analysis_status` 與 `gap_classification`；`analysis-gap`／`untraced` 會阻擋，
+  `evidence-gap` 與 `business-confirmation` 分開列出且保留已知實作行為；嚴格頁面必須有具體
+  逐步條件、資料／狀態、結果、例外與定位，四步摘要不算完成。
 
 每個 safe included file 另由 ledger 分成 `functional-evidence`、`supporting-technical`、
 `no-observable-behavior` 或 `analysis-gap`。Uncovered、analysis-gap、dangling requirement、
@@ -82,13 +85,17 @@ export-notebooklm.py --root . --apply --discovery-id sha256:... --preflight-id s
 - `query-index`：BA／SA 問題與最多五個 capability sources 的 router；
 - `project-map`：capability 與 document/source mapping 導覽；
 - `shared-business-context`：共用詞彙、流程目錄與 active 且具 sources／derived
-  evidence 的跨功能流程；
+  evidence 的跨功能流程，並嵌入適用 requirement／rule 正文供獨立閱讀；
 - `capability:<cap>`：完整 BA／SA pair；
 - slot 壓力下才使用 `capability:combined`，安全分割時加 `#part-###`。
 
 輸出分成完整 `documents/{cap}-ba.md`／`-sa.md` 與只供上傳的 sources，manifest 保存雙向
 mapping。Schema v6 拒絕 `ba_only`、`include_traceability`、`include_evidence` 與
 `dlp_allowlist`。必要 BA／SA 內容不能因 `source_budget` 靜默消失。
+
+在遮罩與安全分割後，`process_source_integrity` 會直接檢查即將寫入 `sources/*.md` 的 bytes：
+每個 active evidence-backed process 的正文、具體步驟與適用規則正文都必須存在。這是內容與
+追溯完整性檢查，不是 NotebookLM 生成式問答保證；實際 tenant 問答仍依固定 UAT 題組驗證。
 
 ## Schema v6 與 migration
 
