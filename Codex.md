@@ -9,7 +9,7 @@ surfaces directly instead of Copilot slash prompt files.
 | Path                            | Required    | Purpose                                                       |
 | ------------------------------- | ----------- | ------------------------------------------------------------- |
 | `AGENTS.md`                     | Yes         | Durable Codex project rules                                   |
-| `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, installer, references, templates, and helper scripts |
+| `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, installer, references, templates, helper scripts, and pinned tgrep bundle |
 | `.codex/`                       | Recommended | Hooks and framework guard configuration                       |
 | `wiki/`                         | Yes         | Generated knowledge base                                      |
 | `.github/`                      | Optional    | Keep only when the repo also supports GitHub Copilot          |
@@ -156,9 +156,12 @@ behavioral tests。依可觀察行為建立 `fr-*`／`cap-*`、`AC-*`、流程�
 確認後重建 managed sections、保留 user notes，更新 requirement/process/rule pages、每個
 `cap-*` 的現況 BA／SA、local coverage ledger、index 與一筆 log，並記錄 confirmed discovery ID。
 完成後自動執行 readiness preflight；只有 raw/config/scope 漂移才重新預覽。以 confirmed
-`discovery_id` 與 latest `preflight_id` 產生 `.notebooklm/documents`、只供上傳的 `sources`、
-  schema v6 manifest、governance 與 upload plan；sources 另包含共用詞彙、流程目錄與
-  active evidence-backed 跨功能流程。Codebase 是唯一內容依據，衝突以程式碼為主；
+`discovery_id` 與 latest `preflight_id` 產生 `.notebooklm/documents/`、只供上傳的
+`.notebooklm/sources/query-index.md`、`.notebooklm/sources/project-map.md`、
+`.notebooklm/sources/shared-business-context.md`、capability sources、
+  schema v6 `.notebooklm/manifest.json`、`.notebooklm/governance.md` 與 `.notebooklm/upload-plan.md`；
+  sources 另包含共用詞彙、
+  流程目錄與 active evidence-backed 跨功能流程。Codebase 是唯一內容依據，衝突以程式碼為主；
 v1–v5 或 BA-only retrieval contract 必須 full rebuild。Exporter 不呼叫雲端 API。
 ```
 

@@ -10,7 +10,8 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
-source_digest: sha256:13e34b183a1ac944ba3ffaa3f3dafd0b9ddae20e97d0070fff2dd5f305e0a9d3
+  - tests/tgrep/test_tgrep_search.py
+source_digest: sha256:e8b9d686e8f8315cef0b29a8981ae50d26b2a9b9bdd7b8dbf1e71045ea838a5c
 derived_from: []
 last_updated: 2026-09-09
 tags: [framework, business-knowledge, wiki, notebooklm]
@@ -90,6 +91,8 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 只使用 Wiki 與 Repo source evidence，不連線即時資料庫或呼叫資料庫工具 fallback，也不
 使用 tgrep。Windows x64 的 Interactive/Batch Ingest 與 Code Archaeology 可選用共用
 tgrep wrapper 定位候選 source；結果必須重新讀取目前 source 才能成為 evidence。
+固定版本、digest、allowlisted flags、path containment 與不建立 index 的唯讀契約由
+`tests/tgrep/test_tgrep_search.py` 覆蓋；這不會把 tgrep 擴展成 Query fallback。
 
 ## 範圍與邊界
 

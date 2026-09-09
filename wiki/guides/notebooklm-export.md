@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/product/workflows/README.md
-source_digest: sha256:7480e18ef70a056bd6dc289621a8acc0e3de42fd0eec12e453b5a0e541a8aa32
+source_digest: sha256:bedd5a25e9c6a83c32ab6f12cf1ea026da3d41abfe8aaf408131cfd6762f968d
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[notebooklm-exporter]]", "[[business-analysis]]"]
 last_updated: 2026-09-09
 tags: [guide, notebooklm, export, ba-first, enterprise]
@@ -100,10 +100,12 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --output .notebooklm --format json
 ```
 
-只手動上傳 `.notebooklm/sources/*.md`；其中 `shared-business-context`
+只手動上傳 `.notebooklm/sources/*.md`；其中
+`.notebooklm/sources/shared-business-context.md`
 保留共用詞彙、流程目錄與 active evidence-backed 跨功能流程，`query-index`
-會把相關問題導向它及對應 capability BA／SA。`documents/`、README、manifest、
-upload plan 與 governance 留在本機。
+會把相關問題導向它及對應 capability BA／SA。`.notebooklm/documents/`、
+`.notebooklm/README.md`、`.notebooklm/manifest.json`、`.notebooklm/upload-plan.md`
+與 `.notebooklm/governance.md` 留在本機。
 依 `upload-plan.md` 處理 `added`、`changed`、`deleted`、`unchanged`。若
 `migration.requires_full_rebuild=true`，先清除同一本 Notebook 的所有舊 static sources，
 再上傳全部新 sources 並套用 README 的 BA／SA Custom instructions。

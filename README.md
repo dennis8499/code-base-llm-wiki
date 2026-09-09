@@ -48,12 +48,13 @@ code-base-llm-wiki/
 │   │   └── releases/              # 版本、發布資產與更新契約
 │   └── history/                   # 上游 attribution 與產品變更摘要
 ├── samples/task-tracker/          # 可操作的無第三方依賴 E2E 樣例
-├── tests/                         # 依責任分組的 contract、installer、Wiki 與產品測試
+├── tests/                         # 依責任分組的 contract、installer、tgrep、Wiki 與產品測試
 │   ├── contracts/                 # 公開 contract 與 repository shape
 │   ├── installer/                 # Copilot／Codex installer surface
 │   ├── notebooklm/                # NotebookLM exporter 與 acceptance
 │   ├── release/                   # Release builder
 │   ├── samples/                   # E2E sample contract
+│   ├── tgrep/                      # pinned tgrep wrapper 與唯讀邊界
 │   └── wiki/                      # Wiki quality、hooks 與 provenance
 ├── tools/release.py               # Release asset 與更新 manifest builder
 ├── wiki/                          # 持久 Markdown 知識庫與活動紀錄
@@ -64,6 +65,8 @@ code-base-llm-wiki/
 ├── ChangeLog.md                   # 版本變更紀錄
 └── README.md                      # 本頁：專案導覽與快速開始
 ```
+
+Pinned wrapper regression tests are located at `tests/tgrep/test_tgrep_search.py`; the tree above abbreviates that path as `tgrep/`.
 
 文件總覽請先參閱 [docs/README.md](docs/README.md)；詳細元件關係與資料流請參閱
 [架構文件](docs/product/architecture/README.md)。
@@ -259,8 +262,9 @@ NotebookLM Enterprise 匯出：
 請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export：先做完整 safe discovery preflight，
 列出納入/排除、功能、BA／SA 覆蓋、待分析內容、來源差異、DLP 與容量後等待我一次確認。
 確認後依當下 Codebase 全量建立每功能的繁中 BA／SA、保留 user notes，自動完成 readiness
-preflight，再產生 documents、query-index、project-map、shared business context、governance
-與單一 Notebook source pack。
+preflight，再產生 `.notebooklm/documents/`、只供上傳的
+`.notebooklm/sources/query-index.md`、`.notebooklm/sources/project-map.md`、
+`.notebooklm/sources/shared-business-context.md`、manifest 與 governance。
 ```
 
 預覽使用 `export-notebooklm.py --preflight`，以 `--root` 指定的檔案系統目錄為掃描
@@ -286,7 +290,7 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 | [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
 | [架構與資料流](docs/product/architecture/README.md) | 三層模型、雙入口、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/operations/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/product/workflows/README.md) | 十一類意圖、11 個操作情境、平台對照與輸出契約 |
+| [工作流手冊](docs/product/workflows/README.md) | 十一類意圖、12 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/operations/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/operations/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
@@ -308,8 +312,9 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 
 本框架不提供 RAG、向量資料庫、必要的常駐搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
 隨 Skill 發佈的 Windows x64 tgrep 只供 Ingest／Archaeology 來源探索，並透過唯讀 wrapper 限制範圍。
-NotebookLM export 產生的是可供 NotebookLM 使用的 Markdown `query-index`，不是常駐搜尋引擎；
-它只產生本地 `.notebooklm/`。Wiki Query 不連線即時資料庫，也不呼叫 tgrep、資料庫工具或 fallback；
+NotebookLM export 產生的是本地 `.notebooklm/`；其中只有 `sources/*.md` 是可供 NotebookLM
+手動上傳的 Markdown source，`query-index` 是 bounded router，不是常駐搜尋引擎。
+Wiki Query 不連線即時資料庫，也不呼叫 tgrep、資料庫工具或 fallback；
 Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
 本 Repo 尚未宣告軟體授權；請勿從參考專案的授權狀態推定本專案授權。

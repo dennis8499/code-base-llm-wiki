@@ -12,7 +12,8 @@ sources:
   - docs/operations/releases/README.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:27c0fa6c55b057f3638f08c8e3f0bb3a2c9db3a12aeca603132d6f77756ec85e
+  - tests/tgrep/test_tgrep_search.py
+source_digest: sha256:62d428771b00c001e09dfcc121014496182bf601495c4802b90bb7c3eb670b76
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-09
 tags: [module, adapters, validation, release, parity]
@@ -52,6 +53,8 @@ status: active
   adapter，不複製完整規則；
   Interactive/Batch authorization 與 Query/Lint/Archaeology completion coupling
   都由 `tests/contracts/test_contracts.py` 固定。
+- `tests/tgrep/test_tgrep_search.py` 固定 bundled tgrep 的版本／digest、allowlisted
+  flags、shell 禁用、path containment、exit codes 與不建立 index 的唯讀邊界。
 - Codex v4 的 18 個歷史 Task Tracker fixture runs 保存 JSONL tool events、前後 hashes、
   Git 狀態、情境 assertions 與 deterministic outputs；受修復影響的情境皆捨棄首輪
   結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。

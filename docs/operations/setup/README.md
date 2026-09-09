@@ -161,10 +161,13 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-Exporter 產生完整 `documents/{cap}-ba.md`／`-sa.md`、只供上傳的 `sources/*.md`、schema v6
-`manifest.json`、`upload-plan.md`、README 與 local-only governance。Raw source/config 不會直接
-進入 pack；documents 與 sources 的 DLP finding 先遮罩，residual 有命中才阻擋。
-只把 `sources/*.md` 手動加入企業版 Notebook；再次執行時仍會全量重掃專案與增量
+Exporter 產生完整 `.notebooklm/documents/{cap}-ba.md`／`-sa.md`、只供上傳的
+`.notebooklm/sources/*.md`（包含 `query-index.md`、`project-map.md` 與
+`shared-business-context.md`）、schema v6 `.notebooklm/manifest.json`、
+`.notebooklm/upload-plan.md`、`.notebooklm/README.md` 與 local-only
+`.notebooklm/governance.md`。Raw source/config 不會直接進入 pack；documents 與 sources
+的 DLP finding 先遮罩，residual 有命中才阻擋。
+只把 `.notebooklm/sources/*.md` 手動加入企業版 Notebook；再次執行時仍會全量重掃專案與增量
 更新 Wiki，再依 upload plan 處理新增、變更與刪除，`unchanged` 不需重新上傳。
 `.notebooklm/` 預設被 Git 忽略；若需調整 Workspace tier 或 analysis scope，可將
 `.agents/skills/codebase-wiki/assets/notebooklm.toml` 複製為 Repo root 的

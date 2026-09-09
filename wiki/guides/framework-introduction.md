@@ -10,7 +10,8 @@ sources:
   - docs/operations/validation/README.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
-source_digest: sha256:96642b0e1f82dba005fe9431cace96cce6ae248109a06a6b022f93623f1ab2c6
+  - tests/tgrep/test_tgrep_search.py
+source_digest: sha256:09e985ff38aff12cedcd4fa0739b5e570b8cf71ebeb841ba6ec01c383ba2a170
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-09-09
 tags: [guide, onboarding, framework, copilot, codex]
@@ -152,8 +153,10 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-只手動上傳 `.notebooklm/sources/*.md`。Schema v6 `manifest.json` 記錄 discovery/readiness、
-BA／SA documents、source mapping、coverage、DLP、migration 與 stable IDs；`governance.md`
+只手動上傳 `.notebooklm/sources/*.md`。其中包含
+`.notebooklm/sources/query-index.md`、`.notebooklm/sources/project-map.md` 與
+`.notebooklm/sources/shared-business-context.md`。Schema v6 `.notebooklm/manifest.json` 記錄 discovery/readiness、
+BA／SA documents、source mapping、coverage、DLP、migration 與 stable IDs；`.notebooklm/governance.md`
 區分本機檢查與待管理員驗證的雲端控制。Raw evidence 不直接進入 pack；舊 schema v1–v5
 或 retrieval contract 必須在同一本 Notebook full rebuild。預設 pack 使用 450 MB /
 450,000 words safety limits，且不超過 Enterprise 的 300 sources、500 MB /
@@ -204,6 +207,9 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 
 `samples/task-tracker/` 包含 `TaskItem`、Repository pattern、設定載入、狀態轉換、錯誤分支與 injected clock。依 `samples/README.md` 複製到暫存目錄後，可對五個 active 情境執行隔離驗收。
 
+這五項是 agent runtime 情境；pinned tgrep wrapper 的版本、digest、參數 allowlist、path
+containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 deterministic tests 驗證。
+
 驗收不比較 Agent 文字是否完全相同，而是確認：
 
 - 關鍵 domain behavior 有 Wiki/source evidence；
@@ -229,7 +235,7 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 - 文件總覽：`docs/README.md`
 - 架構與資料流：`docs/product/architecture/README.md`
 - 安裝、升級與排錯：`docs/operations/setup/README.md`
-- 11 個操作情境：`docs/product/workflows/README.md`
+- 12 個操作情境：`docs/product/workflows/README.md`
 - 本機 deterministic checks 與手動驗收：`docs/operations/validation/README.md`
 - Codex 獨立手冊：`Codex.md`
 

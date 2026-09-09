@@ -25,7 +25,7 @@
 | `docs/history/` | 上游概念 attribution 與歷史材料 | [歷史文件](history/README.md) |
 | `docs/history/changes/` | Codebase LLM Wiki 產品變更摘要 | [變更摘要](history/changes/) |
 | `samples/` | 不會隨 installer 發布的可操作 E2E 樣例 | [樣例說明](../samples/README.md) |
-| `tests/` | 依責任分組的 contract、installer、NotebookLM、release、sample 與 Wiki tests | [測試目錄](../tests/README.md) |
+| `tests/` | 依責任分組的 contract、installer、NotebookLM、release、sample、tgrep 與 Wiki tests | [測試目錄](../tests/README.md) |
 
 ## 專案邊界
 

@@ -60,6 +60,10 @@ python .agents/skills/codebase-wiki/scripts/tgrep-search.py --check
 並確認搜尋前後都沒有產生 `.tgrep/`。非 Windows x64 預期使用 host-native read/search，
 wrapper 回傳受控 unavailable 狀態，不將 tgrep 視為必要依賴。
 
+`tests/tgrep/test_tgrep_search.py` 另外固定 wrapper 的版本／SHA-256 self-check、allowlisted
+參數、shell 禁用、path containment、match exit codes 與不建立 index 的唯讀行為；這些是
+deterministic tool checks，不增加五項 active agent runtime 情境。
+
 `lint-wiki.py` 的 missing-module coverage 與 contradictions 會保持
 `agent_review_required`；維護者另行完成人工語意審查並保存結論。另須確認：
 

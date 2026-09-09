@@ -184,10 +184,13 @@ python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
   --preflight-id <readiness-id> --output .notebooklm --format json
 ```
 
-輸出包含完整 `documents/{cap}-ba.md`／`-sa.md`、只供上傳的 `sources/query-index.md`、
-`sources/project-map.md`、`sources/shared-business-context.md` 與 capability sources；
-shared source 收錄共用詞彙、流程目錄與 active 且有證據支持的跨功能流程。另有本機 schema v6 manifest、upload plan、
-README 與 governance。Retrieval contract 是 `codebase-ba-sa-retrieval-v1`；
+輸出包含完整 `.notebooklm/documents/{cap}-ba.md`／`-sa.md`、只供上傳的
+`.notebooklm/sources/query-index.md`、`.notebooklm/sources/project-map.md`、
+`.notebooklm/sources/shared-business-context.md` 與
+capability sources；shared source 收錄共用詞彙、流程目錄與 active 且有證據支持的跨功能流程。
+另有本機 `.notebooklm/manifest.json`、`.notebooklm/upload-plan.md`、`.notebooklm/README.md`
+與 `.notebooklm/governance.md`。
+Retrieval contract 是 `codebase-ba-sa-retrieval-v1`；
 raw code/config 不會直接 materialize。Schema v1–v5 或其他舊 contract
 必須在同一本 Notebook full rebuild。
 

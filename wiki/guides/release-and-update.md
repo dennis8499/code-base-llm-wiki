@@ -10,7 +10,7 @@ sources:
   - README.md
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:1614d722c53955fc2a7d2cd25b62b749c76e58a5c722505cbedabdb5b268a2d7
+source_digest: sha256:5b8afa45310ea26f376ac8b21d19eadda9220deba17ed8195587cb89eae7b802
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-09-09
 tags: [guide, release, version, extension]

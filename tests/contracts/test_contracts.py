@@ -100,6 +100,33 @@ class ContractTests(unittest.TestCase):
                 content = (REPO_ROOT / relative).read_text(encoding="utf-8")
                 self.assertIn(expected, content)
 
+    def test_public_docs_declare_tgrep_surface_and_boundaries(self) -> None:
+        expected_claims = {
+            "README.md": (
+                "tests/tgrep/",
+                "Windows x64 tgrep 只供 Ingest／Archaeology 來源探索",
+            ),
+            "docs/README.md": ("sample、tgrep 與 Wiki tests",),
+            "tests/README.md": (
+                "`tgrep/`",
+                "pinned Windows x64 tgrep wrapper",
+            ),
+            "docs/product/workflows/README.md": (
+                "Query 不使用 tgrep",
+                ".notebooklm/sources/query-index.md",
+            ),
+            "docs/operations/validation/README.md": (
+                "tests/tgrep/test_tgrep_search.py",
+                "五項 active agent runtime 情境",
+            ),
+        }
+
+        for relative, claims in expected_claims.items():
+            content = (REPO_ROOT / relative).read_text(encoding="utf-8")
+            for claim in claims:
+                with self.subTest(path=relative, claim=claim):
+                    self.assertIn(claim, content)
+
     def test_ba_sa_sd_standard_aligned_document_contract(self) -> None:
         skill_root = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"
         standards = (skill_root / "references/analysis-document-standards.md").read_text(

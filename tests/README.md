@@ -10,4 +10,5 @@
 | `notebooklm/` | NotebookLM exporter、schema 與 acceptance runner |
 | `release/` | release builder 與資產契約 |
 | `samples/` | `samples/task-tracker` 的安裝與 E2E contract |
+| `tgrep/` | pinned Windows x64 tgrep wrapper、版本／digest 與唯讀邊界 |
 | `wiki/` | Wiki lint、stale、log、hooks 與規格驗證 |

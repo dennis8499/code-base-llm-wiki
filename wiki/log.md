@@ -595,3 +595,9 @@ status: active
 - wrapper 優先使用既有 tgrep index/server，沒有索引時由 tgrep full scan；不自動執行 `index`／`serve`，不建立 `.tgrep/`，Query 維持 Wiki-first 且無 CLI fallback。
 - Installer、Codex/Copilot adapters、release `bundled_tools` metadata、binary hash 驗證、README／操作文件與相關 Wiki 已同步；`wiki/index.md` 已更新，未改變十一個 machine operations。
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[release-and-update]]、[[codebase-functional-coverage]]
+
+## [2026-09-09] update | 同步 README 與公開文件契約
+
+- 公開文件補齊 `tests/tgrep/` 測試面，統一 12 個操作情境、NotebookLM schema-v6 輸出路徑與只上傳 `sources/*.md` 的邊界。
+- 回歸契約固定 tgrep 的文件可見範圍與 Query 不使用 tgrep 的規則；本次未改變 API、CLI、installer 行為或產品版號。
+- 受影響頁面：[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[platform-adapters-and-release]]、[[codebase-functional-coverage]]、[[cap-analysis-document-generation-sa]]、[[system-analysis]]
