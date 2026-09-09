@@ -10,12 +10,15 @@ code path.
    public API, or function name.
 2. Read `wiki/index.md` and relevant wiki pages for routing context.
 3. Trace current source behavior read-only.
-4. Use non-destructive git history commands:
+4. When source locations are hard to locate, optionally use the bounded
+   [Source Discovery with tgrep](source-discovery-workflow.md) wrapper. Treat
+   its output as candidate locators and re-read current files before analysis.
+5. Use non-destructive git history commands:
    - `git log --oneline -- path/to/file`
    - `git log --all --oneline --grep "{keyword}"`
    - `git blame -L start,end path/to/file`
    - `git show <commit> -- path/to/file`
-5. Persist findings only when the user asks or the task explicitly includes
+6. Persist findings only when the user asks or the task explicitly includes
    wiki updates.
 
 ## Writing Rules

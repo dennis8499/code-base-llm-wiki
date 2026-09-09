@@ -5,6 +5,7 @@
 dist/
 .notebooklm/
 .notebooklm-tests-tmp/
+.tgrep/
 .*.notebooklm-transaction.json
 .*.notebooklm-transaction.lock
 .*.notebooklm-transaction.*.tmp-*

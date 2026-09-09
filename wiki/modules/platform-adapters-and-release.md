@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與手動 Release
 type: module
-summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架
+summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架，並以 pinned tgrep bundle 擴充 Ingest／Archaeology 來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -10,9 +10,11 @@ sources:
   - tests/contracts/test_contracts.py
   - tools/release.py
   - docs/operations/releases/README.md
-source_digest: sha256:aca138dbf5fda1fa3e83e1c57d238d600555ad841f85b8399df271ed6c4e643f
+  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
+  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
+source_digest: sha256:27c0fa6c55b057f3638f08c8e3f0bb3a2c9db3a12aeca603132d6f77756ec85e
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -32,6 +34,9 @@ status: active
   Repo-local Wiki agent profiles。
 - 共用 Query workflow 與雙平台代理只接受 Wiki／Repo source evidence；即時資料庫存取、
   資料庫工具及 fallback 由 parity 與 contract regression 明確禁止。
+- tgrep source-discovery integration 只開放給 Interactive/Batch Ingest 與 Code Archaeology；
+  Query 保持 Wiki-first，不呼叫 tgrep 或 CLI fallback。Windows x64 wrapper 只回傳候選
+  locator，形成 evidence 前必須直接重讀目前 source。
 - Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
 - 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，
@@ -55,7 +60,10 @@ status: active
 - `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、LICENSE、
   repository name、資產邊界與 checksum。
 - Release builder 排除 cache、hook/NotebookLM state、transaction artifacts 與敏感
-  paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry。
+  paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry；它驗證
+  `bundled_tools` 中 tgrep 1.0.5 的固定 path、platform 與 SHA-256，且排除 `.tgrep/`。
+- `update-manifest.json` 以 `bundled_tools` 描述隨 ZIP/TAR.GZ 發佈的 wrapper、manifest
+  與 binary；這不是額外 asset，也不改變四項手動 Release asset 契約。
 
 ## Contradictions
 

@@ -41,10 +41,18 @@ manually.
 
 Queries use the Markdown Wiki directly. Read `wiki/index.md`, then 1–5 relevant
 pages, and inspect their listed raw sources only when the Wiki is insufficient,
-stale, or contradictory. The framework does not create a local search database
-or source-code structure index, and Query does not connect to live databases or
-invoke database-tool fallbacks. Questions that require current database state
-remain explicit unverified gaps.
+stale, or contradictory. The framework does not create a Wiki search database
+or source-code structure index. Query does not invoke the optional tgrep source
+discovery wrapper, connect to live databases, or use CLI fallbacks. Questions
+that require current database state remain explicit unverified gaps.
+
+Ingest and Code Archaeology may use the bundled Windows x64 tgrep wrapper to
+locate candidate source files, symbols, imports, and exports. The wrapper is
+read-only, uses an existing tgrep index/server when available, otherwise lets
+tgrep scan the tree, and never starts `index` or `serve`. Always re-read current
+source files before treating search output as evidence. Load
+`.agents/skills/codebase-wiki/references/source-discovery-workflow.md` for its
+allowlisted command contract and fallback behavior.
 
 ## Copilot Prompt To Codex Recipe
 
@@ -74,11 +82,21 @@ Interactive ingest:
 請依照 AGENTS.md 的 Interactive Ingest 流程，分析 src/features/checkout/，先摘要主要職責、相依關係與風險，再更新 wiki。
 ```
 
+若需定位大量 symbol 或 import/export，可在 Windows x64 使用共用 wrapper：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\tgrep-search.py `
+  --root . --path src/features/checkout --fixed --files-only --pattern "CheckoutService"
+```
+
 Batch ingest:
 
 ```text
 請使用 $codebase-wiki，依照 Batch Ingest 流程掃描 src/，建立初始 wiki，最後更新 index 與 log。
 ```
+
+Batch Ingest 使用 tgrep 時仍須以直接讀取的目前 source 驗證候選結果；需要最新
+檔案狀態時加上 `--no-index`，不執行 `tgrep index` 或 `tgrep serve`。
 
 Wiki-first query:
 
@@ -105,6 +123,9 @@ Code archaeology:
 ```text
 請用 code archaeology 流程追蹤 discount_code 欄位的 git history，清楚區分證據與推測，最後更新 wiki。
 ```
+
+來源位置難以定位時，可先用 tgrep wrapper 的 `--fixed --files-only` 找候選檔案，
+再直接讀取檔案並使用 `git log`、`git blame`、`git show` 補足歷史。
 
 Business analysis document:
 

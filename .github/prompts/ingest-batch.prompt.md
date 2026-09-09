@@ -10,6 +10,8 @@ argument-hint: "目標路徑，例如：src/、services/ 或 packages/core"
 對 `${input:targetPath}` 執行 **Batch Ingest**。
 
 完整載入並遵守 [Ingest workflow](../../.agents/skills/codebase-wiki/references/ingest-workflow.md)。
+Windows x64 可依 [Source Discovery with tgrep](../../.agents/skills/codebase-wiki/references/source-discovery-workflow.md)
+加速候選檔案與 import/export 定位；仍須直接讀取目前 source，且不建立 index/server。
 使用者選擇本 prompt 已明確授權指定 scope 的 Batch Ingest；不得擴張範圍，
 也不需要再次要求 interactive confirmation。依相依順序處理模組，定期回報進度，
 並只建立有證據支持的 overview、module、entity、pattern 或 architecture pages。

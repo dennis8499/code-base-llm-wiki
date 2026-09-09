@@ -40,6 +40,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | SD architecture views, decisions, and quality strategy | `references/system-design-workflow.md` |
 | BA／SA／SD standards profiles and traceability | `references/analysis-document-standards.md` |
 | Code archaeology and git-history evidence | `references/code-archaeology-workflow.md` |
+| Read-only source discovery acceleration | `references/source-discovery-workflow.md` |
 | Hook trigger, I/O, and guard-mode contract | `references/hooks-specification.md` |
 | New page starting points | Matching template under `assets/` |
 | Stale source checks, stats, or index rebuilds | Matching script under `scripts/` |

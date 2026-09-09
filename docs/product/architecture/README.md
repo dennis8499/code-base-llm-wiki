@@ -22,6 +22,8 @@ flowchart TB
     Pages --> Enough{證據足夠且未過時?}
     Enough -->|是| Result[回答或產出]
     Enough -->|否| Sources[唯讀檢查 raw sources]
+    Sources -.->|Ingest/Archaeology only| Tgrep[Windows x64 tgrep wrapper]
+    Tgrep --> Sources
     Sources --> Result
     Result -->|持久化工作流| Wiki[更新頁面 / index / append-only log]
     BA[BA: objectives / cap / fr / bp / br / AC] --> SA[SA: SR / NFR / IF]
@@ -41,6 +43,7 @@ flowchart TB
 - intent routing、frontmatter、log operations 與工作流 references；NotebookLM export 另有離線 source-pack reference；
 - Wiki page templates；
 - installer、parity、frontmatter、stale-source、唯讀 lint 與統計 scripts；
+- Windows x64 tgrep source-discovery wrapper 與 pinned binary manifest；
 - Raw Sources 唯讀、Wiki-first、append-only log 與 evidence-backed 的核心規則。
 
 平台 adapter 不需要逐 byte 相同；`parity-check.py` 驗證兩邊仍公開相同能力且沒有指向已移除的舊路徑。
@@ -53,6 +56,7 @@ Copilot 的 `.github/prompts/` 是 VS Code 本機 adapter；其他 Copilot hosts
 目前 Agent 依 `SKILL.md` 路由到單一 authoritative workflow，再按該 workflow 的
 authorization policy 執行。Copilot prompt files 與 Codex recipes 都是薄入口，不另設
 Repo-local Wiki agent profiles，也不改變寫入權限。
+tgrep 只在 Ingest／Archaeology 作為候選 locator；Query 不呼叫它。
 
 ## Wiki 資料模型
 
@@ -108,16 +112,17 @@ PowerShell wrapper 與 `Join-Path`，可安全處理空白和非 ASCII root path
 Windows staging 目錄繼承 target parent 的 ACL，避免 Python 3.13+ `mkdtemp()` 的
 owner-only DACL 跟著 staged files 移入目標，造成 Codex sandbox account 無法讀取。
 
-框架 Repo 根目錄的 `wiki/` 是框架自己的持久知識，不會複製到目標專案；目標 Wiki 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 的乾淨骨架建立。`docs/`、`samples/` 與 `tests/` 同樣不屬於 installer surface。
+框架 Repo 根目錄的 `wiki/` 是框架自己的持久知識，不會複製到目標專案；目標 Wiki 由 `.agents/skills/codebase-wiki/assets/wiki-starter/` 的乾淨骨架建立。共用 Skill 同時安裝 tgrep wrapper、manifest 與 Windows x64 binary；`docs/`、`samples/` 與 `tests/` 同樣不屬於 installer surface。
 
 ## 設計邊界
 
 - 不建立向量資料庫、SQLite source index 或 Tree-sitter cache。
+- 不由框架建立或管理 tgrep index/server；`.tgrep/` 是使用者管理的 generated state。
 - Query 不因讀取而自動持久化結果。
 - BA／SA／SD 只宣稱 standard-aligned；不宣稱 conformance、認證或稽核通過，也不複製付費標準原文。
 - SA 保持 solution-neutral；technology/component/deployment design 只進 SD 或 ADR。
 - 三份文件皆可在上游缺失時產出，但必須以具體 Gap 降級，不產生虛構 Mermaid。
-- Query 不連線即時資料庫，也不呼叫資料庫工具或 fallback；需要目前資料庫狀態的問題標示為未驗證 gap。
+- Query 不使用 tgrep、不連線即時資料庫，也不呼叫資料庫工具或 fallback；需要目前資料庫狀態的問題標示為未驗證 gap。
 - Repo 內的 `.sql`、migration 與 schema 可維持一般唯讀 source evidence。
 - 不建立 project-level Codex slash prompts；Codex 使用自然語言 recipes。
 - NotebookLM export 每次唯讀全量掃描安全 UTF-8 repo text；既有 Wiki 是增量知識基線，不是掃描邊界，非文字業務證據列為 gap。Discovery ID 與 Wiki readiness ID 分離。

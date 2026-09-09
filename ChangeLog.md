@@ -8,6 +8,9 @@
 
 ### Added
 
+- **tgrep 來源探索整合**：共用 Skill 內含 pinned Windows x64 tgrep 1.0.5、SHA-256
+  manifest、唯讀 allowlisted wrapper 與共用 source-discovery reference；Interactive/Batch
+  Ingest 與 Code Archaeology 可用它定位候選 source，Query 維持 Wiki-first 且不使用 tgrep。
 - **NotebookLM 每功能現況 BA／SA**：新增 `codebase-business-analysis-v1` 與
   `codebase-system-analysis-v1` templates、BA／SA pair/locator gates、完整本機
   `documents/`、upload-only `sources/` mapping，以及 Google 官方產品限制與安全控制治理清單。
@@ -26,6 +29,9 @@
 
 ### Changed
 
+- **Installer 與 Release bundle metadata**：Copilot/Codex 共用 surface 同步安裝 tgrep
+  wrapper、manifest 與 binary；release `update-manifest.json` 新增 `bundled_tools`，建置
+  前驗證固定版本、路徑與 SHA-256，並排除 target 的 `.tgrep/` generated state。
 - **Codebase LLM Wiki-only 目錄分層**：文件依 product／operations／history 分類，測試依
   contracts、installer、NotebookLM、release、samples 與 Wiki 責任分組；所有公開路徑、
   Wiki sources 與驗證入口同步更新。

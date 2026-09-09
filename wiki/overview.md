@@ -6,11 +6,13 @@ sources:
   - README.md
   - AGENTS.md
   - .agents/skills/codebase-wiki/capabilities.json
+  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
+  - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
-source_digest: sha256:5b3299e8726768078d4d8cd02dcf91f9653cb14cd0dc6dc7e2f3ad869e2b3842
+source_digest: sha256:13e34b183a1ac944ba3ffaa3f3dafd0b9ddae20e97d0070fff2dd5f305e0a9d3
 derived_from: []
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -85,7 +87,9 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 框架也支援一般 Ingest、Query、Lint、Archaeology、ADR 與 Synthesis；這些
 能力的工程入口與治理細節保留在 [[project-function-catalog]] 與
 [[framework-introduction]]。Query
-只使用 Wiki 與 Repo source evidence，不連線即時資料庫或呼叫資料庫工具 fallback。
+只使用 Wiki 與 Repo source evidence，不連線即時資料庫或呼叫資料庫工具 fallback，也不
+使用 tgrep。Windows x64 的 Interactive/Batch Ingest 與 Code Archaeology 可選用共用
+tgrep wrapper 定位候選 source；結果必須重新讀取目前 source 才能成為 evidence。
 
 ## 範圍與邊界
 
@@ -97,11 +101,14 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 - 可審查的安全排除、DLP、容量與 migration 狀態。
 - Versioned standards profiles、coverage、markers、evidence-gated Mermaid 與
   BA → SA → SD traceability。
+- Windows x64 的 pinned tgrep 來源探索 wrapper，僅服務 Ingest／Archaeology，並以
+  host-native search 作其他平台 fallback。
 
 ### 不包含
 
 - NotebookLM API、自動雲端上傳或雲端 source 刪除；
-- 向量資料庫、常駐搜尋服務或 deterministic NotebookLM 回答保證；
+- 向量資料庫、框架必須維護的常駐搜尋服務或 deterministic NotebookLM 回答保證；tgrep
+  只作選用的來源定位器，框架不管理 index/server；
 - 將未轉成 UTF-8 repo text 的 PDF、Office、圖片或訪談內容自動視為證據；
 - 自動把實作行為提升為已核准業務政策。
 - 正式 ISO／IEEE／IIBA conformance、認證或稽核，以及付費標準全文複製。

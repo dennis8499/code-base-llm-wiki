@@ -10,6 +10,8 @@ argument-hint: "要追蹤的功能、欄位、路由或問題，例如：discoun
 對 `${input:target}` 執行 **Code Archaeology**。
 
 完整載入 [Code archaeology workflow](../../.agents/skills/codebase-wiki/references/code-archaeology-workflow.md)。
+來源位置難以定位時，依 [Source Discovery with tgrep](../../.agents/skills/codebase-wiki/references/source-discovery-workflow.md)
+使用共用唯讀 wrapper；先重新讀取目前 source，再補足 Git history。
 先讀 `wiki/index.md` 與相關頁面，再從具體 entrypoint 追蹤目前 inputs、processing、
 outputs 與特殊分支；之後才使用非破壞性的 `git log`、`git blame`、`git show`
 補足歷史。分開標示 source/Git evidence、inference、speculation 與 uncertainty。

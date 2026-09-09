@@ -1,7 +1,7 @@
 ---
 title: Installer 與 Upgrade
 type: module
-summary: Installer v6 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源
+summary: Installer v6 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle
 notebooklm_group: function-install-upgrade
 notebooklm_role: traceability
 sources:
@@ -10,9 +10,11 @@ sources:
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/installer/test_install_framework.py
-source_digest: sha256:b22d8a1156f78e35045c57748f3543b7e26df3e92ba935939594dd64873fe1a9
+  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
+  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
+source_digest: sha256:432a50c3d6f3ba221cb113e6294d48adca4472efba39340dfbb01439efc3f793
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -34,6 +36,8 @@ status: active
   release archive。
 - 套用前拒絕會沿 target symlink/reparse point 解析到選定 target root 外的路徑，避免把框架檔案寫入外部目錄。
 - Installer source tree 若包含 symlink 或 Windows junction/reparse point 也會 fail closed，避免 framework source 讀取 repo 外內容。
+- 共用 Skill 以同一份受管 surface 安裝 tgrep wrapper、manifest 與 Windows x64 binary；
+  Copilot／Codex 不各自維護副本，且 installer 不建立 target 的 `.tgrep/` index/server。
 - Copilot surface 直接枚舉目前 `.github/` 內容；Repo 不再含 workflows，因此 installer
   不需要 CI/release workflow 特例，也不會把 workflow YAML 安裝到目標。
 - v6 隨共用 Skill 安裝三份 standards-aligned templates/workflows 與兩份 NotebookLM
@@ -85,6 +89,10 @@ JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 - `_render_managed_document()` 對只有 managed block 的新 target 使用 canonical bytes，
   因此第一次 apply 後的第二次 plan 不會反覆回報 `AGENTS.md` 變更；Codex/Copilot
   surface 都有整合 smoke 與 regression coverage。
+- `COMMON_SURFACE_PATHS` 遞迴納入 `scripts/tgrep-search.py`、
+  `bin/tgrep-manifest.json` 與 `bin/windows-x64/tgrep.exe`，因此兩個 surface 的
+  fresh install 與 upgrade 都共享相同 tgrep artifact；wrapper 的 read-only 契約另由
+  `tests/tgrep/test_tgrep_search.py` 驗證。
 - Starter Wiki 日期由注入的 `install_date` 產生，測試不依賴固定系統日期。
 
 ## Contradictions

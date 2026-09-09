@@ -10,7 +10,9 @@
 
 Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`，後續查詢先讀 Wiki，內容不足、過時或矛盾時才回溯 raw sources。
 
-它不是 RAG：不建立向量資料庫、不複製完整原始碼，也不要求本機搜尋服務。知識以可閱讀、可版本控制、可交叉引用的 Markdown 持續累積。
+它不是 RAG：不建立向量資料庫、不複製完整原始碼，也不要求常駐本機搜尋服務。Windows x64
+另可用隨 Skill 提供的 tgrep 加速 Ingest／Archaeology 的來源探索；知識仍以可閱讀、可版本控制、
+可交叉引用的 Markdown 持續累積。
 
 ---
 
@@ -32,7 +34,7 @@ Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent
 
 ```text
 code-base-llm-wiki/
-├── .agents/skills/codebase-wiki/  # Copilot/Codex 共用 Skill、規格、模板與腳本
+├── .agents/skills/codebase-wiki/  # Copilot/Codex 共用 Skill、規格、模板、腳本與 tgrep
 ├── .codex/                        # Codex hooks 與設定
 ├── .github/                       # Copilot VS Code prompts、hooks 與 instructions
 ├── docs/                          # 產品文件、操作文件與歷史材料
@@ -113,10 +115,10 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 | 工作流 | 用途 | 預設寫入 |
 | --- | --- | --- |
 | Install / setup | 安裝或升級框架入口 | dry-run；`--apply` 才寫入 |
-| Ingest | 把 source evidence 整理成 Wiki | 需確認 |
+| Ingest | 把 source evidence 整理成 Wiki；可用 tgrep 加速來源定位 | 需確認 |
 | Query | Wiki-first 回答問題；符合條件時提供保存、更新或 Lint 選項 | 否 |
 | Lint | 檢查 stale、連結、frontmatter、coverage；報告後提供修復選項 | 先報告 |
-| Archaeology | 追蹤程式路徑與 Git 歷史 | 否 |
+| Archaeology | 追蹤程式路徑與 Git 歷史；可用 tgrep 加速來源定位 | 否 |
 | ADR | 保存架構決策 | 是 |
 | Synthesis | 保存長期跨領域分析 | 是 |
 | Business Analysis / BA | 依 29148 與 IIBA profile 產生業務需求、流程、規則、指標與變更影響文件 | 是 |
@@ -133,6 +135,8 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 - **Wiki-first**：先讀 `wiki/index.md` 與相關頁面，再按需回溯 sources。
 - **來源可追溯**：`sources` 保存 raw paths、`derived_from` 保存 Wiki 關係，
   `source_digest` 偵測同日內容變更。
+- **來源探索加速**：Windows x64 以 Skill 內部 wrapper 使用固定版本 tgrep；只作 Ingest／
+  Archaeology 的候選定位，索引不存在時安全 full scan，其他平台使用原有搜尋方式。
 - **增量維護**：透過 `wiki/index.md`、wikilinks 與 append-only `wiki/log.md` 累積知識。
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
 - **BA → SA → SD 標準對齊文件**：三份繁中 Markdown 可獨立產出，以穩定 ID
@@ -160,6 +164,8 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 - Python 3.11+
 - GitHub Copilot Chat 或 OpenAI Codex，依使用入口選擇
 
+Windows x64 的 Skill 內含 tgrep 1.0.5；tgrep 是選用的來源探索加速器，不是必要的常駐服務。
+
 ### 安裝 GitHub Copilot surface
 
 先預覽，再明確套用：
@@ -182,6 +188,20 @@ local 變更時回報 `conflicts`。Root instructions 只更新 managed marker b
 
 Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的其他 Skills
 不會外帶。`upgrade` 只同步 framework surface，既有 `wiki/` 保持不變。
+
+### tgrep 來源探索
+
+Windows x64 的 Ingest 與 Code Archaeology 可使用共用 wrapper：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\tgrep-search.py `
+  --root . --path src --fixed --files-only --pattern "PaymentService"
+```
+
+Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/server 時可直接使用，
+否則由 tgrep full scan。索引可能落後於檔案變更，需使用 `--no-index` 並直接重新讀 source
+才能確認最新證據。`Query` 不使用 tgrep，仍遵守 Wiki-first 與無 CLI fallback 契約。
+手動建立 index/server 時，請將 `.tgrep/` 保持在 target repo 的 Git ignore 中。
 
 ---
 
@@ -286,9 +306,10 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
 | NotebookLM Enterprise | 支援完整 codebase 的現況 BA／SA 整理與離線匯出 | 一次確認、每功能 BA／SA、完整映射、DLP、schema v6 與 Google 官方治理清單；不含雲端 API |
 
-本框架不提供 RAG、向量資料庫、本機搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
+本框架不提供 RAG、向量資料庫、必要的常駐搜尋服務、MCP 搜尋服務、NotebookLM 雲端上傳 API 或自動修改 raw sources。
+隨 Skill 發佈的 Windows x64 tgrep 只供 Ingest／Archaeology 來源探索，並透過唯讀 wrapper 限制範圍。
 NotebookLM export 產生的是可供 NotebookLM 使用的 Markdown `query-index`，不是常駐搜尋引擎；
-它只產生本地 `.notebooklm/`。Wiki Query 不連線即時資料庫，也不呼叫資料庫工具或 fallback；
+它只產生本地 `.notebooklm/`。Wiki Query 不連線即時資料庫，也不呼叫 tgrep、資料庫工具或 fallback；
 Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
 本 Repo 尚未宣告軟體授權；請勿從參考專案的授權狀態推定本專案授權。

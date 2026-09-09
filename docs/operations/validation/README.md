@@ -49,6 +49,17 @@ python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --repo-root .
 python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
 ```
 
+Windows x64 另外執行 bundled tgrep self-check；它只驗證固定 binary 的版本與 digest，
+不建立 index/server：
+
+```powershell
+python .agents/skills/codebase-wiki/scripts/tgrep-search.py --check
+```
+
+在 Windows x64 smoke fixture 中，應以 `--no-index` 驗證命中回傳 `0`、無命中回傳 `1`，
+並確認搜尋前後都沒有產生 `.tgrep/`。非 Windows x64 預期使用 host-native read/search，
+wrapper 回傳受控 unavailable 狀態，不將 tgrep 視為必要依賴。
+
 `lint-wiki.py` 的 missing-module coverage 與 contradictions 會保持
 `agent_review_required`；維護者另行完成人工語意審查並保存結論。另須確認：
 
@@ -66,6 +77,9 @@ Contract tests 另固定驗證：
 
 - capability manifest 為 v6、11 operations／11 intent groups，BA／SA／SD 都採
   `explicit_request`；
+- capability manifest 的 tgrep source-discovery metadata 只包含 Ingest／Archaeology，
+  `query_enabled`、auto index 與 auto serve 都是 false；wrapper、manifest 與 binary 的
+  固定版本和 SHA-256 必須一致；
 - 共用 standards reference 鎖定 29148:2018、15288:2023、25010:2023、
   42010:2022 與 IIBA v2.0，IEEE 1016-2009 僅是 informative 歷史參考；
 - 三份模板具有正確 `standards_profile`、`coverage_status`、必要章節、穩定 ID、
@@ -75,7 +89,8 @@ Contract tests 另固定驗證：
 - NotebookLM schema v6 以 `codebase-ba-sa-v1` 驗證每 capability 的 current-state BA／SA
   pair、雙向連結與 locator，並只把規整後的 `sources/*.md` 列為 upload candidates；
 - Codex 與 Copilot installer 都取得共用 references/templates，Copilot 取得三個薄
-  prompt adapters，upgrade 不改寫目標 Wiki。
+  prompt adapters，兩個 surface 都取得相同 tgrep wrapper/manifest/binary，upgrade 不改寫
+  目標 Wiki。
 
 人工語意驗收另逐項確認 `cap/fr/bp/br/AC → SR/NFR/IF → DE/VIEW/ADR` 追溯、
 設計內容已由 SA 移到 SD、上游缺失會建立具體 Gap 而不是中止或臆造，以及人工
@@ -122,6 +137,8 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - [ ] `VERSION` 是穩定 `X.Y.Z`，發版 tag 嚴格對應 `vX.Y.Z`。
 - [ ] 專案擁有者已加入明確 LICENSE；缺少時 release readiness gate 必須阻擋。
 - [ ] Release builder 僅先用 fixture 驗證，正式資產通過 manifest 與 SHA-256 檢查。
+- [ ] `bundled_tools` 描述 tgrep 1.0.5 的路徑、平台與 SHA-256，archive 含 binary，且
+  `.tgrep/` generated state 未被封裝。
 
 ## 手動語意審查
 

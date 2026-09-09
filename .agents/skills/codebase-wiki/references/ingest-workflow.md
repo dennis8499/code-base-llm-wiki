@@ -19,7 +19,8 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
 2. **探索階段**：
    - 讀取目標目錄結構（`list_dir`）
    - 讀取核心檔案（`read_file`）—— 優先讀入口點、index 檔、README
-   - 搜尋關鍵 export / import 關係（`grep_search`）
+   - 搜尋關鍵 export / import 關係（`grep_search`）；Windows x64 可依
+     [Source Discovery with tgrep](source-discovery-workflow.md) 使用共用唯讀 wrapper
 3. **摘要階段**：
    - 向使用者報告發現：
      - 模組的核心職責
@@ -47,7 +48,8 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
 1. **掃描階段**：
    - 列出目標路徑下的所有子目錄和檔案
    - 建立初步的模組清單
-   - 分析 import/export 關係，建立依賴圖
+   - 分析 import/export 關係，建立依賴圖；Windows x64 可用 tgrep wrapper
+     加速候選定位，仍須直接讀取目前檔案
    - 若由 NotebookLM preparation 觸發，先讀 `business_source_paths` 與現有業務文件，
      再依 safe-scope contract 掃描 runtime/config/schema/docs；以角色、觸發、前置條件、
      業務結果、例外、規則與狀態轉換建立端到端業務流程

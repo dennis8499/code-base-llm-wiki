@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "tool": "tgrep",
+  "version": "1.0.5",
+  "platform": "windows-x86_64",
+  "binary": "bin/windows-x64/tgrep.exe",
+  "sha256": "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
+  "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5"
+}

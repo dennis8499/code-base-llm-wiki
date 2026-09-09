@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from collections.abc import Callable
 from pathlib import Path
 import re
@@ -114,9 +115,39 @@ QUERY_DATABASE_BOUNDARIES = {
         "current database state",
     ),
 }
+QUERY_TGREP_BOUNDARIES = {
+    ".agents/skills/codebase-wiki/references/query-workflow.md": (
+        "out of scope for Query",
+        "does not use tgrep",
+        "CLI fallbacks",
+    ),
+}
+SOURCE_DISCOVERY_REFERENCE = ".agents/skills/codebase-wiki/references/source-discovery-workflow.md"
+TGREP_MANIFEST_PATH = ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+TGREP_BINARY_PATH = ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+TGREP_SHA256 = "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7"
+TGREP_INTEGRATION = {
+    "provider": "tgrep",
+    "version": "1.0.5",
+    "platforms": ["windows-x86_64"],
+    "operations": ["ingest", "archaeology"],
+    "fallback": "host-native-search",
+    "index_policy": "existing-index-or-full-scan",
+    "auto_index": False,
+    "auto_serve": False,
+    "exit_codes": {"match": 0, "no_match": 1, "error": 2},
+    "writes": False,
+    "query_enabled": False,
+    "wrapper": ".agents/skills/codebase-wiki/scripts/tgrep-search.py",
+    "manifest": TGREP_MANIFEST_PATH,
+    "binary": TGREP_BINARY_PATH,
+    "sha256": TGREP_SHA256,
+    "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+}
 COPILOT_PROMPT_CONTRACT = {
     "ingest-module.prompt.md": (
         "references/ingest-workflow.md",
+        "references/source-discovery-workflow.md",
         "等待確認",
         "確認前不得寫檔",
         "wiki/index.md",
@@ -124,6 +155,7 @@ COPILOT_PROMPT_CONTRACT = {
     ),
     "ingest-batch.prompt.md": (
         "references/ingest-workflow.md",
+        "references/source-discovery-workflow.md",
         "明確授權",
         "不需要再次要求",
         "指定 scope",
@@ -144,6 +176,7 @@ COPILOT_PROMPT_CONTRACT = {
     ),
     "code-archaeology.prompt.md": (
         "references/code-archaeology-workflow.md",
+        "references/source-discovery-workflow.md",
         "Git evidence",
         "預設零寫入",
         "明確要求保存",
@@ -224,6 +257,43 @@ def main() -> int:
         for token in required_tokens:
             if token.lower() not in text:
                 issues.append(f"query live-database boundary missing in {relative}: {token}")
+    for relative, required_tokens in QUERY_TGREP_BOUNDARIES.items():
+        path = root / relative
+        text = path.read_text(encoding="utf-8").lower() if path.is_file() else ""
+        for token in required_tokens:
+            if token.lower() not in text:
+                issues.append(f"query tgrep boundary missing in {relative}: {token}")
+
+    integrations = manifest.get("integrations", {})
+    source_discovery = integrations.get("source_discovery") if isinstance(integrations, dict) else None
+    if source_discovery != TGREP_INTEGRATION:
+        issues.append("tgrep source_discovery integration metadata drifted")
+    for relative in (SOURCE_DISCOVERY_REFERENCE, TGREP_MANIFEST_PATH, TGREP_BINARY_PATH, TGREP_INTEGRATION["wrapper"]):
+        if not (root / relative).is_file():
+            issues.append(f"missing tgrep integration surface: {relative}")
+    tgrep_manifest_path = root / TGREP_MANIFEST_PATH
+    if tgrep_manifest_path.is_file():
+        try:
+            tgrep_manifest = json.loads(tgrep_manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            issues.append(f"invalid tgrep manifest: {exc}")
+            tgrep_manifest = {}
+        expected_manifest = {
+            "schema_version": 1,
+            "tool": "tgrep",
+            "version": "1.0.5",
+            "platform": "windows-x86_64",
+            "binary": "bin/windows-x64/tgrep.exe",
+            "sha256": TGREP_SHA256,
+            "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+        }
+        if tgrep_manifest != expected_manifest:
+            issues.append("tgrep bundle manifest metadata drifted")
+    tgrep_binary_path = root / TGREP_BINARY_PATH
+    if tgrep_binary_path.is_file():
+        digest = hashlib.sha256(tgrep_binary_path.read_bytes()).hexdigest()
+        if digest != TGREP_SHA256:
+            issues.append("bundled tgrep binary SHA-256 mismatch")
 
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
@@ -296,6 +366,22 @@ def main() -> int:
     recipe_document = entrypoints.get("codex", {}).get("recipe_document", "")
     if recipe_document != "Codex.md" or not (root / recipe_document).is_file():
         issues.append("Codex recipe document must be Codex.md")
+    for relative in (
+        ".agents/skills/codebase-wiki/references/ingest-workflow.md",
+        ".agents/skills/codebase-wiki/references/code-archaeology-workflow.md",
+    ):
+        path = root / relative
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if SOURCE_DISCOVERY_REFERENCE not in text and "source-discovery-workflow.md" not in text:
+            issues.append(f"workflow missing source-discovery reference: {relative}")
+    codex_text = (root / "Codex.md").read_text(encoding="utf-8") if (root / "Codex.md").is_file() else ""
+    for token in (
+        SOURCE_DISCOVERY_REFERENCE,
+        "Query does not invoke the optional tgrep",
+        "never starts `index` or `serve`",
+    ):
+        if token not in codex_text:
+            issues.append(f"Codex recipe missing tgrep boundary: {token}")
 
     cli = manifest.get("cli", {})
     if not isinstance(cli, dict):

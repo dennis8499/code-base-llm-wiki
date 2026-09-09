@@ -8,9 +8,11 @@ sources:
   - docs/operations/releases/README.md
   - docs/operations/validation/README.md
   - README.md
-source_digest: sha256:97f3839f6eae51c9807a2447742a9a9df6c79b60b252500f478c81e2562bf4e5
+  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
+  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
+source_digest: sha256:1614d722c53955fc2a7d2cd25b62b749c76e58a5c722505cbedabdb5b268a2d7
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -31,6 +33,9 @@ notebooklm_role: traceability
 - Framework workflow changes, including the shared Query/Lint follow-up action
   contract, must be reflected in the release documentation, ChangeLog, Wiki
   index, and append-only update log before publishing.
+- Shared source-discovery changes must also keep the pinned tgrep manifest, wrapper and
+  `bundled_tools` release metadata aligned; the integration is limited to Ingest／Archaeology
+  and does not change the eleven-operation contract.
 
 ## 發佈流程
 
@@ -59,6 +64,12 @@ stage、backup 與 temporary sibling files 也不會被封裝；非排除路徑�
 release root 外的內容讀入資產。NotebookLM source pack 是每個使用者本機產生的交付物，
 不會混入 framework release。下載資產包含完整 framework Repo，安裝時仍由 installer
 選擇 Copilot 或 Codex surface。
+
+`.tgrep/` 是 target repo 的 generated index/server state，release builder 會排除它，
+也不由 framework 自動建立或管理。兩個 archive 內則包含共用 Skill 的
+`scripts/tgrep-search.py`、`bin/tgrep-manifest.json` 與 Windows x64 tgrep 1.0.5；
+`update-manifest.json` 透過 `bundled_tools` 記錄 binary path、platform、source URL 與
+SHA-256，建置前會 fail closed 驗證 hash。
 
 `--repository OWNER/NAME` 與 `GITHUB_REPOSITORY` 只接受安全的 GitHub owner/name
 元件；不合法的 query、path traversal 或額外 path segment 會被拒絕。

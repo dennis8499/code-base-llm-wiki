@@ -101,5 +101,25 @@
   "cli": {
     "install": "python .agents/skills/codebase-wiki/scripts/install-framework.py install --target TARGET --surface SURFACE --guard-mode wiki-only",
     "upgrade": "python .agents/skills/codebase-wiki/scripts/install-framework.py upgrade --target TARGET --surface SURFACE --guard-mode wiki-only"
+  },
+  "integrations": {
+    "source_discovery": {
+      "provider": "tgrep",
+      "version": "1.0.5",
+      "platforms": ["windows-x86_64"],
+      "operations": ["ingest", "archaeology"],
+      "fallback": "host-native-search",
+      "index_policy": "existing-index-or-full-scan",
+      "auto_index": false,
+      "auto_serve": false,
+      "exit_codes": {"match": 0, "no_match": 1, "error": 2},
+      "writes": false,
+      "query_enabled": false,
+      "wrapper": ".agents/skills/codebase-wiki/scripts/tgrep-search.py",
+      "manifest": ".agents/skills/codebase-wiki/bin/tgrep-manifest.json",
+      "binary": ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe",
+      "sha256": "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
+      "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5"
+    }
   }
 }

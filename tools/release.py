@@ -13,7 +13,7 @@ import hashlib
 import io
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import stat
@@ -30,6 +30,16 @@ VERSION_FILE = "VERSION"
 VERSION_PATTERN = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 ARCHIVE_NAMES = ("codebase-llm-wiki.zip", "codebase-llm-wiki.tar.gz")
 MANIFEST_NAME = "update-manifest.json"
+BUNDLED_TOOL_MANIFEST = ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+EXPECTED_TGREP = {
+    "tool": "tgrep",
+    "version": "1.0.5",
+    "platform": "windows-x86_64",
+    "binary": "bin/windows-x64/tgrep.exe",
+    "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+    "path": ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe",
+    "sha256": "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
+}
 CHECKSUMS_NAME = "SHA256SUMS"
 EXCLUDED_PARTS = {
     ".git",
@@ -43,6 +53,7 @@ EXCLUDED_PARTS = {
     "dist",
     "logs",
     ".notebooklm",
+    ".tgrep",
 }
 EXCLUDED_PARTS_LOWER = {value.lower() for value in EXCLUDED_PARTS}
 GENERATED_SUFFIXES = (
@@ -307,6 +318,83 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _safe_repo_relative_path(root: Path, relative: str, label: str) -> Path:
+    """Resolve a manifest path without allowing links or root escapes."""
+
+    if not isinstance(relative, str) or not relative:
+        raise ReleaseError(f"{label} must be a non-empty relative path")
+    normalized = relative.replace("\\", "/")
+    parsed = PurePosixPath(normalized)
+    if (
+        parsed.is_absolute()
+        or any(part in {"", ".", ".."} for part in parsed.parts)
+        or re.fullmatch(r"[A-Za-z]:.*", normalized)
+    ):
+        raise ReleaseError(f"{label} must stay within the repository: {relative!r}")
+
+    candidate = root
+    for component in parsed.parts:
+        candidate = candidate / component
+        if _is_reparse_point(candidate):
+            raise ReleaseError(f"{label} must not traverse a symlink or reparse point")
+    try:
+        candidate.resolve(strict=False).relative_to(root.resolve(strict=False))
+    except ValueError as exc:
+        raise ReleaseError(f"{label} escapes the repository: {relative!r}") from exc
+    return candidate
+
+
+def bundled_tool_metadata(root: Path = REPO_ROOT) -> list[dict[str, str]]:
+    """Validate the pinned bundled tgrep binary and return release metadata."""
+
+    root = root.resolve()
+    manifest_path = _safe_repo_relative_path(
+        root, BUNDLED_TOOL_MANIFEST, "bundled tool manifest"
+    )
+    if not manifest_path.is_file():
+        raise ReleaseError(f"missing bundled tool manifest: {BUNDLED_TOOL_MANIFEST}")
+    try:
+        metadata = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ReleaseError(f"unable to read bundled tool manifest: {manifest_path}") from exc
+    if not isinstance(metadata, dict):
+        raise ReleaseError("bundled tool manifest must contain an object")
+    if metadata.get("schema_version") != 1:
+        raise ReleaseError("bundled tool manifest schema_version must be 1")
+    for field, expected in EXPECTED_TGREP.items():
+        if field == "path":
+            continue
+        if metadata.get(field) != expected:
+            raise ReleaseError(f"bundled tgrep manifest mismatch for {field}")
+
+    skill_root = PurePosixPath(".agents/skills/codebase-wiki")
+    binary_relative = skill_root / metadata["binary"]
+    binary_path = _safe_repo_relative_path(
+        root, binary_relative.as_posix(), "bundled tgrep binary"
+    )
+    binary_repo_path = binary_path.relative_to(root).as_posix()
+    if binary_repo_path != EXPECTED_TGREP["path"]:
+        raise ReleaseError("bundled tgrep binary path is not the pinned release path")
+    if not binary_path.is_file():
+        raise ReleaseError(f"missing bundled tgrep binary: {binary_path}")
+    actual_hash = sha256(binary_path)
+    if actual_hash != EXPECTED_TGREP["sha256"]:
+        raise ReleaseError(
+            "bundled tgrep SHA-256 mismatch: "
+            f"expected {EXPECTED_TGREP['sha256']}, got {actual_hash}"
+        )
+    return [
+        {
+            "tool": metadata["tool"],
+            "version": metadata["version"],
+            "platform": metadata["platform"],
+            "path": binary_repo_path,
+            "sha256": actual_hash,
+            "source_url": metadata["upstream_release"],
+        }
+    ]
+
+
 def build_release(
     output: Path,
     root: Path = REPO_ROOT,
@@ -323,6 +411,7 @@ def build_release(
     version = read_version(root)
     tag = expected_tag(version)
     repo = repository_name(root, repository)
+    bundled_tools = bundled_tool_metadata(root)
     output.mkdir(parents=True, exist_ok=True)
     files = release_files(root, output)
 
@@ -351,6 +440,7 @@ def build_release(
         "installer_contract_version": INSTALLER_CONTRACT_VERSION,
         "release_url": release_url,
         "assets": assets,
+        "bundled_tools": bundled_tools,
     }
     manifest_path = output / MANIFEST_NAME
     manifest_path.write_text(
@@ -368,6 +458,7 @@ def build_release(
         "repository": repo,
         "output": output.as_posix(),
         "files": [name for name in (*ARCHIVE_NAMES, MANIFEST_NAME, CHECKSUMS_NAME)],
+        "bundled_tools": bundled_tools,
         "manifest": manifest,
     }
 
@@ -394,7 +485,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.action == "validate":
             version = validate_tag(args.tag)
             validate_release_readiness()
-            payload = {"ok": True, "version": version, "tag": args.tag}
+            bundled_tools = bundled_tool_metadata()
+            payload = {
+                "ok": True,
+                "version": version,
+                "tag": args.tag,
+                "bundled_tools": bundled_tools,
+            }
         else:
             payload = build_release(args.output.absolute(), repository=args.repository)
     except (ReleaseError, OSError, UnicodeError) as exc:

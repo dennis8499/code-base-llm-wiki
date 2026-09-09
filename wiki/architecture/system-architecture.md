@@ -10,9 +10,12 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
-source_digest: sha256:865619021fd7f9c32d7edff355f551d03030c31ca5ae2717ac87af4e2a7b86b0
+  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
+  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
+  - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
+source_digest: sha256:b48d61cb4f693549cecb3baffc79322fc133340d87480079acd99f5ca427946f
 derived_from: ["[[overview]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -25,7 +28,9 @@ status: active
 `.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十一個 machine
 operations、十一個 intent groups 與 authorization policy 由
 `.agents/skills/codebase-wiki/capabilities.json` 描述，詳細流程由 Skill references
-按意圖載入。[[installer-and-upgrade]] 負責把共用規格及選定平台入口安裝到目標 Repo。
+按意圖載入。Windows x64 的 tgrep wrapper 是同一 Skill 內的選用唯讀來源定位層，
+只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper
+與選定平台入口安裝到目標 Repo。
 
 ## Components
 
@@ -35,6 +40,7 @@ operations、十一個 intent groups 與 authorization policy 由
 | Installer v6 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
+| tgrep source discovery | 固定版本 Windows x64 binary、manifest、root/path containment 與 allowlisted read-only search | `.agents/skills/codebase-wiki/scripts/tgrep-search.py`、`.agents/skills/codebase-wiki/bin/tgrep-manifest.json` |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
 | NotebookLM exporter | 完整 discovery、每 capability BA／SA 配對、雙識別碼、DLP、容量與單一 Notebook source plan | [[notebooklm-exporter]] |
 | Platform/release surface | Copilot 靜態契約、Codex UAT、本機 gates、版本與手動發布 | [[platform-adapters-and-release]] |
@@ -45,6 +51,8 @@ operations、十一個 intent groups 與 authorization policy 由
 User intent
   -> SKILL routing + selected workflow
   -> Wiki-first evidence read
+  -> Ingest/Archaeology source gap -> optional Windows x64 tgrep locator
+  -> direct re-read of current source before evidence claim
   -> BA why/outcome -> SA solution-neutral requirements -> SD design views
   -> authorized Wiki/framework write
   -> frontmatter + digest + index + append-only log checks
@@ -64,16 +72,21 @@ discovery ID 只綁定 raw snapshot 與 discovery 設定，文件更新只使 re
 
 ## Deployment
 
-框架沒有常駐服務或資料庫。執行環境只需要 Python 標準函式庫，以及支援 Codex 或
-GitHub Copilot 的專案入口；Git 僅供獨立 Wiki freshness/history 與可選 manifest
-provenance 使用，NotebookLM export inventory 與 preflight 不要求 Git。安裝後的
-`.notebooklm/` 與 hook logs 是本機生成物，不進入 release。
+框架沒有必須常駐的服務或資料庫。執行環境只需要 Python 標準函式庫，以及支援 Codex 或
+GitHub Copilot 的專案入口；Windows x64 Skill 另帶 tgrep 1.0.5，但只供 Ingest／
+Archaeology 候選定位，不會自動執行 `index` 或 `serve`。Git 僅供獨立 Wiki freshness/history
+與可選 manifest provenance 使用，NotebookLM export inventory 與 preflight 不要求 Git。
+安裝後的 `.notebooklm/`、`.tgrep/` 與 hook logs 是本機生成物，不進入 release；框架不
+管理 target tgrep index/server。
 框架不配置 GitHub Actions；維護者在隔離 worktree 手動驗證，再明列資產建立
 GitHub Release。
 
 ## Evidence
 
 - `capabilities.json` 是跨平台 machine-readable contract。
+- `capabilities.json` 的 `source_discovery` integration metadata 將 tgrep 限定為
+  `ingest`／`archaeology`，並記錄 pinned version、platform、hash、exit codes 與
+  no-auto-index/no-auto-serve policy。
 - `analysis-document-standards.md` 固定 BA／SA／SD profiles、邊界、coverage 與追溯契約。
 - Installer、lint、exporter 與 hooks 皆位於共享 Skill，平台設定只負責調用。
 - Canonical installer、lint、exporter 與 hook 程式承載可由測試直接驗證的核心行為。
@@ -89,7 +102,9 @@ GitHub Release。
 
 ## Inferences
 
-- 無常駐搜尋服務使安裝與稽核面積較小；NotebookLM export 以 Markdown
+- tgrep 的 full scan／既有 index resolution 讓大型 source tree 有選用的快速 locator，
+  但直接重讀 source 才能維持 evidence freshness。
+- 無必須常駐搜尋服務使安裝與稽核面積較小；NotebookLM export 以 Markdown
   `query-index` 對齊 BA／SA capability 路由，但超大型 Wiki 的雲端 retrieval 仍是生成式行為，
   不能視為 deterministic local search。
 

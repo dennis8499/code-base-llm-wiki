@@ -5,6 +5,8 @@ Query is read-only.
 Query uses only Wiki pages and repository source files. It must not connect to
 live databases or invoke database tools, MCP servers, apps, or CLI fallbacks.
 Questions that require current database state remain explicit unverified gaps.
+The tgrep source-discovery wrapper is intentionally out of scope for Query;
+Query does not use tgrep to discover or rank source files.
 
 ## Steps
 

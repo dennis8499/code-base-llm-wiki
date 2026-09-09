@@ -102,6 +102,24 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue(
                 (
                     target
+                    / ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
                     / ".agents"
                     / "skills"
                     / "codebase-wiki"
@@ -271,6 +289,24 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue(payload["applied"])
             self.assertTrue((target / ".github" / "copilot-instructions.md").exists())
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+                ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+                ).exists()
+            )
             for prompt in (
                 "business-analysis-doc.prompt.md",
                 "system-analysis-doc.prompt.md",

@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -14,6 +15,30 @@ import zipfile
 
 REPO_ROOT = Path(__file__).parents[2]
 RELEASE_PATH = REPO_ROOT / "tools" / "release.py"
+TGREP_BINARY = REPO_ROOT / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+TGREP_SHA256 = "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7"
+
+
+def add_bundled_tgrep(root: Path) -> None:
+    binary = root / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+    binary.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(TGREP_BINARY, binary)
+    (root / ".agents/skills/codebase-wiki/bin/tgrep-manifest.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "tool": "tgrep",
+                "version": "1.0.5",
+                "platform": "windows-x86_64",
+                "binary": "bin/windows-x64/tgrep.exe",
+                "sha256": TGREP_SHA256,
+                "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def create_directory_reparse_point(link: Path, target: Path) -> None:
@@ -57,6 +82,7 @@ class ReleaseTests(unittest.TestCase):
                 "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f\n",
                 encoding="utf-8",
             )
+            add_bundled_tgrep(root)
             cli_path = root / "tools/release.py"
             cli_path.parent.mkdir(parents=True)
             cli_path.write_text(RELEASE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
@@ -101,6 +127,8 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(built.returncode, 0, built.stderr)
             payload = json.loads(built.stdout)
             self.assertEqual(payload["tag"], "v0.2.0")
+            self.assertEqual(payload["bundled_tools"][0]["tool"], "tgrep")
+            self.assertEqual(payload["bundled_tools"][0]["sha256"], TGREP_SHA256)
             self.assertEqual(
                 set(payload["files"]),
                 {"codebase-llm-wiki.zip", "codebase-llm-wiki.tar.gz", "update-manifest.json", "SHA256SUMS"},
@@ -136,6 +164,8 @@ class ReleaseTests(unittest.TestCase):
             "dist/codebase-llm-wiki.tar.gz",
             "dist/update-manifest.json",
             "dist/SHA256SUMS",
+            "bundled_tools",
+            ".tgrep/",
             "--verify-tag",
         ):
             with self.subTest(required=required):
@@ -170,6 +200,7 @@ class ReleaseTests(unittest.TestCase):
                 "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f\n",
                 encoding="utf-8",
             )
+            add_bundled_tgrep(source_root)
             payload = release.build_release(
                 output,
                 root=source_root,
@@ -190,11 +221,25 @@ class ReleaseTests(unittest.TestCase):
                     "installer_contract_version",
                     "release_url",
                     "assets",
+                    "bundled_tools",
                 },
             )
             self.assertEqual(manifest["schema_version"], 1)
             self.assertEqual(manifest["installer_contract_version"], 3)
             self.assertEqual(manifest["release_url"], "https://github.com/owner/example/releases/tag/v0.2.0")
+            self.assertEqual(
+                manifest["bundled_tools"],
+                [
+                    {
+                        "tool": "tgrep",
+                        "version": "1.0.5",
+                        "platform": "windows-x86_64",
+                        "path": ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe",
+                        "sha256": TGREP_SHA256,
+                        "source_url": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+                    }
+                ],
+            )
             self.assertEqual(
                 [asset["name"] for asset in manifest["assets"]],
                 ["codebase-llm-wiki.zip", "codebase-llm-wiki.tar.gz"],
@@ -220,11 +265,39 @@ class ReleaseTests(unittest.TestCase):
                 self.assertFalse(any("/.git/" in name for name in names))
                 self.assertFalse(any("/__pycache__/" in name for name in names))
                 self.assertFalse(any("/logs/" in name for name in names))
+                self.assertTrue(
+                    any(
+                        name.endswith(
+                            "/.agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+                        )
+                        for name in names
+                    )
+                )
 
     def test_public_release_is_blocked_until_owner_selects_a_license(self) -> None:
         release = load_release()
         with self.assertRaisesRegex(release.ReleaseError, "explicit LICENSE"):
             release.validate_release_readiness(REPO_ROOT)
+
+    def test_release_rejects_bundled_tgrep_metadata_or_hash_drift(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            add_bundled_tgrep(root)
+            manifest_path = root / ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+            metadata = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+            metadata["version"] = "1.0.4"
+            manifest_path.write_text(json.dumps(metadata), encoding="utf-8")
+            with self.assertRaisesRegex(release.ReleaseError, "manifest mismatch for version"):
+                release.bundled_tool_metadata(root)
+
+            metadata["version"] = "1.0.5"
+            manifest_path.write_text(json.dumps(metadata), encoding="utf-8")
+            binary = root / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+            binary.write_bytes(binary.read_bytes() + b"drift")
+            with self.assertRaisesRegex(release.ReleaseError, "SHA-256 mismatch"):
+                release.bundled_tool_metadata(root)
 
     def test_release_cli_rejects_invalid_utf8_history_without_traceback(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -267,6 +340,8 @@ class ReleaseTests(unittest.TestCase):
             (root / ".github-hook-logs/audit.jsonl").write_text(
                 "private audit\n", encoding="utf-8"
             )
+            (root / ".tgrep/index/state.bin").parent.mkdir(parents=True)
+            (root / ".tgrep/index/state.bin").write_bytes(b"generated index\n")
             (root / "..notebooklm.notebooklm-transaction.json").write_text(
                 "crash journal\n", encoding="utf-8"
             )
@@ -309,6 +384,7 @@ class ReleaseTests(unittest.TestCase):
                 "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f\n",
                 encoding="utf-8",
             )
+            add_bundled_tgrep(root)
             (root / ".env").write_text("TOKEN=private\n", encoding="utf-8")
             (root / "secrets").mkdir()
             (root / "secrets/runtime.toml").write_text("token='private'\n", encoding="utf-8")
@@ -324,6 +400,14 @@ class ReleaseTests(unittest.TestCase):
             self.assertFalse(any("/secrets/" in name for name in names))
             self.assertFalse(any(name.endswith("/private.pem") for name in names))
             self.assertFalse(any("/artifacts/" in name for name in names))
+            self.assertTrue(
+                any(
+                    name.endswith(
+                        "/.agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+                    )
+                    for name in names
+                )
+            )
 
             release.build_release(output, root=root, repository="owner/example")
             names_after_repeat = zipfile.ZipFile(

@@ -22,11 +22,11 @@ flowchart LR
 | 情境 | Copilot prompt | Codex 自然語言 recipe | 主要產出 |
 | --- | --- | --- | --- |
 | 1. Install / upgrade | CLI dry-run + `--apply` | `安裝／升級 codebase-wiki surface` | schema/adapters + starter（install only） |
-| 2. Interactive Ingest | `/ingest-module {path}` | `分析 {path}，先摘要再更新 wiki` | module/entity/pattern pages |
-| 3. Batch Ingest | `/ingest-batch {path}` | `批次掃描 {path} 建立初始 wiki` | overview、architecture、modules |
+| 2. Interactive Ingest | `/ingest-module {path}` | `分析 {path}，先摘要再更新 wiki` | module/entity/pattern pages；可選 tgrep locator |
+| 3. Batch Ingest | `/ingest-batch {path}` | `批次掃描 {path} 建立初始 wiki` | overview、architecture、modules；可選 tgrep locator |
 | 4. Query | `/query-wiki {question}` | `先查 wiki，再必要時回溯 sources` | 唯讀答案與 citations |
 | 5. Lint | `/lint-wiki` | `依 lint 流程列出 critical/warning` | 健康報告；確認後修復 |
-| 6. Archaeology | `/code-archaeology {target}` | `追蹤 {target} 行為與 git history` | 現況、歷史證據、推論 |
+| 6. Archaeology | `/code-archaeology {target}` | `追蹤 {target} 行為與 git history` | 現況、歷史證據、推論；可選 tgrep locator |
 | 7. ADR | `/new-adr {title}` | `建立 ADR：{title}` | `wiki/decisions/` record |
 | 8. Synthesis | `/save-synthesis {topic}` | `保存 {topic} 的跨模組分析` | `wiki/synthesis/` page |
 | 9. Business Analysis / BA | `/business-analysis-doc {scope}` | `產出 {scope} BA 文件` | business analysis + standards/coverage/Gap |
@@ -55,6 +55,11 @@ templates；Copilot 額外取得三個 prompt adapters，Codex 維持自然語�
 
 適合單一模組或新功能。Agent 先回報責任、公開介面、相依性、特殊邏輯、風險與問題；確認後才建立或更新 Wiki。新增或重大更新頁面後同步 index，並使用 `ingest` 追加 log。
 
+Windows x64 若需要定位大量 symbol、import 或 export，可依
+`.agents/skills/codebase-wiki/references/source-discovery-workflow.md` 使用唯讀 tgrep wrapper。
+搜尋結果只作候選 locator；摘要或 Wiki claim 前仍須直接讀取目前 source。wrapper 不會建立
+index/server，索引可能過時時使用 `--no-index`。
+
 ```text
 請分析 src/orders。先摘要模組職責、主要介面、相依性、特殊分支與風險；
 確認證據足夠後建立或更新 wiki，補上 wikilinks、index 與 log。
@@ -62,11 +67,11 @@ templates；Copilot 額外取得三個 prompt adapters，Codex 維持自然語�
 
 ## 3. Batch Ingest
 
-適合第一次導入或大型目錄。優先讀 README、entrypoints、exports/imports、routes、services、models 與 config；依 dependency order 建立 overview、architecture、modules 與 entities。缺少證據時使用 placeholder 或 gap，不推測行為。
+適合第一次導入或大型目錄。優先讀 README、entrypoints、exports/imports、routes、services、models 與 config；依 dependency order 建立 overview、architecture、modules 與 entities。Windows x64 可用 tgrep wrapper 加速候選定位，但仍須直接讀取目前 source。缺少證據時使用 placeholder 或 gap，不推測行為。
 
 ## 4. Query
 
-Query 預設唯讀。先讀 index 和 1–5 個相關 Wiki pages；只有 Wiki 不足、stale 或矛盾時才回溯 frontmatter sources。回答同時指出使用的 Wiki 頁面、source paths、推論與未驗證 gaps。Query 不連線即時資料庫，也不呼叫資料庫工具、MCP、app 或 CLI fallback；需要目前資料庫狀態的問題保留為未驗證 gap。若結果具長期價值、暴露 stale/gap，或發現品質風險，依 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 顯示最多三個後續選項；不自動寫入或 Hand-Off。
+Query 預設唯讀。先讀 index 和 1–5 個相關 Wiki pages；只有 Wiki 不足、stale 或矛盾時才回溯 frontmatter sources。回答同時指出使用的 Wiki 頁面、source paths、推論與未驗證 gaps。Query 不使用 tgrep、不連線即時資料庫，也不呼叫資料庫工具、MCP、app 或 CLI fallback；需要目前資料庫狀態的問題保留為未驗證 gap。若結果具長期價值、暴露 stale/gap，或發現品質風險，依 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 顯示最多三個後續選項；不自動寫入或 Hand-Off。
 
 ## 5. Lint
 
@@ -76,7 +81,10 @@ frontmatter、append-only log、managed index、contradictions 與 coverage。�
 
 ## 6. Archaeology
 
-從具體 entrypoint、symbol 或 field 開始，追蹤 call paths 和異常分支，再使用 `git log`、`git blame`、`git show` 等非破壞性命令補足歷史。分開標示目前 source evidence、Git evidence、inference 與 uncertainty。預設不持久化。
+從具體 entrypoint、symbol 或 field 開始，追蹤 call paths 和異常分支。Windows x64 可先用
+tgrep wrapper 定位候選 source，再直接讀取目前內容，最後使用 `git log`、`git blame`、
+`git show` 等非破壞性命令補足歷史。分開標示目前 source evidence、Git evidence、
+inference 與 uncertainty。預設不持久化。
 
 ## 7. ADR
 

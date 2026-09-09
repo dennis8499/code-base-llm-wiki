@@ -31,7 +31,7 @@ def load_installer():
 class RepositoryFormatTests(unittest.TestCase):
     def test_generated_caches_are_explicitly_ignored(self) -> None:
         gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
-        for pattern in (".mypy_cache/", ".ruff_cache/"):
+        for pattern in (".mypy_cache/", ".ruff_cache/", ".tgrep/"):
             with self.subTest(pattern=pattern):
                 self.assertIn(pattern, gitignore)
 

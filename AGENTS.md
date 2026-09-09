@@ -46,6 +46,9 @@ reference before acting.
 - Cite source paths with backticks, for example `src/auth/service.ts`.
 - Distinguish evidence-backed statements from inference or speculation.
 - Preserve user-authored Wiki content.
+- Optional tgrep source discovery is limited to Ingest and Archaeology; use the
+  Skill wrapper, re-read current sources before claims, and keep Query
+  Wiki-first without CLI fallback.
 
 Project-level Codex slash prompt files are outside this framework; Codex uses
 natural-language recipes and `$codebase-wiki`.

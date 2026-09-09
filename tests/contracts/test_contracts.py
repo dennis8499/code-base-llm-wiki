@@ -71,6 +71,19 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(set(manifest["cli"]), {"install", "upgrade"})
         self.assertIn("install-framework.py install", manifest["cli"]["install"])
         self.assertIn("install-framework.py upgrade", manifest["cli"]["upgrade"])
+        tgrep = manifest["integrations"]["source_discovery"]
+        self.assertEqual(tgrep["provider"], "tgrep")
+        self.assertEqual(tgrep["version"], "1.0.5")
+        self.assertEqual(tgrep["platforms"], ["windows-x86_64"])
+        self.assertEqual(tgrep["operations"], ["ingest", "archaeology"])
+        self.assertFalse(tgrep["query_enabled"])
+        self.assertFalse(tgrep["auto_index"])
+        self.assertFalse(tgrep["auto_serve"])
+        self.assertEqual(tgrep["exit_codes"], {"match": 0, "no_match": 1, "error": 2})
+        self.assertEqual(
+            tgrep["sha256"],
+            "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
+        )
 
     def test_current_public_docs_declare_installer_contract_v6(self) -> None:
         expected_claims = {
@@ -519,6 +532,8 @@ class ContractTests(unittest.TestCase):
             "dist/codebase-llm-wiki.tar.gz",
             "dist/update-manifest.json",
             "dist/SHA256SUMS",
+            "bundled_tools",
+            ".tgrep/",
         ):
             with self.subTest(document="release", token=token):
                 self.assertIn(token, release)
@@ -664,6 +679,7 @@ class ContractTests(unittest.TestCase):
             "check-stale.py",
             "validate-frontmatter.py",
             "wiki-stats.py",
+            "tgrep-search.py",
         )
         script_root = REPO_ROOT / ".agents/skills/codebase-wiki/scripts"
         for filename in scripts:

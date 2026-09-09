@@ -11,9 +11,34 @@
 
 Installer 不需要 PyYAML、Node.js、資料庫、向量模型或其他第三方套件。
 
+Windows x64 的共用 Skill 另隨附固定版本的 tgrep 1.0.5，僅作 Ingest 與 Code
+Archaeology 的選用來源定位器；macOS/Linux 或其他主機維持 host-native source
+exploration。tgrep 不是安裝必要條件，也不是常駐服務。
+
 目標專案的 `wiki/` 由共用 Skill 內的乾淨 starter 建立；框架 Repo 自己的 Wiki pages 與活動歷史不會被複製。
 Installer allowlist 只包含 `.agents/skills/codebase-wiki/`，不會複製同一
 工作目錄中的其他個人或 workspace Skills。
+
+共用 Skill 會遞迴安裝 `scripts/tgrep-search.py`、`bin/tgrep-manifest.json` 與
+`bin/windows-x64/tgrep.exe`；Copilot 與 Codex 兩個 surface 使用同一份 wrapper、manifest
+與 binary。Installer 不會替 target repo 建立或管理 tgrep index/server。
+
+### tgrep 來源探索
+
+Windows x64 在 Ingest 與 Code Archaeology 中可透過共用 wrapper 找候選檔案、symbol、
+import 或 export；搜尋結果只提供 locator，形成 evidence claim 前必須直接重新讀取目前
+source。wrapper 只接受明列的固定字串、大小寫、檔名、glob、type、context、JSON 與
+`--no-index` 參數，會以 `--` 隔離 pattern，並拒絕離開明確 `--root` 的路徑。
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\tgrep-search.py `
+  --root . --path src --fixed --files-only --pattern "PaymentService"
+```
+
+有既有 tgrep index/server 時可直接使用；沒有索引時由 tgrep full scan。索引可能過時時
+使用 `--no-index`。wrapper 不會執行 `index` 或 `serve`，也不會建立 `.tgrep/`；若主機
+不是 Windows x64 或 bundle 驗證失敗，回傳受控 unavailable 狀態並改用 host-native
+read/search。tgrep 的 `0`、`1`、`2` 分別保留為命中、無命中、錯誤。
 
 ## Dry-run 優先
 
@@ -88,6 +113,8 @@ python .agents\skills\codebase-wiki\scripts\install-framework.py upgrade --targe
 - `AGENTS.md` 與 Copilot instructions 只更新 managed marker block，保留其餘內容。
 - `upgrade` 只規劃 framework surface，既有 `wiki/` 不參與 conflict
   判斷且保持 byte-for-byte 不變。
+- tgrep wrapper、manifest 與 binary 屬共用 Skill 的受管檔案；upgrade 會依 upstream
+  fingerprint 更新它們，但不會建立 target 的 `.tgrep/` index/server 或改寫 Wiki。
 - Installer 不做語意三方 merge，也沒有 `--force`；套用失敗會 rollback。
 - `.codebase-wiki/` 只會出現在 `obsolete_paths`；確認沒有人工內容後由維護者另行處理。
 
@@ -179,6 +206,7 @@ Exporter 產生完整 `documents/{cap}-ba.md`／`-sa.md`、只供上傳的 `sour
 
 ```powershell
 python .agents\skills\codebase-wiki\scripts\parity-check.py
+python .agents\skills\codebase-wiki\scripts\tgrep-search.py --check  # Windows x64
 python .agents\skills\codebase-wiki\scripts\validate-frontmatter.py wiki
 python .agents\skills\codebase-wiki\scripts\check-stale.py wiki .
 python .agents\skills\codebase-wiki\scripts\validate-log.py wiki\log.md --repo-root .

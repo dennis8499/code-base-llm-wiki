@@ -1,16 +1,18 @@
 ---
 title: Codebase LLM Wiki — 使用指南
 type: guide
-summary: 從安裝、Wiki-first 操作到驗證與升級的框架使用路線
+summary: 從安裝、Wiki-first 操作到驗證與升級的框架使用路線，包含 Windows x64 tgrep 來源探索邊界
 sources:
   - README.md
   - Codex.md
   - docs/operations/setup/README.md
   - docs/product/workflows/README.md
   - docs/operations/validation/README.md
-source_digest: sha256:9cb0fdc1ba609996e2a730216b2dc3698edce4216d0cfd749c3c205b250be546
+  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
+  - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
+source_digest: sha256:96642b0e1f82dba005fe9431cace96cce6ae248109a06a6b022f93623f1ab2c6
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -38,6 +40,8 @@ notebooklm_role: traceability
 - 對目標 Repo 的讀取權限，以及對框架 schema/Wiki 的必要寫入權限。
 
 框架不需要向量資料庫、Node.js、MCP 搜尋服務、PyYAML 或其他第三方 Python 套件。
+Windows x64 的共用 Skill 另含 tgrep 1.0.5，但它只是 Ingest／Archaeology 的選用來源
+locator；其他平台使用 host-native search，Query 不使用 tgrep。
 
 ## 1. 選擇入口
 
@@ -93,6 +97,10 @@ Extension 可比較本地版本與 manifest 版本，驗證 checksum 後呼叫 `
 - 新頁面能從 `wiki/index.md` 導覽；
 - `wiki/log.md` 只在尾端追加 `ingest` 條目；
 - raw sources 沒有被修改。
+
+Windows x64 若來源位置難以定位，可使用 `scripts/tgrep-search.py`；先讀 Wiki/index，
+再以 wrapper 找候選位置，最後直接重讀目前 source。需要避免索引落後時使用 `--no-index`；
+wrapper 不建立 `.tgrep/`、`index` 或 `serve`。
 
 ## 4. Wiki-first Query
 
@@ -208,6 +216,8 @@ Frontmatter 或 stale check 失敗時，先修復實際 path/schema 問題；不
 
 - **直接對版本化 sample 執行 `--apply`**：先複製到暫存目錄。
 - **把 Query 當成全文 source scan**：必須先查 Wiki。
+- **把 tgrep 當成 Query fallback 或 evidence 本身**：tgrep 只在 Ingest／Archaeology
+  作候選 locator，搜尋輸出必須由目前 source 直接讀取驗證。
 - **要求 Query 連線即時資料庫**：Query 只讀 Wiki 與 Repo sources；需要目前資料庫狀態時標示 gap，不呼叫資料庫工具或 fallback。
 - **遇到 conflicts 使用覆寫**：Installer 沒有 force；應人工合併。
 - **把既有 Wiki 當成 NotebookLM 掃描邊界**：export 每次都要重掃安全的全專案範圍，才能發現新增、刪除與未被 Wiki 覆蓋的功能。

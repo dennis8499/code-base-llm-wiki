@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 tags: [log]
 status: active
 ---
@@ -588,3 +588,10 @@ status: active
 - 移除 AI SDLC skills、專用 records 與 benchmark 產物，只保留 Codebase LLM Wiki 的共用 Skill、installer surface v6 與既有 Wiki。
 - 重新整理產品文件與測試責任目錄，更新 Markdown links、測試 import、NotebookLM acceptance runner 與 exporter discovery 邊界；`wiki/` 維持唯一持久知識層。
 - 受影響頁面：[[index]]、[[overview]]、[[framework-introduction]]、[[notebooklm-export]]、[[notebooklm-exporter]]、[[notebooklm-ba-knowledge-export]]、[[notebooklm-ba-functional-export]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[platform-hooks-and-guards]]、[[wiki-quality-and-provenance]]、[[codebase-functional-coverage]]、[[log]]；未新增、刪除或更名 Wiki 頁面，索引不需更新。
+
+## [2026-09-09] update | 整合 tgrep 來源探索流程
+
+- 共用 Skill 新增 pinned Windows x64 tgrep 1.0.5、SHA-256 manifest 與唯讀 allowlisted wrapper；Interactive/Batch Ingest 與 Code Archaeology 可用它定位候選 source，結果仍須直接重讀目前 source。
+- wrapper 優先使用既有 tgrep index/server，沒有索引時由 tgrep full scan；不自動執行 `index`／`serve`，不建立 `.tgrep/`，Query 維持 Wiki-first 且無 CLI fallback。
+- Installer、Codex/Copilot adapters、release `bundled_tools` metadata、binary hash 驗證、README／操作文件與相關 Wiki 已同步；`wiki/index.md` 已更新，未改變十一個 machine operations。
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[release-and-update]]、[[codebase-functional-coverage]]
