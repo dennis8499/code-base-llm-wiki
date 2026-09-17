@@ -65,7 +65,7 @@ allowlisted command contract and fallback behavior.
 | `/new-adr {title}`             | `請建立一份 ADR：{title}，寫入 wiki/decisions/，並同步更新 index 與 log。`                                             |
 | `/save-synthesis {topic}`      | `請把這次分析整理成 wiki/synthesis/{topic} 頁面，保留來源並更新 index 與 log。`                                        |
 | `/code-archaeology {target}`   | `請依 code archaeology 流程追蹤 {target} 的目前行為與 git history，清楚區分證據、推測與不確定性。`                     |
-| `/code-audit [scope]` | `請依 Codebase 健檢流程檢查全專案或 {scope} 的入口與呼叫路徑，分列具體 BUG 和待確認業務疑點，將覆蓋缺口保存至 Wiki；若我說只回報則不寫入。` |
+| `/code-audit [scope]` | `請依 Codebase 健檢流程檢查全專案或 {scope} 的入口與呼叫路徑，交叉核對 transaction、設定引用、邏輯／狀態與定向 Git history，分列 BUG、技術風險和待確認業務疑點，將覆蓋缺口保存至 Wiki；若我說只回報則不寫入。` |
 | `/business-analysis-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned BA 文件，保留人工 notes、明列 Gap，並更新 index 與 log。` |
 | `/system-analysis-doc {scope}` | `請基於目前 wiki 產出 {scope} 的 solution-neutral SA 文件，以 SR/NFR/IF 建立需求與驗證追溯，並更新 index 與 log。` |
 | `/system-design-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned SD 文件，建立 concerns、views、DE/ADR 與 SA 追溯，並更新 index 與 log。` |
@@ -131,10 +131,10 @@ Code archaeology:
 Codebase audit:
 
 ```text
-請全面健檢目前 Codebase，沿 API、UI、CLI、排程、事件與公開介面入口靜態追查明顯 BUG 和業務邏輯疑點；分開列出確定缺陷與待確認政策，合併相同根因，記錄每個入口的 checked／partial／not checked 覆蓋與限制，保存繁中報告到 wiki/synthesis/code-audit-all.md，更新相關 Wiki link、index 與 synthesis log。不要執行程式、測試或修正。
+請全面健檢目前 Codebase，沿 API、UI、CLI、排程、事件與公開介面入口靜態追查明顯 BUG、transaction／設定／邏輯矛盾與變更遺漏；記錄 transaction、configuration、logic/state、change-completeness 四類檢查，並使用 git log、git show、git blame 交叉核對目前 source 與定向歷史。分開列出確定缺陷、技術風險與待確認政策，合併相同根因，記錄每個入口的 checked／partial／not checked 覆蓋與限制，保存繁中報告到 wiki/synthesis/code-audit-all.md，更新相關 Wiki link、index 與 synthesis log，最後執行 validate-code-audit.py。不要執行程式、測試或修正。
 ```
 
-若只需檢查特定模組或入口，將範圍明確提供，例如 `src/payments` 或 `退款 API`；若只要對話回報，明確說「只回報，不寫 Wiki」。
+若只需檢查特定模組或入口，將範圍明確提供，例如 `src/payments` 或 `退款 API`；也可指定要追查的 commit 或 range；若只要對話回報，明確說「只回報，不寫 Wiki」。
 
 Business analysis document:
 
@@ -214,11 +214,14 @@ Project-local hooks run only after Codex trusts the project `.codex/` layer. In
 the CLI, use `/hooks` to review and trust new or changed hooks.
 
 Query, Lint, and Archaeology retain their read-only or report-first boundaries
-through the shared capability and workflow contracts. Prompt metadata does not
-grant writes, and shell access is not a technical write sandbox; host
-permissions must deny unapproved shell writes. Hook guards remain a
-defense-in-depth layer and do not replace platform sandbox or host permission
-controls.
+through the shared capability and workflow contracts. Codebase audit likewise
+keeps application source read-only while using targeted `git log`, `git show`,
+and `git blame` as historical evidence; it records `BUG-*`, `RISK-*`, and
+`BIZ-*` separately and validates persisted reports with
+`validate-code-audit.py`. Prompt metadata does not grant writes, and shell
+access is not a technical write sandbox; host permissions must deny unapproved
+shell writes. Hook guards remain a defense-in-depth layer and do not replace
+platform sandbox or host permission controls.
 
 Hook audit files are written to `.codex/hooks/logs/` when possible, with fallback
 to `.codex-hook-logs/`. Both paths should stay ignored by git. The complete hook
@@ -243,6 +246,8 @@ python .agents\skills\codebase-wiki\scripts\wiki-stats.py wiki\
 python .agents\skills\codebase-wiki\scripts\lint-wiki.py wiki
 python .agents\skills\codebase-wiki\scripts\rebuild-index.py wiki --check
 python .agents\skills\codebase-wiki\scripts\parity-check.py
+# 若已建立持久化 Codebase audit report，再執行下一行
+python .agents\skills\codebase-wiki\scripts\validate-code-audit.py wiki\synthesis\code-audit-all.md --repo-root .
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --preflight --format json
 python .agents\skills\codebase-wiki\scripts\export-notebooklm.py --root . --apply --discovery-id DISCOVERY_ID --preflight-id PREFLIGHT_ID --output .notebooklm --format json
 ```

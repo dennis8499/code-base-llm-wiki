@@ -81,11 +81,13 @@ class FrameworkInstallerTests(unittest.TestCase):
             "codex": [
                 ".agents/skills/codebase-wiki/references/code-audit-workflow.md",
                 ".agents/skills/codebase-wiki/assets/code-audit-template.md",
+                ".agents/skills/codebase-wiki/scripts/validate-code-audit.py",
                 "Codex.md",
             ],
             "copilot": [
                 ".agents/skills/codebase-wiki/references/code-audit-workflow.md",
                 ".agents/skills/codebase-wiki/assets/code-audit-template.md",
+                ".agents/skills/codebase-wiki/scripts/validate-code-audit.py",
                 ".github/prompts/code-audit.prompt.md",
             ],
         }
@@ -131,6 +133,12 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue((target / "AGENTS.md").exists())
             self.assertTrue((target / "Codex.md").exists())
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+                ).exists()
+            )
             self.assertTrue(
                 (
                     target
@@ -323,6 +331,12 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertTrue(payload["applied"])
             self.assertTrue((target / ".github" / "copilot-instructions.md").exists())
             self.assertTrue((target / ".agents" / "skills" / "codebase-wiki" / "SKILL.md").exists())
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+                ).exists()
+            )
             self.assertTrue(
                 (
                     target

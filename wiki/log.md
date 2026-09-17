@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [log]
 status: active
 ---
@@ -616,3 +616,9 @@ status: active
 - 重新盤點 153 個安全來源，確認新增檔案均落在既有 disposition 範圍且沒有未覆蓋項目；更新 analyzed discovery ID、受影響頁面的 `source_digest`，並保留 BA／SA 文件內容與 reviewer notes。
 - `wiki/index.md` 已加入健檢模組頁；本次未新增、刪除或更名其他頁面。
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[code-audit]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[generate-analysis-document]]、[[business-analysis]]、[[cap-analysis-document-generation-sa]]、[[cap-notebooklm-ba-functional-export-sa]]、[[system-analysis]]、[[system-design]]、[[project-function-catalog]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-17] update | 強化 Codebase 健檢的一致性與 Git 歷史證據
+
+- Codebase audit 現在以目前 source 為主，定向讀取 Git `log`／`show`／`blame` 的完整 commit 內文與 diff，明確交叉檢查 transaction／side effects、設定引用、邏輯／狀態契約與變更完整性；新增 `RISK-*` 技術疑點分類。
+- 新增 `validate-code-audit.py`，檢查報告 frontmatter、目前 sources、finding IDs、入口關聯、coverage 與摘要計數、Git HEAD／歷史狀態及完整 SHA／diff 位置；新增隔離 Git history fixture 與刪除設定、transaction、介面回歸、改名、後續修正、dirty worktree 及完整性限制驗收案例。
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[code-audit]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[release-and-update]]、[[project-function-catalog]]、[[log]]

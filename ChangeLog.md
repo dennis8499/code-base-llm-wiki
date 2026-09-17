@@ -11,6 +11,10 @@
 - **Codebase 靜態健檢**：新增 `code_audit` intent、共用入口追查工作流、繁中報告模板、
   Copilot prompt、Codex recipe 與多入口驗收 fixture。明確健檢請求預設保存含證據、finding IDs
   與逐入口 coverage 的 Wiki 報告；待確認業務規則分開標示，使用者指定只回報時零寫入。
+- **Codebase audit 歷史與一致性檢查**：健檢現在以目前 source 為主，定向閱讀 `git log`、
+  `git show`、`git blame` 的完整 commit 內文與 diff，交叉核對 transaction／side effects、
+  設定引用、邏輯／狀態契約與變更完整性；新增 `RISK-*` 技術疑點分類、Git provenance 欄位、
+  `validate-code-audit.py` 報告 validator，以及隔離 Git history 驗收 fixture。
 - **tgrep 來源探索整合**：共用 Skill 內含 pinned Windows x64 tgrep 1.0.5、SHA-256
   manifest、唯讀 allowlisted wrapper 與共用 source-discovery reference；Interactive/Batch
   Ingest 與 Code Archaeology 可用它定位候選 source，Query 維持 Wiki-first 且不使用 tgrep。

@@ -47,6 +47,9 @@ python .agents/skills/codebase-wiki/scripts/validate-log.py wiki/log.md --repo-r
 python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki
 python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --repo-root .
 python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
+# 若已有持久化 Codebase audit report，再執行下一行
+python .agents/skills/codebase-wiki/scripts/validate-code-audit.py \
+  wiki/synthesis/code-audit-all.md --repo-root .
 ```
 
 Windows x64 另外執行 bundled tgrep self-check；它只驗證固定 binary 的版本與 digest，
@@ -115,8 +118,14 @@ notes 在重產後保留。
 
 Codebase audit 使用 `tests/fixtures/code-audit/` 做靜態工作流驗收，與上述五個 Codex host
 runtime 情境分開。依 fixture 手動檢查共用根因是否合併、多入口是否保留、明確規則違反是否列為
-BUG、未知政策是否列為待確認問題、已有上游驗證是否排除誤報，以及動態入口是否保留 coverage gap。
+BUG、交易／設定／邏輯矛盾是否有具體證據、未知技術條件是否列為 RISK、未知政策是否列為待確認
+問題、已有上游驗證是否排除誤報，以及動態入口是否保留 coverage gap。history fixture 會在
+隔離暫存 Git repo 建立可控的 commit title、完整內文、刪除／改名與後續修正，驗證 audit 能將
+commit 意圖、diff 與目前 source 分開核對。另以 `validate-code-audit.py` 檢查 finding ID 唯一性、
+摘要與 coverage 計數、必要欄位、目前 sources 存在性、Git HEAD／歷史狀態與完整 SHA 格式。
 同範圍重跑另須確認 finding IDs 與 user notes 保留；chat-only 要求不得寫 Wiki、index、log。
+若 finding 由 `BUG-*`、`RISK-*` 或 `BIZ-*` 轉類，則保留原紀錄並以關聯欄位連到新 ID；未複查
+項目不可標為已解決。歷史分析仍併入同一份 audit 報告，不另建 Archaeology 報告。
 來源檔案需在健檢前後維持相同 hash；健檢不執行樣例程式或其測試。
 
 自然語言不做 byte-for-byte golden comparison；驗收 evidence、結構、安全邊界與

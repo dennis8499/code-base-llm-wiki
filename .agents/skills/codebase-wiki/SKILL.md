@@ -30,11 +30,12 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Wiki-first query and citations | `references/query-workflow.md` |
 | Query/Lint follow-up action choices | `references/follow-up-actions.md` |
 | Wiki health checks, severities, report format | `references/lint-checklist.md` |
-| Static Codebase bug and business-logic audit | `references/code-audit-workflow.md` |
+| Static Codebase audit across current source and targeted Git history | `references/code-audit-workflow.md` |
 | Required frontmatter fields and allowed values | `references/frontmatter-spec.md` |
 | Allowed `wiki/log.md` operations and append format | `references/log-operations.md` |
 | Page-type selection and exact template | `references/page-types.md` |
 | Codebase audit report shape | `assets/code-audit-template.md` |
+| Codebase audit report validation | `scripts/validate-code-audit.py` |
 | ADR creation and numbering | `references/adr-workflow.md` |
 | Durable synthesis creation | `references/synthesis-workflow.md` |
 | BA document generation, business coverage, gap handling | `references/business-analysis-workflow.md` |
@@ -86,7 +87,10 @@ append one operation from `references/log-operations.md`.
 - query and default archaeology: read-only;
 - lint: report, then confirm repairs;
 - explicit Codebase audit: save a coverage-aware Synthesis report; requests for
-  chat-only findings make no Wiki, index, or log changes;
+  chat-only findings make no Wiki, index, or log changes. Audit reads current
+  source first, then targeted Git history for transaction, configuration,
+  logic/state and change-completeness checks; findings are `BUG-*`, `RISK-*`,
+  or `BIZ-*` and persisted reports pass `validate-code-audit.py`;
 - ADR, synthesis, BA, SA, and SD: explicit creation request authorizes output.
 
 ## Verification

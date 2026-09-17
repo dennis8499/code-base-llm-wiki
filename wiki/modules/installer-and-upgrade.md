@@ -11,13 +11,14 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
+  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/installer/test_install_framework.py
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:a7295cbef884d3d49a440fa0ff62edb517b680c0c61db742c34b33054f611e64
+source_digest: sha256:a0782be6ea062939686309f43ad279c211764688d15bcb24fdd200b211dffa68
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -45,7 +46,8 @@ status: active
   不需要 CI/release workflow 特例，也不會把 workflow YAML 安裝到目標。
 - v6 隨共用 Skill 安裝三份 standards-aligned templates/workflows 與兩份 NotebookLM
   current-state BA／SA templates，Copilot surface 另取得
-  BA／SA／SD／Codebase audit 薄 prompt adapters；共用 Codebase audit workflow 與報告模板
+  BA／SA／SD／Codebase audit 薄 prompt adapters；共用 Codebase audit workflow、報告模板與
+  `validate-code-audit.py`
   亦隨兩個 surface 安裝；upgrade 仍不改寫目標 `wiki/`。
 
 ## 對外介面

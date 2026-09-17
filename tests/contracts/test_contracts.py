@@ -614,7 +614,10 @@ class ContractTests(unittest.TestCase):
                 "只回報",
                 "partial",
                 "BUG",
+                "RISK",
                 "BIZ",
+                "git show",
+                "validate-code-audit.py",
                 "不得呼叫 tgrep",
                 "wiki/index.md",
                 "wiki/log.md",
@@ -718,6 +721,7 @@ class ContractTests(unittest.TestCase):
             "check-stale.py",
             "validate-frontmatter.py",
             "wiki-stats.py",
+            "validate-code-audit.py",
             "tgrep-search.py",
         )
         script_root = REPO_ROOT / ".agents/skills/codebase-wiki/scripts"

@@ -15,9 +15,10 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
-source_digest: sha256:f39dc169d44eee79447b2f014c34f75064576f09419003bcacb3006c10014a60
+  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
+source_digest: sha256:e7c0d2098d4f11535714a2223f88026f89bc2488bf37486cf002f38c9f56b663
 derived_from: ["[[overview]]"]
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -34,9 +35,11 @@ operations、十二個 intent groups 與 authorization policy 由
 只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper
 與選定平台入口安裝到目標 Repo。
 
-`code_audit` 使用原生唯讀搜尋追查專案入口，將有可達性與來源證據的缺陷和待確認業務政策
-分列，保存逐入口 coverage 與 gaps；明確健檢請求授權 Synthesis report，使用者要求只回報時
-不寫 Wiki。它不執行目標程式或測試，也不擴大 tgrep 的 Ingest／Archaeology 使用範圍。
+`code_audit` 使用原生唯讀搜尋追查專案入口，先分析目前 source、設定與呼叫路徑，再定向讀取
+Git `log`／`show`／`blame` 的完整 commit 內文與 diff。它將有可達性與來源證據的缺陷、缺少技術
+條件的 `RISK-*` 與待確認業務政策分列，並保存逐入口 coverage 與四類交叉檢查狀態；明確健檢
+請求授權 Synthesis report，使用者要求只回報時不寫 Wiki。它不執行目標程式或測試，也不擴大
+tgrep 的 Ingest／Archaeology 使用範圍。
 
 ## Components
 
@@ -46,7 +49,7 @@ operations、十二個 intent groups 與 authorization policy 由
 | Installer v6 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
-| Codebase audit | 入口 inventory、靜態 call-path review、finding evidence、coverage gaps 與 Wiki report | [[code-audit]] |
+| Codebase audit | 入口 inventory、transaction／設定／邏輯交叉檢查、定向 Git history、finding evidence、coverage gaps 與 Wiki report | [[code-audit]] |
 | tgrep source discovery | 固定版本 Windows x64 binary、manifest、root/path containment 與 allowlisted read-only search | `.agents/skills/codebase-wiki/scripts/tgrep-search.py`、`.agents/skills/codebase-wiki/bin/tgrep-manifest.json` |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
 | NotebookLM exporter | 完整 discovery、每 capability BA／SA 配對、雙識別碼、DLP、容量與單一 Notebook source plan | [[notebooklm-exporter]] |

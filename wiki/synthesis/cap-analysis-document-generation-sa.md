@@ -17,7 +17,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - tests/contracts/test_contracts.py
-source_digest: sha256:d2d678b96ac33b0cea7d21c62453f2df100b12130a6e7ed835240ff72857ec0a
+source_digest: sha256:e761bb5f759d72f1e728ec3604d189eca997bd33e71dd7a7068669511411f67b
 source_locators:
   - ".agents/skills/codebase-wiki/references/business-analysis-workflow.md:12"
   - ".agents/skills/codebase-wiki/references/system-analysis-workflow.md:13"

@@ -17,7 +17,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/notebooklm/test_notebooklm_acceptance.py
   - tests/notebooklm/test_notebooklm_contract.py
-source_digest: sha256:5b04b9e32cab5ea793fb38e5b9298e98e93a9bd2816b29701768b5644ee155db
+source_digest: sha256:88baf46e904c6a8b63c1cf7c3ba41ba7f9f333bcf920d345cf7d6fe48812e136
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1922"
   - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215"

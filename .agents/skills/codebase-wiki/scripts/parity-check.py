@@ -40,6 +40,32 @@ EXPECTED_INTENT_CONTRACT = {
     "system_design": (True, False, "explicit_request"),
     "notebooklm_export": (False, True, "preview_then_confirm"),
 }
+CODE_AUDIT_CHECKS = [
+    "transaction_consistency",
+    "configuration_reference_consistency",
+    "logic_state_consistency",
+    "change_regression",
+]
+CODE_AUDIT_FINDING_CLASSES = ["BUG", "RISK", "BIZ"]
+CODE_AUDIT_HISTORY = {
+    "mode": "current_first_targeted",
+    "commands": ["git log", "git show", "git blame"],
+    "read_only": True,
+}
+CODE_AUDIT_REPORT_VALIDATOR = ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+CODE_AUDIT_WORKFLOW_TOKENS = (
+    "Transactions and side effects",
+    "Configuration references",
+    "Logic and state contracts",
+    "Change completeness",
+    "git log --follow",
+    "git rev-parse --is-shallow-repository",
+    "git show --format=fuller --stat --patch",
+    "complete body",
+    "uncommitted changes",
+    "preserve its original record",
+    "separate Archaeology report",
+)
 EXPECTED_GROUPS = {
     "install_setup": ["install"],
     "ingest": ["ingest"],
@@ -180,10 +206,15 @@ COPILOT_PROMPT_CONTRACT = {
     "code-audit.prompt.md": (
         "references/code-audit-workflow.md",
         "assets/code-audit-template.md",
+        "validate-code-audit.py",
         "只回報",
         "partial",
         "BUG",
+        "RISK",
         "BIZ",
+        "git show",
+        "transaction",
+        "設定",
         "不得呼叫 tgrep",
         "wiki/index.md",
         "wiki/log.md",
@@ -335,6 +366,16 @@ def main() -> int:
         if actual != expected:
             issues.append(f"authorization drift: {operation}")
 
+    audit_contract = intents.get("code_audit", {})
+    if audit_contract.get("checks") != CODE_AUDIT_CHECKS:
+        issues.append("Codebase audit checks contract is incomplete or reordered")
+    if audit_contract.get("finding_classes") != CODE_AUDIT_FINDING_CLASSES:
+        issues.append("Codebase audit finding classes must be BUG/RISK/BIZ")
+    if audit_contract.get("history") != CODE_AUDIT_HISTORY:
+        issues.append("Codebase audit Git history contract is incomplete")
+    if audit_contract.get("report_validator") != CODE_AUDIT_REPORT_VALIDATOR:
+        issues.append("Codebase audit report validator path is not canonical")
+
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
         issues.append("manifest must define the exact twelve user-facing intent groups")
@@ -391,15 +432,34 @@ def main() -> int:
     audit_workflow = root / ".agents/skills/codebase-wiki/references/code-audit-workflow.md"
     if not audit_workflow.is_file():
         issues.append("missing Codebase audit workflow")
-    elif "do not use the optional tgrep wrapper" not in audit_workflow.read_text(
-        encoding="utf-8"
-    ).lower():
-        issues.append("Codebase audit must stay outside the tgrep source-discovery contract")
+    else:
+        audit_workflow_text = audit_workflow.read_text(encoding="utf-8")
+        if "do not use the optional tgrep wrapper" not in audit_workflow_text.lower():
+            issues.append("Codebase audit must stay outside the tgrep source-discovery contract")
+        audit_workflow_normalized = " ".join(audit_workflow_text.split()).lower()
+        for token in CODE_AUDIT_WORKFLOW_TOKENS:
+            if token.lower() not in audit_workflow_normalized:
+                issues.append(f"Codebase audit workflow missing check: {token}")
     audit_template = root / ".agents/skills/codebase-wiki/assets/code-audit-template.md"
     if not audit_template.is_file():
         issues.append("missing Codebase audit report template")
     elif 'source_digest: "sha256:' not in audit_template.read_text(encoding="utf-8"):
         issues.append("Codebase audit report template must include its source digest")
+    validator = root / CODE_AUDIT_REPORT_VALIDATOR
+    if not validator.is_file():
+        issues.append("missing Codebase audit report validator")
+    else:
+        validator_text = validator.read_text(encoding="utf-8")
+        for token in (
+            "duplicate finding ID",
+            "Git history section",
+            "source does not exist",
+            "入口覆蓋 counts do not match",
+            "affected entrypoint is missing",
+            "historical evidence must name a diff/blame location",
+        ):
+            if token not in validator_text:
+                issues.append(f"Codebase audit validator missing check: {token}")
     codex_text = (root / "Codex.md").read_text(encoding="utf-8") if (root / "Codex.md").is_file() else ""
     for token in (
         SOURCE_DISCOVERY_REFERENCE,

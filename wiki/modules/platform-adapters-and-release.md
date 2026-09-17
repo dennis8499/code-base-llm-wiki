@@ -12,6 +12,9 @@ sources:
   - tests/installer/test_install_framework.py
   - tests/fixtures/code-audit/README.md
   - tests/fixtures/code-audit/expected-findings.md
+  - tests/contracts/test_code_audit_validator.py
+  - tests/fixtures/code-audit/history/README.md
+  - tests/fixtures/code-audit/history/expected-findings.md
   - tools/release.py
   - docs/operations/releases/README.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
@@ -19,11 +22,12 @@ sources:
   - tests/tgrep/test_tgrep_search.py
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
+  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:6a75cd972532da4127f0652aa687d44dbb0e82526cc4147e77d91d28941d87c1
+source_digest: sha256:1293a1280c9dc6667203a54b8c5ca1ec19f8b9520c90a6872647f7a9afd59692
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -46,8 +50,10 @@ status: active
 - tgrep source-discovery integration 只開放給 Interactive/Batch Ingest 與 Code Archaeology；
   Query 保持 Wiki-first，不呼叫 tgrep 或 CLI fallback。Windows x64 wrapper 只回傳候選
   locator，形成 evidence 前必須直接重讀目前 source。
-- `code_audit` 以唯讀原生搜尋檢查入口，不呼叫 tgrep、不執行目標程式或測試，並將明確缺陷與
-  待確認業務疑點分列；明確健檢要求預設保存 synthesis 報告，使用者指定只回報時維持零寫入。
+- `code_audit` 以唯讀原生搜尋檢查入口，交叉核對 transaction／side effects、設定引用、邏輯／
+  狀態契約與變更完整性，再定向使用 `git log`／`git show`／`git blame` 讀取 commit 完整內文與
+  diff；不呼叫 tgrep、不執行目標程式或測試，並將 `BUG-*`、`RISK-*` 與 `BIZ-*` 分列。明確健檢
+  要求預設保存 synthesis 報告，使用者指定只回報時維持零寫入，持久化後通過 `validate-code-audit.py`。
 - Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
 - 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，
@@ -56,7 +62,8 @@ status: active
 
 ## Evidence
 
-- `parity-check.py` 驗證 contract 6、十二個 operation mapping、Codebase audit 靜態邊界、prompt coupling、built-in
+- `parity-check.py` 驗證 contract 6、十二個 operation mapping、Codebase audit 的四類檢查／Git history／
+  validator contract、靜態邊界、prompt coupling、built-in
   prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
   root-resolved hooks，並要求 Repo 不含 GitHub workflow YAML。
 - Copilot prompts（含新增 BA／SD 與保留 SA 入口）是連結 authoritative workflow 的薄
@@ -66,7 +73,9 @@ status: active
 - `tests/tgrep/test_tgrep_search.py` 固定 bundled tgrep 的版本／digest、allowlisted
   flags、shell 禁用、path containment、exit codes 與不建立 index 的唯讀邊界。
 - `test_code_audit.py` 與 `tests/fixtures/code-audit/` 固定 audit authorization、平台入口、靜態證據分類、
-  共享根因、上游防護、業務疑點與動態入口 coverage gap；不執行 fixture 程式碼。
+  共享根因、transaction／設定／介面變更、上游防護、技術風險、業務疑點與動態入口 coverage gap；
+  `test_code_audit_validator.py` 另外以隔離 Git fixture 驗證刪除、commit 內文／diff、來源與報告計數；
+  不執行 fixture 程式碼。
 - Codex v4 的 18 個歷史 Task Tracker fixture runs 保存 JSONL tool events、前後 hashes、
   Git 狀態、情境 assertions 與 deterministic outputs；受修復影響的情境皆捨棄首輪
   結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。

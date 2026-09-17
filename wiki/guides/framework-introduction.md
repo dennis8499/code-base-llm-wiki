@@ -10,13 +10,15 @@ sources:
   - docs/operations/validation/README.md
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
+  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:e0a00d53e82518a22cca536541693abd7ccfc29c27e9509f139e356948634578
+  - tests/contracts/test_code_audit_validator.py
+source_digest: sha256:20d779aff8d08ce6e0e82079e2bf51afc88178082f3bff03473266ecb3feae6a
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -122,7 +124,7 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | Query | 找行為、位置、原因；必要時提供保存、更新或 Lint 選項 | 預設唯讀 |
 | Lint | Wiki 品質與 coverage；報告後提供受 findings 支持的選項 | 先報告；修復後 `lint` log |
 | Archaeology | Legacy、異常分支、歷史原因 | 預設唯讀 |
-| Codebase audit | 全專案或指定入口的靜態 BUG 與業務規則檢查 | 報告、coverage、index、`synthesis` log；只回報模式零寫入 |
+| Codebase audit | 全專案或指定入口的目前 source／設定／定向 Git history 靜態檢查，涵蓋 transaction、邏輯與變更一致性 | BUG、RISK、BIZ 報告、coverage、index、`synthesis` log；只回報模式零寫入 |
 | ADR | 保存架構選擇 | decision + index + `adr` log |
 | Synthesis | 保存跨模組分析 | synthesis + index + log |
 | Business Analysis / BA | 業務問題、現況／目標、能力、流程、規則、成功指標與 change impact | synthesis + index + log |
@@ -137,13 +139,15 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 
 使用 `/code-audit [scope]` 或 Codex 自然語言 recipe；省略範圍即檢查全專案，也可以指定
 模組、route、command、job、event 或公開 API。Agent 先讀少量相關 Wiki，再盤點目前入口並沿
-「輸入 → 驗證／權限 → 業務處理 → 資料／狀態 → 輸出與失敗」追查；搜尋使用 host-native 工具，
-不執行目標程式或測試，也不使用 tgrep。
+「輸入 → 驗證／權限 → 業務處理 → 資料／狀態 → 輸出與失敗」追查；交叉核對 transaction／
+connection、設定檔／鍵引用、邏輯／狀態契約與變更後 callers。再針對相關路徑使用 host-native
+Git `log`／`show`／`blame` 讀取完整 commit 內文與 diff；不執行目標程式或測試，也不使用 tgrep。
 
-只有能證明可達觸發條件與具體錯誤結果，或違反明確規則時才列為確定 BUG。業務政策不明時改列
-待確認疑點。相同根因合併，記錄各入口 checked／partial／not checked 和具體缺口；明確健檢請求
-預設保存繁中 Synthesis report，說「只回報」則不寫 Wiki、index 或 log。完整契約與驗收樣例見
-[[code-audit]]。
+只有能證明可達觸發條件與具體錯誤結果，或違反明確規則時才列為確定 `BUG-*`；有具體技術依據
+但缺少框架／部署／環境證據時列為 `RISK-*`；業務政策不明時列為 `BIZ-*`。相同根因合併，記錄
+各入口 checked／partial／not checked、四類檢查狀態和具體缺口；明確健檢請求預設保存繁中
+Synthesis report，並執行 `validate-code-audit.py`；說「只回報」則不寫 Wiki、index 或 log。
+完整契約與驗收樣例見 [[code-audit]]。
 
 ## NotebookLM Enterprise export
 

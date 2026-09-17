@@ -10,11 +10,12 @@ sources:
   - README.md
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/parity-check.py
+  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:7e03c837ccd5ccb4b84cceee827ded582bfaebddaed04387d39cffe4667e91aa
+source_digest: sha256:fcfe36ad1819ebd17367579379f6e72810705b5a62e18d5e644029cd600ea1cb
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -35,6 +36,9 @@ notebooklm_role: traceability
 - Framework workflow changes, including the shared Query/Lint follow-up action
   contract, must be reflected in the release documentation, ChangeLog, Wiki
   index, and append-only update log before publishing.
+- Codebase audit changes must keep the shared transaction/configuration/logic/
+  change-completeness checks, targeted Git history evidence, report validator,
+  Copilot prompt, and Codex recipe aligned before publishing.
 - Shared source-discovery changes must also keep the pinned tgrep manifest, wrapper and
   `bundled_tools` release metadata aligned; the integration is limited to Ingest／Archaeology
   and remains independent from other user-facing operations. `code_audit` is an additive v6

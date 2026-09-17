@@ -31,7 +31,20 @@
     "code_audit": {
       "writes_by_default": true,
       "requires_confirmation": false,
-      "authorization_policy": "explicit_request"
+      "authorization_policy": "explicit_request",
+      "checks": [
+        "transaction_consistency",
+        "configuration_reference_consistency",
+        "logic_state_consistency",
+        "change_regression"
+      ],
+      "finding_classes": ["BUG", "RISK", "BIZ"],
+      "history": {
+        "mode": "current_first_targeted",
+        "commands": ["git log", "git show", "git blame"],
+        "read_only": true
+      },
+      "report_validator": ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
     },
     "archaeology": {
       "writes_by_default": false,

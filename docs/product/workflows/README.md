@@ -33,7 +33,7 @@ flowchart LR
 | 10. System Analysis / SA | `/system-analysis-doc {scope}` | `產出 {scope} solution-neutral SA 文件` | system requirements + V&V traceability |
 | 11. System Design / SD | `/system-design-doc {scope}` | `產出 {scope} SD 文件` | concerns/views/decisions + quality strategy |
 | 12. NotebookLM export | `/export-notebooklm` | `全量盤點當下 Codebase，預覽後一次確認，產生每功能現況 BA／SA` | BA／SA Wiki + 單一 Notebook pack + governance |
-| 13. Codebase audit | `/code-audit [scope]` | `全面檢查或指定範圍的 BUG 與業務邏輯，並保留入口覆蓋` | 有證據的 BUG、待確認疑點、逐入口覆蓋與 Wiki synthesis report |
+| 13. Codebase audit | `/code-audit [scope]` | `檢查目前 source、設定與定向 Git history 的 transaction、邏輯與變更一致性` | 有證據的 BUG、技術風險、待確認疑點、逐入口覆蓋與 Wiki synthesis report |
 
 ## Authorization
 
@@ -43,7 +43,7 @@ flowchart LR
 - Lint：先報告，再確認 repairs。
 - ADR、Synthesis、BA、SA、SD：明確建立要求即授權輸出。
 - NotebookLM export：先做完整 discovery preview；一次確認後全量建立每功能 BA／SA，自動 readiness 並寫入 `.notebooklm/`。
-- Codebase audit：明確健檢請求授權保存 `wiki/synthesis/code-audit-{scope}.md`；指定「只回報」時 Wiki、index、log 零寫入。目標程式和測試一律唯讀，不執行。
+- Codebase audit：明確健檢請求授權保存 `wiki/synthesis/code-audit-{scope}.md`；指定「只回報」時 Wiki、index、log 零寫入。目標程式和測試一律唯讀，不執行；以目前 source 為主、定向讀取 `git log`／`git show`／`git blame`。
 
 ## 1. Install / Upgrade
 
@@ -211,14 +211,27 @@ unchanged。Hard limits 為 300 sources、每 source 500 MB / 500,000 words，sa
 完整載入 `.agents/skills/codebase-wiki/references/code-audit-workflow.md`，全專案預設用
 scope `all`，局部檢查可指定模組、路徑或入口。先查 Wiki，再盤點專案擁有的 API／route、
 UI action、CLI、job、event consumer、plugin 與公開介面；逐一追蹤輸入、驗證／權限、業務處理、
-資料或狀態改變、輸出與失敗路徑。使用原生搜尋並直接重讀來源；tgrep 仍只供 Ingest 與
-Archaeology。不得執行目標程式、測試、migration、build 或自動修正。
+資料或狀態改變、輸出與失敗路徑。額外交叉檢查 transaction／connection 與 rollback、設定檔／鍵
+引用與產生／注入／fallback、邏輯／狀態契約及變更後 callers／consumers 是否同步。使用原生搜尋並
+直接重讀來源；tgrep 仍只供 Ingest 與 Archaeology。不得執行目標程式、測試、migration、build
+或自動修正。
 
-只有存在可達觸發條件與具體錯誤結果，或違反明確規則時，才列為 `BUG-*`；政策未明時列為
-`BIZ-*` 並提出待確認問題。分開記錄影響等級與證據確定度，相同根因合併並列出所有入口。
+先記錄目前 `git rev-parse HEAD`、`git rev-parse --is-shallow-repository`、`git status --short` 與 `current-first-targeted` 範圍，使用
+唯讀 `git log --follow --name-status` 建立目前入口／相關路徑的歷史索引，再以
+`git show --format=fuller --stat --patch` 和 `git blame` 深入閱讀相關 commit 的標題、完整內文
+與 diff。核對父版本、後續修正、刪除／改名、未提交修改，以及 shallow 或缺少 Git object；不
+fetch、不切換分支、不 checkout 其他 revision、不改寫歷史。Commit 文字只代表作者意圖，不能
+單獨證明 BUG 或業務規則；歷史證據與目前 source 的結果要放在同一份 Codebase audit 報告。
+未提交變更仍是目前 source 的判定對象，另標示其不屬於 HEAD 可達歷史。
+
+只有存在可達觸發條件與具體錯誤結果，或違反明確規則時，才列為 `BUG-*`；有具體技術依據但
+缺少框架／部署／環境證據時列為 `RISK-*`；政策未明時列為 `BIZ-*` 並提出待確認問題。分開記錄
+影響等級與證據確定度，相同根因合併並列出所有入口。
 每個入口標示 checked、partial 或 not checked；動態／外部邊界留下具體 gap，不以靜態檢查
 宣稱零 BUG。保存 `wiki/synthesis/code-audit-{scope}.md`，沿用 finding IDs，保留 user notes，
-同步相關 Wiki link、index 與一筆 `synthesis` log。只回報模式維持零寫入。
+若分類轉換則保留原紀錄並以關聯欄位連結新 ID，未複查項目不得標為已解決，
+同步相關 Wiki link、index 與一筆 `synthesis` log，並執行
+`.agents/skills/codebase-wiki/scripts/validate-code-audit.py`。只回報模式維持零寫入。
 
 流程缺口分為 `analysis-gap`（尚未完成呼叫鏈追查，阻擋匯出）、`evidence-gap`（已查來源
 但沒有該事實）與 `business-confirmation`（實作行為可見，但營運政策、責任、重跑權限或 SLA

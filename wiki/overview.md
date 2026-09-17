@@ -11,10 +11,11 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
+  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:e558d62eae65d7f1232795f081c90eab7b6489cc312336a7bdc8ed02592dae53
+source_digest: sha256:c533d040322f875653adb732929d1e7419e76434a7e316dea579427fcca784ea
 derived_from: []
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -87,8 +88,10 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 本機 pack。相關約束見
 [[ba-knowledge-precedes-traceability]] 與 [[readiness-preflight-required]]。
 
-Codebase 健檢流程 [[code-audit]] 沿 API、UI、CLI、排程、事件與公開介面入口追查目前行為；
-明確缺陷與待確認業務疑點分開記錄，相同根因合併，動態或外部邊界保留為 coverage gap。
+Codebase 健檢流程 [[code-audit]] 沿 API、UI、CLI、排程、事件與公開介面入口追查目前行為，
+交叉檢查 transaction／side effects、configuration references、logic／state contracts 與
+變更完整性；再以定向 Git `log`／`show`／`blame` 核對 commit 意圖、diff 與目前 source。
+明確缺陷、技術風險與待確認業務疑點分開記錄，相同根因合併，動態或外部邊界保留為 coverage gap。
 框架也支援一般 Ingest、Query、Lint、Archaeology、ADR 與 Synthesis；這些
 能力的工程入口與治理細節保留在 [[project-function-catalog]] 與
 [[framework-introduction]]。Query

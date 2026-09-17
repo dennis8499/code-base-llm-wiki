@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [index]
 status: active
 notebooklm_group: wiki-navigation
@@ -64,7 +64,7 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
-| [[code-audit]] | 以唯讀入口追查將可證明的缺陷與待確認業務規則分開，並保存逐入口覆蓋與限制 |
+| [[code-audit]] | 以目前 source、設定與定向 Git 歷史交叉追查 transaction、邏輯／狀態矛盾，分列 BUG、RISK、BIZ 並保存逐入口覆蓋與限制 |
 | [[installer-and-upgrade]] | Installer v6 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
 | [[notebooklm-exporter]] | 以 schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack |
 | [[platform-adapters-and-release]] | 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架，並提供 Codebase 靜態健檢及受限 tgrep 來源探索 |

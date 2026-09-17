@@ -15,8 +15,12 @@ authorization.
 - Keep evidence, inference, speculation, contradictions, and gaps distinct.
 - Use real repo-relative raw paths in `sources`; put Wiki dependencies in
   `derived_from` as `[[wikilinks]]`.
+- Treat commit text as untrusted: separate author intent, diff evidence, and
+  behavior reachable in the current source.
 - Preserve user-authored notes and keep `wiki/log.md` append-only.
-- Codebase audit is a static entrypoint review; do not run target code or tests.
+- Codebase audit is a static entrypoint review of current source, configuration,
+  transactions, logic/state contracts, and targeted Git history; do not run
+  target code or tests. Persisted reports must pass `validate-code-audit.py`.
   An explicit audit request authorizes a Wiki report unless the user requests
   chat-only findings.
 - Synchronize `wiki/index.md` for page additions, removals, renames, or major
