@@ -11,6 +11,64 @@ FIXTURE_ROOT = REPO_ROOT / "tests" / "fixtures" / "code-audit"
 
 
 class CodeAuditContractTests(unittest.TestCase):
+    def test_audit_is_source_first_and_wiki_is_context_only(self) -> None:
+        skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Codebase audit is the explicit", skill)
+        self.assertIn("current-source-first exception", skill)
+
+        target_block = (SKILL_ROOT / "assets" / "target-agents-block.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Codebase audit starts with the current Codebase tree", target_block)
+        self.assertIn("Wiki pages never define the audit scan boundary", target_block)
+        self.assertNotIn(
+            "Read `wiki/index.md` and relevant pages before raw sources.", target_block
+        )
+
+        workflow = (SKILL_ROOT / "references" / "code-audit-workflow.md").read_text(
+            encoding="utf-8"
+        )
+        source_marker = "Start with the current Codebase tree"
+        wiki_marker = "Consult `wiki/index.md` and relevant Wiki pages only"
+        self.assertIn(source_marker, workflow)
+        self.assertIn(wiki_marker, workflow)
+        self.assertLess(workflow.index(source_marker), workflow.index(wiki_marker))
+        self.assertNotIn("1. Read `wiki/index.md`", workflow)
+        self.assertIn("missing Wiki must not reduce this discovery scope", workflow)
+        self.assertIn("Wiki pages can name terms, rules, and boundaries, but they never define", workflow)
+        self.assertIn("On every run, rebuild the entrypoint inventory", workflow)
+
+        prompt = (REPO_ROOT / ".github" / "prompts" / "code-audit.prompt.md").read_text(
+            encoding="utf-8"
+        )
+        prompt_source = "先從目前工作樹"
+        prompt_wiki = "只有遇到業務規則或政策語意缺口時才查"
+        self.assertLess(prompt.index(prompt_source), prompt.index(prompt_wiki))
+        self.assertNotIn("先讀少量相關 Wiki，再盤點", prompt)
+
+        codex = (REPO_ROOT / "Codex.md").read_text(encoding="utf-8")
+        audit_section = codex.split("Codebase audit:", 1)[1].split(
+            "Business analysis document:", 1
+        )[0]
+        codex_source = "先從目前 Codebase 的目錄、manifest、設定與入口註冊處盤點"
+        codex_wiki = "只有遇到業務規則或政策語意缺口才查 Wiki"
+        self.assertLess(audit_section.index(codex_source), audit_section.index(codex_wiki))
+        self.assertNotIn("先查 Wiki，再盤點", audit_section)
+
+    def test_source_first_fixture_covers_missing_stale_and_incomplete_wiki_cases(self) -> None:
+        fixture_readme = (FIXTURE_ROOT / "README.md").read_text(encoding="utf-8").lower()
+        self.assertFalse((FIXTURE_ROOT / "wiki").exists())
+        for required in (
+            "no wiki baseline",
+            "wiki omits a current entrypoint",
+            "wiki page is stale",
+            "existing audit report omits a newly registered entrypoint",
+            "current codebase inventory remains authoritative",
+            "continue tracing the remaining entries",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, fixture_readme)
+
     def test_audit_is_a_persisting_static_intent_outside_tgrep(self) -> None:
         manifest = json.loads((SKILL_ROOT / "capabilities.json").read_text(encoding="utf-8"))
         audit = manifest["intents"]["code_audit"]

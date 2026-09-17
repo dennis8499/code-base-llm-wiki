@@ -1,15 +1,18 @@
 ---
 name: codebase-wiki
 description: >
-  Operate a persistent, wiki-first Markdown knowledge base. Use for framework
-  install or maintenance, ingest, query, lint, ADR, synthesis, system analysis,
-  business analysis, system design, or code archaeology.
+  Operate a persistent, wiki-first Markdown knowledge base; Codebase audit is a
+  current-source-first exception. Use for framework install or maintenance,
+  ingest, query, lint, ADR, synthesis, system analysis, business analysis,
+  system design, or code archaeology.
 ---
 
 # Codebase LLM Wiki
 
-Build durable, evidence-backed knowledge under `wiki/`. Query the Wiki first;
-inspect raw sources only for missing, stale, or contradictory evidence.
+Build durable, evidence-backed knowledge under `wiki/`. Query and other Wiki
+knowledge workflows use the Wiki first; Codebase audit is the explicit
+current-source-first exception and consults Wiki only when a business-rule
+context gap needs clarification.
 
 ## Route
 
@@ -51,12 +54,17 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 Read the chosen reference file completely before using it. Prefer scripts for
 deterministic checks instead of reimplementing parsing in prose.
 
-## Universal Process
+## Shared Process
 
-1. Establish Wiki state from `wiki/index.md` and relevant pages.
-2. Inspect listed sources only when the Wiki has an evidence gap.
-3. Perform the selected branch under its authorization policy.
-4. Verify its completion criterion before reporting success.
+Most Wiki knowledge workflows establish state from `wiki/index.md` and relevant
+pages, then inspect listed sources only when the Wiki is missing, stale, or
+contradictory. Codebase audit follows a separate source-first order: inventory
+the current project tree and registered entrypoints, trace reachable call paths,
+consult Wiki only for an encountered business-rule context gap, and then use
+targeted Git history to corroborate current behavior. In both cases:
+
+1. Perform the selected branch under its authorization policy.
+2. Verify its completion criterion before reporting success.
 
 ## Invariants
 

@@ -10,7 +10,7 @@ has a separate artifact and authorization contract.
 | Ingest | document, analyze, ingest, add to wiki, 文件化 | Read wiki state, inspect raw sources read-only, then create or update wiki pages. |
 | Query | explain, find, where, how, 查詢 | Read `wiki/index.md`, then relevant pages; inspect sources only if wiki evidence is insufficient, stale, or contradictory. |
 | Lint | Wiki health, stale, broken links, lint, Wiki 品質 | Audit Wiki quality and report findings before broad repairs. |
-| Codebase audit | code health, codebase audit, bugs, logic review, 程式健檢, BUG 檢查 | Read `code-audit-workflow.md`; inspect entrypoints, reachable call paths, transactions, configuration references, logic/state contracts, and targeted Git history statically, then save a coverage-aware report. Explicit 「只回報」 requests stay read-only. |
+| Codebase audit | code health, codebase audit, bugs, logic review, 程式健檢, BUG 檢查 | Read `code-audit-workflow.md`; start from the current Codebase tree and registered entrypoints, trace reachable call paths, consult Wiki only for business-rule context gaps, then inspect transactions, configuration references, logic/state contracts, and targeted Git history statically before saving a coverage-aware report. Explicit 「只回報」 requests stay read-only. |
 | ADR | decision, ADR, architecture choice | Create or update a record under `wiki/decisions/` with ADR frontmatter. |
 | Synthesis | save analysis, synthesis | Persist durable cross-cutting analysis under `wiki/synthesis/`. |
 | Business Analysis / BA | BA文件, 業務分析文件, business analysis document | Generate a standard-aligned Markdown BA document under `wiki/synthesis/` from wiki-first evidence. |
@@ -24,12 +24,14 @@ has a separate artifact and authorization contract.
 - Framework maintenance is a scope overlay on the selected intent, not an
   additional machine operation. Load `framework-maintenance.md` whenever the
   target is this framework repository.
-- A Codebase audit checks current code paths for concrete defects, technical
-  risks needing framework/deployment evidence, and business questions needing
-  policy confirmation. It may use targeted read-only Git history after current
-  source review. It does not run the target application, tests, or automatic
-  fixes. The explicit audit request authorizes a Wiki report unless the user
-  asks for a chat-only report.
+- A Codebase audit starts with the current source tree and entrypoint
+  registrations, regardless of Wiki coverage. It checks current code paths for
+  concrete defects, technical risks needing framework/deployment evidence, and
+  business questions needing policy confirmation. It consults relevant Wiki
+  pages only when the source trace exposes a business-rule context gap, then
+  may use targeted read-only Git history after current source review. It does
+  not run the target application, tests, or automatic fixes. The explicit audit
+  request authorizes a Wiki report unless the user asks for a chat-only report.
 - Interactive Ingest and Batch Ingest are ingest modes, not separate intents.
 - Existing `type: guide` pages remain readable legacy Wiki data. This framework
   no longer routes requests to a Guide creation operation or supplies a Guide

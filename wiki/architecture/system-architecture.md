@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki 系統架構
 type: architecture
-summary: 以共享 Skill 為規格核心，透過雙平台 adapter、Codebase 靜態健檢、標準對齊文件工作流、離線工具與持久 Markdown Wiki 形成可驗證的知識維護系統
+summary: 以共享 Skill 為規格核心，透過雙平台 adapter、source-first Codebase 靜態健檢、標準對齊文件工作流、離線工具與持久 Markdown Wiki 形成可驗證的知識維護系統
 notebooklm_group: architecture
 notebooklm_role: traceability
 sources:
@@ -16,7 +16,7 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-source_digest: sha256:e7c0d2098d4f11535714a2223f88026f89bc2488bf37486cf002f38c9f56b663
+source_digest: sha256:47e475fc13898446f89bd53eab7a561c4d528b4ae4a6b16a83206be1ed20f566
 derived_from: ["[[overview]]"]
 last_updated: 2026-09-17
 tags: [architecture, framework, data-flow, safety]
@@ -35,8 +35,9 @@ operations、十二個 intent groups 與 authorization policy 由
 只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper
 與選定平台入口安裝到目標 Repo。
 
-`code_audit` 使用原生唯讀搜尋追查專案入口，先分析目前 source、設定與呼叫路徑，再定向讀取
-Git `log`／`show`／`blame` 的完整 commit 內文與 diff。它將有可達性與來源證據的缺陷、缺少技術
+`code_audit` 使用原生唯讀搜尋從目前 Codebase 的目錄、manifest、設定與註冊處盤點專案入口，先
+分析目前 source、設定與呼叫路徑；只有遇到業務規則語意缺口才查相關 Wiki，然後定向讀取 Git
+`log`／`show`／`blame` 的完整 commit 內文與 diff。它將有可達性與來源證據的缺陷、缺少技術
 條件的 `RISK-*` 與待確認業務政策分列，並保存逐入口 coverage 與四類交叉檢查狀態；明確健檢
 請求授權 Synthesis report，使用者要求只回報時不寫 Wiki。它不執行目標程式或測試，也不擴大
 tgrep 的 Ingest／Archaeology 使用範圍。
@@ -60,7 +61,9 @@ tgrep 的 Ingest／Archaeology 使用範圍。
 ```text
 User intent
   -> SKILL routing + selected workflow
-  -> Wiki-first evidence read
+  -> Query/一般知識工作流：Wiki-first evidence read
+  -> Codebase audit：current Codebase entrypoint inventory
+  -> Codebase audit：call-path trace -> optional Wiki business-rule context
   -> Ingest/Archaeology source gap -> optional Windows x64 tgrep locator
   -> direct re-read of current source before evidence claim
   -> BA why/outcome -> SA solution-neutral requirements -> SD design views

@@ -117,9 +117,10 @@ notes 在重產後保留。
 | Code archaeology | built-in prompt 綁定 explicit-persist policy | 先解釋目前路徑與 Git evidence；預設零寫入，明確保存後才更新 page、index、log |
 
 Codebase audit 使用 `tests/fixtures/code-audit/` 做靜態工作流驗收，與上述五個 Codex host
-runtime 情境分開。依 fixture 手動檢查共用根因是否合併、多入口是否保留、明確規則違反是否列為
-BUG、交易／設定／邏輯矛盾是否有具體證據、未知技術條件是否列為 RISK、未知政策是否列為待確認
-問題、已有上游驗證是否排除誤報，以及動態入口是否保留 coverage gap。history fixture 會在
+runtime 情境分開。依 fixture 手動檢查 audit 是否先從目前 Codebase 入口探索，且不因缺少、遺漏或
+過時 Wiki 縮減範圍；再檢查共用根因是否合併、多入口是否保留、明確規則違反是否列為 BUG、交易／
+設定／邏輯矛盾是否有具體證據、未知技術條件是否列為 RISK、未知政策是否列為待確認問題、已有
+上游驗證是否排除誤報，以及動態入口是否保留 coverage gap。history fixture 會在
 隔離暫存 Git repo 建立可控的 commit title、完整內文、刪除／改名與後續修正，驗證 audit 能將
 commit 意圖、diff 與目前 source 分開核對。另以 `validate-code-audit.py` 檢查 finding ID 唯一性、
 摘要與 coverage 計數、必要欄位、目前 sources 存在性、Git HEAD／歷史狀態與完整 SHA 格式。
@@ -162,6 +163,8 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 ## 手動語意審查
 
 - Query 確實 Wiki-first，沒有無條件掃描 source tree。
+- Codebase audit 確實 source-first：先從目前 Codebase 盤點入口，Wiki 只補充業務規則語意缺口，
+  且沒有 Wiki 或既有報告遺漏入口時仍能繼續探索。
 - Copilot prompts 是薄 adapter，且非 VS Code host 不被誤導為支援 prompt files。
 - Authorization 沒因 follow-up 或 shell access 擴張。
 - Sources、inference、speculation、contradiction 與 gaps 的標示彼此一致。

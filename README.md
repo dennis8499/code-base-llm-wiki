@@ -8,7 +8,7 @@
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-7C3AED?logo=obsidian)](https://obsidian.md/)
 [![Latest Release](https://img.shields.io/github/v/release/dennis8499/code-base-llm-wiki?display_name=tag&sort=semver)](https://github.com/dennis8499/code-base-llm-wiki/releases/latest)
 
-Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`，後續查詢先讀 Wiki，內容不足、過時或矛盾時才回溯 raw sources。
+Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`；一般查詢先讀 Wiki，Codebase audit 則先從目前 Codebase 盤點入口與呼叫路徑，只有遇到業務規則語意缺口才回查 Wiki。
 
 它不是 RAG：不建立向量資料庫、不複製完整原始碼，也不要求常駐本機搜尋服務。Windows x64
 另可用隨 Skill 提供的 tgrep 加速 Ingest／Archaeology 的來源探索；知識仍以可閱讀、可版本控制、
@@ -87,6 +87,7 @@ Pinned wrapper regression tests are located at `tests/tgrep/test_tgrep_search.py
 flowchart LR
     Source[Raw Sources\n唯讀] -->|必要時查證| Agent[Copilot / Codex\nWiki workflows]
     Wiki[wiki/\n持久 Markdown] -->|Wiki-first| Agent
+    Source -->|Codebase audit：入口與呼叫路徑優先| Agent
     Agent -->|Ingest / ADR / Synthesis / BA / SA / SD| Wiki
     Agent -->|NotebookLM export| Pack[.notebooklm/\nlocal source pack]
     Schema[Schema\nRules + Skills + Hooks] --> Agent
@@ -136,14 +137,15 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 
 ## 主要特色
 
-- **Wiki-first**：先讀 `wiki/index.md` 與相關頁面，再按需回溯 sources。
+- **Wiki-first**：Query 與一般 Wiki 知識工作流先讀 `wiki/index.md` 與相關頁面，再按需回溯 sources；
+  Codebase audit 先從目前 Codebase 盤點入口，Wiki 只補充業務規則缺口。
 - **來源可追溯**：`sources` 保存 raw paths、`derived_from` 保存 Wiki 關係，
   `source_digest` 偵測同日內容變更。
 - **來源探索加速**：Windows x64 以 Skill 內部 wrapper 使用固定版本 tgrep；只作 Ingest／
   Archaeology 的候選定位，索引不存在時安全 full scan，其他平台使用原有搜尋方式。
 - **增量維護**：透過 `wiki/index.md`、wikilinks 與 append-only `wiki/log.md` 累積知識。
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
-- **Codebase 健檢**：由 API、UI、CLI、排程、事件與公開介面入口追查目前呼叫路徑，交叉核對 transaction、設定引用、邏輯／狀態與定向 Git history；把有可達性與來源證據的 BUG、技術風險和需業務確認的疑點分列，保留檢查覆蓋與缺口，不執行目標程式或測試。
+- **Codebase 健檢**：先從 API、UI、CLI、排程、事件、plugin 與公開介面的目前註冊處盤點入口，再追查呼叫路徑，交叉核對 transaction、設定引用、邏輯／狀態與定向 Git history；Wiki 只補充業務規則語意缺口。把有可達性與來源證據的 BUG、技術風險和需業務確認的疑點分列，保留檢查覆蓋與缺口，不執行目標程式或測試。
 - **BA → SA → SD 標準對齊文件**：三份繁中 Markdown 可獨立產出，以穩定 ID
   建立追溯；證據不足仍保留章節與具體 Gap，不宣稱 ISO／IEEE conformance。
 - **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、重新 Ingest 或 Lint；不會自動寫入或切換工作流。
@@ -259,6 +261,13 @@ Codex 直接讀取 `AGENTS.md` 與 `$codebase-wiki`。例如：
 ```
 
 Codex 的 hooks、recipes 與排錯方式保留在可獨立安裝的 [Codex.md](Codex.md)。
+
+Codebase audit 使用 `/code-audit [scope]` 或自然語言 recipe。它先從目前 Codebase 的目錄、
+manifest、設定與入口註冊處盤點 API、UI、CLI、排程、事件、plugin 與公開介面，再沿呼叫鏈檢查
+驗證、權限、業務邏輯、資料／狀態、輸出與失敗處理；只有遇到業務規則語意缺口才查 Wiki。明確
+健檢請求會保存含 coverage 的報告；每次重跑都以目前 Codebase 重新建立入口 inventory，既有報告
+只用於對照 findings、沿用 IDs 與保留 user notes。說「只回報」則不寫 Wiki、index 或 log；完整契約見
+[`code-audit` Wiki 頁](wiki/modules/code-audit.md)。
 
 NotebookLM Enterprise 匯出：
 

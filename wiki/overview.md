@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki — 業務總覽
 type: overview
-summary: 讓團隊把 codebase 建成可追溯 Wiki、靜態健檢入口行為，並產出標準對齊 BA／SA／SD 與現況 NotebookLM BA／SA 知識包
+summary: 讓團隊把 codebase 建成可追溯 Wiki、以目前入口 source-first 進行靜態健檢，並產出標準對齊 BA／SA／SD 與現況 NotebookLM BA／SA 知識包
 sources:
   - README.md
   - AGENTS.md
@@ -13,7 +13,7 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:c533d040322f875653adb732929d1e7419e76434a7e316dea579427fcca784ea
+source_digest: sha256:1febc56d05e0edc84452b24dc0f42328474bfa7dbaf4171e212b24ca44980893
 derived_from: []
 last_updated: 2026-09-17
 tags: [framework, business-knowledge, wiki, notebooklm]
@@ -88,10 +88,12 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 本機 pack。相關約束見
 [[ba-knowledge-precedes-traceability]] 與 [[readiness-preflight-required]]。
 
-Codebase 健檢流程 [[code-audit]] 沿 API、UI、CLI、排程、事件與公開介面入口追查目前行為，
-交叉檢查 transaction／side effects、configuration references、logic／state contracts 與
-變更完整性；再以定向 Git `log`／`show`／`blame` 核對 commit 意圖、diff 與目前 source。
-明確缺陷、技術風險與待確認業務疑點分開記錄，相同根因合併，動態或外部邊界保留為 coverage gap。
+Codebase 健檢流程 [[code-audit]] 先從目前 Codebase 的目錄、manifest、設定與註冊處盤點 API、UI、
+CLI、排程、事件與公開介面入口，再沿呼叫路徑追查目前行為。Wiki 不決定 audit 的掃描範圍；只有
+source trace 遇到業務規則或政策語意缺口時才查相關頁面。接著交叉檢查 transaction／side effects、
+configuration references、logic／state contracts 與變更完整性，再以定向 Git `log`／`show`／`blame`
+核對 commit 意圖、diff 與目前 source。明確缺陷、技術風險與待確認業務疑點分開記錄，相同根因合併，
+動態或外部邊界保留為 coverage gap。
 框架也支援一般 Ingest、Query、Lint、Archaeology、ADR 與 Synthesis；這些
 能力的工程入口與治理細節保留在 [[project-function-catalog]] 與
 [[framework-introduction]]。Query

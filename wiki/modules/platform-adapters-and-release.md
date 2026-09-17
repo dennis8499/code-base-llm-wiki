@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與手動 Release
 type: module
-summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架，並提供 Codebase 靜態健檢及受限 tgrep 來源探索
+summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -25,7 +25,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:1293a1280c9dc6667203a54b8c5ca1ec19f8b9520c90a6872647f7a9afd59692
+source_digest: sha256:759f629fd766c64629c394b0b622228e649d575045aabd591af77dfb64517203
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-17
 tags: [module, adapters, validation, release, parity]
@@ -50,10 +50,11 @@ status: active
 - tgrep source-discovery integration 只開放給 Interactive/Batch Ingest 與 Code Archaeology；
   Query 保持 Wiki-first，不呼叫 tgrep 或 CLI fallback。Windows x64 wrapper 只回傳候選
   locator，形成 evidence 前必須直接重讀目前 source。
-- `code_audit` 以唯讀原生搜尋檢查入口，交叉核對 transaction／side effects、設定引用、邏輯／
-  狀態契約與變更完整性，再定向使用 `git log`／`git show`／`git blame` 讀取 commit 完整內文與
-  diff；不呼叫 tgrep、不執行目標程式或測試，並將 `BUG-*`、`RISK-*` 與 `BIZ-*` 分列。明確健檢
-  要求預設保存 synthesis 報告，使用者指定只回報時維持零寫入，持久化後通過 `validate-code-audit.py`。
+- `code_audit` 先以唯讀原生搜尋從目前 Codebase 盤點入口，再交叉核對 transaction／side effects、
+  設定引用、邏輯／狀態契約與變更完整性；只有遇到業務規則語意缺口才查 Wiki，之後定向使用
+  `git log`／`git show`／`git blame` 讀取 commit 完整內文與 diff。不呼叫 tgrep、不執行目標程式或
+  測試，並將 `BUG-*`、`RISK-*` 與 `BIZ-*` 分列。明確健檢要求預設保存 synthesis 報告，使用者
+  指定只回報時維持零寫入，持久化後通過 `validate-code-audit.py`。
 - Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
 - 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，

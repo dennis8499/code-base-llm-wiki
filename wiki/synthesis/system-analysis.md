@@ -14,7 +14,7 @@ sources:
   - tests/wiki/test_wiki_lint.py
 source_digest: sha256:9dbd0423e250ec79d4fffcbfd4f08ff601c1423ff9d1873d9dc5b71882f336c1
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
-last_updated: 2026-09-16
+last_updated: 2026-09-17
 tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
@@ -288,8 +288,9 @@ lint/ADR/synthesis/BA/SA/SD、hooks 與離線 NotebookLM pack；不涵蓋 RAG ru
 ## 系統總覽與脈絡
 
 使用者透過 Codex 自然語言、VS Code Copilot prompts，或其他 Copilot hosts 的共用
-Skill 觸發工作流。Skill 先讀 Wiki，只有
-evidence gap 才回到 raw source；被授權的 durable change 寫回 Wiki/index/log。
+Skill 觸發工作流。Query 與一般 Wiki 知識工作流先讀 Wiki，只有 evidence gap 才回到 raw source；
+Codebase audit 則先從目前 Codebase 盤點入口與追查呼叫路徑，只有業務規則語意缺口才查 Wiki，
+再定向核對 Git history。被授權的 durable change 寫回 Wiki/index/log。
 NotebookLM preparation 另行以 `--root` 的檔案系統邊界執行安全 inventory：discovery
 展示 capability、未完成分析與 BA／SA 文件計畫，使用者確認一次後更新知識，自動以
 readiness 產生本機 pack。Git repository、clean working tree 與 nested repository 不會成為
@@ -319,6 +320,12 @@ BA／SA pair 與已登記 gaps。詳見 [[system-architecture]]。
 - 入口：`$codebase-wiki` intent routing。
 - 步驟：index/page → evidence gap sources → authorized edit → index/log coupling → checks。
 - 輸出：Markdown pages、append-only operation、明確 deterministic/semantic status。
+
+### Codebase audit
+
+- 入口：`/code-audit [scope]` 或 Codex 的 Codebase 健檢 recipe。
+- 步驟：current Codebase inventory → entrypoint/call-path trace → optional Wiki business-rule context → targeted Git history → coverage-aware report。
+- 邊界：Wiki 不決定掃描範圍；動態或外部註冊只影響受阻入口的 coverage，其他入口繼續檢查；不執行目標程式、測試或自動修正。
 
 ### NotebookLM export
 

@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki — 使用指南
 type: guide
-summary: 從安裝、Wiki-first 操作、Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界
+summary: 從安裝、Wiki-first 操作與 source-first Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界
 sources:
   - README.md
   - Codex.md
@@ -16,7 +16,7 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
   - tests/contracts/test_code_audit_validator.py
-source_digest: sha256:20d779aff8d08ce6e0e82079e2bf51afc88178082f3bff03473266ecb3feae6a
+source_digest: sha256:1d2b84807c10710fb32403df338015ce0bd2f4078bb9de3f01cd5bcdd87bcf4c
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-09-17
 tags: [guide, onboarding, framework, copilot, codex]
@@ -138,10 +138,12 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 ## Codebase 健檢
 
 使用 `/code-audit [scope]` 或 Codex 自然語言 recipe；省略範圍即檢查全專案，也可以指定
-模組、route、command、job、event 或公開 API。Agent 先讀少量相關 Wiki，再盤點目前入口並沿
-「輸入 → 驗證／權限 → 業務處理 → 資料／狀態 → 輸出與失敗」追查；交叉核對 transaction／
-connection、設定檔／鍵引用、邏輯／狀態契約與變更後 callers。再針對相關路徑使用 host-native
-Git `log`／`show`／`blame` 讀取完整 commit 內文與 diff；不執行目標程式或測試，也不使用 tgrep。
+模組、route、command、job、event 或公開 API。Agent 先從目前 Codebase 的目錄、manifest、設定
+與註冊處盤點入口，再沿「輸入 → 驗證／權限 → 業務處理 → 資料／狀態 → 輸出與失敗」追查，並
+跨模組跟進共用呼叫；掃描範圍不由 Wiki 決定，只有遇到業務規則或政策語意缺口才查相關 Wiki。
+交叉核對 transaction／connection、設定檔／鍵引用、邏輯／狀態契約與變更後 callers。再針對
+相關路徑使用 host-native Git `log`／`show`／`blame` 讀取完整 commit 內文與 diff；不執行目標
+程式或測試，也不使用 tgrep。
 
 只有能證明可達觸發條件與具體錯誤結果，或違反明確規則時才列為確定 `BUG-*`；有具體技術依據
 但缺少框架／部署／環境證據時列為 `RISK-*`；業務政策不明時列為 `BIZ-*`。相同根因合併，記錄

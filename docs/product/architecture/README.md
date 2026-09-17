@@ -17,11 +17,17 @@ flowchart TB
     Entry -->|Codex| CX[AGENTS.md / Codex.md / .codex hooks]
     GH --> Skill[.agents/skills/codebase-wiki]
     CX --> Skill
-    Skill --> Index[wiki/index.md]
+    Skill --> Route{工作流}
+    Route -->|Query／一般 Wiki 工作流| Index[wiki/index.md]
     Index --> Pages[1-5 個相關 Wiki 頁面]
     Pages --> Enough{證據足夠且未過時?}
     Enough -->|是| Result[回答或產出]
     Enough -->|否| Sources[唯讀檢查 raw sources]
+    Route -->|Codebase audit| Inventory[目前 Codebase 入口 inventory]
+    Inventory --> Trace[沿入口追查呼叫路徑]
+    Trace --> AuditGap{業務規則語意缺口?}
+    AuditGap -->|是| Pages
+    AuditGap -->|否| Result
     Sources -.->|Ingest/Archaeology only| Tgrep[Windows x64 tgrep wrapper]
     Tgrep --> Sources
     Sources --> Result
@@ -44,7 +50,8 @@ flowchart TB
 - Wiki page templates；
 - installer、parity、frontmatter、stale-source、唯讀 lint 與統計 scripts；
 - Windows x64 tgrep source-discovery wrapper 與 pinned binary manifest；
-- Raw Sources 唯讀、Wiki-first、append-only log 與 evidence-backed 的核心規則。
+- Raw Sources 唯讀、一般知識工作流的 Wiki-first、Codebase audit 的 source-first、append-only log
+  與 evidence-backed 是共同核心規則。
 
 平台 adapter 不需要逐 byte 相同；`parity-check.py` 驗證兩邊仍公開相同能力且沒有指向已移除的舊路徑。
 Copilot 的 `.github/prompts/` 是 VS Code 本機 adapter；其他 Copilot hosts 直接
@@ -54,7 +61,8 @@ Copilot 的 `.github/prompts/` 是 VS Code 本機 adapter；其他 Copilot hosts
 ## 執行責任
 
 目前 Agent 依 `SKILL.md` 路由到單一 authoritative workflow，再按該 workflow 的
-authorization policy 執行。Copilot prompt files 與 Codex recipes 都是薄入口，不另設
+authorization policy 執行。Codebase audit 先盤點目前 Codebase 的入口與呼叫路徑，只有遇到
+業務規則語意缺口才查 Wiki；Copilot prompt files 與 Codex recipes 都是薄入口，不另設
 Repo-local Wiki agent profiles，也不改變寫入權限。
 tgrep 只在 Ingest／Archaeology 作為候選 locator；Query 不呼叫它。
 

@@ -16,7 +16,7 @@ sources:
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:a0782be6ea062939686309f43ad279c211764688d15bcb24fdd200b211dffa68
+source_digest: sha256:2655f1f3d25a9a37d464226e1e2a1779368612ac339119bf34bb7c9d2f2584c6
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-17
 tags: [module, installer, upgrade, atomicity]
@@ -48,7 +48,8 @@ status: active
   current-state BA／SA templates，Copilot surface 另取得
   BA／SA／SD／Codebase audit 薄 prompt adapters；共用 Codebase audit workflow、報告模板與
   `validate-code-audit.py`
-  亦隨兩個 surface 安裝；upgrade 仍不改寫目標 `wiki/`。
+  亦隨兩個 surface 安裝。Audit adapter 每次先從目前 Codebase 入口建立 inventory，
+  再按呼叫路徑追查；upgrade 仍不改寫目標 `wiki/`。
 
 ## 對外介面
 

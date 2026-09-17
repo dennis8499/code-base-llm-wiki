@@ -11,10 +11,12 @@ argument-hint: "檢查範圍或 commit/range，例如 all、src/payments、退�
 [Codebase Audit Workflow](../../.agents/skills/codebase-wiki/references/code-audit-workflow.md)
 及 [報告模板](../../.agents/skills/codebase-wiki/assets/code-audit-template.md)。
 
-先讀 `wiki/index.md` 與少量相關頁面，再用原生檔案搜尋和直接讀取盤點 API、UI、CLI、
-排程、事件與公開介面等入口，逐一追查輸入、驗證／權限、業務處理、資料／狀態變更、
-輸出與失敗路徑。明確檢查 transaction／connection 與 rollback、設定檔／鍵引用及產生／注入／
-fallback、狀態與回傳契約、重試與冪等。每項缺陷都核對可達性、上游防護與下游約束。
+每次執行都先從目前工作樹的目錄、manifest、設定與入口註冊處重新建立 inventory，用原生檔案搜尋和直接讀取盤點 API、UI、CLI、
+排程、事件、plugin 與公開介面等入口；掃描範圍不由 Wiki 的既有頁面決定。逐一追查輸入、
+驗證／權限、業務處理、資料／狀態變更、輸出與失敗路徑，並沿共用呼叫跨模組追查。明確檢查
+transaction／connection 與 rollback、設定檔／鍵引用及產生／注入／fallback、狀態與回傳契約、
+重試與冪等。只有遇到業務規則或政策語意缺口時才查 `wiki/index.md` 與相關頁面；Wiki 內容不能
+取代目前 source 的直接讀取。每項缺陷都核對可達性、上游防護與下游約束。
 
 先記錄 `git rev-parse HEAD`、`git rev-parse --is-shallow-repository`、`git status --short` 與 `current-first-targeted` 歷史範圍，
 再用唯讀 `git log --follow --name-status` 建立索引，對相關 commit 使用 `git show --format=fuller --stat --patch`

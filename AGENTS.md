@@ -52,11 +52,14 @@ reference before acting.
   Skill wrapper, re-read current sources before claims, and keep Query
   Wiki-first without CLI fallback.
 - Codebase audit statically traces all or a specified set of project entrypoints;
-  it cross-checks transactions, configuration references, logic/state contracts
-  and relevant targeted Git history. Findings are separated into `BUG-*`,
-  `RISK-*`, and `BIZ-*`; persisted reports include coverage and historical
-  provenance. It does not run target code or tests. An explicit audit request
-  authorizes a Wiki report unless the user asks to only receive findings in chat.
+  its inventory starts from the current Codebase tree and registration points,
+  not from Wiki coverage. It consults Wiki only for business-rule context gaps,
+  then cross-checks transactions, configuration references, logic/state
+  contracts and relevant targeted Git history. Findings are separated into
+  `BUG-*`, `RISK-*`, and `BIZ-*`; persisted reports include coverage and
+  historical provenance. It does not run target code or tests. An explicit
+  audit request authorizes a Wiki report unless the user asks to only receive
+  findings in chat.
 
 Project-level Codex slash prompt files are outside this framework; Codex uses
 natural-language recipes and `$codebase-wiki`.

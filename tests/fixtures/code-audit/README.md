@@ -25,3 +25,20 @@ Expected coverage and classification:
 This scenario also checks root-cause deduplication, evidence paths, coverage
 gaps, and the distinction between current behavior and confirmed business
 policy.
+
+Source-first discovery cases:
+
+- **No Wiki baseline**: this fixture has no `wiki/` directory; the current
+  Codebase inventory must still discover and trace every listed entrypoint.
+- The current Codebase inventory remains authoritative even when Wiki context
+  is absent or incomplete.
+- **Wiki omits a current entrypoint**: if a target Wiki lists only the order
+  routes, the account, checkout, return, and plugin registrations still come
+  from the current source tree and remain in coverage.
+- **Wiki page is stale**: an old page must be treated as context evidence only;
+  re-read the current source and record the stale page as a gap when behavior
+  differs.
+- **Existing audit report omits a newly registered entrypoint**: re-running the
+  same scope must discover the new registration from current source, add its
+  coverage row, and continue tracing the remaining entries while preserving
+  prior finding IDs and user notes.

@@ -36,6 +36,11 @@
 
 ### Changed
 
+- **Codebase audit 改為 source-first 入口探索**：audit 先從目前 Codebase 的目錄、manifest、設定與
+  註冊處盤點所有入口，再沿呼叫路徑進行靜態檢查；Wiki 只在業務規則語意缺口時提供補充 context，
+  不再限制掃描範圍。共享 Skill、Copilot/Codex adapters、報告模板、驗收 fixture 與 parity contract
+  已同步更新，並保留無 Wiki、遺漏／過時頁面與舊報告缺少新入口時的覆蓋驗收。
+
 - **NotebookLM 流程深度與來源完整性**：流程分析工作流、BA／SA 與業務頁模板現在要求從入口沿呼叫鏈記錄觸發條件、逐步行為、資料／狀態變更、結果、失敗去向與來源定位；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開處理。Exporter 在遮罩與安全分割後檢查實際 `sources/*.md` 是否保留流程正文、分支及適用 requirement／rule 正文，並以反例測試拒絕標題或四步摘要；結構檢查不宣稱 NotebookLM 問答已驗證。
 
 - **Installer 與 Release bundle metadata**：Copilot/Codex 共用 surface 同步安裝 tgrep

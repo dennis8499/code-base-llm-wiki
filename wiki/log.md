@@ -622,3 +622,10 @@ status: active
 - Codebase audit 現在以目前 source 為主，定向讀取 Git `log`／`show`／`blame` 的完整 commit 內文與 diff，明確交叉檢查 transaction／side effects、設定引用、邏輯／狀態契約與變更完整性；新增 `RISK-*` 技術疑點分類。
 - 新增 `validate-code-audit.py`，檢查報告 frontmatter、目前 sources、finding IDs、入口關聯、coverage 與摘要計數、Git HEAD／歷史狀態及完整 SHA／diff 位置；新增隔離 Git history fixture 與刪除設定、transaction、介面回歸、改名、後續修正、dirty worktree 及完整性限制驗收案例。
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[code-audit]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[release-and-update]]、[[project-function-catalog]]、[[log]]
+
+## [2026-09-17] update | Codebase 健檢改為從目前入口主動探索
+
+- Audit 現在先從目前 Codebase 的目錄、manifest、設定與註冊處盤點入口，再沿呼叫路徑進行靜態檢查；Wiki 只在業務規則或政策語意缺口時提供補充 context，不再限制掃描範圍。
+- 共享 Skill、Codebase audit workflow、Copilot/Codex adapters、報告模板、parity 與 fixture 契約同步加入無 Wiki、Wiki 遺漏／過時及既有報告缺少新入口時仍持續探索的驗收。
+- Framework Wiki coverage ledger 已依目前安全來源重新整理 analyzed discovery ID，並保留既有 BA／SA 內容與 reviewer notes。
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[code-audit]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[installer-and-upgrade]]、[[system-analysis]]、[[project-function-catalog]]、[[codebase-functional-coverage]]、[[log]]

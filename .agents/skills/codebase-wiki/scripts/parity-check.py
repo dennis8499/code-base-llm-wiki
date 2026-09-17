@@ -54,6 +54,10 @@ CODE_AUDIT_HISTORY = {
 }
 CODE_AUDIT_REPORT_VALIDATOR = ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
 CODE_AUDIT_WORKFLOW_TOKENS = (
+    "Start with the current Codebase tree",
+    "Inventory every in-scope entrypoint",
+    "Consult `wiki/index.md` and relevant Wiki pages only",
+    "On every run, rebuild the entrypoint inventory",
     "Transactions and side effects",
     "Configuration references",
     "Logic and state contracts",
@@ -66,6 +70,16 @@ CODE_AUDIT_WORKFLOW_TOKENS = (
     "preserve its original record",
     "separate Archaeology report",
 )
+CODE_AUDIT_SOURCE_FIRST_ADAPTERS = {
+    ".github/prompts/code-audit.prompt.md": (
+        "先從目前工作樹",
+        "只有遇到業務規則或政策語意缺口時才查",
+    ),
+    "Codex.md": (
+        "先從目前 Codebase 的目錄、manifest、設定與入口註冊處盤點",
+        "只有遇到業務規則或政策語意缺口才查 Wiki",
+    ),
+}
 EXPECTED_GROUPS = {
     "install_setup": ["install"],
     "ingest": ["ingest"],
@@ -440,6 +454,31 @@ def main() -> int:
         for token in CODE_AUDIT_WORKFLOW_TOKENS:
             if token.lower() not in audit_workflow_normalized:
                 issues.append(f"Codebase audit workflow missing check: {token}")
+        source_first = audit_workflow_text.find("Start with the current Codebase tree")
+        wiki_context = audit_workflow_text.find(
+            "Consult `wiki/index.md` and relevant Wiki pages only"
+        )
+        if source_first == -1 or wiki_context == -1 or source_first > wiki_context:
+            issues.append("Codebase audit workflow must inventory current Codebase before Wiki context")
+        if "An empty, stale, incomplete, or\n   missing Wiki must not reduce this discovery scope." not in audit_workflow_text:
+            issues.append("Codebase audit workflow must keep discovery independent of Wiki coverage")
+    skill_path = root / ".agents/skills/codebase-wiki/SKILL.md"
+    skill_text = skill_path.read_text(encoding="utf-8") if skill_path.is_file() else ""
+    if "Codebase audit is the explicit" not in skill_text or "current-source-first exception" not in skill_text:
+        issues.append("shared Skill must declare the Codebase audit source-first exception")
+    target_block_path = root / ".agents/skills/codebase-wiki/assets/target-agents-block.md"
+    target_block_text = (
+        target_block_path.read_text(encoding="utf-8")
+        if target_block_path.is_file()
+        else ""
+    )
+    if (
+        "Codebase audit starts with the current Codebase tree and" not in target_block_text
+        or "Wiki pages never define the audit scan boundary" not in target_block_text
+    ):
+        issues.append("installed root instructions must declare the Codebase audit source-first exception")
+    if "Read `wiki/index.md` and relevant pages before raw sources." in target_block_text:
+        issues.append("installed root instructions still require Wiki-first audit discovery")
     audit_template = root / ".agents/skills/codebase-wiki/assets/code-audit-template.md"
     if not audit_template.is_file():
         issues.append("missing Codebase audit report template")
@@ -468,6 +507,27 @@ def main() -> int:
     ):
         if token not in codex_text:
             issues.append(f"Codex recipe missing tgrep boundary: {token}")
+    audit_prompt = root / ".github" / "prompts" / "code-audit.prompt.md"
+    adapter_texts = {
+        ".github/prompts/code-audit.prompt.md": audit_prompt.read_text(encoding="utf-8")
+        if audit_prompt.is_file()
+        else "",
+        "Codex.md": (
+            codex_text.split("Codebase audit:", 1)[1].split("Business analysis document:", 1)[0]
+            if "Codebase audit:" in codex_text and "Business analysis document:" in codex_text
+            else ""
+        ),
+    }
+    for relative, (source_marker, wiki_marker) in CODE_AUDIT_SOURCE_FIRST_ADAPTERS.items():
+        adapter_text = adapter_texts[relative]
+        source_position = adapter_text.find(source_marker)
+        wiki_position = adapter_text.find(wiki_marker)
+        if source_position == -1 or wiki_position == -1 or source_position > wiki_position:
+            issues.append(
+                f"Codebase audit adapter must inventory current source before Wiki context: {relative}"
+            )
+        if "先讀少量相關 Wiki，再盤點" in adapter_text or "先查 Wiki，再盤點" in adapter_text:
+            issues.append(f"Codebase audit adapter still uses Wiki-first discovery wording: {relative}")
 
     cli = manifest.get("cli", {})
     if not isinstance(cli, dict):
