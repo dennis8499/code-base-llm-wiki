@@ -79,8 +79,8 @@ deterministic tool checks，不增加五項 active agent runtime 情境。
 
 Contract tests 另固定驗證：
 
-- capability manifest 為 v6、11 operations／11 intent groups，BA／SA／SD 都採
-  `explicit_request`；
+- capability manifest 為 v6、12 operations／12 intent groups；`code_audit` 採
+  explicit-request report authorization，BA／SA／SD 同樣採 `explicit_request`；
 - capability manifest 的 tgrep source-discovery metadata 只包含 Ingest／Archaeology，
   `query_enabled`、auto index 與 auto serve 都是 false；wrapper、manifest 與 binary 的
   固定版本和 SHA-256 必須一致；
@@ -92,7 +92,7 @@ Contract tests 另固定驗證：
 - frontmatter 接受新欄位的合法值、拒絕非法值，同時允許缺少兩欄的 legacy SA；
 - NotebookLM schema v6 以 `codebase-ba-sa-v1` 驗證每 capability 的 current-state BA／SA
   pair、雙向連結與 locator，並只把規整後的 `sources/*.md` 列為 upload candidates；
-- Codex 與 Copilot installer 都取得共用 references/templates，Copilot 取得三個薄
+- Codex 與 Copilot installer 都取得共用 references/templates，Copilot 取得薄
   prompt adapters，兩個 surface 都取得相同 tgrep wrapper/manifest/binary，upgrade 不改寫
   目標 Wiki。
 
@@ -112,6 +112,12 @@ notes 在重產後保留。
 | Wiki-first query | built-in prompt 綁定唯讀 query workflow | index → 1–5 pages → 必要 sources；答案正確且零寫入 |
 | Lint | built-in prompt 綁定 report-before-repair | 注入受控 index 缺口；先報告零寫入，確認後修復並追加一筆 lint log |
 | Code archaeology | built-in prompt 綁定 explicit-persist policy | 先解釋目前路徑與 Git evidence；預設零寫入，明確保存後才更新 page、index、log |
+
+Codebase audit 使用 `tests/fixtures/code-audit/` 做靜態工作流驗收，與上述五個 Codex host
+runtime 情境分開。依 fixture 手動檢查共用根因是否合併、多入口是否保留、明確規則違反是否列為
+BUG、未知政策是否列為待確認問題、已有上游驗證是否排除誤報，以及動態入口是否保留 coverage gap。
+同範圍重跑另須確認 finding IDs 與 user notes 保留；chat-only 要求不得寫 Wiki、index、log。
+來源檔案需在健檢前後維持相同 hash；健檢不執行樣例程式或其測試。
 
 自然語言不做 byte-for-byte golden comparison；驗收 evidence、結構、安全邊界與
 artifact。每個 Codex 情境在全新 fixture 執行三次，並保存：

@@ -23,9 +23,9 @@ knowledge over time.
 
 ## Routing
 
-Use `$codebase-wiki` for install, ingest, query, lint, ADR, synthesis,
-business analysis, solution-neutral system analysis, system design, NotebookLM
-export, archaeology, Wiki maintenance, or framework maintenance.
+Use `$codebase-wiki` for install, ingest, query, lint, code audit, ADR,
+synthesis, business analysis, solution-neutral system analysis, system design,
+NotebookLM export, archaeology, Wiki maintenance, or framework maintenance.
 Classify the branch with
 `.agents/skills/codebase-wiki/references/intent-routing.md` and load its exact
 reference before acting.
@@ -49,6 +49,9 @@ reference before acting.
 - Optional tgrep source discovery is limited to Ingest and Archaeology; use the
   Skill wrapper, re-read current sources before claims, and keep Query
   Wiki-first without CLI fallback.
+- Codebase audit statically traces all or a specified set of project entrypoints;
+  it does not run target code or tests. An explicit audit request authorizes a
+  Wiki report unless the user asks to only receive findings in chat.
 
 Project-level Codex slash prompt files are outside this framework; Codex uses
 natural-language recipes and `$codebase-wiki`.

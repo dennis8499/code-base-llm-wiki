@@ -18,6 +18,7 @@ read-only compatibility exception and has no creator asset.
 | `dependency` | A significant external package | `assets/dependency-template.md` | `package_name`, `version` |
 | `guide` (legacy, read-only) | Existing Guide pages remain parseable; do not create new Guide pages | — | — |
 | `synthesis` | Durable cross-cutting analysis | `assets/synthesis-template.md` | — |
+| `synthesis` (Codebase audit) | Static entrypoint audit with separated confirmed defects and business questions | `assets/code-audit-template.md` | NotebookLM-excluded local report, stable finding IDs, source-backed coverage, gaps, and preserved user notes |
 | `synthesis` (function catalog) | Optional technical capability coverage for traceability or legacy Wiki maintenance | `assets/project-function-catalog-template.md` | tags include `function-catalog`; not a BA export prerequisite |
 | `synthesis` (functional requirement catalog) | Mandatory BA-facing index of every active `fr-*` requirement | `assets/functional-requirement-catalog-template.md` | tags include `functional-requirements`; every active requirement must be linked |
 | `synthesis` (codebase functional coverage) | Mandatory local-only disposition ledger for every safe analysis input | `assets/codebase-functional-coverage-template.md` | `notebooklm_role: exclude`; no uncovered or `analysis-gap` row may remain at export |

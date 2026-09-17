@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest import mock
 
@@ -73,6 +74,37 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertFalse(payload["applied"])
             self.assertEqual(payload["obsolete_paths"], [])
             self.assertEqual(list(target.iterdir()), [])
+
+    def test_upgrade_plan_exposes_code_audit_resources_for_both_surfaces(self) -> None:
+        installer = load_installer()
+        new_paths = {
+            "codex": [
+                ".agents/skills/codebase-wiki/references/code-audit-workflow.md",
+                ".agents/skills/codebase-wiki/assets/code-audit-template.md",
+                "Codex.md",
+            ],
+            "copilot": [
+                ".agents/skills/codebase-wiki/references/code-audit-workflow.md",
+                ".agents/skills/codebase-wiki/assets/code-audit-template.md",
+                ".github/prompts/code-audit.prompt.md",
+            ],
+        }
+        root = REPO_ROOT / f".code-audit-installer-test-{uuid.uuid4().hex}"
+        root.mkdir()
+        try:
+            for surface, paths in new_paths.items():
+                with self.subTest(surface=surface):
+                    target = root / surface
+                    target.mkdir()
+                    plan = installer.plan_install(REPO_ROOT, target, surface, "upgrade")
+                    self.assertTrue(set(paths).issubset(plan["changes"]))
+                    self.assertEqual(plan["conflicts"], [])
+                    self.assertEqual(list(target.iterdir()), [])
+        finally:
+            self.assertTrue(root.resolve().is_relative_to(REPO_ROOT.resolve()))
+            for target in root.iterdir():
+                target.rmdir()
+            root.rmdir()
 
     def test_apply_copies_codex_surface_in_target_mode_without_runtime(self) -> None:
         installer = load_installer()
@@ -150,6 +182,7 @@ class FrameworkInstallerTests(unittest.TestCase):
                 "codebase-functional-coverage-template.md",
                 "system-analysis-template.md",
                 "system-design-template.md",
+                "code-audit-template.md",
             ):
                 self.assertTrue(
                     (
@@ -176,6 +209,7 @@ class FrameworkInstallerTests(unittest.TestCase):
                 "business-analysis-workflow.md",
                 "system-analysis-workflow.md",
                 "system-design-workflow.md",
+                "code-audit-workflow.md",
             ):
                 self.assertTrue(
                     (
@@ -311,6 +345,7 @@ class FrameworkInstallerTests(unittest.TestCase):
                 "business-analysis-doc.prompt.md",
                 "system-analysis-doc.prompt.md",
                 "system-design-doc.prompt.md",
+                "code-audit.prompt.md",
             ):
                 self.assertTrue((target / ".github" / "prompts" / prompt).exists())
             self.assertFalse((target / REMOVED_LIVE_DB_REFERENCE).exists())

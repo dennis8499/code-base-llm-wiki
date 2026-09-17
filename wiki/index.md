@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-09-09
+last_updated: 2026-09-16
 tags: [index]
 status: active
 notebooklm_group: wiki-navigation
@@ -27,7 +27,7 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
-| [[overview]] | 讓團隊把 codebase 建成可追溯 Wiki，並產出標準對齊 BA／SA／SD 與現況 NotebookLM BA／SA 知識包；Windows x64 Ingest／Archaeology 可選用 tgrep 定位 |
+| [[overview]] | 讓團隊把 codebase 建成可追溯 Wiki、靜態健檢入口行為，並產出標準對齊 BA／SA／SD 與現況 NotebookLM BA／SA 知識包 |
 
 ## Business Requirements
 
@@ -43,7 +43,7 @@ notebooklm_role: exclude
 | 頁面 | 摘要 |
 |------|------|
 | [[generate-analysis-document]] | 使用者以明確請求選擇 BA、SA 或 SD，系統依 Wiki-first 證據產出標準對齊文件、追溯與 Gap |
-| [[notebooklm-ba-knowledge-export]] | 知識維護者經全量萃取、一次確認與 readiness 檢核，把現況 BA／SA 交付到單一 Notebook |
+| [[notebooklm-ba-knowledge-export]] | 知識維護者以當下完整安全 Codebase 全量萃取每功能 BA／SA，經一次確認後交付單一 Notebook 來源包 |
 
 ## Business Rules
 
@@ -58,15 +58,16 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
-| [[system-architecture]] | 以共享 Skill 為規格核心，透過雙平台 adapter、標準對齊文件工作流、離線工具與持久 Markdown Wiki 形成可驗證的知識維護系統，並提供受限 tgrep source discovery |
+| [[system-architecture]] | 以共享 Skill 為規格核心，透過雙平台 adapter、Codebase 靜態健檢、標準對齊文件工作流、離線工具與持久 Markdown Wiki 形成可驗證的知識維護系統 |
 
 ## Modules
 
 | 頁面 | 摘要 |
 |------|------|
+| [[code-audit]] | 以唯讀入口追查將可證明的缺陷與待確認業務規則分開，並保存逐入口覆蓋與限制 |
 | [[installer-and-upgrade]] | Installer v6 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
 | [[notebooklm-exporter]] | 以 schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack |
-| [[platform-adapters-and-release]] | 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架，並以 pinned tgrep bundle 擴充 Ingest／Archaeology 來源探索 |
+| [[platform-adapters-and-release]] | 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架，並提供 Codebase 靜態健檢及受限 tgrep 來源探索 |
 | [[platform-hooks-and-guards]] | 共用 canonical hooks 以 Git-root 定位與三種 guard modes 維持跨 cwd 寫入邊界 |
 | [[wiki-quality-and-provenance]] | 以安全來源解析、內容摘要、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |
 
@@ -90,7 +91,7 @@ _（尚無頁面）_
 
 | 頁面 | 摘要 |
 |------|------|
-| [[framework-introduction]] | 從安裝、Wiki-first 操作到驗證與升級的框架使用路線，包含 Windows x64 tgrep 來源探索邊界 |
+| [[framework-introduction]] | 從安裝、Wiki-first 操作、Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界 |
 | [[notebooklm-export]] | 依全量 discovery、一次確認、每功能 BA／SA 與自動 readiness 安全產生 schema-v6 source pack |
 | [[release-and-update]] | 以 VERSION、本機驗證、手動 GitHub Release 與授權 gate 管理框架發布 |
 
@@ -103,13 +104,13 @@ _（尚無頁面）_
 | [[business-knowledge-gaps]] | NotebookLM 現況 BA／SA 知識交付與一般 BA／SA／SD 文件中無可靠證據或需外部確認的事項 |
 | [[business-process-catalog]] | 框架可供 BA 查詢的 NotebookLM 交付與 BA／SA／SD 文件產出流程、角色、觸發、結果與覆蓋 |
 | [[business-rule-catalog]] | NotebookLM 現況 BA／SA 知識交付與一般 BA／SA／SD 文件產出的規則、適用流程、證據狀態與例外 |
-| [[cap-analysis-document-generation-ba]] | 依框架現況整理 BA、SA 與 SD 文件產生的角色、流程、規則與結果 |
-| [[cap-analysis-document-generation-sa]] | 依框架現況整理分析文件產生的系統邊界、輸入輸出、狀態、介面與失敗行為 |
-| [[cap-notebooklm-ba-functional-export-ba]] | 依 exporter 現況整理全量 discovery、一次確認、文件化與單一 Notebook 本機交付 |
-| [[cap-notebooklm-ba-functional-export-sa]] | 依 exporter 現況整理 discovery/readiness identity、配對驗證、遮罩、容量與原子輸出 |
+| [[cap-analysis-document-generation-ba]] | 依框架現況整理 BA、SA 與 SD 文件產生的角色、流程、規則與結果。 |
+| [[cap-analysis-document-generation-sa]] | 依框架現況整理分析文件產生的系統邊界、輸入輸出、狀態、介面與失敗行為。 |
+| [[cap-notebooklm-ba-functional-export-ba]] | 依 exporter 現況整理全量 discovery、一次確認、文件化與單一 Notebook 本機交付。 |
+| [[cap-notebooklm-ba-functional-export-sa]] | 依 exporter 現況整理 discovery/readiness identity、配對驗證、遮罩、容量與原子輸出。 |
 | [[codebase-functional-coverage]] | 本機完整性 gate，將 framework scan profile 的每個安全檔案歸屬到 NotebookLM 與 BA／SA／SD 文件功能需求或無可觀察行為 |
 | [[functional-requirement-catalog]] | Codebase LLM Wiki 提供給 BA 的 NotebookLM 與 BA／SA／SD 文件 active 功能需求、能力、流程與驗收覆蓋 |
-| [[project-function-catalog]] | 將安裝、Wiki 品質、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋 |
+| [[project-function-catalog]] | 將安裝、Wiki 品質、Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋 |
 | [[system-analysis]] | 以 solution-neutral 系統邊界、stakeholder needs、SR/NFR/IF 與驗證需求描述 BA／SA／SD 文件能力 |
 | [[system-design]] | 以共享 standards profiles、三個文件工作流、雙平台 adapters 與既有驗證／匯出器實作 BA／SA／SD 產出能力 |
 

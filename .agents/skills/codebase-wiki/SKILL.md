@@ -30,9 +30,11 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Wiki-first query and citations | `references/query-workflow.md` |
 | Query/Lint follow-up action choices | `references/follow-up-actions.md` |
 | Wiki health checks, severities, report format | `references/lint-checklist.md` |
+| Static Codebase bug and business-logic audit | `references/code-audit-workflow.md` |
 | Required frontmatter fields and allowed values | `references/frontmatter-spec.md` |
 | Allowed `wiki/log.md` operations and append format | `references/log-operations.md` |
 | Page-type selection and exact template | `references/page-types.md` |
+| Codebase audit report shape | `assets/code-audit-template.md` |
 | ADR creation and numbering | `references/adr-workflow.md` |
 | Durable synthesis creation | `references/synthesis-workflow.md` |
 | BA document generation, business coverage, gap handling | `references/business-analysis-workflow.md` |
@@ -83,6 +85,8 @@ append one operation from `references/log-operations.md`.
 - explicit batch ingest: scoped Wiki writes authorized;
 - query and default archaeology: read-only;
 - lint: report, then confirm repairs;
+- explicit Codebase audit: save a coverage-aware Synthesis report; requests for
+  chat-only findings make no Wiki, index, or log changes;
 - ADR, synthesis, BA, SA, and SD: explicit creation request authorizes output.
 
 ## Verification

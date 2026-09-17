@@ -6,6 +6,7 @@
 | 目錄 | 責任 |
 | --- | --- |
 | `contracts/` | 公開 contract、目錄形狀與 capability removal |
+| `fixtures/code-audit/` | 靜態 Codebase 健檢的多入口、缺陷、業務疑點與覆蓋缺口驗收材料 |
 | `installer/` | Copilot／Codex installer surface 與升級生命週期 |
 | `notebooklm/` | NotebookLM exporter、schema 與 acceptance runner |
 | `release/` | release builder 與資產契約 |

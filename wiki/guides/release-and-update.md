@@ -8,11 +8,13 @@ sources:
   - docs/operations/releases/README.md
   - docs/operations/validation/README.md
   - README.md
+  - .agents/skills/codebase-wiki/capabilities.json
+  - .agents/skills/codebase-wiki/scripts/parity-check.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:d9e8588127c94ca28230c28831566ef03c7ecbae35f76d46e34fbb8629593968
+source_digest: sha256:7e03c837ccd5ccb4b84cceee827ded582bfaebddaed04387d39cffe4667e91aa
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-09
+last_updated: 2026-09-16
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -35,7 +37,8 @@ notebooklm_role: traceability
   index, and append-only update log before publishing.
 - Shared source-discovery changes must also keep the pinned tgrep manifest, wrapper and
   `bundled_tools` release metadata aligned; the integration is limited to Ingest／Archaeology
-  and does not change the eleven-operation contract.
+  and remains independent from other user-facing operations. `code_audit` is an additive v6
+  capability; it does not change the installer contract version or product version.
 
 ## 發佈流程
 

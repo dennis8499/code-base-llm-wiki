@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-09
+last_updated: 2026-09-16
 tags: [log]
 status: active
 ---
@@ -608,3 +608,11 @@ status: active
 - shared business context 現在把 active 流程的適用 requirement／rule 正文帶入實際 upload source；新增遮罩／分割後的 flow-integrity 檢查與虛構關帳反例測試，拒絕只有標題、四步摘要、缺分支或只有規則連結的內容。
 - 同步框架 README、Codex／Copilot adapters、工作流／驗收文件、ChangeLog 與相關 Wiki；結構檢查只宣稱內容與追溯完整，NotebookLM tenant 問答仍標示未驗證。
 - 受影響頁面：[[index]]、[[notebooklm-exporter]]、[[notebooklm-export]]、[[notebooklm-ba-functional-export]]、[[notebooklm-ba-knowledge-export]]、[[generate-analysis-document]]、[[cap-notebooklm-ba-functional-export-ba]]、[[cap-notebooklm-ba-functional-export-sa]]、[[cap-analysis-document-generation-ba]]、[[cap-analysis-document-generation-sa]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-16] update | 新增 Codebase 靜態健檢功能
+
+- 新增 `code_audit`、共用靜態入口追查工作流與報告模板（含 `source_digest`）、Copilot prompt 及 Codex recipe；明確缺陷與待確認業務疑點分列，保留入口覆蓋與分析缺口，目標程式和測試維持唯讀。
+- 新增含多入口共用根因、明確規則、業務疑點、上游驗證及動態入口的 acceptance fixture；installer、parity、routing、公開文件與框架 Wiki 已同步，contract 維持 v6。
+- 重新盤點 153 個安全來源，確認新增檔案均落在既有 disposition 範圍且沒有未覆蓋項目；更新 analyzed discovery ID、受影響頁面的 `source_digest`，並保留 BA／SA 文件內容與 reviewer notes。
+- `wiki/index.md` 已加入健檢模組頁；本次未新增、刪除或更名其他頁面。
+- 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[code-audit]]、[[installer-and-upgrade]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[generate-analysis-document]]、[[business-analysis]]、[[cap-analysis-document-generation-sa]]、[[cap-notebooklm-ba-functional-export-sa]]、[[system-analysis]]、[[system-design]]、[[project-function-catalog]]、[[codebase-functional-coverage]]、[[log]]

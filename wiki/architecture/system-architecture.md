@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki 系統架構
 type: architecture
-summary: 以共享 Skill 為規格核心，透過雙平台 adapter、標準對齊文件工作流、離線工具與持久 Markdown Wiki 形成可驗證的知識維護系統
+summary: 以共享 Skill 為規格核心，透過雙平台 adapter、Codebase 靜態健檢、標準對齊文件工作流、離線工具與持久 Markdown Wiki 形成可驗證的知識維護系統
 notebooklm_group: architecture
 notebooklm_role: traceability
 sources:
@@ -13,9 +13,11 @@ sources:
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
-source_digest: sha256:be0f57f5fbc3799a630a75fadc1f4a6298f07bfcb7455fdc3cb1855c0cbfd3b8
+  - .agents/skills/codebase-wiki/references/code-audit-workflow.md
+  - .agents/skills/codebase-wiki/assets/code-audit-template.md
+source_digest: sha256:f39dc169d44eee79447b2f014c34f75064576f09419003bcacb3006c10014a60
 derived_from: ["[[overview]]"]
-last_updated: 2026-09-09
+last_updated: 2026-09-16
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -25,12 +27,16 @@ status: active
 ## Overview
 
 系統採三層模型：目標專案原始來源是唯讀證據、`wiki/` 是可持續累積的知識層、
-`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十一個 machine
-operations、十一個 intent groups 與 authorization policy 由
+`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十二個 machine
+operations、十二個 intent groups 與 authorization policy 由
 `.agents/skills/codebase-wiki/capabilities.json` 描述，詳細流程由 Skill references
 按意圖載入。Windows x64 的 tgrep wrapper 是同一 Skill 內的選用唯讀來源定位層，
 只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper
 與選定平台入口安裝到目標 Repo。
+
+`code_audit` 使用原生唯讀搜尋追查專案入口，將有可達性與來源證據的缺陷和待確認業務政策
+分列，保存逐入口 coverage 與 gaps；明確健檢請求授權 Synthesis report，使用者要求只回報時
+不寫 Wiki。它不執行目標程式或測試，也不擴大 tgrep 的 Ingest／Archaeology 使用範圍。
 
 ## Components
 
@@ -40,6 +46,7 @@ operations、十一個 intent groups 與 authorization policy 由
 | Installer v6 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
+| Codebase audit | 入口 inventory、靜態 call-path review、finding evidence、coverage gaps 與 Wiki report | [[code-audit]] |
 | tgrep source discovery | 固定版本 Windows x64 binary、manifest、root/path containment 與 allowlisted read-only search | `.agents/skills/codebase-wiki/scripts/tgrep-search.py`、`.agents/skills/codebase-wiki/bin/tgrep-manifest.json` |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
 | NotebookLM exporter | 完整 discovery、每 capability BA／SA 配對、雙識別碼、DLP、容量與單一 Notebook source plan | [[notebooklm-exporter]] |

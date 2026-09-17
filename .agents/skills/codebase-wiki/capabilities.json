@@ -28,6 +28,11 @@
       "requires_confirmation": true,
       "authorization_policy": "confirm_repairs"
     },
+    "code_audit": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
+    },
     "archaeology": {
       "writes_by_default": false,
       "requires_confirmation": true,
@@ -72,6 +77,7 @@
     "ingest": ["ingest"],
     "query": ["query"],
     "lint": ["lint"],
+    "code_audit": ["code_audit"],
     "adr": ["adr"],
     "synthesis": ["synthesis"],
     "business_analysis": ["business_analysis"],
@@ -86,6 +92,7 @@
       "ingest": ["ingest-module.prompt.md", "ingest-batch.prompt.md"],
       "query": ["query-wiki.prompt.md"],
       "lint": ["lint-wiki.prompt.md"],
+      "code_audit": ["code-audit.prompt.md"],
       "archaeology": ["code-archaeology.prompt.md"],
       "adr": ["new-adr.prompt.md"],
       "synthesis": ["save-synthesis.prompt.md"],

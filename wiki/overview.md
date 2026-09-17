@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki — 業務總覽
 type: overview
-summary: 讓團隊把 codebase 建成可追溯 Wiki，並產出標準對齊 BA／SA／SD 與現況 NotebookLM BA／SA 知識包
+summary: 讓團隊把 codebase 建成可追溯 Wiki、靜態健檢入口行為，並產出標準對齊 BA／SA／SD 與現況 NotebookLM BA／SA 知識包
 sources:
   - README.md
   - AGENTS.md
@@ -10,10 +10,11 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
+  - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:ff9a0dac504b91eeb96d86db30d2956db0feedbee5cc2301b933630ff0c1e9e0
+source_digest: sha256:e558d62eae65d7f1232795f081c90eab7b6489cc312336a7bdc8ed02592dae53
 derived_from: []
-last_updated: 2026-09-09
+last_updated: 2026-09-16
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -49,6 +50,7 @@ NotebookLM Exporter 每次從當下完整安全 Codebase 重新盤點，以 Wiki
 | Architect／Engineer | 把 SA drivers 轉成可審查 solution design | `DE-*`／`VIEW-*`／ADR、五種 views 與品質策略 |
 | 知識維護者 | 將來源證據整理成 durable knowledge | 可增量更新的 Wiki、index 與 append-only log |
 | 工程／稽核角色 | 在本機 Wiki 追查 BA 說明對應的實作或設定 | 不會上傳的 local-only provenance |
+| Engineer／維護者 | 從程式入口靜態檢查可證明的 BUG，盤點已檢查範圍與業務規格缺口 | 有來源證據的 Wiki 健檢報告；不執行程式或測試 |
 
 ## 對 BA 提供的知識能力
 
@@ -85,6 +87,8 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 本機 pack。相關約束見
 [[ba-knowledge-precedes-traceability]] 與 [[readiness-preflight-required]]。
 
+Codebase 健檢流程 [[code-audit]] 沿 API、UI、CLI、排程、事件與公開介面入口追查目前行為；
+明確缺陷與待確認業務疑點分開記錄，相同根因合併，動態或外部邊界保留為 coverage gap。
 框架也支援一般 Ingest、Query、Lint、Archaeology、ADR 與 Synthesis；這些
 能力的工程入口與治理細節保留在 [[project-function-catalog]] 與
 [[framework-introduction]]。Query
@@ -140,4 +144,5 @@ readiness preflight。
 - [[system-analysis]] — 跨模組風險與非功能需求
 - [[business-analysis]] — 文件能力的業務脈絡、需求、成功指標與 change impact
 - [[system-design]] — profiles、workflows、adapters、validators、installer 與 exporter views
+- [[code-audit]] — 本機 Codebase 健檢與逐入口覆蓋，不進 NotebookLM upload sources
 <!-- notebooklm:local-only:end -->

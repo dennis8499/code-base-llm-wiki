@@ -1,19 +1,22 @@
 ---
 title: Codebase LLM Wiki — 使用指南
 type: guide
-summary: 從安裝、Wiki-first 操作到驗證與升級的框架使用路線，包含 Windows x64 tgrep 來源探索邊界
+summary: 從安裝、Wiki-first 操作、Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界
 sources:
   - README.md
   - Codex.md
   - docs/operations/setup/README.md
   - docs/product/workflows/README.md
   - docs/operations/validation/README.md
+  - .agents/skills/codebase-wiki/references/code-audit-workflow.md
+  - .agents/skills/codebase-wiki/assets/code-audit-template.md
+  - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:cfa6ec1507a0dc32224ab2b7533ca7144da611e76e35f1aeb9ff0ea76e4a8364
+source_digest: sha256:e0a00d53e82518a22cca536541693abd7ccfc29c27e9509f139e356948634578
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-09
+last_updated: 2026-09-16
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -119,6 +122,7 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | Query | 找行為、位置、原因；必要時提供保存、更新或 Lint 選項 | 預設唯讀 |
 | Lint | Wiki 品質與 coverage；報告後提供受 findings 支持的選項 | 先報告；修復後 `lint` log |
 | Archaeology | Legacy、異常分支、歷史原因 | 預設唯讀 |
+| Codebase audit | 全專案或指定入口的靜態 BUG 與業務規則檢查 | 報告、coverage、index、`synthesis` log；只回報模式零寫入 |
 | ADR | 保存架構選擇 | decision + index + `adr` log |
 | Synthesis | 保存跨模組分析 | synthesis + index + log |
 | Business Analysis / BA | 業務問題、現況／目標、能力、流程、規則、成功指標與 change impact | synthesis + index + log |
@@ -127,6 +131,19 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | NotebookLM export | 全量盤點當下 Codebase 並重建每功能現況 BA／SA | `.notebooklm/` documents、upload sources、schema v6、governance；不自動上傳 |
 
 完整提示詞與輸出契約位於 `docs/product/workflows/README.md`。
+目前工作流手冊列出十二類意圖、13 個常用操作情境；其中 Interactive／Batch Ingest 是同一 intent。
+
+## Codebase 健檢
+
+使用 `/code-audit [scope]` 或 Codex 自然語言 recipe；省略範圍即檢查全專案，也可以指定
+模組、route、command、job、event 或公開 API。Agent 先讀少量相關 Wiki，再盤點目前入口並沿
+「輸入 → 驗證／權限 → 業務處理 → 資料／狀態 → 輸出與失敗」追查；搜尋使用 host-native 工具，
+不執行目標程式或測試，也不使用 tgrep。
+
+只有能證明可達觸發條件與具體錯誤結果，或違反明確規則時才列為確定 BUG。業務政策不明時改列
+待確認疑點。相同根因合併，記錄各入口 checked／partial／not checked 和具體缺口；明確健檢請求
+預設保存繁中 Synthesis report，說「只回報」則不寫 Wiki、index 或 log。完整契約與驗收樣例見
+[[code-audit]]。
 
 ## NotebookLM Enterprise export
 
@@ -235,7 +252,7 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 - 文件總覽：`docs/README.md`
 - 架構與資料流：`docs/product/architecture/README.md`
 - 安裝、升級與排錯：`docs/operations/setup/README.md`
-- 12 個操作情境：`docs/product/workflows/README.md`
+- 十二類意圖與 13 個常用操作情境：`docs/product/workflows/README.md`
 - 本機 deterministic checks 與手動驗收：`docs/operations/validation/README.md`
 - Codex 獨立手冊：`Codex.md`
 

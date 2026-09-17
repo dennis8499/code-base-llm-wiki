@@ -8,6 +8,9 @@
 
 ### Added
 
+- **Codebase 靜態健檢**：新增 `code_audit` intent、共用入口追查工作流、繁中報告模板、
+  Copilot prompt、Codex recipe 與多入口驗收 fixture。明確健檢請求預設保存含證據、finding IDs
+  與逐入口 coverage 的 Wiki 報告；待確認業務規則分開標示，使用者指定只回報時零寫入。
 - **tgrep 來源探索整合**：共用 Skill 內含 pinned Windows x64 tgrep 1.0.5、SHA-256
   manifest、唯讀 allowlisted wrapper 與共用 source-discovery reference；Interactive/Batch
   Ingest 與 Code Archaeology 可用它定位候選 source，Query 維持 Wiki-first 且不使用 tgrep。
@@ -38,8 +41,8 @@
   contracts、installer、NotebookLM、release、samples、tgrep 與 Wiki 責任分組；所有公開路徑、
   Wiki sources 與驗證入口同步更新。
 - **公開文件契約同步**：README、Codex、docs hub、工作流／安裝／驗證手冊與測試導覽同步
-  `tests/tgrep/`、12 個操作情境、NotebookLM schema-v6 輸出路徑與 tgrep 來源探索邊界；
-  此次只更新文件、回歸契約與 Wiki evidence，不改變功能或產品版號。
+  `tests/tgrep/`、13 個操作情境、NotebookLM schema-v6 輸出路徑與 tgrep 來源探索邊界；
+  Codebase audit 增列為第十二個 machine operation，維持 installer contract v6 與產品版號。
 - **NotebookLM discovery 邊界收斂**：Wiki 是唯一持久知識層；一般產品文件照常納入安全
   discovery，不再依賴 `docs/knowledge`、`docs/work` 或 delivery outcome 的 AI SDLC 特殊排除。
 

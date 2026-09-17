@@ -1,12 +1,12 @@
 ---
 title: Codebase LLM Wiki 專案功能目錄
 type: synthesis
-summary: 將安裝、Wiki 品質、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋
+summary: 將安裝、Wiki 品質、Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋
 notebooklm_group: project
 notebooklm_role: traceability
 sources: []
-derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]"]
-last_updated: 2026-09-04
+derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[code-audit]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]"]
+last_updated: 2026-09-16
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -26,6 +26,7 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 | --- | --- | --- | --- | --- | --- |
 | 安裝與升級 | 安裝 Codex/Copilot surface、安全升級 | `install-framework.py` | install state、file fingerprints | [[installer-and-upgrade]] | covered |
 | Wiki 攝取與品質 | 建立可追溯頁面、偵測 stale/link/index/log 問題 | `$codebase-wiki`、quality CLIs | frontmatter、digest、wikilinks、log entries | [[wiki-quality-and-provenance]] | covered |
+| Codebase 健檢 | 從全專案或指定入口靜態追查確定 BUG 與待確認業務疑點，保留逐入口覆蓋缺口 | `/code-audit [scope]`、Codex recipe + shared workflow | entrypoint、呼叫路徑、finding IDs、來源證據、coverage 與 gaps | [[code-audit]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
 | 分析／設計文件 | 獨立產出 standard-aligned BA、solution-neutral SA 與 SD，建立 Gap-visible 三層追溯 | BA／SA／SD prompt/recipe + shared workflows | profiles、coverage、BA/SR/NFR/IF/DE/VIEW/ADR IDs、markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] | partial |
 | NotebookLM 準備 | 全量發現後建立每功能現況 BA／SA，一次確認後產生單一 Notebook 離線 pack | `export-notebooklm.py` | discovery/readiness 雙 ID、BA／SA pair、locator、DLP、容量、manifest v6 | [[notebooklm-exporter]] | covered |
@@ -40,7 +41,7 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 | --- | --- | --- | --- |
 | Raw-source read-only | 所有 Wiki intents | `AGENTS.md`、`SKILL.md` | covered |
 | Untrusted evidence | Ingest、Query、NotebookLM、SA | `SKILL.md`、`ingest-workflow.md` | covered |
-| 明確授權 | 十三個 machine operations／十二個 intent groups | `capabilities.json` | covered |
+| 明確授權 | 十二個 machine operations／十二個 intent groups | `capabilities.json` | covered |
 | 原子交付 | Installer、NotebookLM exporter | 兩個 canonical Python modules | covered |
 | 跨平台 parity | Copilot、Codex | `parity-check.py` | covered |
 

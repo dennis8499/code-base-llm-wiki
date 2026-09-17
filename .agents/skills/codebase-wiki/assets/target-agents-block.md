@@ -1,7 +1,7 @@
 # Codebase LLM Wiki
 
 Use `$codebase-wiki` at `.agents/skills/codebase-wiki/` for install, ingest,
-query, lint, ADR, synthesis, business analysis, solution-neutral system
+query, lint, code audit, ADR, synthesis, business analysis, solution-neutral system
 analysis, system design, NotebookLM export, archaeology, or Wiki maintenance. Load its `SKILL.md`, classify the request with
 `references/intent-routing.md`, and read the selected workflow completely.
 
@@ -16,6 +16,9 @@ authorization.
 - Use real repo-relative raw paths in `sources`; put Wiki dependencies in
   `derived_from` as `[[wikilinks]]`.
 - Preserve user-authored notes and keep `wiki/log.md` append-only.
+- Codebase audit is a static entrypoint review; do not run target code or tests.
+  An explicit audit request authorizes a Wiki report unless the user requests
+  chat-only findings.
 - Synchronize `wiki/index.md` for page additions, removals, renames, or major
   updates, and append one valid log operation for durable Wiki changes.
 After changes, run the workflow's deterministic checks and report changed

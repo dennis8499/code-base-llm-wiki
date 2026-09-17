@@ -102,7 +102,7 @@ flowchart LR
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 | 輸出 | `wiki/` | `wiki/` |
 
-兩個入口維持十一個使用者意圖群組、十一個 machine operations 與相同安全邊界；
+兩個入口維持十二個使用者意圖群組、十二個 machine operations 與相同安全邊界；
 工作由目前 Agent 透過共用 Skill 與平台入口完成。
 
 Copilot prompt files 是 VS Code 本機 Agent 入口，不是 GitHub Copilot coding agent
@@ -122,6 +122,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 | Query | Wiki-first 回答問題；符合條件時提供保存、更新或 Lint 選項 | 否 |
 | Lint | 檢查 stale、連結、frontmatter、coverage；報告後提供修復選項 | 先報告 |
 | Archaeology | 追蹤程式路徑與 Git 歷史；可用 tgrep 加速來源定位 | 否 |
+| Codebase audit | 全面或指定入口的靜態 BUG／業務邏輯檢查，報告逐入口覆蓋與證據缺口 | 是；指定「只回報」則否 |
 | ADR | 保存架構決策 | 是 |
 | Synthesis | 保存長期跨領域分析 | 是 |
 | Business Analysis / BA | 依 29148 與 IIBA profile 產生業務需求、流程、規則、指標與變更影響文件 | 是 |
@@ -142,6 +143,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
   Archaeology 的候選定位，索引不存在時安全 full scan，其他平台使用原有搜尋方式。
 - **增量維護**：透過 `wiki/index.md`、wikilinks 與 append-only `wiki/log.md` 累積知識。
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
+- **Codebase 健檢**：由 API、UI、CLI、排程、事件與公開介面入口追查目前呼叫路徑；把有可達性與來源證據的 BUG 和需業務確認的疑點分列，保留檢查覆蓋與缺口，不執行目標程式或測試。
 - **BA → SA → SD 標準對齊文件**：三份繁中 Markdown 可獨立產出，以穩定 ID
   建立追溯；證據不足仍保留章節與具體 Gap，不宣稱 ISO／IEEE conformance。
 - **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、重新 Ingest 或 Lint；不會自動寫入或切換工作流。
@@ -284,6 +286,8 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 
 `samples/task-tracker/` 是一個只使用 Python 標準函式庫的 Task Tracker。它包含 entity、repository abstraction、service 狀態轉換、設定載入、例外分支與 injected clock，可驗證 Interactive/Batch Ingest、Query、Lint 與 Archaeology 五項 active 流程。
 
+`tests/fixtures/code-audit/` 提供靜態健檢驗收場景，涵蓋共用根因、多入口、明確規則違反、待確認政策、上游防護與動態入口缺口；它是唯讀分析樣例，不執行目標程式。
+
 為避免把框架檔案寫進版本化樣例，請先複製樣例到暫存目錄，再安裝任一 surface。完整步驟與預期結果請看 [samples/README.md](samples/README.md)。
 
 ---
@@ -295,7 +299,7 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 | [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
 | [架構與資料流](docs/product/architecture/README.md) | 三層模型、雙入口、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/operations/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/product/workflows/README.md) | 十一類意圖、12 個操作情境、平台對照與輸出契約 |
+| [工作流手冊](docs/product/workflows/README.md) | 十二類意圖、13 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/operations/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/operations/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |

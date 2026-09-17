@@ -43,8 +43,8 @@ class ContractTests(unittest.TestCase):
             manifest["intents"]["notebooklm_export"]["audience"],
             "business-and-system-analyst",
         )
-        self.assertEqual(len(manifest["intents"]), 11)
-        self.assertEqual(len(manifest["intent_groups"]), 11)
+        self.assertEqual(len(manifest["intents"]), 12)
+        self.assertEqual(len(manifest["intent_groups"]), 12)
         grouped = [
             operation
             for operations in manifest["intent_groups"].values()
@@ -58,6 +58,7 @@ class ContractTests(unittest.TestCase):
             "business_analysis",
             "system_analysis",
             "system_design",
+            "code_audit",
         ):
             self.assertTrue(manifest["intents"][operation]["writes_by_default"])
             self.assertFalse(manifest["intents"][operation]["requires_confirmation"])
@@ -604,6 +605,17 @@ class ContractTests(unittest.TestCase):
                 "references/code-archaeology-workflow.md",
                 "git log",
                 "語意 inbound",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
+            "code-audit.prompt.md": (
+                "references/code-audit-workflow.md",
+                "assets/code-audit-template.md",
+                "只回報",
+                "partial",
+                "BUG",
+                "BIZ",
+                "不得呼叫 tgrep",
                 "wiki/index.md",
                 "wiki/log.md",
             ),

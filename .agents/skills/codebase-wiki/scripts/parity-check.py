@@ -17,6 +17,7 @@ EXPECTED_OPERATIONS = {
     "ingest",
     "query",
     "lint",
+    "code_audit",
     "archaeology",
     "adr",
     "synthesis",
@@ -30,6 +31,7 @@ EXPECTED_INTENT_CONTRACT = {
     "ingest": (False, True, "interactive_preview_or_explicit_batch"),
     "query": (False, False, "read_only"),
     "lint": (False, True, "confirm_repairs"),
+    "code_audit": (True, False, "explicit_request"),
     "archaeology": (False, True, "explicit_persist"),
     "adr": (True, False, "explicit_request"),
     "synthesis": (True, False, "explicit_request"),
@@ -43,6 +45,7 @@ EXPECTED_GROUPS = {
     "ingest": ["ingest"],
     "query": ["query"],
     "lint": ["lint"],
+    "code_audit": ["code_audit"],
     "adr": ["adr"],
     "synthesis": ["synthesis"],
     "business_analysis": ["business_analysis"],
@@ -173,6 +176,17 @@ COPILOT_PROMPT_CONTRACT = {
         "先回報",
         "未經確認不得修復",
         "一筆 lint log",
+    ),
+    "code-audit.prompt.md": (
+        "references/code-audit-workflow.md",
+        "assets/code-audit-template.md",
+        "只回報",
+        "partial",
+        "BUG",
+        "BIZ",
+        "不得呼叫 tgrep",
+        "wiki/index.md",
+        "wiki/log.md",
     ),
     "code-archaeology.prompt.md": (
         "references/code-archaeology-workflow.md",
@@ -309,7 +323,7 @@ def main() -> int:
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
-        issues.append("manifest intents must define the eleven canonical operations")
+        issues.append("manifest intents must define the twelve canonical operations")
         intents = {}
     for operation, expected in EXPECTED_INTENT_CONTRACT.items():
         contract = intents.get(operation, {})
@@ -323,7 +337,7 @@ def main() -> int:
 
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
-        issues.append("manifest must define the exact eleven user-facing intent groups")
+        issues.append("manifest must define the exact twelve user-facing intent groups")
         groups = {}
     grouped = [operation for values in groups.values() if isinstance(values, list) for operation in values]
     if len(grouped) != len(set(grouped)) or set(grouped) != EXPECTED_OPERATIONS:
@@ -374,6 +388,18 @@ def main() -> int:
         text = path.read_text(encoding="utf-8") if path.is_file() else ""
         if SOURCE_DISCOVERY_REFERENCE not in text and "source-discovery-workflow.md" not in text:
             issues.append(f"workflow missing source-discovery reference: {relative}")
+    audit_workflow = root / ".agents/skills/codebase-wiki/references/code-audit-workflow.md"
+    if not audit_workflow.is_file():
+        issues.append("missing Codebase audit workflow")
+    elif "do not use the optional tgrep wrapper" not in audit_workflow.read_text(
+        encoding="utf-8"
+    ).lower():
+        issues.append("Codebase audit must stay outside the tgrep source-discovery contract")
+    audit_template = root / ".agents/skills/codebase-wiki/assets/code-audit-template.md"
+    if not audit_template.is_file():
+        issues.append("missing Codebase audit report template")
+    elif 'source_digest: "sha256:' not in audit_template.read_text(encoding="utf-8"):
+        issues.append("Codebase audit report template must include its source digest")
     codex_text = (root / "Codex.md").read_text(encoding="utf-8") if (root / "Codex.md").is_file() else ""
     for token in (
         SOURCE_DISCOVERY_REFERENCE,
