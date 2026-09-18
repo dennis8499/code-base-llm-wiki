@@ -10,7 +10,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-log.py
   - tests/wiki/test_stale.py
   - tests/wiki/test_wiki_lint.py
-source_digest: sha256:d07f7f2925378c3d886e96ecdcc4f41c93175a363b5a2e412322d92319bb2f18
+source_digest: sha256:49b0f4796b81524d1e8a546749d627cb35d26bdeea5082bf7fa1ea29b8b92ca3
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-04
 tags: [module, lint, provenance, frontmatter, freshness]

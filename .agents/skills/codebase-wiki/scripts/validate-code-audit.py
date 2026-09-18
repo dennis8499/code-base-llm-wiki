@@ -39,6 +39,15 @@ REQUIRED_FRONTMATTER = {
 FINDING_HEADING = re.compile(
     r"(?m)^###\s+((?:BUG|RISK|BIZ)-[0-9]+)\s+[—-]\s+.+$"
 )
+FUNCTION_ID = re.compile(
+    r"(?<![A-Za-z0-9._-])FUNC-[A-Za-z0-9][A-Za-z0-9._-]*(?![A-Za-z0-9._-])"
+)
+RERUN_STATES = {
+    "new",
+    "still-present",
+    "rechecked-no-longer-observed",
+    "not-rechecked",
+}
 FULL_SHA = re.compile(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])")
 SOURCE_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 RELATIVE_SOURCE = re.compile(r"^[^/\\][^:]*$")
@@ -51,6 +60,18 @@ SUMMARY_FINDINGS = re.compile(
     r"確定缺陷\s*[：:]\s*([0-9]+)\s*[；;，,]\s*"
     r"技術風險\s*[：:]\s*([0-9]+)\s*[；;，,]\s*"
     r"待確認業務疑點\s*[：:]\s*([0-9]+)",
+)
+SUMMARY_FUNCTION_COVERAGE = re.compile(
+    r"功能覆蓋[^\n]*?checked\s*([0-9]+)[^\n]*?partial\s*([0-9]+)"
+    r"[^\n]*?not checked\s*([0-9]+)",
+    re.IGNORECASE,
+)
+SUMMARY_RERUN = re.compile(
+    r"finding\s*重跑狀態[^\n]*?new\s*([0-9]+)"
+    r"[^\n]*?still-present\s*([0-9]+)"
+    r"[^\n]*?rechecked-no-longer-observed\s*([0-9]+)"
+    r"[^\n]*?not-rechecked\s*([0-9]+)",
+    re.IGNORECASE,
 )
 TABLE_CELL = re.compile(r"^\|(.+)\|$")
 PATH_REFERENCE = re.compile(
@@ -102,6 +123,7 @@ REQUIRED_SECTIONS = (
     "未完成工作與驗證建議",
     "相關頁面",
 )
+V2_REQUIRED_SECTIONS = ("功能 Review",)
 
 FINDING_FIELDS = {
     "BUG": (
@@ -199,6 +221,226 @@ def _field_value(body: str, field: str) -> str:
     return match.group(1).strip() if match else ""
 
 
+def _cell_value(value: str) -> str:
+    """Normalise a Markdown table cell for stable contract checks."""
+
+    return value.strip().strip("`").strip()
+
+
+def _function_ids(value: str) -> list[str]:
+    """Return stable function references from a table cell or finding field."""
+
+    return FUNCTION_ID.findall(value)
+
+
+def _finding_ids(value: str) -> list[str]:
+    return re.findall(r"(?:BUG|RISK|BIZ)-[0-9]+", value)
+
+
+def _entrypoint_refs(value: str) -> list[str]:
+    """Extract one or more entrypoint labels from a function table cell."""
+
+    refs = [item.strip() for item in re.findall(r"`([^`]+)`", value) if item.strip()]
+    if not refs:
+        refs = [item.strip() for item in re.split(r"[；;,]", value) if item.strip()]
+    return [
+        item
+        for item in refs
+        if item.lower() not in {"無", "none", "n/a", "-"}
+    ]
+
+
+def _validate_functional_v2(
+    managed: str,
+    findings: list[tuple[str, str]],
+) -> list[str]:
+    """Validate the version-2 function/entrypoint and rerun contract.
+
+    Legacy reports intentionally bypass this function so existing persisted
+    reports remain readable and can be upgraded on their next audit run.
+    """
+
+    errors: list[str] = []
+    function_body = _section_body(managed, "功能 Review")
+    function_ids: list[str] = []
+    function_rows: list[tuple[str, list[str]]] = []
+    for line in function_body.splitlines():
+        cells = _table_cells(line)
+        if cells is None or not cells or _is_separator_row(cells):
+            continue
+        if _cell_value(cells[0]).lower() in {"功能 id", "function id"}:
+            continue
+        if len(cells) < 7:
+            errors.append("each 功能 Review row must include ID, entrypoints, status, scenarios, findings, and limits")
+            continue
+        function_id = _cell_value(cells[0])
+        if not FUNCTION_ID.fullmatch(function_id):
+            errors.append(f"功能 Review row has invalid function ID: {cells[0]}")
+            continue
+        if function_id in function_ids:
+            errors.append(f"duplicate function ID: {function_id}")
+        function_ids.append(function_id)
+        status = _normalise_status(cells[3])
+        if status not in COVERAGE_STATUSES:
+            errors.append(f"功能 Review row has invalid status: {cells[3]}")
+        if not _cell_value(cells[1]):
+            errors.append(f"功能 Review row is missing a name: {function_id}")
+        related_entries = _entrypoint_refs(cells[2])
+        if not related_entries:
+            errors.append(f"功能 Review row is missing related entrypoints: {function_id}")
+        if not _cell_value(cells[4]):
+            errors.append(f"功能 Review row is missing checked scenarios: {function_id}")
+        referenced_findings = _finding_ids(cells[5])
+        function_rows.append((function_id, related_entries))
+        if not _cell_value(cells[5]):
+            errors.append(f"功能 Review row is missing finding value: {function_id}")
+        elif _cell_value(cells[5]).lower() not in {"無", "none", "n/a", "-"}:
+            if not referenced_findings:
+                errors.append(f"功能 Review row has invalid finding references: {function_id}")
+        if not _cell_value(cells[6]):
+            errors.append(f"功能 Review row is missing a limitation value: {function_id}")
+
+    function_counts = {"checked": 0, "partial": 0, "not checked": 0}
+    for line in function_body.splitlines():
+        cells = _table_cells(line)
+        if cells is None or len(cells) < 4 or _is_separator_row(cells):
+            continue
+        if _cell_value(cells[0]).lower() in {"功能 id", "function id"}:
+            continue
+        status = _normalise_status(cells[3])
+        if status in function_counts:
+            function_counts[status] += 1
+    declared_functions = SUMMARY_FUNCTION_COVERAGE.search(managed)
+    if not declared_functions:
+        errors.append("結果摘要 must include 功能覆蓋 checked/partial/not checked counts")
+    else:
+        declared = {
+            "checked": int(declared_functions.group(1)),
+            "partial": int(declared_functions.group(2)),
+            "not checked": int(declared_functions.group(3)),
+        }
+        if declared != function_counts:
+            errors.append(
+                "功能覆蓋 counts do not match the table: "
+                f"declared={declared}, actual={function_counts}"
+            )
+
+    coverage_body = _section_body(managed, "入口覆蓋")
+    entrypoints: list[str] = []
+    entry_function_refs: dict[str, set[str]] = {}
+    for line in coverage_body.splitlines():
+        cells = _table_cells(line)
+        if cells is None or not cells or _is_separator_row(cells):
+            continue
+        if _cell_value(cells[0]).lower() in {"功能 id", "function id"}:
+            continue
+        if len(cells) < 10:
+            errors.append("v2 入口覆蓋 rows must include a function ID and all trace columns")
+            continue
+        refs = _function_ids(cells[0])
+        if not refs or any(ref not in function_ids for ref in refs):
+            errors.append(f"入口覆蓋 row references an unknown function ID: {cells[0]}")
+        entry = _cell_value(cells[1])
+        if not entry:
+            errors.append("入口覆蓋 row is missing an entrypoint")
+            continue
+        entrypoints.append(entry)
+        entry_function_refs.setdefault(entry, set()).update(refs)
+        for category_cell in cells[4:8]:
+            if _normalise_status(category_cell) not in CHECK_CATEGORY_STATUSES:
+                errors.append(f"入口覆蓋 row has invalid category status: {category_cell}")
+
+    for function_id, related_entries in function_rows:
+        for related_entry in related_entries:
+            normalized = _cell_value(related_entry)
+            if normalized.lower() in {"無", "none", "n/a", "-"}:
+                continue
+            matching_entries = [
+                entry
+                for entry in entrypoints
+                if normalized == entry or normalized in entry or entry in normalized
+            ]
+            if not matching_entries:
+                errors.append(
+                    f"功能 Review entrypoint is missing from 入口覆蓋: {function_id} -> {normalized}"
+                )
+            elif not any(
+                function_id in entry_function_refs.get(entry, set())
+                for entry in matching_entries
+            ):
+                errors.append(
+                    "功能 Review function/entrypoint association is missing: "
+                    f"{function_id} -> {normalized}"
+                )
+    for entry, refs in entry_function_refs.items():
+        if not refs:
+            errors.append(f"入口覆蓋 entrypoint has no function association: {entry}")
+
+    finding_ids = {finding_id for finding_id, _ in findings}
+    rerun_counts = {state: 0 for state in RERUN_STATES}
+    for finding_id, body in findings:
+        rerun_state = _normalise_status(_field_value(body, "重跑狀態"))
+        if rerun_state not in RERUN_STATES:
+            errors.append(f"{finding_id} has invalid or missing 重跑狀態")
+        else:
+            rerun_counts[rerun_state] += 1
+        affected_functions = _function_ids(_field_value(body, "受影響功能"))
+        if not affected_functions:
+            errors.append(f"{finding_id} must name at least one affected function")
+        elif any(function_id not in function_ids for function_id in affected_functions):
+            errors.append(f"{finding_id} affected function is missing from 功能 Review")
+        affected_entries = _field_value(body, "受影響入口")
+        if not _is_empty_value(affected_entries):
+            affected_entry_matches = [
+                entry for entry in entrypoints if entry.lower() in affected_entries.lower()
+            ]
+            if entrypoints and not affected_entry_matches:
+                errors.append(f"{finding_id} affected entrypoint is missing from 入口覆蓋")
+            for function_id in affected_functions:
+                if affected_entry_matches and not any(
+                    function_id in entry_function_refs.get(entry, [])
+                    for entry in affected_entry_matches
+                ):
+                    errors.append(
+                        f"{finding_id} affected function/entrypoint association is missing: "
+                        f"{function_id}"
+                    )
+        else:
+            errors.append(f"{finding_id} must name at least one affected entrypoint")
+
+    rerun_summary = SUMMARY_RERUN.search(managed)
+    if not rerun_summary:
+        errors.append("結果摘要 must include finding rerun-state counts")
+    else:
+        declared = {
+            "new": int(rerun_summary.group(1)),
+            "still-present": int(rerun_summary.group(2)),
+            "rechecked-no-longer-observed": int(rerun_summary.group(3)),
+            "not-rechecked": int(rerun_summary.group(4)),
+        }
+        if declared != rerun_counts:
+            errors.append(
+                "finding rerun-state counts do not match headings: "
+                f"declared={declared}, actual={rerun_counts}"
+            )
+
+    # Ensure function rows do not point at findings that are absent from the report.
+    for function_id, _ in function_rows:
+        row_text = next(
+            (
+                line
+                for line in function_body.splitlines()
+                if line.startswith("|") and function_id in line
+            ),
+            "",
+        )
+        for referenced in _finding_ids(row_text):
+            if referenced not in finding_ids:
+                errors.append(f"{function_id} references unknown finding ID: {referenced}")
+
+    return errors
+
+
 def _normalise_status(value: str) -> str:
     return value.strip().strip("`").lower()
 
@@ -242,6 +484,10 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
         return [f"cannot read report: {exc}"]
 
     frontmatter = parse_frontmatter_text(text)
+    report_version = frontmatter.get("audit_report_version")
+    is_v2 = report_version is not None
+    if is_v2 and str(report_version).strip() != "2":
+        errors.append("audit_report_version must be integer 2 when present")
     missing = sorted(REQUIRED_FRONTMATTER - set(frontmatter))
     if missing:
         errors.append("missing required frontmatter: " + ", ".join(missing))
@@ -312,27 +558,36 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
         if cells is None or not cells or _is_separator_row(cells):
             continue
         first = cells[0].strip().strip("`").lower()
-        if first in {"入口", "entrypoint"}:
+        if first in {"入口", "entrypoint", "功能 id", "function id"}:
             continue
-        if len(cells) < 3:
+        required_columns = 10 if is_v2 else 9
+        if len(cells) < (4 if is_v2 else 3):
             errors.append("each 入口覆蓋 row must include an entry, type, and status")
             continue
-        entry = cells[0].strip().strip("`")
-        status = _normalise_status(cells[2])
+        entry_index = 1 if is_v2 else 0
+        status_index = 3 if is_v2 else 2
+        entry = cells[entry_index].strip().strip("`")
+        status = _normalise_status(cells[status_index])
         if status not in COVERAGE_STATUSES:
-            errors.append(f"入口覆蓋 row has invalid status: {cells[2]}")
+            errors.append(f"入口覆蓋 row has invalid status: {cells[status_index]}")
             continue
         coverage_entries.append(entry)
         coverage_counts[status] += 1
-        if len(cells) < 9:
+        if len(cells) < required_columns:
             errors.append(
                 "each 入口覆蓋 row must include transaction/configuration/logic/history statuses, trace, and reason"
             )
             continue
-        for index, label in ((0, "entry"), (1, "type"), (7, "trace"), (8, "reason")):
+        required_fields = (
+            ((0, "function"), (1, "entry"), (2, "type"), (8, "trace"), (9, "reason"))
+            if is_v2
+            else ((0, "entry"), (1, "type"), (7, "trace"), (8, "reason"))
+        )
+        for index, label in required_fields:
             if not cells[index].strip():
                 errors.append(f"入口覆蓋 row is missing {label}")
-        for category_cell in cells[3:7]:
+        category_start, category_end = (4, 8) if is_v2 else (3, 7)
+        for category_cell in cells[category_start:category_end]:
             if _normalise_status(category_cell) not in CHECK_CATEGORY_STATUSES:
                 errors.append(f"入口覆蓋 row has invalid category status: {category_cell}")
     summary_match = SUMMARY_COVERAGE.search(managed)
@@ -374,6 +629,11 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
             errors.append(f"static cross-check table missing category: {category}")
 
     findings = _finding_blocks(managed)
+    if is_v2:
+        for section in V2_REQUIRED_SECTIONS:
+            if not re.search(rf"(?m)^##\s+{re.escape(section)}\s*$", managed):
+                errors.append(f"missing required section: {section}")
+        errors.extend(_validate_functional_v2(managed, findings))
     ids = [finding_id for finding_id, _ in findings]
     duplicates = sorted({finding_id for finding_id in ids if ids.count(finding_id) > 1})
     if duplicates:

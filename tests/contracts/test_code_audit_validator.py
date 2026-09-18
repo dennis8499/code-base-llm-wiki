@@ -133,6 +133,100 @@ def valid_report(head: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def valid_v2_report(head: str) -> str:
+    """A minimal functional-review report used to exercise the v2 contract."""
+
+    report = valid_report(head)
+    report = report.replace(
+        'summary: "目前 source 與定向 Git history 的靜態檢查"\n',
+        'summary: "目前 source 與定向 Git history 的靜態檢查"\n'
+        "audit_report_version: 2\n",
+    )
+    report = report.replace(
+        "- 入口覆蓋：checked 1、partial 0、not checked 0\n",
+        "- 功能覆蓋：checked 1、partial 0、not checked 0\n"
+        "- 入口覆蓋：checked 1、partial 0、not checked 0\n"
+        "- finding 重跑狀態：new 1；still-present 0；rechecked-no-longer-observed 0；not-rechecked 0\n",
+    )
+    report = report.replace(
+        "## 入口覆蓋\n",
+        "## 功能 Review\n\n"
+        "| 功能 ID | 功能／使用情境 | 相關入口 | 狀態 | 已檢查情境 | Findings | 未完成原因／限制 |\n"
+        "| --- | --- | --- | --- | --- | --- | --- |\n"
+        "| `FUNC-orders` | 查詢服務 | `GET /service` | checked | 正常、邊界、錯誤 | `BUG-001` | none |\n\n"
+        "## 入口覆蓋\n",
+    )
+    report = report.replace(
+        "| 入口 | 類型 | 狀態 | 交易／一致性 | 設定／引用 | 邏輯／狀態 | 歷史交叉核對 |\n"
+        "| --- | --- | --- | --- | --- | --- | --- |\n"
+        "| `GET /service` | API | checked | checked | not applicable | checked | evidence-gap | `entry → service` | `none` |",
+        "| 功能 ID | 入口 | 類型 | 狀態 | 交易／一致性 | 設定／引用 | 邏輯／狀態 | 歷史交叉核對 | 追查路徑 | 未完成原因 |\n"
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+        "| `FUNC-orders` | `GET /service` | API | checked | checked | not applicable | checked | evidence-gap | `entry → service` | `none` |",
+    )
+    report = report.replace(
+        "- 狀態：`open`\n",
+        "- 狀態：`open`\n"
+        "- 重跑狀態：`new`\n",
+    )
+    report = report.replace(
+        "- 影響程度：`low`\n- 受影響入口：",
+        "- 影響程度：`low`\n- 受影響功能：`FUNC-orders`\n- 受影響入口：",
+    )
+    return report
+
+
+def shared_entry_v2_report(head: str) -> str:
+    """A valid v2 report where two functions share one entrypoint."""
+
+    report = valid_v2_report(head)
+    report = report.replace(
+        "- 功能覆蓋：checked 1、partial 0、not checked 0",
+        "- 功能覆蓋：checked 2、partial 0、not checked 0",
+    ).replace(
+        "- 入口覆蓋：checked 1、partial 0、not checked 0",
+        "- 入口覆蓋：checked 2、partial 0、not checked 0",
+    )
+    report = report.replace(
+        "| `FUNC-orders` | 查詢服務 | `GET /service` | checked | 正常、邊界、錯誤 | `BUG-001` | none |\n\n## 入口覆蓋\n",
+        "| `FUNC-orders` | 查詢服務 | `GET /service` | checked | 正常、邊界、錯誤 | `BUG-001` | none |\n"
+        "| `FUNC-other` | 其他服務 | `GET /service` | checked | 正常 | none | none |\n\n## 入口覆蓋\n",
+    )
+    report = report.replace(
+        "| `FUNC-orders` | `GET /service` | API | checked | checked | not applicable | checked | evidence-gap | `entry → service` | `none` |",
+        "| `FUNC-orders` | `GET /service` | API | checked | checked | not applicable | checked | evidence-gap | `entry → service` | `none` |\n"
+        "| `FUNC-other` | `GET /service` | API | checked | checked | not applicable | checked | evidence-gap | `entry → service` | `none` |",
+    )
+    return report
+
+
+def mismatched_function_entry_v2_report(head: str) -> str:
+    """A v2 report whose function row points to an entry owned by another function."""
+
+    report = valid_v2_report(head)
+    report = report.replace(
+        "- 功能覆蓋：checked 1、partial 0、not checked 0",
+        "- 功能覆蓋：checked 2、partial 0、not checked 0",
+    ).replace(
+        "- 入口覆蓋：checked 1、partial 0、not checked 0",
+        "- 入口覆蓋：checked 2、partial 0、not checked 0",
+    )
+    report = report.replace(
+        "| `FUNC-orders` | 查詢服務 | `GET /service` | checked | 正常、邊界、錯誤 | `BUG-001` | none |\n\n## 入口覆蓋\n",
+        "| `FUNC-orders` | 查詢服務 | `GET /service` | checked | 正常、邊界、錯誤 | none | none |\n"
+        "| `FUNC-other` | 其他服務 | `GET /other` | checked | 正常 | `BUG-001` | none |\n\n## 入口覆蓋\n",
+    )
+    report = report.replace(
+        "| `FUNC-orders` | `GET /service` | API | checked | checked | not applicable | checked | evidence-gap | `entry → service` | `none` |",
+        "| `FUNC-other` | `GET /service` | API | checked | checked | not applicable | checked | evidence-gap | `entry → service` | `none` |\n"
+        "| `FUNC-other` | `GET /other` | API | checked | checked | not applicable | checked | evidence-gap | `entry → other` | `none` |",
+    )
+    return report.replace(
+        "- 影響程度：`low`\n- 受影響功能：`FUNC-orders`",
+        "- 影響程度：`low`\n- 受影響功能：`FUNC-other`",
+    )
+
+
 class CodeAuditValidatorTests(unittest.TestCase):
     def _init_git(self, root: Path) -> str:
         run_git(root, "init", "-q")
@@ -157,6 +251,60 @@ class CodeAuditValidatorTests(unittest.TestCase):
             report.write_text(valid_report(head), encoding="utf-8")
             result = run_validator(report, root)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_accepts_functional_review_v2_report(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(valid_v2_report(head), encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_accepts_functional_review_v2_multi_function_entrypoint(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(shared_entry_v2_report(head), encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_rejects_functional_review_v2_mismatched_function_entrypoint(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(mismatched_function_entry_v2_report(head), encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("function/entrypoint association is missing", result.stdout)
+            self.assertIn("FUNC-orders", result.stdout)
+            self.assertIn("GET /service", result.stdout)
+
+    def test_validator_rejects_functional_review_v2_orphan_references_and_counts(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v2_report(head)
+                .replace("`FUNC-orders` | `GET /service`", "`FUNC-missing` | `GET /service`")
+                .replace("- finding 重跑狀態：new 1；still-present 0；rechecked-no-longer-observed 0；not-rechecked 0", "- finding 重跑狀態：new 2；still-present 0；rechecked-no-longer-observed 0；not-rechecked 0"),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unknown function ID", result.stdout)
+            self.assertIn("rerun-state counts do not match", result.stdout)
 
     def test_validator_accepts_source_report_when_git_is_unavailable(self) -> None:
         with workspace_temp() as root:

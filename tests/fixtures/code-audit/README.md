@@ -6,6 +6,15 @@ manually verify the `code_audit` workflow and compare the result with
 
 Expected coverage and classification:
 
+- Present the result by stable `FUNC-*` capabilities while keeping every route,
+  CLI command, plugin registration, and other source registration in the
+  entrypoint coverage table. The order-summary capability must link both the
+  API and CLI entrypoints to the shared `BUG-*` root cause.
+- A function with a dynamic or external boundary is `partial`; an entrypoint
+  that cannot be assigned a business name uses `FUNC-UNCLASSIFIED-{slug}` and
+  remains in the review. A rerun preserves finding IDs and records one of
+  `new`, `still-present`, `rechecked-no-longer-observed`, or `not-rechecked`.
+
 - The API and CLI order-summary entrypoints converge on one root cause. The
   draft API stores an order with zero lines; that value reaches division by zero
   in the shared service, so report one

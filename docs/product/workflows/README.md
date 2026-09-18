@@ -225,6 +225,12 @@ scope `all`，局部檢查可指定模組、路徑或入口。先從目前 Codeb
 邏輯／狀態契約及變更後 callers／consumers 是否同步。使用原生搜尋並直接重讀來源；tgrep 仍只供
 Ingest 與 Archaeology。不得執行目標程式、測試、migration、build 或自動修正。
 
+輸出以穩定 `FUNC-*` 功能／使用情境呈現，再以入口表核對每個 API、UI、CLI、job、event 或公開
+介面的 coverage；一個功能可連結多個入口。每個功能要記錄正常／邊界／錯誤／授權／狀態／交易／
+設定／相容性／效能情境，無法歸類的入口使用 `FUNC-UNCLASSIFIED-{slug}`。報告的
+`audit_report_version: 2` 讓每個 finding 同時引用受影響功能與入口，並在同範圍重跑時沿用 ID、
+保留 user notes、標記 `new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`。
+
 先記錄目前 `git rev-parse HEAD`、`git rev-parse --is-shallow-repository`、`git status --short` 與 `current-first-targeted` 範圍，使用
 唯讀 `git log --follow --name-status` 建立目前入口／相關路徑的歷史索引，再以
 `git show --format=fuller --stat --patch` 和 `git blame` 深入閱讀相關 commit 的標題、完整內文

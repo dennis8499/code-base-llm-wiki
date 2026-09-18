@@ -85,6 +85,21 @@ class CodeAuditContractTests(unittest.TestCase):
                     "change_regression",
                 ],
                 "finding_classes": ["BUG", "RISK", "BIZ"],
+                "review_unit": "functional_capability_with_entrypoint_coverage",
+                "report_version": 2,
+                "functional_review": [
+                    "normal_and_boundary_scenarios",
+                    "validation_authorization_and_security",
+                    "state_transactions_side_effects_and_idempotency",
+                    "configuration_compatibility_performance_and_observability",
+                ],
+                "rerun_states": [
+                    "new",
+                    "still-present",
+                    "rechecked-no-longer-observed",
+                    "not-rechecked",
+                ],
+                "impact_order": ["high", "medium", "low"],
                 "history": {
                     "mode": "current_first_targeted",
                     "commands": ["git log", "git show", "git blame"],
@@ -128,6 +143,10 @@ class CodeAuditContractTests(unittest.TestCase):
             "Preserve the prior ID",
             "user-notes markers",
             "synthesis` entry",
+            "Functional review model",
+            "FUNC-UNCLASSIFIED",
+            "rechecked-no-longer-observed",
+            "high to medium to low impact",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, normalized_workflow)
@@ -148,6 +167,13 @@ class CodeAuditContractTests(unittest.TestCase):
             "設定檔／鍵引用",
             "RISK-*",
             "validate-code-audit.py",
+            "FUNC-*",
+            "audit_report_version: 2",
+            "new",
+            "still-present",
+            "rechecked-no-longer-observed",
+            "not-rechecked",
+            "high、medium、low",
         ):
             with self.subTest(prompt_token=required):
                 self.assertIn(required, prompt)
@@ -175,6 +201,12 @@ class CodeAuditContractTests(unittest.TestCase):
             "BUG-001",
             "RISK-001",
             "BIZ-001",
+            "## 功能 Review",
+            "功能 ID",
+            "受影響功能",
+            "重跑狀態",
+            "audit_report_version: 2",
+            "high` → `medium` → `low",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, template)
@@ -189,7 +221,9 @@ class CodeAuditContractTests(unittest.TestCase):
             "explicitly forbids cancellation while an unpaid invoice exists",
             "BIZ-001",
             "validates positive quantity before calling the service",
-            "Partial coverage",
+            "Functional coverage:",
+            "partial 1",
+            "FUNC-order-summary",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, normalized_expected)

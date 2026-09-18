@@ -36,6 +36,15 @@
 
 ### Changed
 
+- **Codebase audit 逐功能 Review 與重跑追蹤**：audit 報告 v2 以 `FUNC-*` 功能／使用情境
+  呈現結果、以 API／UI／CLI／job／event／公開介面入口核對 coverage，並要求正常／邊界、驗證／
+  授權、狀態、transaction／副作用、重試／冪等、設定／相容性、效能與錯誤可觀測性等情境留有
+  檢查證據。每個 finding 同時連結功能與入口；同範圍重跑沿用 ID 並標示 `new`、`still-present`、
+  `rechecked-no-longer-observed` 或 `not-rechecked`。Validator 對新報告檢查功能／入口關聯與
+  摘要計數，未帶版本標記的既有報告維持 legacy 相容。
+- **Codebase audit validator 關聯修正**：v2 validator 現在合併重複入口列的功能 ID，並拒絕
+  `功能 Review` 與 `入口覆蓋` 之間存在錯配的功能／入口組合；新增合法共享入口與錯配回歸測試。
+
 - **Codebase audit 改為 source-first 入口探索**：audit 先從目前 Codebase 的目錄、manifest、設定與
   註冊處盤點所有入口，再沿呼叫路徑進行靜態檢查；Wiki 只在業務規則語意缺口時提供補充 context，
   不再限制掃描範圍。共享 Skill、Copilot/Codex adapters、報告模板、驗收 fixture 與 parity contract

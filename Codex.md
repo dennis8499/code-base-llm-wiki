@@ -132,6 +132,8 @@ Codebase audit:
 
 ```text
 每次執行都先從目前 Codebase 的目錄、manifest、設定與入口註冊處盤點並重新建立 inventory，盤點 API、UI、CLI、排程、事件、plugin 與公開介面，再沿每個入口追查目前 source 的輸入、驗證／權限、業務邏輯、資料／狀態、輸出與失敗路徑；掃描範圍不由 Wiki 決定，只有遇到業務規則或政策語意缺口才查 Wiki。交叉檢查 transaction、configuration、logic/state、change-completeness 四類，並在 source 追查後使用 git log、git show、git blame 核對定向歷史。分開列出確定缺陷、技術風險與待確認政策，合併相同根因，記錄每個入口的 checked／partial／not checked 覆蓋與限制，保存繁中報告到 wiki/synthesis/code-audit-all.md，更新相關 Wiki link、index 與 synthesis log，最後執行 validate-code-audit.py。不要執行程式、測試或修正。
+
+以穩定的 `FUNC-*` 功能／使用情境整理結果，再以入口逐項核對覆蓋；一個功能可以包含多個 API、UI、CLI、排程、事件或公開介面。每個功能都要記錄相關入口、已檢查的正常／邊界／錯誤／授權／狀態／交易／設定／相容性／效能情境與 checked／partial／not checked 狀態；無法歸類的入口使用 `FUNC-UNCLASSIFIED-{slug}`，不得遺漏。每個 finding 同時記錄受影響功能與入口。報告使用 `audit_report_version: 2` 時，重跑狀態分為 `new`、`still-present`、`rechecked-no-longer-observed`、`not-rechecked`，沿用既有 finding IDs、user notes 與已移除入口的歷史；finding 在各分類中依 high → medium → low 影響程度排序。
 ```
 
 若只需檢查特定模組或入口，將範圍明確提供，例如 `src/payments` 或 `退款 API`；也可指定要追查的 commit 或 range；若只要對話回報，明確說「只回報，不寫 Wiki」。

@@ -74,6 +74,31 @@ source files, comments, fixtures, or docs.
 
 ## Trace and assess entrypoints
 
+### Functional review model
+
+The audit presents findings by stable business capability or user scenario and
+uses the entrypoint inventory as its coverage control. A capability may contain
+multiple routes, UI actions, commands, jobs, events, or public interfaces; a
+shared service is traced once and linked to every affected capability and
+entrypoint. If a capability cannot be inferred from current source or available
+business context, create a stable technical capability such as
+`FUNC-UNCLASSIFIED-{slug}` and continue the review instead of dropping the
+entrypoint.
+
+For every discovered capability, create one `FUNC-*` row with its linked
+entrypoints, `checked` / `partial` / `not checked` status, the scenarios that
+were inspected, the findings linked to it, and any blocker. A capability is
+`checked` only when all linked entrypoints and applicable review scenarios have
+been traced. A completed inventory is not evidence that the capability was
+reviewed.
+
+Each capability review covers the normal flow and relevant boundary or absent
+data, validation and authorization, state transitions and calculations,
+transaction and external side effects, retries / concurrency / idempotency,
+configuration and compatibility, performance / resource lifetime, and error
+mapping and observability. Mark a dimension `not applicable` only with a source
+based reason; otherwise retain `partial` or an evidence gap.
+
 For every discovered in-scope entrypoint, trace as far as the available source
 allows:
 
@@ -130,6 +155,9 @@ uses `confirmed`; a `BIZ-*` policy gap uses `unresolved`. Use high for likely da
 unauthorized access, financial harm, or a core flow blocked; medium for a
 material but limited or recoverable failure; low for a narrow, non-critical
 impact. Do not turn uncertainty into severity.
+Within each finding class, list findings from high to medium to low impact so
+the report remains actionable while retaining the `BUG-*`, `RISK-*`, and
+`BIZ-*` classification.
 
 ## Coverage and report updates
 
@@ -138,10 +166,12 @@ impact. Do not turn uncertainty into severity.
   history of findings and user notes, not the current scan boundary; newly
   registered entries must be added and removed entries must remain visible as
   no longer discovered.
-- Give each discovered entrypoint a coverage row: `checked`, `partial`, or `not
-  checked`, with the traced path and any concrete blocker. If one dynamic or
-  external boundary prevents further tracing, mark only the affected entry
-  partial and continue with the rest.
+- Give each discovered capability and entrypoint a coverage row: `checked`,
+  `partial`, or `not checked`, with the traced path and any concrete blocker.
+  Every entrypoint must link to one or more capability IDs, including a
+  technical unclassified capability when business grouping is unavailable. If
+  one dynamic or external boundary prevents further tracing, mark only the
+  affected capability and entrypoint partial and continue with the rest.
 - Merge findings with the same root cause and list every affected entrypoint.
   Reuse an existing ID for the same issue; allocate the next unused sequential
   ID within `BUG-*`, `RISK-*`, or `BIZ-*` for a new issue. Never recycle an ID.
@@ -150,14 +180,26 @@ impact. Do not turn uncertainty into severity.
   `BUG-002` → `RISK-001`). Do not silently overwrite the old classification.
 - On a same-scope rerun, update the existing report rather than creating a
   duplicate. Preserve the prior ID and all text inside the user-notes markers.
-  Carry forward unreviewed findings as `not-rechecked`; never call them fixed.
-  If a reviewed finding is no longer observed in current source, say so with
-  current evidence and leave runtime verification explicitly open.
+  Carry forward unreviewed findings with finding rerun state
+  `not-rechecked`; never call them fixed. New findings use `new`, findings
+  confirmed again use `still-present`, and findings no longer observed use
+  `rechecked-no-longer-observed` while leaving runtime verification explicitly
+  open. If a no-longer-observed root cause reappears later, reuse its original
+  ID and mark the new observation `still-present`; never allocate a duplicate
+  solely because an earlier run did not observe it.
 - Cite source locations as `` `path/to/file.ext:line` `` and link related Wiki
   pages with `[[page-name]]`. `sources` contains only real raw repository paths
   actually inspected; Wiki evidence belongs in `derived_from`. When `sources`
   is non-empty, populate and refresh `source_digest` using the contract in
   `references/frontmatter-spec.md`.
+- New reports set `audit_report_version: 2`. Their managed body contains a
+  functional review table, a function ID on every entrypoint row, and
+  `受影響功能` plus `重跑狀態` on every finding. A report without this marker is
+  a legacy report and remains valid under the legacy structure until its next
+  same-scope audit upgrades it from current source.
+- `validate-code-audit.py` checks report structure, linkage, counts, and
+  provenance only; a passing validator does not prove that the source review
+  found every defect or that a runtime behavior was reproduced.
 - Add a Git history section to every report. Record the full HEAD when history
   is available, whether the worktree was dirty, the query scope, the commits
   deeply reviewed, and any shallow/missing-object limitation. Historical paths
@@ -183,12 +225,14 @@ audit report, index, or log in chat-only mode.
 
 ## Completion criterion
 
-The audit is complete when every in-scope discovered entrypoint has a coverage
-status and each static check category is marked, every finding has a reachable
+The audit is complete when every in-scope discovered capability and entrypoint
+has a coverage status and capability association, every applicable review
+dimension and static check category is marked, every finding has a reachable
 trigger and evidence or is clearly marked as a technical risk or business
 question, shared root causes are merged, current behavior has been cross-checked
-against relevant Git intent and diff evidence, unverified areas remain visible,
-and the report contains the expected evidence and validation guidance.
+against relevant Git intent and diff evidence, rerun state is explicit,
+unverified areas remain visible, and the report contains the expected evidence
+and validation guidance.
 For a persisted audit, valid frontmatter, raw-source provenance, inbound Wiki
 link, synchronized index, and one valid append-only `synthesis` log entry are
 also required. Run `validate-code-audit.py` against the report in addition to

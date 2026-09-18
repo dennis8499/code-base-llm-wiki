@@ -216,6 +216,10 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
             f"{', '.join(sorted(ALLOWED_GAP_CLASSIFICATIONS))}; got {gap_classification!r}"
         )
 
+    audit_report_version = fm.get("audit_report_version")
+    if audit_report_version is not None and str(audit_report_version).strip() != "2":
+        errors.append(f"{rel}: audit_report_version must be 2 when present")
+
     summary = fm.get("summary")
     if summary is not None and not is_non_empty_string(summary):
         errors.append(f"{rel}: summary must be a non-empty string when present")

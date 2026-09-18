@@ -6,8 +6,8 @@
 | 目錄 | 責任 |
 | --- | --- |
 | `contracts/` | 公開 contract、目錄形狀與 capability removal |
-| `fixtures/code-audit/` | 先從目前 Codebase 入口探索的靜態健檢驗收材料，涵蓋多入口、Wiki 缺失／遺漏／過時、既有報告缺少新入口、transaction／設定／邏輯缺陷、Git 歷史、技術風險、業務疑點與覆蓋缺口 |
-| `contracts/test_code_audit_validator.py` | persisted audit 報告結構、來源存在性、finding IDs、摘要／coverage 計數與隔離 Git history 驗收 |
+| `fixtures/code-audit/` | 先從目前 Codebase 入口探索的靜態健檢驗收材料，涵蓋逐功能 `FUNC-*` Review、多入口共享根因、Wiki 缺失／遺漏／過時、既有報告缺少新入口、transaction／設定／邏輯缺陷、Git 歷史、技術風險、業務疑點與覆蓋缺口 |
+| `contracts/test_code_audit_validator.py` | persisted audit 報告結構、legacy/v2 相容、功能／入口關聯、來源存在性、finding IDs、重跑狀態與摘要／coverage 計數及隔離 Git history 驗收 |
 | `installer/` | Copilot／Codex installer surface 與升級生命週期 |
 | `notebooklm/` | NotebookLM exporter、schema 與 acceptance runner |
 | `release/` | release builder 與資產契約 |

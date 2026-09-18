@@ -18,6 +18,11 @@ transaction／connection 與 rollback、設定檔／鍵引用及產生／注入�
 重試與冪等。只有遇到業務規則或政策語意缺口時才查 `wiki/index.md` 與相關頁面；Wiki 內容不能
 取代目前 source 的直接讀取。每項缺陷都核對可達性、上游防護與下游約束。
 
+以穩定的 `FUNC-*` 功能／使用情境整理結果，再以入口表核對覆蓋。每個功能要列出相關 API、UI、
+CLI、排程、事件或公開介面、已檢查的正常／邊界／錯誤／授權／狀態／交易／設定／相容性／效能
+情境，以及 `checked`、`partial` 或 `not checked` 狀態；無法歸類的入口使用
+`FUNC-UNCLASSIFIED-{slug}`，不得漏掉。每個 finding 同時填寫受影響功能與入口。
+
 先記錄 `git rev-parse HEAD`、`git rev-parse --is-shallow-repository`、`git status --short` 與 `current-first-targeted` 歷史範圍，
 再用唯讀 `git log --follow --name-status` 建立索引，對相關 commit 使用 `git show --format=fuller --stat --patch`
 與 `git blame` 閱讀標題、完整內文和 diff。分開記錄 commit 意圖、diff 可證實的修改與目前
@@ -34,6 +39,11 @@ checked 覆蓋與各類檢查狀態。不可執行目標程式、測試、build�
 若同一問題因新證據而轉換分類，保留原 finding 紀錄、標示原處置並以關聯欄位連到新 ID；未複查
 的問題維持 `not-rechecked`，不可標為已解決。Git 歷史分析併入這一份 Codebase audit 報告，不
 另建同範圍 Archaeology 報告。
+
+同範圍重跑使用報告格式 `audit_report_version: 2`：新 finding 標為 `new`、再次確認的標為
+`still-present`、目前不再觀察到的標為 `rechecked-no-longer-observed`，尚未重查的標為
+`not-rechecked`；摘要必須列出四種數量，並在每個 finding 分類中按 high、medium、low 影響程度排序。保留既有 finding ID、user-notes 與已移除入口的歷史，
+不可把未複查或未觀察到直接宣稱為已驗證修復。
 
 明確健檢請求授權將繁中報告保存到 `wiki/synthesis/code-audit-{scope}.md`，全專案用
 `all`；若要求「只回報」，保持 Wiki、index、log 零寫入。更新同範圍既有報告時保留

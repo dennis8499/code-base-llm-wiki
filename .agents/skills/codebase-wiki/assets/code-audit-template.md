@@ -2,6 +2,7 @@
 title: "Codebase 健檢：{Scope}"
 type: synthesis
 summary: "以目前 source、設定與定向 Git 歷史盤點 {Scope} 的入口、具體缺陷、技術風險、業務疑點及覆蓋缺口"
+audit_report_version: 2
 sources: []
 derived_from: []
 source_digest: "sha256:{64-lowercase-hex}"
@@ -21,8 +22,12 @@ notebooklm_role: exclude
 - 範圍：`all` 或具體模組／入口
 - 檢查日期：YYYY-MM-DD
 - 檢查方式：目前 source、設定與定向 Git 歷史的唯讀靜態追查；沒有執行目標程式或測試
+- 報告格式：`audit_report_version: 2`；以功能／使用情境呈現，入口作為覆蓋核對
+- 功能覆蓋：checked N、partial N、not checked N
 - 入口覆蓋：checked N、partial N、not checked N
 - 確定缺陷：N；技術風險：N；待確認業務疑點：N
+- finding 重跑狀態：new N；still-present N；rechecked-no-longer-observed N；not-rechecked N
+- finding 排序：各分類依影響程度 `high` → `medium` → `low`
 - 歷史：`available`、`shallow`、`unavailable` 或 `not-a-repository`
 - 限制：列出動態路由、外部依賴、缺少規格、shallow clone 或遺失的 Git object
 
@@ -30,11 +35,21 @@ notebooklm_role: exclude
 
 先記錄本次由目前 Codebase 目錄、manifest、設定與入口註冊處發現的模組與入口類型，再列出目前讀取的設定／schema／部署宣告、歷史查詢範圍，以及排除目錄／行為和排除理由。每次重跑都重新建立這份 inventory；既有報告只用於對照 findings 與保留 user notes，不得成為掃描邊界。Wiki 只在 source trace 暴露業務規則或政策語意缺口時列為補充證據，不得用 Wiki 的既有頁面限制這份清單。標示動態或外部註冊的解析限制；不要把未讀或無法解析的項目寫成已檢查。
 
+## 功能 Review
+
+每個 `FUNC-*` 代表一個業務功能／使用情境；若目前 source 無法可靠歸類，使用
+`FUNC-UNCLASSIFIED-{slug}`。一個功能可連結多個入口與共用呼叫路徑。功能只有在所有
+相關入口及適用檢查情境完成追查後才能標為 `checked`。
+
+| 功能 ID | 功能／使用情境 | 相關入口 | 狀態 | 已檢查情境 | Findings | 未完成原因／限制 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `FUNC-{stable-slug}` | `{業務功能或技術功能}` | `{入口名稱}` | `checked / partial / not checked` | `{正常、邊界、錯誤、授權、狀態、交易、設定、相容性、效能等}` | `{BUG-001；或無}` | `{none or concrete blocker}` |
+
 ## 入口覆蓋
 
-| 入口 | 類型 | 狀態 | 交易／一致性 | 設定／引用 | 邏輯／狀態 | 歷史交叉核對 | 追查路徑 | 未完成原因 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `{route / command / handler}` | `{API / UI / CLI / job / event / public API / other}` | `checked / partial / not checked` | `{checked / not applicable / evidence-gap}` | `{checked / not applicable / evidence-gap}` | `{checked / not applicable / evidence-gap}` | `{checked / not applicable / evidence-gap}` | `{entry → validation → service → data/state → result}` | `{none or reason}` |
+| 功能 ID | 入口 | 類型 | 狀態 | 交易／一致性 | 設定／引用 | 邏輯／狀態 | 歷史交叉核對 | 追查路徑 | 未完成原因 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `FUNC-{stable-slug}` | `{route / command / handler}` | `{API / UI / CLI / job / event / public API / other}` | `checked / partial / not checked` | `{checked / not applicable / evidence-gap}` | `{checked / not applicable / evidence-gap}` | `{checked / not applicable / evidence-gap}` | `{checked / not applicable / evidence-gap}` | `{entry → validation → service → data/state → result}` | `{none or reason}` |
 
 ## 靜態交叉檢查
 
@@ -69,8 +84,10 @@ notebooklm_role: exclude
 ### BUG-001 — {短標題}
 
 - 狀態：`open`、`not-rechecked` 或 `rechecked-no-longer-observed`
+- 重跑狀態：`new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`
 - 證據確定度：`confirmed`
 - 影響程度：`high`、`medium` 或 `low`
+- 受影響功能：`FUNC-{stable-slug}`
 - 受影響入口：
 - 可達觸發條件：
 - 呼叫路徑：
@@ -89,8 +106,10 @@ notebooklm_role: exclude
 ### RISK-001 — {需技術證據確認的短標題}
 
 - 狀態：`needs-technical-confirmation`、`not-rechecked` 或 `rechecked-no-longer-observed`
+- 重跑狀態：`new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`
 - 證據確定度：`unresolved`
 - 影響程度：`high`、`medium` 或 `low`
+- 受影響功能：`FUNC-{stable-slug}`
 - 受影響入口：
 - 成立條件：明確描述在何種框架、部署或執行環境下會出錯
 - 可疑呼叫路徑：
@@ -109,8 +128,10 @@ notebooklm_role: exclude
 ### BIZ-001 — {待確認問題}
 
 - 狀態：`needs-business-confirmation`、`not-rechecked` 或 `rechecked-no-longer-observed`
+- 重跑狀態：`new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`
 - 證據確定度：`unresolved`（業務政策待確認）
 - 可能影響程度：`high`、`medium` 或 `low`
+- 受影響功能：`FUNC-{stable-slug}`
 - 受影響入口：
 - 呼叫路徑：
 - 目前行為：

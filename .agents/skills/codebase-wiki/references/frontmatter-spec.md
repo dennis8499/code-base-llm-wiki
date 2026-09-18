@@ -26,6 +26,7 @@
 | `coverage_status` | enum | 選填 `covered` / `partial` / `gap`；新 BA／SA／SD 與 business-process 必填。 |
 | `analysis_status` | enum | 選填 `untraced` / `traced` / `complete` / `evidence-gap` / `business-confirmation`；更新後的流程與 BA／SA 文件用來標示追查是否完成。 |
 | `gap_classification` | enum | 選填 `none` / `analysis-gap` / `evidence-gap` / `business-confirmation`；分開標示未追查、來源缺證據與待業務確認。 |
+| `audit_report_version` | integer | Codebase audit report 選填；缺少時以 legacy report contract 驗證，`2` 啟用功能／入口關聯與重跑狀態契約。 |
 
 `source_digest` 對排序後的 `repo-relative-path + NUL + file-sha256` records
 再做 SHA-256。目錄來源展開 Git tracked 與 non-ignored untracked files，並排除

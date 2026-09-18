@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-17
+last_updated: 2026-09-18
 tags: [log]
 status: active
 ---
@@ -629,3 +629,15 @@ status: active
 - 共享 Skill、Codebase audit workflow、Copilot/Codex adapters、報告模板、parity 與 fixture 契約同步加入無 Wiki、Wiki 遺漏／過時及既有報告缺少新入口時仍持續探索的驗收。
 - Framework Wiki coverage ledger 已依目前安全來源重新整理 analyzed discovery ID，並保留既有 BA／SA 內容與 reviewer notes。
 - 受影響頁面：[[index]]、[[overview]]、[[system-architecture]]、[[code-audit]]、[[platform-adapters-and-release]]、[[framework-introduction]]、[[notebooklm-export]]、[[release-and-update]]、[[installer-and-upgrade]]、[[system-analysis]]、[[project-function-catalog]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-18] update | Codebase 健檢加入逐功能 Review 與重跑追蹤
+
+- Audit report v2 以 `FUNC-*` 功能／使用情境呈現結果，再用入口表核對每個 API、UI、CLI、job、event 與公開介面的 coverage；未能可靠歸類的入口使用 `FUNC-UNCLASSIFIED-{slug}`。
+- 每個功能要求記錄正常／邊界、驗證／授權、狀態、transaction／副作用、重試／冪等、設定／相容性、效能與錯誤可觀測性情境；finding 同時引用受影響功能與入口。
+- 同範圍重跑沿用 finding ID 並記錄 `new`、`still-present`、`rechecked-no-longer-observed`、`not-rechecked`；validator 檢查功能／入口關聯與摘要計數，沒有版本標記的 legacy 報告維持相容。
+- 受影響頁面：[[index]]、[[overview]]、[[code-audit]]、[[log]]
+
+## [2026-09-18] update | 修正 Codebase audit validator 功能／入口配對
+
+- v2 validator 合併重複入口列的功能 ID，並拒絕 `功能 Review` 與 `入口覆蓋` 之間存在錯配的功能／入口組合；新增共享入口通過與錯配失敗的 contract tests。
+- 受影響頁面：[[index]]、[[overview]]、[[code-audit]]、[[log]]

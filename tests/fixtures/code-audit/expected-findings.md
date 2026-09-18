@@ -4,30 +4,46 @@
 
 - Scope: all files and entrypoint registrations in this fixture
 - Method: read-only source review; no fixture code or tests executed
-- Coverage: checked 6 entrypoints, partial 1, not checked 0; Partial coverage is limited to the runtime plugin boundary
+- Functional coverage: checked 5, partial 1, not checked 0; the plugin capability is partial because its downstream module is selected at runtime
+- Entrypoint coverage: checked 6, partial 1, not checked 0
+- Functional review: `FUNC-order-summary` links the API and CLI summary entrypoints to `BUG-001`; the plugin registration remains a partial capability review and any unclassified registration is retained with a `FUNC-UNCLASSIFIED-*` ID
 - Findings: 2 confirmed defects and 1 unresolved business question
+- Rerun state: first scan findings are `new`; later scans reuse the same IDs and distinguish `still-present`, `rechecked-no-longer-observed`, and `not-rechecked`
 - Limitation: the plugin module is selected at runtime, so plugin-owned routes and handlers are unavailable
 
 ## Scope and Exclusions
 
 Reviewed API routes, the CLI command, draft-order storage, service calls, plugin registration, and the fixture's business rules. No runtime modules outside this fixture were available. Application execution and tests are excluded.
 
+## Functional Review
+
+| Function ID | Capability / scenario | Related entrypoints | Status | Checked scenarios | Findings | Limitations |
+| --- | --- | --- | --- | --- | --- | --- |
+| `FUNC-order-draft` | Create and retain an order draft | `POST /orders/drafts` | checked | normal, boundary, validation, state, transaction, error | none | none |
+| `FUNC-order-summary` | Calculate an order summary | `GET /orders/{order_id}/summary`; `orders summary` | checked | normal, empty draft, boundary, state, shared service, error | `BUG-001` | none |
+| `FUNC-account-cancellation` | Cancel an account | `POST /accounts/{account_id}/cancel` | checked | normal, unpaid-invoice boundary, authorization, transaction, side effect | `BUG-002` | none |
+| `FUNC-checkout` | Submit checkout quantity | `POST /checkout` | checked | normal, invalid quantity, validation, error | none | upstream route validation prevents the tested false positive |
+| `FUNC-return` | Return an order | `POST /orders/{order_id}/return` | checked | normal, eligibility boundary, state, policy gap, error | `BIZ-001` | fee policy is absent |
+| `FUNC-plugin-extension-hook` | Load runtime plugin routes | Runtime plugin registration | partial | registration, dynamic boundary, error | none | selected plugin module and handlers are unavailable |
+
 ## Entrypoint Coverage
 
-| Entrypoint | Status | Trace |
-| --- | --- | --- |
-| `POST /orders/drafts` | checked | `src/api/orders.py:10` → `src/data/orders.py:12`, `src/data/orders.py:13`, `src/data/orders.py:14` stores a draft with zero lines |
-| `GET /orders/{order_id}/summary` | checked | `src/api/orders.py:14`, `src/api/orders.py:18` → `src/data/orders.py:17`, `src/data/orders.py:18` → `src/services/orders.py:1`, `src/services/orders.py:2` |
-| `orders summary` | checked | `src/cli/orders.py:9`, `src/cli/orders.py:13` → same repository and summary service as the API |
-| `POST /accounts/{account_id}/cancel` | checked | `src/api/accounts.py:9`, `src/api/accounts.py:10` → `src/services/accounts.py:1`, `src/services/accounts.py:5` deletes the account |
-| `POST /checkout` | checked | `src/api/checkout.py:9`, `src/api/checkout.py:11`, `src/api/checkout.py:13` rejects non-positive quantity before `src/services/checkout.py:1` |
-| `POST /orders/{order_id}/return` | checked | `src/api/returns.py:9`, `src/api/returns.py:11`, `src/api/returns.py:13` → `src/services/returns.py:1`, `src/services/returns.py:2` |
-| Runtime plugin registration | partial | `src/plugins/loader.py:5`, `src/plugins/loader.py:6`, `src/plugins/loader.py:7`, `src/plugins/loader.py:8` imports an environment-selected module; plugin routes are unavailable for tracing |
+| Function ID | Entrypoint | Type | Status | Transaction / consistency | Configuration / references | Logic / state | History cross-check | Trace | Limitation |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `FUNC-order-draft` | `POST /orders/drafts` | API | checked | checked | not applicable | checked | evidence-gap | `src/api/orders.py:10` → `src/data/orders.py:12`, `src/data/orders.py:13`, `src/data/orders.py:14` stores a draft with zero lines | none |
+| `FUNC-order-summary` | `GET /orders/{order_id}/summary` | API | checked | checked | not applicable | checked | evidence-gap | `src/api/orders.py:14`, `src/api/orders.py:18` → `src/data/orders.py:17`, `src/data/orders.py:18` → `src/services/orders.py:1`, `src/services/orders.py:2` | none |
+| `FUNC-order-summary` | `orders summary` | CLI | checked | checked | not applicable | checked | evidence-gap | `src/cli/orders.py:9`, `src/cli/orders.py:13` → same repository and summary service as the API | none |
+| `FUNC-account-cancellation` | `POST /accounts/{account_id}/cancel` | API | checked | checked | not applicable | checked | evidence-gap | `src/api/accounts.py:9`, `src/api/accounts.py:10` → `src/services/accounts.py:1`, `src/services/accounts.py:5` deletes the account | none |
+| `FUNC-checkout` | `POST /checkout` | API | checked | checked | not applicable | checked | evidence-gap | `src/api/checkout.py:9`, `src/api/checkout.py:11`, `src/api/checkout.py:13` rejects non-positive quantity before `src/services/checkout.py:1` | none |
+| `FUNC-return` | `POST /orders/{order_id}/return` | API | checked | checked | not applicable | checked | evidence-gap | `src/api/returns.py:9`, `src/api/returns.py:11`, `src/api/returns.py:13` → `src/services/returns.py:1`, `src/services/returns.py:2` | none |
+| `FUNC-plugin-extension-hook` | Runtime plugin registration | other | partial | evidence-gap | checked | evidence-gap | not applicable | `src/plugins/loader.py:5`, `src/plugins/loader.py:6`, `src/plugins/loader.py:7`, `src/plugins/loader.py:8` imports an environment-selected module | plugin routes are unavailable for tracing |
 
 ## Confirmed Defects
 
 ### BUG-001 — Empty draft order summary divides by zero
 
+- 重跑狀態: `new`
+- 受影響功能: `FUNC-order-summary`
 - Status: `open`
 - Evidence certainty: `confirmed`
 - Impact: `medium`
@@ -42,6 +58,8 @@ Reviewed API routes, the CLI command, draft-order storage, service calls, plugin
 
 ### BUG-002 — Account cancellation ignores the unpaid-invoice rule
 
+- 重跑狀態: `new`
+- 受影響功能: `FUNC-account-cancellation`
 - Status: `open`
 - Evidence certainty: `confirmed`
 - Impact: `high`
@@ -58,6 +76,8 @@ Reviewed API routes, the CLI command, draft-order storage, service calls, plugin
 
 ### BIZ-001 — Is a zero return fee the intended policy?
 
+- 重跑狀態: `new`
+- 受影響功能: `FUNC-return`
 - Status: `needs-business-confirmation`
 - Evidence certainty: `unresolved`
 - Possible impact: `medium`

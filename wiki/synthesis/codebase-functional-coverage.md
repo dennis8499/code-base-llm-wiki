@@ -42,7 +42,7 @@ status: active
 
 ## Gate 結果
 
-Analyzed discovery ID: `sha256:255f2a8e3409c9754c2597cb0799ec92febcac96cdf5997de6b9d68e527df8b1`
+Analyzed discovery ID: `sha256:f57e3542a118aae76c16064268644e8f4c401053f8c3647bc0329b9ff159776e`
 - Uncovered safe files：0
 - Analysis gaps：0
 - Dangling requirement links：0

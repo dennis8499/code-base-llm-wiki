@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:1febc56d05e0edc84452b24dc0f42328474bfa7dbaf4171e212b24ca44980893
+source_digest: sha256:57f8b34945a416b7bf626efa237ca66561b7e0a52127b3017aad4fc7e5862616
 derived_from: []
-last_updated: 2026-09-17
+last_updated: 2026-09-18
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -89,11 +89,13 @@ NotebookLM 交付功能需求是 [[notebooklm-ba-functional-export]]，其端到
 [[ba-knowledge-precedes-traceability]] 與 [[readiness-preflight-required]]。
 
 Codebase 健檢流程 [[code-audit]] 先從目前 Codebase 的目錄、manifest、設定與註冊處盤點 API、UI、
-CLI、排程、事件與公開介面入口，再沿呼叫路徑追查目前行為。Wiki 不決定 audit 的掃描範圍；只有
-source trace 遇到業務規則或政策語意缺口時才查相關頁面。接著交叉檢查 transaction／side effects、
-configuration references、logic／state contracts 與變更完整性，再以定向 Git `log`／`show`／`blame`
-核對 commit 意圖、diff 與目前 source。明確缺陷、技術風險與待確認業務疑點分開記錄，相同根因合併，
-動態或外部邊界保留為 coverage gap。
+CLI、排程、事件與公開介面入口，再以穩定 `FUNC-*` 功能／使用情境整理結果，沿呼叫路徑追查目前
+行為；一個功能可涵蓋多個入口，共用服務也要連結回所有受影響功能。Wiki 不決定 audit 的掃描範圍；
+只有 source trace 遇到業務規則或政策語意缺口時才查相關頁面。每個功能逐一檢查正常／邊界、驗證／
+授權、狀態、transaction／side effects、重試／冪等、設定／相容性、效能與錯誤可觀測性，再以定向
+Git `log`／`show`／`blame` 核對 commit 意圖、diff 與目前 source。明確缺陷、技術風險與待確認業務
+疑點分開記錄，相同根因合併，動態或外部邊界保留為 coverage gap；同範圍重跑沿用 finding ID 並
+標示 `new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`。
 框架也支援一般 Ingest、Query、Lint、Archaeology、ADR 與 Synthesis；這些
 能力的工程入口與治理細節保留在 [[project-function-catalog]] 與
 [[framework-introduction]]。Query

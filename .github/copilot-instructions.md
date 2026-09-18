@@ -33,7 +33,9 @@ workflow、schema、template 與 hook logic 的共同來源。
   transaction、設定引用、邏輯／狀態與定向 Git history；只有遇到業務規則語意缺口才查 Wiki。
   不使用 tgrep，也不執行目標程式、測試或修正。明確健檢請求授權保存報告；指定「只回報」則
   不寫 Wiki、index 或 log。finding 分為 `BUG-*`、`RISK-*`、`BIZ-*`，保存後執行
-  `validate-code-audit.py`。
+  `validate-code-audit.py`。v2 報告以 `FUNC-*` 功能／使用情境呈現，再逐入口核對 API、UI、CLI、
+  排程、事件與公開介面的 coverage；每個 finding 連結受影響功能與入口，重跑沿用 ID 並標示
+  `new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`。
 - NotebookLM export 每次以 Wiki 為基線做全專案安全 preflight；`--root` 指定的檔案系統目錄是掃描邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。預覽功能 Ingest 並確認後才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。流程分析要從入口追到實際呼叫鏈，保留每一步的條件、資料／狀態變更、成功與失敗分支；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開標示，不能以四步摘要或規則連結代替正文。
 - BA／SA／SD 文件載入共用 standards profile；SA 保持 solution-neutral，證據不足以具體 Gap 降級，不產生虛構 Mermaid 或設計。
 

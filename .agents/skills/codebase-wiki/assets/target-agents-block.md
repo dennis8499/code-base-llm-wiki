@@ -26,6 +26,10 @@ authorization.
   target code or tests. Persisted reports must pass `validate-code-audit.py`.
   An explicit audit request authorizes a Wiki report unless the user requests
   chat-only findings.
+- Audit reports use `FUNC-*` capability／user-scenario rows for presentation and
+  entrypoint rows for coverage control. Every entrypoint maps to a capability,
+  and version-2 reports record `new`, `still-present`,
+  `rechecked-no-longer-observed`, or `not-rechecked` finding state on reruns.
 - Synchronize `wiki/index.md` for page additions, removals, renames, or major
   updates, and append one valid log operation for durable Wiki changes.
 After changes, run the workflow's deterministic checks and report changed

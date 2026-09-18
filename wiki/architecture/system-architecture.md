@@ -16,7 +16,7 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-source_digest: sha256:47e475fc13898446f89bd53eab7a561c4d528b4ae4a6b16a83206be1ed20f566
+source_digest: sha256:32254df29d08ad4910baaaaa7da42b1702135ad55d5a89737314edc85ca052aa
 derived_from: ["[[overview]]"]
 last_updated: 2026-09-17
 tags: [architecture, framework, data-flow, safety]

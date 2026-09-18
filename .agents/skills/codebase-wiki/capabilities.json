@@ -39,6 +39,21 @@
         "change_regression"
       ],
       "finding_classes": ["BUG", "RISK", "BIZ"],
+      "review_unit": "functional_capability_with_entrypoint_coverage",
+      "report_version": 2,
+      "functional_review": [
+        "normal_and_boundary_scenarios",
+        "validation_authorization_and_security",
+        "state_transactions_side_effects_and_idempotency",
+        "configuration_compatibility_performance_and_observability"
+      ],
+      "rerun_states": [
+        "new",
+        "still-present",
+        "rechecked-no-longer-observed",
+        "not-rechecked"
+      ],
+      "impact_order": ["high", "medium", "low"],
       "history": {
         "mode": "current_first_targeted",
         "commands": ["git log", "git show", "git blame"],

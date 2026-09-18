@@ -38,6 +38,18 @@ current tree is reviewed together with its targeted history:
 - A rerun must merge the shared root cause, continue finding IDs, preserve the
   user-notes block, and retain an old record with a link to a new ID if a
   finding classification changes between `BUG-*`, `RISK-*`, and `BIZ-*`.
+- Functional review rows group the payment, settlement, configuration, state,
+  and refund entrypoints under stable `FUNC-*` IDs; every entrypoint remains
+  linked even when a shared root cause affects more than one capability.
+- A same-scope rerun keeps each finding ID and records `new`, `still-present`,
+  `rechecked-no-longer-observed`, or `not-rechecked` rather than inferring a
+  fix from missing evidence.
+
+The expected v2 report also includes a function table with checked scenarios and
+limitations, a ten-column entrypoint table whose first column is the function
+ID, and `受影響功能` / `重跑狀態` on every finding. `FUNC-state-and-idempotency`
+links the cross-step state and retry cases, while `FUNC-UNCLASSIFIED-refund-cli`
+is retained when the CLI's business capability cannot be established from source.
 
 The fixture intentionally does not prove that every historical commit was
 reviewed. It also contains no runtime tests and must not be executed.

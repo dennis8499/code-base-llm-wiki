@@ -124,6 +124,8 @@ runtime 情境分開。依 fixture 手動檢查 audit 是否先從目前 Codebas
 隔離暫存 Git repo 建立可控的 commit title、完整內文、刪除／改名與後續修正，驗證 audit 能將
 commit 意圖、diff 與目前 source 分開核對。另以 `validate-code-audit.py` 檢查 finding ID 唯一性、
 摘要與 coverage 計數、必要欄位、目前 sources 存在性、Git HEAD／歷史狀態與完整 SHA 格式。
+v2 報告另須確認 `FUNC-*` 功能與入口的雙向關聯、功能／入口 coverage 計數、finding 受影響功能
+引用與四種重跑狀態計數；沒有 `audit_report_version` 的既有報告仍以 legacy validator 驗證。
 同範圍重跑另須確認 finding IDs 與 user notes 保留；chat-only 要求不得寫 Wiki、index、log。
 若 finding 由 `BUG-*`、`RISK-*` 或 `BIZ-*` 轉類，則保留原紀錄並以關聯欄位連到新 ID；未複查
 項目不可標為已解決。歷史分析仍併入同一份 audit 報告，不另建 Archaeology 報告。

@@ -98,7 +98,8 @@ append one operation from `references/log-operations.md`.
   chat-only findings make no Wiki, index, or log changes. Audit reads current
   source first, then targeted Git history for transaction, configuration,
   logic/state and change-completeness checks; findings are `BUG-*`, `RISK-*`,
-  or `BIZ-*` and persisted reports pass `validate-code-audit.py`;
+  or `BIZ-*`, functional reports associate every entrypoint with a `FUNC-*`
+  capability and persisted reports pass `validate-code-audit.py`;
 - ADR, synthesis, BA, SA, and SD: explicit creation request authorizes output.
 
 ## Verification

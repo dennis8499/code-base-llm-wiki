@@ -123,7 +123,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 | Query | Wiki-first 回答問題；符合條件時提供保存、更新或 Lint 選項 | 否 |
 | Lint | 檢查 stale、連結、frontmatter、coverage；報告後提供修復選項 | 先報告 |
 | Archaeology | 追蹤程式路徑與 Git 歷史；可用 tgrep 加速來源定位 | 否 |
-| Codebase audit | 全面或指定入口的目前 source／設定／定向 Git history 靜態檢查，涵蓋 transaction、邏輯與變更一致性，報告逐入口覆蓋與證據缺口 | 是；指定「只回報」則否 |
+| Codebase audit | 全面或指定入口的目前 source／設定／定向 Git history 靜態檢查，以 `FUNC-*` 功能／使用情境呈現、逐入口核對 coverage，涵蓋 transaction、邏輯與變更一致性 | 是；指定「只回報」則否 |
 | ADR | 保存架構決策 | 是 |
 | Synthesis | 保存長期跨領域分析 | 是 |
 | Business Analysis / BA | 依 29148 與 IIBA profile 產生業務需求、流程、規則、指標與變更影響文件 | 是 |
@@ -266,7 +266,9 @@ Codebase audit 使用 `/code-audit [scope]` 或自然語言 recipe。它先從�
 manifest、設定與入口註冊處盤點 API、UI、CLI、排程、事件、plugin 與公開介面，再沿呼叫鏈檢查
 驗證、權限、業務邏輯、資料／狀態、輸出與失敗處理；只有遇到業務規則語意缺口才查 Wiki。明確
 健檢請求會保存含 coverage 的報告；每次重跑都以目前 Codebase 重新建立入口 inventory，既有報告
-只用於對照 findings、沿用 IDs 與保留 user notes。說「只回報」則不寫 Wiki、index 或 log；完整契約見
+只用於對照 findings、沿用 IDs 與保留 user notes。報告以 `FUNC-*` 功能／使用情境呈現，入口表核對
+每個 API、UI、CLI、job、event 或公開介面的 coverage；每個 finding 同時連結功能與入口。v2 重跑
+狀態為 `new`、`still-present`、`rechecked-no-longer-observed`、`not-rechecked`。說「只回報」則不寫 Wiki、index 或 log；完整契約見
 [`code-audit` Wiki 頁](wiki/modules/code-audit.md)。
 
 NotebookLM Enterprise 匯出：
@@ -298,7 +300,9 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 `tests/fixtures/code-audit/` 提供靜態健檢驗收場景，涵蓋共用根因、多入口、交易／設定／邏輯矛盾、
 Git commit 意圖與 diff、待確認技術條件與政策、上游防護及動態入口缺口；它是唯讀分析樣例，不執行
 目標程式。持久化報告可用 `validate-code-audit.py` 檢查摘要計數、finding IDs、來源與 Git history
-欄位是否一致；它只驗證報告結構與 provenance，不是另一個 target scanner 或外部分析器。
+欄位是否一致，也會在 `audit_report_version: 2` 報告中驗證功能／入口關聯與重跑計數；它只驗證
+報告結構與 provenance，不是另一個 target scanner 或外部分析器。沒有版本標記的既有報告維持
+legacy 驗證相容性。
 
 為避免把框架檔案寫進版本化樣例，請先複製樣例到暫存目錄，再安裝任一 surface。完整步驟與預期結果請看 [samples/README.md](samples/README.md)。
 

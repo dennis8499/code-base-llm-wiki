@@ -13,7 +13,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:134218e7c0b218e6d1a38ee68089d84f1469999b8e516ec5cb7a30cda7e4efbd
+source_digest: sha256:fd97725d5a4be04a37f0908650892ebbd7e078a3f0aac9626f64bedb97ce5871
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-09-17
 tags: [guide, release, version, extension]

@@ -69,6 +69,9 @@ CODE_AUDIT_WORKFLOW_TOKENS = (
     "uncommitted changes",
     "preserve its original record",
     "separate Archaeology report",
+    "Functional review model",
+    "FUNC-UNCLASSIFIED",
+    "rechecked-no-longer-observed",
 )
 CODE_AUDIT_SOURCE_FIRST_ADAPTERS = {
     ".github/prompts/code-audit.prompt.md": (
@@ -482,8 +485,12 @@ def main() -> int:
     audit_template = root / ".agents/skills/codebase-wiki/assets/code-audit-template.md"
     if not audit_template.is_file():
         issues.append("missing Codebase audit report template")
-    elif 'source_digest: "sha256:' not in audit_template.read_text(encoding="utf-8"):
-        issues.append("Codebase audit report template must include its source digest")
+    else:
+        audit_template_text = audit_template.read_text(encoding="utf-8")
+        if 'source_digest: "sha256:' not in audit_template_text:
+            issues.append("Codebase audit report template must include its source digest")
+        if "audit_report_version: 2" not in audit_template_text or "## 功能 Review" not in audit_template_text:
+            issues.append("Codebase audit report template must include the v2 functional review contract")
     validator = root / CODE_AUDIT_REPORT_VALIDATOR
     if not validator.is_file():
         issues.append("missing Codebase audit report validator")
@@ -496,6 +503,9 @@ def main() -> int:
             "入口覆蓋 counts do not match",
             "affected entrypoint is missing",
             "historical evidence must name a diff/blame location",
+            "unknown function ID",
+            "affected function/entrypoint association is missing",
+            "finding rerun-state counts do not match",
         ):
             if token not in validator_text:
                 issues.append(f"Codebase audit validator missing check: {token}")
