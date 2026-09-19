@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-18
+last_updated: 2026-09-19
 tags: [log]
 status: active
 ---
@@ -641,3 +641,34 @@ status: active
 
 - v2 validator 合併重複入口列的功能 ID，並拒絕 `功能 Review` 與 `入口覆蓋` 之間存在錯配的功能／入口組合；新增共享入口通過與錯配失敗的 contract tests。
 - 受影響頁面：[[index]]、[[overview]]、[[code-audit]]、[[log]]
+
+## [2026-09-18] update | 統一 Code Audit 與 NotebookLM 全專案 source-first 掃描
+
+- 新增共用 `scan-project.py` inventory：依指定 root 盤點檔案雜湊、分類、入口候選、排除原因、讀取缺口與 snapshot，保留巢狀 repository、ignored／untracked 及自有 CI/CD、IaC、scripts、tools、bin。
+- NotebookLM exporter 改用同一份掃描結果，discovery schema 升為 2；v2 coverage ledger 以逐檔 disposition 為完成條件。
+- Code Audit 報告模板與 validator 升為 v3，綁定 scan snapshot 與逐檔處置表，legacy v2 報告仍可驗證。
+- 受影響頁面：[[index]]、[[overview]]、[[code-audit]]、[[notebooklm-exporter]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-19] update | 完成全專案掃描邊界與快照同步
+
+- 共用 scanner 拒絕 symlink／reparse project root，並只以型別 stat 辨識連結目錄，不追蹤連結目標；更新框架 Wiki 的逐檔雜湊與 analyzed discovery ID。
+- 重新核對 Code Audit／NotebookLM 的來源 digest 與 v2 coverage ledger；目前 preflight 的 analysis gap、uncovered path 與 ledger issue 均為零。
+- 受影響頁面：[[code-audit]]、[[notebooklm-exporter]]、[[cap-notebooklm-ba-functional-export-ba]]、[[cap-notebooklm-ba-functional-export-sa]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-19] update | 阻擋 scanner 設定來源越界
+
+- `project_scanner.py` 對 root、business source 與連結邊界採 lexical fail-closed 檢查，`..` 設定來源會記錄 `path_escape` 並略過；新增越界回歸測試。
+- 同步逐檔 coverage hash、analyzed discovery ID 與受影響頁面 `source_digest`；preflight 仍維持完整 coverage 與可匯出狀態。
+- 受影響頁面：[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-19] update | 強化 scanner symlink 邊界與 Audit v3 類別契約
+
+- 修正 linked regular file 的 boundary 記錄，standalone scanner 在讀取前拒絕 symlink/reparse `notebooklm.toml`，target profile 也排除 `.github/instructions` framework adapter。
+- Audit v3 validator、template 與 workflow 文件共用來源／排除 category allowlist，並新增 linked file、設定檔邊界、target adapter 與 exclusion category 回歸測試。
+- 受影響頁面：[[index]]、[[code-audit]]、[[notebooklm-exporter]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-19] update | 綁定 scanner 設定與 Audit v3 完整快照
+
+- standalone scanner 與 NotebookLM exporter 共用嚴格 scanner 設定解析；TOML 讀取、型別或路徑錯誤一律 fail-closed，target profile 的直接 evidence expansion 也沿用 `.github/instructions` framework boundary。
+- v3 Audit 報告新增 `scan_profile`；validator 依 profile 重跑 shared scanner，拒絕 snapshot 不一致、缺列／多列、目錄 prefix、stale path、錯誤 category 與不相容 disposition。
+- 受影響頁面：[[index]]、[[overview]]、[[code-audit]]、[[notebooklm-exporter]]、[[codebase-functional-coverage]]、[[log]]

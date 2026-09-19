@@ -145,9 +145,9 @@ Business Analyst 與 System Analyst，不會連線或上傳 NotebookLM。`--root
 或 clean worktree。Exporter 分析 UTF-8 runtime source、config、schema、project docs 與
 behavioral tests。PDF、Office、圖片或訪談若未轉成可信文字，登記 knowledge gap，不推測。
 
-CI/CD、IaC、build/dev tooling、dependencies、generated、binary、secrets、framework adapters、
-Wiki 與 output 維持排除。`business_source_paths` 可納入 dev-tooling 下的確切業務文字，但
-不能繞過安全邊界。Raw analysis inputs 永不直接成為 upload source。
+dependencies、generated、binary、secrets、已安裝 framework adapters、Wiki 與 output 維持排除；
+專案自有 CI/CD、IaC、scripts、tools、bin 與 examples 會納入並分類。`business_source_paths` 可納入
+測試或工程 tooling 下的確切業務文字，但不能繞過安全邊界。Raw analysis inputs 永不直接成為 upload source。
 
 第一次執行 discovery preflight，不寫檔：
 
@@ -228,8 +228,11 @@ Ingest 與 Archaeology。不得執行目標程式、測試、migration、build �
 輸出以穩定 `FUNC-*` 功能／使用情境呈現，再以入口表核對每個 API、UI、CLI、job、event 或公開
 介面的 coverage；一個功能可連結多個入口。每個功能要記錄正常／邊界／錯誤／授權／狀態／交易／
 設定／相容性／效能情境，無法歸類的入口使用 `FUNC-UNCLASSIFIED-{slug}`。報告的
-`audit_report_version: 2` 讓每個 finding 同時引用受影響功能與入口，並在同範圍重跑時沿用 ID、
-保留 user notes、標記 `new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`。
+`audit_report_version: 3` 另以 `scan_schema_version: 2`、`scan_profile` 與
+`scan_snapshot_id` 綁定 shared scanner；`檔案處置` 必須逐檔列出 exact path set、scanner
+category 與相容 disposition，`excluded_roots` 只作目錄摘要。每個 finding 同時引用受影響
+功能與入口，並在同範圍重跑時沿用 ID、保留 user notes、標記 `new`、`still-present`、
+`rechecked-no-longer-observed` 或 `not-rechecked`；v2 報告仍依既有相容規則驗證。
 
 先記錄目前 `git rev-parse HEAD`、`git rev-parse --is-shallow-repository`、`git status --short` 與 `current-first-targeted` 範圍，使用
 唯讀 `git log --follow --name-status` 建立目前入口／相關路徑的歷史索引，再以

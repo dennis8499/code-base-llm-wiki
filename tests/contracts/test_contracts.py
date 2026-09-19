@@ -722,6 +722,7 @@ class ContractTests(unittest.TestCase):
             "validate-frontmatter.py",
             "wiki-stats.py",
             "validate-code-audit.py",
+            "scan-project.py",
             "tgrep-search.py",
         )
         script_root = REPO_ROOT / ".agents/skills/codebase-wiki/scripts"

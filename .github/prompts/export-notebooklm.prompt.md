@@ -17,10 +17,22 @@ Codebase 是唯一內容依據，包含 README、規格、測試與註解；衝�
 證據時寫 `Codebase 未提供證據`。掃描以檔案系統
 root 為準，不要求 root 有 `.git`、working tree clean，也不因 nested repository
 阻擋；nested repository 的 `.git` metadata 仍依 generated 排除規則忽略。
+先執行共用 source-first inventory：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\scan-project.py `
+  --root . --profile target --format json
+```
+
 使用 exporter 的 top-down exclusion-aware walker：保留 ignored、untracked 與 nested
-repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-level exclusions
+repository 的 project-owned source，也納入 CI/CD、IaC、scripts、tools、bin 與 examples；
+只在明確的 generated/dependency/sensitive/Wiki/output/framework adapter 邊界剪枝。回報 file-level exclusions
 與 directory-level excluded-root summaries；summary 只做 bounded metadata-only
 觀察，不讀取或 hash 排除內容，`truncated` 或 metadata errors 必須保留為 warning。
+`target` profile 會排除 `.agents/skills/codebase-wiki`、`.codex`、`.github/prompts`、
+`.github/hooks`、`.github/instructions` 與受管 Copilot instruction files；`framework`
+profile 才把這些 framework adapters 視為 evidence。若 `notebooklm.toml` 語法、型別或
+路徑邊界錯誤，shared scanner 與 exporter 都必須 fail closed。
 
 完整載入 `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md`，
 並以該 reference 作為 preflight、確認、文件優先與 pack completion criterion 的唯一來源。
@@ -38,7 +50,7 @@ repository 的 runtime source，但在進入排除目錄前剪枝。回報 file-
 
 3. 先讀 `business_source_paths` 指定的需求、流程、決策表或 acceptance spec，再讀
    preflight 納入的其他 UTF-8 runtime code、必要設定/manifests、schema/migrations、
-   behavioral tests 與既有文件。排除 CI/CD、IaC、build/dev tooling、
+   behavioral tests、CI/CD、IaC、engineering tooling 與既有文件。
    dependencies/generated、binary、credentials、framework adapters、Wiki 與 output。
 4. 依可觀察行為建立 stable `fr-*`／`cap-*` 與 `AC-*`，從入口沿實際呼叫鏈逐步追查，
    為每一步記錄觸發／條件、角色、處理、資料讀寫、狀態前後值、成功結果、阻擋原因、

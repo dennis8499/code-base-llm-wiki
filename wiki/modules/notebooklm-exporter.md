@@ -1,19 +1,21 @@
 ---
 title: NotebookLM 現況 BA／SA 匯出器
 type: module
-summary: 以 schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack
+summary: 以全專案 scanner、schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack
 notebooklm_group: business-notebooklm-export
 notebooklm_role: exclude
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
+  - .agents/skills/codebase-wiki/scripts/project_scanner.py
+  - .agents/skills/codebase-wiki/scripts/scan-project.py
   - .agents/skills/codebase-wiki/scripts/check-stale.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: sha256:940487342b9f3fc6226a473638b161141dd5ef4412db2f31931f4e77e234a1ab
+source_digest: sha256:9fdc5b97e11f896432a4131930cf011863d19e8d4709463db1450ba71a322e0a
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
-last_updated: 2026-09-09
+last_updated: 2026-09-19
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
@@ -34,10 +36,15 @@ NotebookLM API、不修改 raw sources，也不 materialize raw evidence 或技�
 | Capability documents | 專用 current-state profiles、`notebooklm_document: ba/sa`、相同 capability/group 的 pair | 產生本機 documents 與 upload sources |
 | Analysis inputs | Safe runtime source/config/schema/docs/tests、`business_source_paths`、`extra_paths` | 本機讀取、DLP masking、coverage 驗證；不匯出 |
 | Local governance | coverage ledger 與 `notebooklm_role: exclude` pages | readiness evidence；不匯出 |
-| Safety exclusions | sensitive、binary/generated/dependency、CI/IaC、Wiki/output 等 | 不讀內容或不匯出 |
+| Safety exclusions | sensitive、binary/generated/dependency、Wiki/output、框架 adapter 等 | 不讀內容或不匯出 |
 
-`business_source_paths` 只可覆蓋 dev-tooling 的 scope 分類，不能覆蓋 sensitive、
-generated/dependency、CI/IaC、configured exclusion、Wiki/output 或 symlink/reparse boundary。
+`business_source_paths` 只可覆蓋測試或工程 tooling 的 scope 分類，不能覆蓋 sensitive、
+generated/dependency、configured exclusion、Wiki/output 或 symlink/reparse boundary。專案自有
+CI/CD、IaC、scripts、tools、bin 與 examples 由共用 `scan-project.py` 納入並分類，避免只因目錄名稱而遺漏系統運作知識。
+target profile 只排除已安裝的 framework adapter 路徑（包含 `.agents/skills/codebase-wiki`、
+`.codex`、`.github/prompts`、`.github/hooks`、`.github/instructions` 與 managed Copilot instruction
+檔案），不會排除專案自有的 `.github/workflows`。Standalone scanner 與 exporter 共用設定 parser；
+symlink/reparse、malformed、mistyped 或越界的 `notebooklm.toml` 都會在 inventory 前 fail-closed。
 未指定角色的舊 Wiki 頁不會自動成為 source，preflight 會列出 warning。Standalone
 [[business-analysis]]、[[system-analysis]] 與 [[system-design]] 維持各自 profiles，均不會
 因 role 自動進入 schema-v6 上傳內容。
@@ -60,9 +67,9 @@ Preflight 的 `business_coverage` 驗證：
   `evidence-gap` 與 `business-confirmation` 分開列出且保留已知實作行為；嚴格頁面必須有具體
   逐步條件、資料／狀態、結果、例外與定位，四步摘要不算完成。
 
-每個 safe included file 另由 ledger 分成 `functional-evidence`、`supporting-technical`、
+每個 safe included file 先由共用 `scan-project.py` 綁定 snapshot、hash、category 與入口候選，再由 ledger 分成 `functional-evidence`、`supporting-technical`、
 `no-observable-behavior` 或 `analysis-gap`。Uncovered、analysis-gap、dangling requirement、
-缺少結構或 required-document stale 都使
+過時 hash/category、缺少結構或 required-document stale 都使
 `ready_to_export=false`。
 
 ## Discovery/readiness identity 與一次確認

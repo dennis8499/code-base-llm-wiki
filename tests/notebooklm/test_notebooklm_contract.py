@@ -48,7 +48,9 @@ class NotebookLMContractTests(unittest.TestCase):
             with mock.patch.object(Path, "read_bytes", guarded_read_bytes):
                 preflight = module.build_preflight(root, module.load_settings(root))
             self.assertRegex(preflight["discovery_id"], r"^sha256:[0-9a-f]{64}$")
-            self.assertEqual(preflight["discovery_schema_version"], 1)
+            self.assertEqual(preflight["discovery_schema_version"], 2)
+            self.assertEqual(preflight["scan_schema_version"], 2)
+            self.assertRegex(preflight["scan_snapshot_id"], r"^sha256:[0-9a-f]{64}$")
             preview = preflight["capability_preview"]
             self.assertIn(
                 "cap-observed-features-payments",

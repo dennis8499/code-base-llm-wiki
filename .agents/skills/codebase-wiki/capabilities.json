@@ -40,7 +40,11 @@
       ],
       "finding_classes": ["BUG", "RISK", "BIZ"],
       "review_unit": "functional_capability_with_entrypoint_coverage",
-      "report_version": 2,
+      "report_version": 3,
+      "scan_schema_version": 2,
+      "scan_profiles": ["target", "framework"],
+      "scanner": ".agents/skills/codebase-wiki/scripts/scan-project.py",
+      "inventory_contract": "file_hash_category_disposition_snapshot",
       "functional_review": [
         "normal_and_boundary_scenarios",
         "validation_authorization_and_security",
@@ -155,6 +159,17 @@
       "binary": ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe",
       "sha256": "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
       "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5"
+    },
+    "project_scanner": {
+      "provider": "host-native-filesystem",
+      "version": "2",
+      "operations": ["code_audit", "notebooklm_export"],
+      "wrapper": ".agents/skills/codebase-wiki/scripts/scan-project.py",
+      "module": ".agents/skills/codebase-wiki/scripts/project_scanner.py",
+      "read_only": true,
+      "scope": "explicit_project_root_and_descendants",
+      "snapshot": "sha256",
+      "entrypoint_candidates": true
     }
   }
 }

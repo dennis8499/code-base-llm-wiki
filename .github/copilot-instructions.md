@@ -29,14 +29,8 @@ workflow、schema、template 與 hook logic 的共同來源。
 - Interactive/Batch Ingest 與 Code Archaeology 可依
   `references/source-discovery-workflow.md` 使用 Windows x64 tgrep wrapper 作候選 locator；
   形成 claim 前必須直接重讀目前 source，Query 維持 Wiki-first 且不使用 tgrep 或 CLI fallback。
-- Codebase audit 先以原生搜尋與直接讀取目前 Codebase 盤點入口，再靜態追查呼叫路徑，交叉檢查
-  transaction、設定引用、邏輯／狀態與定向 Git history；只有遇到業務規則語意缺口才查 Wiki。
-  不使用 tgrep，也不執行目標程式、測試或修正。明確健檢請求授權保存報告；指定「只回報」則
-  不寫 Wiki、index 或 log。finding 分為 `BUG-*`、`RISK-*`、`BIZ-*`，保存後執行
-  `validate-code-audit.py`。v2 報告以 `FUNC-*` 功能／使用情境呈現，再逐入口核對 API、UI、CLI、
-  排程、事件與公開介面的 coverage；每個 finding 連結受影響功能與入口，重跑沿用 ID 並標示
-  `new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`。
-- NotebookLM export 每次以 Wiki 為基線做全專案安全 preflight；`--root` 指定的檔案系統目錄是掃描邊界，不要求 `.git` 或 clean working tree，也不因 nested repository 阻擋。預覽功能 Ingest 並確認後才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。流程分析要從入口追到實際呼叫鏈，保留每一步的條件、資料／狀態變更、成功與失敗分支；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開標示，不能以四步摘要或規則連結代替正文。
+- Codebase audit 先執行共用 `scan-project.py --root <root> --profile target --format json`，從指定 root 的完整目錄、巢狀 repository、ignored／untracked 來源及自有 CI/CD、IaC、scripts、tools、bin 建立 inventory，再靜態追查入口與呼叫路徑，交叉檢查 transaction、設定引用、邏輯／狀態與定向 Git history；只有遇到業務規則語意缺口才查 Wiki。不使用 tgrep，也不執行目標程式、測試或修正。明確健檢請求授權保存報告；指定「只回報」則不寫 Wiki、index 或 log。finding 分為 `BUG-*`、`RISK-*`、`BIZ-*`，保存後執行 `validate-code-audit.py`。v3 報告以 `FUNC-*` 功能／使用情境呈現，再逐入口核對 API、UI、CLI、排程、事件與公開介面的 coverage；記錄 `scan_profile` 與 `scan_snapshot_id`，每個 finding 連結受影響功能與入口，並在逐檔處置表保留 scanner 的 exact path set、category、disposition 與未讀缺口，重跑沿用 ID 並標示 `new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`。
+- NotebookLM export 先以 `scan-project.py --root <root> --profile target --format json` 對整個指定檔案系統 root 做唯讀盤點，再以 Wiki 補充既有知識；不因空白、過時或不完整 Wiki 縮小範圍。掃描包含 nested repository、ignored／untracked 自有來源與 CI/CD、IaC、scripts、tools、bin，保留 hash、分類、排除理由、read issues、entrypoint candidates 及 snapshot。target profile 會排除 `.agents/skills/codebase-wiki`、`.codex`、`.github/prompts`、`.github/hooks`、`.github/instructions` 與受管 Copilot instruction files，framework profile 才納入這些 framework adapters；設定錯誤時 shared scanner 與 exporter fail closed。預覽功能與缺口並取得一次確認後，才增量更新 Wiki、產生被 Git 忽略的繁中 `.notebooklm/` pack，且不自動連線或上傳。流程分析要從入口追到實際呼叫鏈，保留每一步的條件、資料／狀態變更、成功與失敗分支；`analysis-gap`、`evidence-gap`、`business-confirmation` 分開標示，不能以四步摘要或規則連結代替正文。
 - BA／SA／SD 文件載入共用 standards profile；SA 保持 solution-neutral，證據不足以具體 Gap 降級，不產生虛構 Mermaid 或設計。
 
 ## Copilot Adapter

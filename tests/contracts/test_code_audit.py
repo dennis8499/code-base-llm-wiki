@@ -86,7 +86,11 @@ class CodeAuditContractTests(unittest.TestCase):
                 ],
                 "finding_classes": ["BUG", "RISK", "BIZ"],
                 "review_unit": "functional_capability_with_entrypoint_coverage",
-                "report_version": 2,
+                "report_version": 3,
+                "scan_schema_version": 2,
+                "scan_profiles": ["target", "framework"],
+                "scanner": ".agents/skills/codebase-wiki/scripts/scan-project.py",
+                "inventory_contract": "file_hash_category_disposition_snapshot",
                 "functional_review": [
                     "normal_and_boundary_scenarios",
                     "validation_authorization_and_security",
@@ -116,6 +120,10 @@ class CodeAuditContractTests(unittest.TestCase):
         self.assertEqual(
             manifest["integrations"]["source_discovery"]["operations"],
             ["ingest", "archaeology"],
+        )
+        self.assertEqual(
+            manifest["integrations"]["project_scanner"]["operations"],
+            ["code_audit", "notebooklm_export"],
         )
 
         workflow = (SKILL_ROOT / "references" / "code-audit-workflow.md").read_text(
@@ -168,7 +176,7 @@ class CodeAuditContractTests(unittest.TestCase):
             "RISK-*",
             "validate-code-audit.py",
             "FUNC-*",
-            "audit_report_version: 2",
+            "audit_report_version: 3",
             "new",
             "still-present",
             "rechecked-no-longer-observed",
@@ -205,7 +213,10 @@ class CodeAuditContractTests(unittest.TestCase):
             "功能 ID",
             "受影響功能",
             "重跑狀態",
-            "audit_report_version: 2",
+            "audit_report_version: 3",
+            "scan_schema_version: 2",
+            "scan_profile: target",
+            "## 檔案處置",
             "high` → `medium` → `low",
         ):
             with self.subTest(required=required):

@@ -55,6 +55,9 @@ CODE_AUDIT_HISTORY = {
 CODE_AUDIT_REPORT_VALIDATOR = ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
 CODE_AUDIT_WORKFLOW_TOKENS = (
     "Start with the current Codebase tree",
+    "scan-project.py",
+    "snapshot",
+    "project-owned CI/CD",
     "Inventory every in-scope entrypoint",
     "Consult `wiki/index.md` and relevant Wiki pages only",
     "On every run, rebuild the entrypoint inventory",
@@ -330,6 +333,13 @@ def main() -> int:
     source_discovery = integrations.get("source_discovery") if isinstance(integrations, dict) else None
     if source_discovery != TGREP_INTEGRATION:
         issues.append("tgrep source_discovery integration metadata drifted")
+    project_scanner = integrations.get("project_scanner") if isinstance(integrations, dict) else None
+    if not isinstance(project_scanner, dict) or project_scanner.get("version") != "2":
+        issues.append("project_scanner integration metadata is missing or stale")
+    else:
+        for relative in (project_scanner.get("wrapper"), project_scanner.get("module")):
+            if not relative or not (root / relative).is_file():
+                issues.append(f"missing project scanner surface: {relative}")
     for relative in (SOURCE_DISCOVERY_REFERENCE, TGREP_MANIFEST_PATH, TGREP_BINARY_PATH, TGREP_INTEGRATION["wrapper"]):
         if not (root / relative).is_file():
             issues.append(f"missing tgrep integration surface: {relative}")
@@ -388,6 +398,8 @@ def main() -> int:
         issues.append("Codebase audit checks contract is incomplete or reordered")
     if audit_contract.get("finding_classes") != CODE_AUDIT_FINDING_CLASSES:
         issues.append("Codebase audit finding classes must be BUG/RISK/BIZ")
+    if audit_contract.get("scan_profiles") != ["target", "framework"]:
+        issues.append("Codebase audit scan profiles must be target/framework")
     if audit_contract.get("history") != CODE_AUDIT_HISTORY:
         issues.append("Codebase audit Git history contract is incomplete")
     if audit_contract.get("report_validator") != CODE_AUDIT_REPORT_VALIDATOR:
@@ -489,8 +501,14 @@ def main() -> int:
         audit_template_text = audit_template.read_text(encoding="utf-8")
         if 'source_digest: "sha256:' not in audit_template_text:
             issues.append("Codebase audit report template must include its source digest")
-        if "audit_report_version: 2" not in audit_template_text or "## 功能 Review" not in audit_template_text:
-            issues.append("Codebase audit report template must include the v2 functional review contract")
+        if (
+            "audit_report_version: 3" not in audit_template_text
+            or "scan_schema_version: 2" not in audit_template_text
+            or "scan_profile: target" not in audit_template_text
+            or "## 功能 Review" not in audit_template_text
+            or "## 檔案處置" not in audit_template_text
+        ):
+            issues.append("Codebase audit report template must include the v3 scanner-bound review contract")
     validator = root / CODE_AUDIT_REPORT_VALIDATOR
     if not validator.is_file():
         issues.append("missing Codebase audit report validator")

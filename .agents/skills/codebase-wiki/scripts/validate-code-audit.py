@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Validate the structure and provenance of a persisted Codebase audit.
+"""Validate a persisted Codebase audit against the current scanner inventory.
 
 The validator does not inspect or execute the audited application.  It checks
 that a report is internally consistent, that its current ``sources`` exist,
-and that Git history claims have the evidence shape required by the audit
+and, for v3 reports, that the recorded scan profile, snapshot, file paths,
+categories, and dispositions still match a fresh read-only scanner run.  Git
+history claims must also have the evidence shape required by the audit
 workflow.
 
 Usage:
@@ -22,6 +24,16 @@ import sys
 from typing import Any
 
 from frontmatter import configure_utf8_stdio, parse_frontmatter_text
+
+# Keep the v3 report contract aligned with the canonical source-first scanner
+# instead of maintaining a second inventory or allowlist here.
+from project_scanner import (  # noqa: E402
+    EXCLUSION_REASON_TO_CATEGORY,
+    REPORT_CATEGORIES,
+    ScanError,
+    load_scan_settings,
+    scan_project,
+)
 
 
 REQUIRED_FRONTMATTER = {
@@ -50,6 +62,8 @@ RERUN_STATES = {
 }
 FULL_SHA = re.compile(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])")
 SOURCE_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
+SCAN_SNAPSHOT_ID = re.compile(r"^sha256:[0-9a-f]{64}$")
+SCAN_PROFILES = {"target", "framework"}
 RELATIVE_SOURCE = re.compile(r"^[^/\\][^:]*$")
 SUMMARY_COVERAGE = re.compile(
     r"入口覆蓋[^\n]*?checked\s*([0-9]+)[^\n]*?partial\s*([0-9]+)"
@@ -124,6 +138,9 @@ REQUIRED_SECTIONS = (
     "相關頁面",
 )
 V2_REQUIRED_SECTIONS = ("功能 Review",)
+V3_REQUIRED_SECTIONS = ("功能 Review", "檔案處置")
+FILE_DISPOSITIONS = {"included", "excluded", "read-issue", "analysis-gap", "not-reviewed"}
+SCAN_CATEGORIES = REPORT_CATEGORIES
 
 FINDING_FIELDS = {
     "BUG": (
@@ -476,6 +493,137 @@ def _source_path(repo_root: Path, value: str) -> Path | None:
     return path
 
 
+def _parse_file_disposition_rows(body: str) -> tuple[list[dict[str, str]], list[str]]:
+    rows: list[dict[str, str]] = []
+    errors: list[str] = []
+    seen_paths: set[str] = set()
+    for line in body.splitlines():
+        cells = _table_cells(line)
+        if cells is None or not cells or _is_separator_row(cells):
+            continue
+        if cells[0].strip().lower() in {"path", "檔案", "路徑"}:
+            continue
+        if len(cells) < 4:
+            errors.append(
+                "檔案處置 row must include path, category, disposition, and function/process link"
+            )
+            continue
+        path_value = _cell_value(cells[0])
+        normalized_path = path_value.replace("\\", "/")
+        if normalized_path in seen_paths:
+            errors.append(f"檔案處置 contains duplicate path: {normalized_path}")
+        seen_paths.add(normalized_path)
+        category = _cell_value(cells[1])
+        if category not in SCAN_CATEGORIES:
+            errors.append(f"檔案處置 row has invalid scanner category: {cells[1]}")
+        disposition = _normalise_status(cells[2])
+        if disposition not in FILE_DISPOSITIONS:
+            errors.append(f"檔案處置 row has invalid disposition: {cells[2]}")
+        if not path_value or not category or not _cell_value(cells[3]):
+            errors.append("檔案處置 row is missing path, category, or function/process link")
+        rows.append(
+            {
+                "path": normalized_path,
+                "category": category,
+                "disposition": disposition,
+                "association": _cell_value(cells[3]),
+            }
+        )
+    if not rows:
+        errors.append("檔案處置 must contain at least one file row")
+    return rows, errors
+
+
+def _scanner_bound_errors(
+    repo_root: Path,
+    scan_profile: str,
+    expected_snapshot_id: str,
+    rows: list[dict[str, str]],
+) -> list[str]:
+    try:
+        settings = load_scan_settings(repo_root, scan_profile)
+        scan = scan_project(repo_root, settings, ())
+    except (OSError, ScanError, UnicodeError) as exc:
+        return [f"unable to rebuild scanner inventory: {exc}"]
+
+    errors: list[str] = []
+    actual_by_path: dict[str, dict[str, str]] = {}
+    for row in rows:
+        path = row["path"]
+        if _source_path(repo_root, path) is None:
+            errors.append(f"檔案處置 row has an unsafe or invalid path: {path}")
+            continue
+        actual_by_path[path] = row
+
+    expected_by_path: dict[str, dict[str, str]] = {}
+    for item in scan["included"]:
+        expected_by_path[item["path"]] = {
+            "category": item["category"],
+            "kind": "included",
+        }
+    for item in scan["excluded"]:
+        path = item["path"]
+        category = EXCLUSION_REASON_TO_CATEGORY.get(item["reason"])
+        if category is None:
+            errors.append(f"scanner returned an unknown exclusion reason: {item['reason']}")
+            continue
+        expected_by_path[path] = {
+            "category": category,
+            "kind": "excluded",
+        }
+
+    expected_paths = set(expected_by_path)
+    actual_paths = set(actual_by_path)
+    missing = sorted(expected_paths - actual_paths)
+    extra = sorted(actual_paths - expected_paths)
+    if missing:
+        suffix = " ..." if len(missing) > 10 else ""
+        errors.append(
+            "檔案處置 is missing scanner file rows: "
+            + ", ".join(missing[:10])
+            + suffix
+        )
+    if extra:
+        suffix = " ..." if len(extra) > 10 else ""
+        errors.append(
+            "檔案處置 contains paths absent from scanner inventory: "
+            + ", ".join(extra[:10])
+            + suffix
+        )
+
+    for path in sorted(expected_paths & actual_paths):
+        expected = expected_by_path[path]
+        actual = actual_by_path[path]
+        if actual["category"] != expected["category"]:
+            errors.append(
+                f"檔案處置 category mismatch for {path}: "
+                f"expected {expected['category']}, got {actual['category']}"
+            )
+        allowed = (
+            {"included", "analysis-gap", "not-reviewed"}
+            if expected["kind"] == "included"
+            else {"excluded", "read-issue"}
+        )
+        if actual["disposition"] not in allowed:
+            errors.append(
+                f"檔案處置 disposition mismatch for {path}: "
+                f"expected one of {sorted(allowed)}, got {actual['disposition']}"
+            )
+
+    actual_scan_profile = scan.get("scan_profile")
+    if actual_scan_profile != scan_profile:
+        errors.append(
+            f"scanner profile mismatch: expected {scan_profile}, got {actual_scan_profile}"
+        )
+    actual_snapshot_id = scan.get("snapshot_id")
+    if actual_snapshot_id != expected_snapshot_id:
+        errors.append(
+            "scan_snapshot_id does not match the current scanner inventory: "
+            f"expected {actual_snapshot_id}, got {expected_snapshot_id}"
+        )
+    return errors
+
+
 def validate_report(report_path: Path, repo_root: Path) -> list[str]:
     errors: list[str] = []
     try:
@@ -485,9 +633,27 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
 
     frontmatter = parse_frontmatter_text(text)
     report_version = frontmatter.get("audit_report_version")
-    is_v2 = report_version is not None
-    if is_v2 and str(report_version).strip() != "2":
-        errors.append("audit_report_version must be integer 2 when present")
+    version_text = str(report_version).strip() if report_version is not None else ""
+    is_v3 = version_text == "3"
+    is_v2 = version_text in {"2", "3"}
+    scan_profile: str | None = None
+    scan_snapshot_id: str | None = None
+    if report_version is not None and version_text not in {"2", "3"}:
+        errors.append("audit_report_version must be integer 2 or 3 when present")
+    if is_v3:
+        scan_schema = frontmatter.get("scan_schema_version")
+        if str(scan_schema).strip() != "2":
+            errors.append("scan_schema_version must be integer 2 for audit report v3")
+        raw_scan_profile = frontmatter.get("scan_profile")
+        if not isinstance(raw_scan_profile, str) or raw_scan_profile not in SCAN_PROFILES:
+            errors.append("scan_profile must be 'target' or 'framework' for audit report v3")
+        else:
+            scan_profile = raw_scan_profile
+        snapshot_id = frontmatter.get("scan_snapshot_id")
+        if not isinstance(snapshot_id, str) or not SCAN_SNAPSHOT_ID.fullmatch(snapshot_id):
+            errors.append("scan_snapshot_id must use sha256:<64 lowercase hex>")
+        else:
+            scan_snapshot_id = snapshot_id
     missing = sorted(REQUIRED_FRONTMATTER - set(frontmatter))
     if missing:
         errors.append("missing required frontmatter: " + ", ".join(missing))
@@ -630,10 +796,24 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
 
     findings = _finding_blocks(managed)
     if is_v2:
-        for section in V2_REQUIRED_SECTIONS:
+        required_sections = V3_REQUIRED_SECTIONS if is_v3 else V2_REQUIRED_SECTIONS
+        for section in required_sections:
             if not re.search(rf"(?m)^##\s+{re.escape(section)}\s*$", managed):
                 errors.append(f"missing required section: {section}")
         errors.extend(_validate_functional_v2(managed, findings))
+    if is_v3:
+        disposition_body = _section_body(managed, "檔案處置")
+        disposition_rows, disposition_errors = _parse_file_disposition_rows(disposition_body)
+        errors.extend(disposition_errors)
+        if scan_profile is not None and scan_snapshot_id is not None:
+            errors.extend(
+                _scanner_bound_errors(
+                    repo_root,
+                    scan_profile,
+                    scan_snapshot_id,
+                    disposition_rows,
+                )
+            )
     ids = [finding_id for finding_id, _ in findings]
     duplicates = sorted({finding_id for finding_id in ids if ids.count(finding_id) > 1})
     if duplicates:

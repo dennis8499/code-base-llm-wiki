@@ -1,7 +1,7 @@
 ---
 title: Codebase 靜態健檢
 type: module
-summary: 先從目前 Codebase 盤點功能與入口，再以完整呼叫路徑和定向 Git 歷史追查可證明缺陷，並保留逐功能重跑狀態與覆蓋限制
+summary: 先用共用 scanner 盤點目前 Codebase 的功能與入口，再以完整呼叫路徑和定向 Git 歷史追查可證明缺陷，並保留逐功能、逐檔重跑狀態與覆蓋限制
 sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/SKILL.md
@@ -9,6 +9,8 @@ sources:
   - .agents/skills/codebase-wiki/references/frontmatter-spec.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
+  - .agents/skills/codebase-wiki/scripts/project_scanner.py
+  - .agents/skills/codebase-wiki/scripts/scan-project.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
   - tests/contracts/test_code_audit.py
@@ -17,9 +19,9 @@ sources:
   - tests/contracts/test_code_audit_validator.py
   - tests/fixtures/code-audit/history/README.md
   - tests/fixtures/code-audit/history/expected-findings.md
-source_digest: sha256:81c8c9425272eafccfdd0bfa849fbea7830d34a490e0198403147527ff5fe82d
+source_digest: sha256:169eaa3888bf6841d87d1822887e74b8af348143611b63e07d39e532249948b8
 derived_from: ["[[system-architecture]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-18
+last_updated: 2026-09-19
 tags: [module, code-audit, static-analysis, business-logic, git-history]
 status: active
 notebooklm_group: local-governance
@@ -47,8 +49,13 @@ Audit 報告以穩定的 `FUNC-*` 功能／使用情境呈現結果，以入口�
 
 每個功能至少檢查正常與邊界／缺資料、驗證／授權與安全性、資料／狀態、transaction／副作用、
 重試／並行／冪等、設定／相容性、效能／資源生命週期與錯誤映射／可觀測性。報告格式
-`audit_report_version: 2` 要求每個入口都關聯功能、每個 finding 都同時列受影響功能與入口，
+`audit_report_version: 3` 以 `scan_schema_version: 2` 與 `scan_profile` 綁定共用 scanner snapshot，validator 會重跑 shared scanner，要求每個檔案都有逐檔處置、每個入口都關聯功能、每個 finding 都同時列受影響功能與入口，
 並讓摘要的功能／入口 coverage 與 finding 計數可由 validator 重算。
+逐檔處置的 Category 沿用 scanner 契約：included 使用來源類別；excluded 或 read-issue 可使用
+`sensitive`、`binary_or_generated`、`binary_or_unsupported_encoding`、`framework_adapter`、
+`wiki_knowledge_layer`、`export_output`、`configured_exclude`、`scan_scope_tests`、`link_boundary`
+或 `unreadable`。`sensitive_filename` 只作為 exclusion reason。Scanner 不追蹤 linked file
+target，且會拒絕 linked/reparse 的 `notebooklm.toml`。
 
 ## 判定方式
 
@@ -77,11 +84,11 @@ Audit 報告以穩定的 `FUNC-*` 功能／使用情境呈現結果，以入口�
 共享操作為 `code_audit`，每次執行都先從目前 Codebase 重新建立入口 inventory；明確健檢請求授權寫入
 `wiki/synthesis/code-audit-{scope}.md`；全專案 scope 為 `all`。指定「只回報」時不修改 Wiki、
 索引或日誌。同範圍重跑沿用 finding IDs 並保留 user-notes 區，未重新檢查的項目維持未確認狀態；既有
-legacy 報告沒有 `audit_report_version` 時仍以舊版結構驗證，下一次 audit 才依目前 source 補齊 v2。
+legacy 報告沒有 `audit_report_version` 時仍以舊版結構驗證，下一次 audit 才依目前 source 補齊 v3。
 新增或重大更新報告時，連結相關 Wiki 內容、更新 `wiki/index.md`，並追加一筆 `synthesis`
 操作到 append-only `wiki/log.md`；持久化後以 `validate-code-audit.py` 檢查報告結構、finding IDs、
-來源存在性、入口關聯、coverage／四類檢查計數與 Git history 的完整 SHA／diff 位置。Validator
-只保證報告結構與 provenance 一致，不代表 Review 品質、完整性或 runtime 已驗證。
+來源存在性、入口關聯、coverage／四類檢查計數、Git history 的完整 SHA／diff 位置，以及 scanner
+snapshot、逐檔 path set、category 與 disposition 的一致性。Validator 不代表 Review 品質或 runtime 已驗證。
 
 Copilot 使用 `/code-audit [scope]`；Codex 使用自然語言 recipes，兩者皆載入相同 workflow 與
 report template。驗收 fixture 涵蓋多入口共享根因、交易／設定／介面變更、明確規則、技術風險、

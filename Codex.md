@@ -131,9 +131,9 @@ Code archaeology:
 Codebase audit:
 
 ```text
-每次執行都先從目前 Codebase 的目錄、manifest、設定與入口註冊處盤點並重新建立 inventory，盤點 API、UI、CLI、排程、事件、plugin 與公開介面，再沿每個入口追查目前 source 的輸入、驗證／權限、業務邏輯、資料／狀態、輸出與失敗路徑；掃描範圍不由 Wiki 決定，只有遇到業務規則或政策語意缺口才查 Wiki。交叉檢查 transaction、configuration、logic/state、change-completeness 四類，並在 source 追查後使用 git log、git show、git blame 核對定向歷史。分開列出確定缺陷、技術風險與待確認政策，合併相同根因，記錄每個入口的 checked／partial／not checked 覆蓋與限制，保存繁中報告到 wiki/synthesis/code-audit-all.md，更新相關 Wiki link、index 與 synthesis log，最後執行 validate-code-audit.py。不要執行程式、測試或修正。
+每次執行都先執行 `.agents/skills/codebase-wiki/scripts/scan-project.py --root . --profile target --format json`；先從目前 Codebase 的目錄、manifest、設定與入口註冊處盤點，重新建立 inventory，包含子目錄、巢狀 repository、ignored／untracked 來源及自有 CI/CD、IaC、scripts、tools、bin；再盤點 API、UI、CLI、排程、事件、plugin 與公開介面，沿每個入口追查目前 source 的輸入、驗證／權限、業務邏輯、資料／狀態、輸出與失敗路徑。掃描範圍不由 Wiki 決定，只有遇到業務規則或政策語意缺口才查 Wiki。交叉檢查 transaction、configuration、logic/state、change-completeness 四類，並在 source 追查後使用 git log、git show、git blame 核對定向歷史。分開列出確定缺陷、技術風險與待確認政策，合併相同根因，記錄每個入口的 checked／partial／not checked 覆蓋、每個檔案的處置與 scan snapshot，保存繁中 v3 報告到 wiki/synthesis/code-audit-all.md，更新相關 Wiki link、index 與 synthesis log，最後執行 validate-code-audit.py。不要執行程式、測試或修正。
 
-以穩定的 `FUNC-*` 功能／使用情境整理結果，再以入口逐項核對覆蓋；一個功能可以包含多個 API、UI、CLI、排程、事件或公開介面。每個功能都要記錄相關入口、已檢查的正常／邊界／錯誤／授權／狀態／交易／設定／相容性／效能情境與 checked／partial／not checked 狀態；無法歸類的入口使用 `FUNC-UNCLASSIFIED-{slug}`，不得遺漏。每個 finding 同時記錄受影響功能與入口。報告使用 `audit_report_version: 2` 時，重跑狀態分為 `new`、`still-present`、`rechecked-no-longer-observed`、`not-rechecked`，沿用既有 finding IDs、user notes 與已移除入口的歷史；finding 在各分類中依 high → medium → low 影響程度排序。
+以穩定的 `FUNC-*` 功能／使用情境整理結果，再以入口逐項核對覆蓋；一個功能可以包含多個 API、UI、CLI、排程、事件或公開介面。每個功能都要記錄相關入口、已檢查的正常／邊界／錯誤／授權／狀態／交易／設定／相容性／效能情境與 checked／partial／not checked 狀態；無法歸類的入口使用 `FUNC-UNCLASSIFIED-{slug}`，不得遺漏。每個 finding 同時記錄受影響功能與入口，每個掃描檔案在 v3 `檔案處置` 表中逐檔列出。報告使用 `audit_report_version: 3`、`scan_schema_version: 2` 與 `scan_profile: target|framework`，validator 依 profile 重跑 shared scanner 並比對 snapshot、完整 path set、category 與 disposition；重跑狀態分為 `new`、`still-present`、`rechecked-no-longer-observed`、`not-rechecked`，沿用既有 finding IDs、user notes 與已移除入口的歷史；finding 在各分類中依 high → medium → low 影響程度排序。
 ```
 
 若只需檢查特定模組或入口，將範圍明確提供，例如 `src/payments` 或 `退款 API`；也可指定要追查的 commit 或 range；若只要對話回報，明確說「只回報，不寫 Wiki」。
@@ -160,10 +160,10 @@ NotebookLM Enterprise export:
 
 ```text
 請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export。先執行唯讀 discovery preflight，
-以 `--root` 為檔案系統邊界，盤點安全 UTF-8 runtime source、config、schema、docs 與
-behavioral tests。依可觀察行為建立 `fr-*`／`cap-*`、`AC-*`、流程、規則、詞彙、證據狀態
+先執行 `scan-project.py --root <root> --profile target --format json`，以 `--root` 為檔案系統邊界，盤點安全 UTF-8 runtime source、config、schema、docs、behavioral tests 及自有 CI/CD、IaC、scripts、tools、bin。依可觀察行為建立 `fr-*`／`cap-*`、`AC-*`、流程、規則、詞彙、證據狀態
 與 gaps，從入口沿實際呼叫鏈逐步記錄觸發／條件、資料讀寫、狀態變更、結果、失敗分支與
 來源定位；不要只留下四步摘要或規則連結。讓每個安全檔案都有 non-gap disposition；
+coverage schema v2 同時保存每檔 hash、scanner category、功能／流程關聯與處置理由，目錄 prefix 不足以通過 gate；
 PDF/Office/圖片等只登記 gap。
 列出 inventory、排除、coverage、每個功能預計 BA／SA、DLP masking 與容量後等待一次確認。
 確認後重建 managed sections、保留 user notes，更新 requirement/process/rule pages、每個

@@ -33,12 +33,18 @@ uncertainty and business policy uncertainty separately.
 
 ## Evidence and scan boundaries
 
-1. Start with the current Codebase tree, independently of Wiki coverage. Use
-   native file listing, search, and direct file reads to identify the project
-   structure, manifests, configuration, schemas, tests, documentation, and
-   project-owned entrypoint registrations. An empty, stale, incomplete, or
-   missing Wiki must not reduce this discovery scope.
-2. Inventory every in-scope entrypoint and its source path. Look for routes and
+1. Start with the current Codebase tree, independently of Wiki coverage. Run
+   `python .agents/skills/codebase-wiki/scripts/scan-project.py --root <root>
+   --profile target --format json` and use its snapshot as the inventory
+   baseline. The scanner lists every safe UTF-8 file, hash, category, read
+   issue, exclusion reason, and conservative entrypoint candidate. It includes
+   nested repositories, ignored/untracked files, and project-owned CI/CD, IaC,
+   scripts, tools, and bin content. An empty, stale, incomplete, or
+   missing Wiki must not reduce this discovery scope. Symlink/reparse files
+   are recorded as `link_boundary` without reading their targets; a linked
+   `notebooklm.toml` is rejected before configuration is read.
+2. Inventory every in-scope entrypoint and its source path. Reconcile scanner
+   candidates with direct source reads, then look for routes and
    handlers, UI actions, CLI commands, public interfaces, scheduled jobs,
    event/message consumers, plugin registrations, and other framework
    entrypoints appropriate to the project. Exclude generated output, caches,
@@ -192,14 +198,27 @@ the report remains actionable while retaining the `BUG-*`, `RISK-*`, and
   actually inspected; Wiki evidence belongs in `derived_from`. When `sources`
   is non-empty, populate and refresh `source_digest` using the contract in
   `references/frontmatter-spec.md`.
-- New reports set `audit_report_version: 2`. Their managed body contains a
+- New reports set `audit_report_version: 3`, `scan_schema_version: 2`, and
+  `scan_profile: target | framework`; the profile is the authoritative scanner
+  scope used to rebuild the inventory. Their managed body contains a
   functional review table, a function ID on every entrypoint row, and
-  `受影響功能` plus `重跑狀態` on every finding. A report without this marker is
-  a legacy report and remains valid under the legacy structure until its next
-  same-scope audit upgrades it from current source.
-- `validate-code-audit.py` checks report structure, linkage, counts, and
-  provenance only; a passing validator does not prove that the source review
-  found every defect or that a runtime behavior was reproduced.
+  `受影響功能` plus `重跑狀態` on every finding, together with a row for every
+  included, excluded, or unreadable file in the scanner-bound `檔案處置`
+  section. `Category` uses the scanner's source categories for included files
+  and its exclusion categories (`sensitive`, `binary_or_generated`,
+  `binary_or_unsupported_encoding`, `framework_adapter`,
+  `wiki_knowledge_layer`, `export_output`, `configured_exclude`,
+  `scan_scope_tests`, `link_boundary`, or `unreadable`) for excluded/read-issue
+  rows; `sensitive_filename` remains the reason. `excluded_roots` directory
+  summaries are scanner metadata, not file rows. A report without this marker is a legacy report and remains valid
+  under the legacy structure until its next same-scope audit upgrades it from
+  current source.
+- `validate-code-audit.py` rebuilds the shared scanner using `scan_profile`,
+  compares `scan_snapshot_id`, and requires an exact per-file disposition set
+  with matching scanner categories and compatible dispositions. It still checks
+  report structure, linkage, counts, and provenance; a passing validator does
+  not prove that the source review found every defect or that runtime behavior
+  was reproduced.
 - Add a Git history section to every report. Record the full HEAD when history
   is available, whether the worktree was dirty, the query scope, the commits
   deeply reviewed, and any shallow/missing-object limitation. Historical paths

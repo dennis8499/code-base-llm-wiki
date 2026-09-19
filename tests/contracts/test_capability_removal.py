@@ -295,7 +295,7 @@ status: active
             encoding="utf-8"
         )
         self.assertIn(
-            "| `.agents/skills/codebase-wiki/` | functional-evidence | [[notebooklm-ba-functional-export]], [[business-analysis-document]], [[system-analysis-document]], [[system-design-document]] |",
+            "| `.agents/skills/codebase-wiki/SKILL.md` | `sha256:",
             coverage,
         )
         self.assertNotIn("| `.agents/skills/` |", coverage)

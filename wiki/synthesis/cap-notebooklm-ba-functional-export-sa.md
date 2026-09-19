@@ -13,19 +13,23 @@ notebooklm_role: analysis
 notebooklm_terms: [schema v6, discovery_id, preflight_id, DLP, manifest, atomic commit]
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
+  - .agents/skills/codebase-wiki/scripts/project_scanner.py
+  - .agents/skills/codebase-wiki/scripts/scan-project.py
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/notebooklm/test_notebooklm_acceptance.py
   - tests/notebooklm/test_notebooklm_contract.py
-source_digest: sha256:628beab8a4f91a6b1b2d6b07d3f5265a174d9540d52ec608c4ca372f5736c5c0
+source_digest: sha256:feced8e6df9bbe7e1d285f7242c4dce6979e1e7afddd5be80fc179cd883f20bb
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1922"
+  - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
+  - ".agents/skills/codebase-wiki/scripts/project_scanner.py:1"
   - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215"
   - ".agents/skills/codebase-wiki/capabilities.json:61"
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
   - "tests/notebooklm/test_notebooklm_contract.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-ba]]"]
-last_updated: 2026-09-18
+last_updated: 2026-09-19
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -35,7 +39,7 @@ status: active
 <!-- codebase-wiki:managed:start -->
 ## 系統邊界、輸入與輸出
 
-`notebooklm_exporter.py` 是 canonical 離線實作，compatibility wrapper 只呼叫其 `main()`。輸入是 repository root、可選 `notebooklm.toml`、Wiki pages，以及 apply 時的 `discovery_id`／`preflight_id`；輸出只寫 repository child `.notebooklm/`。
+`scan-project.py`／`project_scanner.py` 是 canonical 唯讀 inventory，`notebooklm_exporter.py` 是 canonical 離線打包實作，compatibility wrapper 只呼叫其 `main()`。輸入是 repository root、可選 `notebooklm.toml`、Wiki pages，以及 apply 時的 `discovery_id`／`preflight_id`；輸出只寫 repository child `.notebooklm/`。
 
 ## 資料、狀態與轉換
 

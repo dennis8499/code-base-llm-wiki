@@ -145,7 +145,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
   Archaeology 的候選定位，索引不存在時安全 full scan，其他平台使用原有搜尋方式。
 - **增量維護**：透過 `wiki/index.md`、wikilinks 與 append-only `wiki/log.md` 累積知識。
 - **雙入口同權**：Copilot 與 Codex 共用 intent、規格、模板與驗收契約。
-- **Codebase 健檢**：先從 API、UI、CLI、排程、事件、plugin 與公開介面的目前註冊處盤點入口，再追查呼叫路徑，交叉核對 transaction、設定引用、邏輯／狀態與定向 Git history；Wiki 只補充業務規則語意缺口。把有可達性與來源證據的 BUG、技術風險和需業務確認的疑點分列，保留檢查覆蓋與缺口，不執行目標程式或測試。
+- **Codebase 健檢**：先用共用 `scan-project.py` 盤點指定 root 下的所有自有來源、CI/CD、IaC、scripts、tools、bin、巢狀 repository 與入口候選，再追查呼叫路徑，交叉核對 transaction、設定引用、邏輯／狀態與定向 Git history；Wiki 只補充業務規則語意缺口。把有可達性與來源證據的 BUG、技術風險和需業務確認的疑點分列，保留逐檔與逐入口覆蓋，不執行目標程式或測試。
 - **BA → SA → SD 標準對齊文件**：三份繁中 Markdown 可獨立產出，以穩定 ID
   建立追溯；證據不足仍保留章節與具體 Gap，不宣稱 ISO／IEEE conformance。
 - **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、重新 Ingest 或 Lint；不會自動寫入或切換工作流。
@@ -156,7 +156,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
 - **NotebookLM 現況 BA／SA 知識包**：每次重掃安全 Codebase，以程式碼優先處理來源衝突，
   為每個 capability 產生互連的 BA／SA；流程會沿入口追到呼叫鏈，保留條件、資料／狀態、
-  結果與失敗分支，並在實際上傳 bytes 檢查規則正文是否存在。一次確認後自動完成 readiness，
+  結果與失敗分支；共用 scanner snapshot 與 schema-v2 逐檔 coverage 會記錄 hash、分類、功能流程關聯與理由，並在實際上傳 bytes 檢查規則正文是否存在。一次確認後自動完成 readiness，
   透過雙識別碼、DLP masking、容量檢查與 stable source mapping 保持可驗證；這不等於已驗證
   NotebookLM 生成式問答。
 - **可驗證**：以 Python 3.11/3.14 在隔離 worktree 手動執行 unit、compile、
@@ -274,7 +274,7 @@ manifest、設定與入口註冊處盤點 API、UI、CLI、排程、事件、plu
 NotebookLM Enterprise 匯出：
 
 ```text
-請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export：先做完整 safe discovery preflight，
+請使用 $codebase-wiki 執行現況 BA／SA NotebookLM export：先做 `scan-project.py` 完整 safe discovery preflight，
 列出納入/排除、功能、BA／SA 覆蓋、待分析內容、來源差異、DLP 與容量後等待我一次確認。
 確認後依當下 Codebase 全量建立每功能的繁中 BA／SA；流程從入口沿呼叫鏈逐步記錄條件、資料／狀態、
 結果與失敗分支，保留 user notes，自動完成 readiness
@@ -300,9 +300,10 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 `tests/fixtures/code-audit/` 提供靜態健檢驗收場景，涵蓋共用根因、多入口、交易／設定／邏輯矛盾、
 Git commit 意圖與 diff、待確認技術條件與政策、上游防護及動態入口缺口；它是唯讀分析樣例，不執行
 目標程式。持久化報告可用 `validate-code-audit.py` 檢查摘要計數、finding IDs、來源與 Git history
-欄位是否一致，也會在 `audit_report_version: 2` 報告中驗證功能／入口關聯與重跑計數；它只驗證
-報告結構與 provenance，不是另一個 target scanner 或外部分析器。沒有版本標記的既有報告維持
-legacy 驗證相容性。
+欄位是否一致，也會在 `audit_report_version: 3` 報告中依 `scan_profile` 重跑 shared scanner，驗證
+scanner snapshot、完整逐檔處置、category／disposition、功能／入口關聯與重跑計數；它不執行 target
+code，也不是外部分析器。沒有版本標記的既有報告維持 legacy 驗證相容性，缺少 `scan_profile` 的既有
+v3 報告則必須重建。
 
 為避免把框架檔案寫進版本化樣例，請先複製樣例到暫存目錄，再安裝任一 surface。完整步驟與預期結果請看 [samples/README.md](samples/README.md)。
 

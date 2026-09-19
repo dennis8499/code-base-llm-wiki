@@ -10,9 +10,9 @@ notebooklm_role: business
 notebooklm_terms: [discovery ID, readiness preflight, preflight ID, 一次確認, ready to export]
 sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
-source_digest: sha256:83f0b22e00e098dbe3034b62a2b347621e01fa59cdcd009cb19ad6d1dc2f6db1
+source_digest: sha256:8d30e703cd81a4c20627fbf703027b42dbf7899ba37d75cdf07cfdfbf480f63c
 derived_from: ["[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-09-08
+last_updated: 2026-09-19
 tags: [business-rule, notebooklm, readiness]
 status: active
 ---

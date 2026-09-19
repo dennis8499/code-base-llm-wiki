@@ -996,6 +996,13 @@ Call the service.
             (root / ".env").write_text("TOKEN=do-not-export\n", encoding="utf-8")
             (root / ".github").mkdir()
             (root / ".github/private.md").write_text("internal\n", encoding="utf-8")
+            # The full-project scanner keeps project-owned .github content in
+            # scope, so the fixture must account for this newly discovered
+            # source before export readiness can pass.
+            add_coverage_rows(
+                root,
+                "| `.github/private.md` | supporting-technical | [[greeting-requirement]] |",
+            )
             overview = root / "wiki/overview.md"
             overview.write_text(
                 overview.read_text(encoding="utf-8").replace(
@@ -1018,7 +1025,8 @@ Call the service.
             }
             for name in (".mypy_cache", ".ruff_cache"):
                 self.assertIn((name, "binary_or_generated"), excluded_roots)
-            self.assertIn((".github", "framework_adapter"), excluded_roots)
+            self.assertNotIn((".github", "framework_adapter"), excluded_roots)
+            self.assertIn(".github/private.md", {item["path"] for item in preflight["inventory"]["included"]})
             self.assertIn((".env", "sensitive_filename"), excluded)
             exported_text = "\n".join(
                 path.read_text(encoding="utf-8")
@@ -1363,9 +1371,13 @@ Call the service.
                 item["path"]: item["reason"]
                 for item in result["inventory"]["excluded_roots"]
             }
-            self.assertEqual(excluded_roots[".github"], "framework_adapter")
-            self.assertEqual(excluded_roots["infra"], "scan_scope_ci_or_iac")
-            self.assertEqual(excluded_roots["tools"], "scan_scope_dev_tooling")
+            self.assertNotIn(".github", excluded_roots)
+            self.assertNotIn("infra", excluded_roots)
+            self.assertNotIn("tools", excluded_roots)
+            included_paths = {item["path"]: item["category"] for item in result["inventory"]["included"]}
+            self.assertEqual(included_paths[".github/workflows/ci.yml"], "ci_cd")
+            self.assertEqual(included_paths["infra/main.tf"], "iac")
+            self.assertEqual(included_paths["tools/build.py"], "engineering_tooling")
             self.assertEqual(excluded_roots[".codex-hook-logs"], "binary_or_generated")
             self.assertEqual(excluded_roots[".github-hook-logs"], "binary_or_generated")
             self.assertEqual(
@@ -1531,7 +1543,7 @@ Call the service.
             excluded = {
                 item["path"]: item["reason"] for item in result["inventory"]["excluded"]
             }
-            self.assertEqual(excluded["src/linked.md"], "path_escape")
+            self.assertEqual(excluded["src/linked.md"], "link_boundary")
             self.assertNotIn("src/linked.md", {item["path"] for item in result["inventory"]["included"]})
 
     def test_preflight_rejects_unsafe_wiki_tree_before_reading(self) -> None:

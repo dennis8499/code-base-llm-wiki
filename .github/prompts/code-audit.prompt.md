@@ -11,6 +11,22 @@ argument-hint: "檢查範圍或 commit/range，例如 all、src/payments、退�
 [Codebase Audit Workflow](../../.agents/skills/codebase-wiki/references/code-audit-workflow.md)
 及 [報告模板](../../.agents/skills/codebase-wiki/assets/code-audit-template.md)。
 
+先執行共用 source-first inventory：
+
+```powershell
+python .agents\skills\codebase-wiki\scripts\scan-project.py `
+  --root . --profile target --format json
+```
+
+掃描只受技能呼叫時指定的專案 root 限制，包含其子目錄、巢狀 repository、ignored／untracked
+來源與自有 CI/CD、IaC、scripts、tools、bin；第三方依賴、產物、快取、敏感檔案、Wiki、
+匯出輸出與框架 adapter 依安全規則排除。檔案清單只是分析輸入，不代表功能已完成 Review。
+
+保存 v3 報告時記錄本次使用的 `scan_profile: target` 或 `framework`、
+`scan_snapshot_id`，並在 `檔案處置` 逐一列出 scanner 的 included、excluded 與
+read-issue 檔案；`excluded_roots` 只保留目錄摘要，不是檔案列。validator 會依報告
+profile 重跑目前 shared scanner，核對 snapshot、完整 path set、category 與相容的 disposition。
+
 每次執行都先從目前工作樹的目錄、manifest、設定與入口註冊處重新建立 inventory，用原生檔案搜尋和直接讀取盤點 API、UI、CLI、
 排程、事件、plugin 與公開介面等入口；掃描範圍不由 Wiki 的既有頁面決定。逐一追查輸入、
 驗證／權限、業務處理、資料／狀態變更、輸出與失敗路徑，並沿共用呼叫跨模組追查。明確檢查
@@ -40,7 +56,7 @@ checked 覆蓋與各類檢查狀態。不可執行目標程式、測試、build�
 的問題維持 `not-rechecked`，不可標為已解決。Git 歷史分析併入這一份 Codebase audit 報告，不
 另建同範圍 Archaeology 報告。
 
-同範圍重跑使用報告格式 `audit_report_version: 2`：新 finding 標為 `new`、再次確認的標為
+同範圍重跑使用報告格式 `audit_report_version: 3`：新 finding 標為 `new`、再次確認的標為
 `still-present`、目前不再觀察到的標為 `rechecked-no-longer-observed`，尚未重查的標為
 `not-rechecked`；摘要必須列出四種數量，並在每個 finding 分類中按 high、medium、low 影響程度排序。保留既有 finding ID、user-notes 與已移除入口的歷史，
 不可把未複查或未觀察到直接宣稱為已驗證修復。

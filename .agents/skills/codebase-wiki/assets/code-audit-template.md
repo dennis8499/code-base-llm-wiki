@@ -2,7 +2,10 @@
 title: "Codebase 健檢：{Scope}"
 type: synthesis
 summary: "以目前 source、設定與定向 Git 歷史盤點 {Scope} 的入口、具體缺陷、技術風險、業務疑點及覆蓋缺口"
-audit_report_version: 2
+audit_report_version: 3
+scan_schema_version: 2
+scan_profile: target
+scan_snapshot_id: "sha256:{64-lowercase-hex}"
 sources: []
 derived_from: []
 source_digest: "sha256:{64-lowercase-hex}"
@@ -22,7 +25,8 @@ notebooklm_role: exclude
 - 範圍：`all` 或具體模組／入口
 - 檢查日期：YYYY-MM-DD
 - 檢查方式：目前 source、設定與定向 Git 歷史的唯讀靜態追查；沒有執行目標程式或測試
-- 報告格式：`audit_report_version: 2`；以功能／使用情境呈現，入口作為覆蓋核對
+- 報告格式：`audit_report_version: 3`；以功能／使用情境呈現，入口作為覆蓋核對
+- 掃描快照：`scan_snapshot_id` 綁定本次全專案檔案盤點；每個檔案都有處置狀態
 - 功能覆蓋：checked N、partial N、not checked N
 - 入口覆蓋：checked N、partial N、not checked N
 - 確定缺陷：N；技術風險：N；待確認業務疑點：N
@@ -44,6 +48,23 @@ notebooklm_role: exclude
 | 功能 ID | 功能／使用情境 | 相關入口 | 狀態 | 已檢查情境 | Findings | 未完成原因／限制 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `FUNC-{stable-slug}` | `{業務功能或技術功能}` | `{入口名稱}` | `checked / partial / not checked` | `{正常、邊界、錯誤、授權、狀態、交易、設定、相容性、效能等}` | `{BUG-001；或無}` | `{none or concrete blocker}` |
+
+## 檔案處置
+
+這份表由共用 source-first scanner 產生，核對本次快照中每個可讀檔案與排除／讀取缺口。
+目錄 prefix 只能作為舊報告參考；v3 必須保留逐檔列。`function/process` 欄連到一個或多個
+`FUNC-*`、流程 ID 或明確的 `unclassified` 原因。
+
+`Category` 使用共用 scanner 契約：included 檔案使用來源類別；excluded 或 read-issue 檔案可使用
+`sensitive`、`binary_or_generated`、`binary_or_unsupported_encoding`、`framework_adapter`、
+`wiki_knowledge_layer`、`export_output`、`configured_exclude`、`scan_scope_tests`、`link_boundary`
+或 `unreadable`。`sensitive_filename` 仍是 exclusion reason，不是 Category。
+
+| Path | Category | Disposition | Function／process／reason |
+| --- | --- | --- | --- |
+| `src/example.py` | `runtime_source` | `included` | `FUNC-{stable-slug}` |
+| `config/secret.env` | `sensitive` | `excluded` | `excluded: sensitive_filename` |
+| `src/dynamic.py` | `runtime_source` | `not-reviewed` | `unclassified: dynamic registration` |
 
 ## 入口覆蓋
 

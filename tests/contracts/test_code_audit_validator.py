@@ -15,6 +15,8 @@ REPO_ROOT = Path(__file__).parents[2]
 SKILL_ROOT = REPO_ROOT / ".agents" / "skills" / "codebase-wiki"
 VALIDATOR = SKILL_ROOT / "scripts" / "validate-code-audit.py"
 HISTORY_FIXTURE = REPO_ROOT / "tests" / "fixtures" / "code-audit" / "history"
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+from project_scanner import ScanSettings, scan_project  # noqa: E402
 
 
 def run_git(root: Path, *args: str) -> str:
@@ -176,6 +178,39 @@ def valid_v2_report(head: str) -> str:
     return report
 
 
+def scanner_snapshot(root: Path) -> str:
+    settings = ScanSettings(
+        scan_profile="target",
+        output_directory=".notebooklm",
+        analysis_include_tests=True,
+        business_source_paths=(),
+        exclude_paths=(),
+    )
+    return scan_project(root, settings, ())['snapshot_id']
+
+
+def valid_v3_report(head: str, snapshot_id: str) -> str:
+    """Upgrade the functional fixture to the scanner-bound report contract."""
+
+    report = valid_v2_report(head).replace(
+        "audit_report_version: 2\n",
+        "audit_report_version: 3\n"
+        "scan_schema_version: 2\n"
+        "scan_profile: target\n"
+        f"scan_snapshot_id: \"{snapshot_id}\"\n",
+    )
+    report = report.replace(
+        "## 入口覆蓋\n",
+        "## 檔案處置\n\n"
+        "| Path | Category | Disposition | Function／process／reason |\n"
+        "| --- | --- | --- | --- |\n"
+        "| `src/service.py` | `runtime_source` | `included` | `FUNC-orders` |\n\n"
+        "## 入口覆蓋\n",
+        1,
+    )
+    return report
+
+
 def shared_entry_v2_report(head: str) -> str:
     """A valid v2 report where two functions share one entrypoint."""
 
@@ -262,6 +297,165 @@ class CodeAuditValidatorTests(unittest.TestCase):
             report.write_text(valid_v2_report(head), encoding="utf-8")
             result = run_validator(report, root)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_accepts_scanner_bound_functional_review_v3_report(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(valid_v3_report(head, scanner_snapshot(root)), encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_accepts_v3_exclusion_categories(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "config").mkdir()
+            (root / "config/secret.env").write_text("TOKEN=masked\n", encoding="utf-8")
+            (root / "binary.bin").write_bytes(b"\x00binary\n")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, scanner_snapshot(root)).replace(
+                    "| `src/service.py` | `runtime_source` | `included` | `FUNC-orders` |",
+                    "| `src/service.py` | `runtime_source` | `included` | `FUNC-orders` |\n"
+                    "| `config/secret.env` | `sensitive` | `excluded` | `excluded: sensitive_filename` |\n"
+                    "| `binary.bin` | `binary_or_unsupported_encoding` | `excluded` | `excluded: binary_or_unsupported_encoding` |",
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_rejects_unknown_v3_scanner_category(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, scanner_snapshot(root)).replace(
+                    "`runtime_source` | `included`",
+                    "`unknown_scanner_category` | `included`",
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("invalid scanner category", result.stdout)
+
+    def test_validator_rejects_v3_inventory_path_mismatch(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, scanner_snapshot(root)).replace(
+                    "| `src/service.py` | `runtime_source` | `included` | `FUNC-orders` |",
+                    "| `src/` | `runtime_source` | `included` | `FUNC-orders` |",
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("missing scanner file rows", result.stdout)
+            self.assertIn("paths absent from scanner inventory", result.stdout)
+
+    def test_validator_rejects_v3_nonexistent_inventory_path(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, scanner_snapshot(root)).replace(
+                    "`src/service.py`", "`missing.py`"
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("missing scanner file rows", result.stdout)
+            self.assertIn("paths absent from scanner inventory", result.stdout)
+
+    def test_validator_rejects_v3_duplicate_inventory_path(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            row = "| `src/service.py` | `runtime_source` | `included` | `FUNC-orders` |"
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, scanner_snapshot(root)).replace(
+                    row, row + "\n" + row
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("duplicate path", result.stdout)
+
+    def test_validator_rejects_v3_snapshot_mismatch(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            snapshot = scanner_snapshot(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, snapshot).replace(
+                    snapshot,
+                    "sha256:" + "0" * 64,
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("scan_snapshot_id does not match", result.stdout)
+
+    def test_validator_rejects_v3_category_disposition_mismatch(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, scanner_snapshot(root)).replace(
+                    "| `src/service.py` | `runtime_source` | `included` | `FUNC-orders` |",
+                    "| `src/service.py` | `sensitive` | `excluded` | `FUNC-orders` |",
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("category mismatch", result.stdout)
+            self.assertIn("disposition mismatch", result.stdout)
+
+    def test_validator_requires_scan_profile_for_v3(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(
+                valid_v3_report(head, scanner_snapshot(root)).replace("scan_profile: target\n", ""),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("scan_profile must be 'target' or 'framework'", result.stdout)
 
     def test_validator_accepts_functional_review_v2_multi_function_entrypoint(self) -> None:
         with workspace_temp() as root:

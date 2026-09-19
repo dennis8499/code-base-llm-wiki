@@ -16,7 +16,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
-source_digest: sha256:fb0ea6bc9c996d335c1448bace6debcf48f55c61c48f015ffba0d1eba446be51
+source_digest: sha256:28f7f54c08c133a91758d59e2b496c211834d56965828ba676fa9429b3ca4697
 derived_from: ["[[overview]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]"]
 last_updated: 2026-09-16
 tags: [business-process, analysis-document, standards-aligned, notebooklm]

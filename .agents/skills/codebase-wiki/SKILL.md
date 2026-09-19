@@ -39,6 +39,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Page-type selection and exact template | `references/page-types.md` |
 | Codebase audit report shape | `assets/code-audit-template.md` |
 | Codebase audit report validation | `scripts/validate-code-audit.py` |
+| Shared full-project inventory | `scripts/scan-project.py` and `scripts/project_scanner.py` |
 | ADR creation and numbering | `references/adr-workflow.md` |
 | Durable synthesis creation | `references/synthesis-workflow.md` |
 | BA document generation, business coverage, gap handling | `references/business-analysis-workflow.md` |

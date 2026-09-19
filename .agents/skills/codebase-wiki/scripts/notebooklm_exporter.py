@@ -44,7 +44,7 @@ except ModuleNotFoundError:  # pragma: no cover - useful when loaded by a caller
 EXPORT_SCHEMA_VERSION = 6
 SUPPORTED_MANIFEST_SCHEMAS = {1, 2, 3, 4, 5, EXPORT_SCHEMA_VERSION}
 PREFLIGHT_SCHEMA_VERSION = 6
-DISCOVERY_SCHEMA_VERSION = 1
+DISCOVERY_SCHEMA_VERSION = 2
 OUTPUT_TRANSACTION_VERSION = 1
 OUTPUT_TRANSACTION_SUFFIX = ".notebooklm-transaction.json"
 OUTPUT_TRANSACTION_LOCK_SUFFIX = ".notebooklm-transaction.lock"
@@ -88,7 +88,6 @@ DEFAULT_GENERATED_PARTS = {
     "__pycache__",
     ".mypy_cache",
     ".ruff_cache",
-    "bin",
     "build",
     "cache",
     "coverage",
@@ -119,11 +118,6 @@ DEFAULT_IAC_PARTS = {
     "k8s",
     "terraform",
 }
-DEFAULT_FRAMEWORK_PREFIXES = (
-    ".agents/skills/codebase-wiki",
-    ".codex",
-    ".github",
-)
 DEFAULT_CI_PREFIXES = (".github/workflows",)
 DEFAULT_DEV_TOOL_PARTS = {"examples", "samples", "tools"}
 DEFAULT_SENSITIVE_NAMES = {
@@ -262,6 +256,18 @@ CAPABILITY_DOCUMENT_PROFILES = {
 SOURCE_LOCATOR_PATTERN = re.compile(r"^(?P<path>.+):(?P<line>[1-9][0-9]*)$")
 ANALYZED_DISCOVERY_PATTERN = re.compile(
     r"(?mi)^Analyzed discovery ID:\s*`?(sha256:[0-9a-f]{64})`?\s*$"
+)
+
+# The source inventory is shared with the standalone Code Audit scanner.  Keep
+# the import local to this script directory so the installed skill works when
+# invoked from an arbitrary project root as well as when imported by tests.
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+from project_scanner import (  # noqa: E402
+    ScanError,
+    is_framework_adapter,
+    parse_scan_settings,
+    scan_project as shared_scan_project,
 )
 
 # ``analysis_status`` is deliberately separate from ``coverage_status``.  The
@@ -521,9 +527,13 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
     profile = raw.get("profile", PROFILE_NAME)
     if not isinstance(profile, str) or not profile.strip():
         raise ExportError("profile must be a non-empty string")
-    scan_profile = raw.get("scan_profile", "target")
-    if scan_profile not in {"target", "framework"}:
-        raise ExportError("scan_profile must be 'target' or 'framework'")
+    try:
+        scan_settings = parse_scan_settings(root, raw)
+    except ScanError as exc:
+        raise ExportError(str(exc)) from exc
+    scan_profile = scan_settings.scan_profile
+    analysis_include_tests = scan_settings.analysis_include_tests
+    output_directory = scan_settings.output_directory
     content_mode = raw.get("content_mode", CONTENT_MODE)
     if content_mode == "ba_only":
         raise ExportError(
@@ -533,15 +543,6 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
         )
     if content_mode != CONTENT_MODE:
         raise ExportError(f"content_mode must be {CONTENT_MODE!r}")
-    analysis_include_tests = raw.get("analysis_include_tests", True)
-    if not isinstance(analysis_include_tests, bool):
-        raise ExportError("analysis_include_tests must be true or false")
-    output_directory = raw.get("output_directory", ".notebooklm")
-    if not isinstance(output_directory, str):
-        raise ExportError("output_directory must be a string")
-    output_directory = validate_relative_config_path(output_directory, root, "output_directory")
-    if output_directory == ".":
-        raise ExportError("output_directory must be a child directory of repository root")
     _reject_symlink_components(
         root,
         root / Path(*PurePosixPath(output_directory).parts),
@@ -589,14 +590,6 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
         validate_relative_config_path(value, root, "extra_paths")
         for value in _str_tuple_config(raw, "extra_paths")
     )
-    exclude_paths = tuple(
-        validate_relative_config_path(value, root, "exclude_paths")
-        for value in _str_tuple_config(raw, "exclude_paths")
-    )
-    business_source_paths = tuple(
-        validate_relative_config_path(value, root, "business_source_paths")
-        for value in _str_tuple_config(raw, "business_source_paths")
-    )
     return Settings(
         profile=profile,
         scan_profile=scan_profile,
@@ -607,9 +600,9 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
         reserved_source_slots=reserved,
         max_source_bytes=max_bytes,
         max_source_words=max_words,
-        business_source_paths=business_source_paths,
+        business_source_paths=scan_settings.business_source_paths,
         extra_paths=extra_paths,
-        exclude_paths=exclude_paths,
+        exclude_paths=scan_settings.exclude_paths,
         dlp_profile=dlp_profile,
         config_path=selected_config if selected_config.is_file() else None,
     )
@@ -957,15 +950,8 @@ def _exclusion_reason_for_relative(
         and not business_override
     ):
         return "scan_scope_tests"
-    if _is_ci_or_iac(lower):
-        return "scan_scope_ci_or_iac"
-    if settings.scan_profile == "target" and _has_prefix(lower, DEFAULT_FRAMEWORK_PREFIXES):
+    if is_framework_adapter(relative, settings.scan_profile):
         return "framework_adapter"
-    if _is_dev_tool(lower) and not business_override and not (
-        settings.scan_profile == "framework"
-        and _has_prefix(lower, (*DEFAULT_FRAMEWORK_PREFIXES, "tools"))
-    ):
-        return "scan_scope_dev_tooling"
     if _has_prefix(relative, settings.exclude_paths):
         return "configured_exclude"
     if is_sensitive(path):
@@ -1264,12 +1250,14 @@ def parse_coverage_ledger(
         return [], [f"missing coverage ledger: {COVERAGE_LEDGER_PATH}"]
     rules: list[dict[str, Any]] = []
     issues: list[str] = []
-    pattern = re.compile(
-        r"(?m)^\|\s*`(?P<path>[^`]+)`\s*\|\s*"
-        r"(?P<disposition>[a-z-]+)\s*\|\s*(?P<requirements>.*?)\s*\|\s*$"
-    )
-    for match in pattern.finditer(page.text):
-        raw_path = match.group("path").strip().replace("\\", "/")
+    for raw_line in page.text.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("|") or "---" in line:
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) < 3 or not cells[0].startswith("`") or not cells[0].endswith("`"):
+            continue
+        raw_path = cells[0][1:-1].strip().replace("\\", "/")
         is_prefix = raw_path.endswith("/")
         try:
             path = validate_relative_config_path(
@@ -1278,13 +1266,17 @@ def parse_coverage_ledger(
         except ExportError as exc:
             issues.append(str(exc))
             continue
-        disposition = match.group("disposition")
+        if len(cells) >= 7:
+            hash_value, category, disposition, requirement_cell, association, reason = cells[1:7]
+        else:
+            hash_value, category, disposition, requirement_cell, association, reason = "", "", cells[1], cells[2], "", ""
+        hash_value = hash_value.strip().strip("`")
         if disposition not in COVERAGE_DISPOSITIONS:
             issues.append(
                 f"invalid coverage disposition for {raw_path}: {disposition}"
             )
             continue
-        requirements = sorted(_wiki_link_targets(match.group("requirements")))
+        requirements = sorted(_wiki_link_targets(requirement_cell))
         if disposition in {"functional-evidence", "supporting-technical"} and not requirements:
             issues.append(
                 f"coverage disposition {disposition} requires a requirement link: {raw_path}"
@@ -1295,6 +1287,10 @@ def parse_coverage_ledger(
                 "prefix": is_prefix,
                 "disposition": disposition,
                 "requirements": requirements,
+                "hash": hash_value.lower().removeprefix("sha256:"),
+                "category": category,
+                "association": association,
+                "reason": reason,
             }
         )
     if not rules:
@@ -1313,127 +1309,34 @@ def coverage_disposition(
 
 
 def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> dict[str, Any]:
-    included: list[dict[str, Any]] = []
-    excluded: list[dict[str, str]] = []
-    excluded_roots: list[dict[str, Any]] = []
-    for path, lexical_relative in _iter_project_files(
-        root, settings, excluded_roots=excluded_roots
-    ):
-        try:
-            relative = (
-                repo_relative(path, root)
-                if _path_requires_resolution(path)
-                else lexical_relative
-            )
-        except ExportError:
-            excluded.append({"path": lexical_relative, "reason": "path_escape"})
-            continue
-        reason = _exclusion_reason_for_relative(relative, settings)
-        if reason:
-            excluded.append({"path": relative, "reason": reason})
-            continue
-        try:
-            data = path.read_bytes()
-        except OSError:
-            excluded.append({"path": relative, "reason": "unreadable"})
-            continue
-        if b"\x00" in data:
-            excluded.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
-            continue
-        try:
-            text = data.decode("utf-8")
-        except UnicodeDecodeError:
-            excluded.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
-            continue
-        included.append(
-            {
-                "path": relative,
-                "category": classify_project_file(relative),
-                "byte_count": len(data),
-                "sha256": sha256_bytes(data),
-                "line_count": max(1, len(text.splitlines())),
-            }
-        )
+    """Return the canonical source-first inventory used by all export paths.
 
-    business_skipped: list[dict[str, str]] = []
-    business_inputs: dict[str, InputFile] = {}
-    for source in settings.business_source_paths:
-        for item in expand_path(
-            source,
-            root,
-            settings,
-            business_skipped,
-            business_override=True,
-        ):
-            business_inputs[item.path] = item
-    by_path = {item["path"]: item for item in included}
-    for item in business_inputs.values():
-        by_path[item.path] = {
-            "path": item.path,
-            "category": "business_documentation",
-            "byte_count": len(item.text.encode("utf-8")),
-            "sha256": item.digest,
-            "line_count": max(1, len(item.text.splitlines())),
-        }
-    included = list(by_path.values())
-    excluded.extend(business_skipped)
+    The scanner owns filesystem boundaries and entrypoint candidates.  The
+    exporter still owns Wiki-specific disposition and document validation, so
+    we add those derived fields here for backwards-compatible callers.
+    """
 
-    included.sort(key=lambda item: item["path"])
-    excluded.sort(key=lambda item: (item["path"], item["reason"]))
-    excluded_roots.sort(key=lambda item: (item["path"], item["reason"]))
     page_list = list(pages)
-    sources = declared_source_paths(page_list, root)
-    ledger_rules, ledger_issues = parse_coverage_ledger(page_list, root)
-    dispositions: list[dict[str, Any]] = []
-    uncovered: list[str] = []
-    for item in included:
-        disposition = coverage_disposition(item["path"], ledger_rules)
-        if disposition is None:
-            uncovered.append(item["path"])
-            continue
-        dispositions.append(
-            {
-                "path": item["path"],
-                "disposition": disposition["disposition"],
-                "requirements": disposition["requirements"],
-            }
-        )
+    scan = shared_scan_project(root, settings, page_list)
+    scan["declared_source_paths"] = list(declared_source_paths(page_list, root))
+    scan["business_source_count"] = sum(
+        1
+        for item in scan["included"]
+        if item["path"] in set(settings.business_source_paths)
+        or any(item["path"].startswith(source.rstrip("/") + "/") for source in settings.business_source_paths)
+    )
     status_counts = Counter(
         str(parse_frontmatter_text(page.text).get("status", "missing")) for page in page_list
     )
-    return {
-        "included": included,
-        "excluded": excluded,
-        "excluded_roots": excluded_roots,
-        "included_count": len(included),
-        "excluded_count": len(excluded),
-        "excluded_root_count": len(excluded_roots),
-        "included_by_category": dict(sorted(Counter(item["category"] for item in included).items())),
-        "business_source_paths": list(settings.business_source_paths),
-        "business_source_count": len(business_inputs),
-        "excluded_by_reason": dict(sorted(Counter(item["reason"] for item in excluded).items())),
-        "excluded_roots_by_reason": dict(
-            sorted(Counter(item["reason"] for item in excluded_roots).items())
-        ),
-        "declared_source_paths": list(sources),
-        "coverage_dispositions": dispositions,
-        "coverage_disposition_counts": dict(
-            sorted(Counter(item["disposition"] for item in dispositions).items())
-        ),
-        "coverage_ledger_issues": ledger_issues,
-        "analysis_gap_paths": [
-            item["path"]
-            for item in dispositions
-            if item["disposition"] == "analysis-gap"
-        ],
-        "uncovered_paths": uncovered,
-        "wiki_status_counts": dict(sorted(status_counts.items())),
-        "required_documents": required_document_coverage(page_list),
-    }
+    scan["wiki_status_counts"] = dict(sorted(status_counts.items()))
+    scan["required_documents"] = required_document_coverage(page_list)
+    return scan
 
 
 def scan_summary(scan: dict[str, Any]) -> dict[str, Any]:
     return {
+        "scan_schema_version": scan.get("scan_schema_version", DISCOVERY_SCHEMA_VERSION),
+        "snapshot_id": scan.get("snapshot_id"),
         "included_count": scan["included_count"],
         "excluded_count": scan["excluded_count"],
         "excluded_root_count": scan["excluded_root_count"],
@@ -1443,10 +1346,16 @@ def scan_summary(scan: dict[str, Any]) -> dict[str, Any]:
         "excluded_by_reason": scan["excluded_by_reason"],
         "excluded_roots_by_reason": scan["excluded_roots_by_reason"],
         "excluded_roots": scan["excluded_roots"],
+        "skipped": scan.get("skipped", []),
         "uncovered_paths": scan["uncovered_paths"],
         "coverage_disposition_counts": scan["coverage_disposition_counts"],
         "coverage_ledger_issues": scan["coverage_ledger_issues"],
+        "coverage_schema_version": scan.get("coverage_schema_version", 1),
+        "legacy_prefix_paths": scan.get("legacy_prefix_paths", []),
         "analysis_gap_paths": scan["analysis_gap_paths"],
+        "entrypoint_count": scan.get("entrypoint_count", 0),
+        "entrypoint_candidates": scan.get("entrypoint_candidates", []),
+        "read_issues": scan.get("read_issues", []),
         "required_documents": scan["required_documents"],
     }
 
@@ -1759,6 +1668,13 @@ def capability_preview(
             "declared_not_in_safe_inventory": declared_missing,
         },
         "included_sources": included_paths,
+        "entrypoint_candidates": list(scan.get("entrypoint_candidates", [])),
+        "entrypoint_count": int(scan.get("entrypoint_count", 0)),
+        "scan_snapshot_id": scan.get("snapshot_id"),
+        "scan_schema_version": scan.get("scan_schema_version", DISCOVERY_SCHEMA_VERSION),
+        "coverage_schema_version": scan.get("coverage_schema_version", 1),
+        "legacy_prefix_paths": list(scan.get("legacy_prefix_paths", [])),
+        "read_issues": list(scan.get("read_issues", [])),
         "excluded": [
             {"path": item["path"], "reason": item["reason"]}
             for item in scan.get("excluded", [])
@@ -4987,12 +4903,21 @@ def _discovery_identity(
 ) -> tuple[str, str]:
     """Bind confirmation to the raw safe source inventory."""
 
+    def is_volatile(item: dict[str, Any]) -> bool:
+        reason = str(item.get("reason", ""))
+        path = str(item.get("path", "")).replace("\\", "/")
+        return reason in {"binary_or_generated", "export_output", "wiki_knowledge_layer"} or (
+            path == ".test-tmp" or path.startswith(".test-tmp/")
+        )
+
     def is_export_artifact(item: dict[str, Any]) -> bool:
         path = str(item.get("path", ""))
         return item.get("reason") == "export_output" or _is_transaction_artifact(path)
 
     material = {
         "schema_version": DISCOVERY_SCHEMA_VERSION,
+        "scan_schema_version": scan.get("scan_schema_version", DISCOVERY_SCHEMA_VERSION),
+        "snapshot_id": scan.get("snapshot_id"),
         "knowledge_contract": KNOWLEDGE_CONTRACT,
         "retrieval_contract": RETRIEVAL_CONTRACT,
         "settings": _settings_fingerprint(settings, root),
@@ -5014,8 +4939,15 @@ def _discovery_identity(
         "excluded_roots": [
             {"path": item["path"], "reason": item["reason"]}
             for item in scan["excluded_roots"]
-            if not is_export_artifact(item)
+            if not is_export_artifact(item) and not is_volatile(item)
         ],
+        "skipped": [
+            item for item in scan.get("skipped", []) if not is_volatile(item)
+        ],
+        "read_issues": [
+            item for item in scan.get("read_issues", []) if not is_volatile(item)
+        ],
+        "entrypoint_candidates": scan.get("entrypoint_candidates", []),
     }
     digest = sha256_bytes(
         json.dumps(
@@ -5043,6 +4975,10 @@ def _preflight_identity(
             {"path": item["path"], "sha256": item["sha256"]}
             for item in scan["included"]
         ],
+        "scan_schema_version": scan.get("scan_schema_version", DISCOVERY_SCHEMA_VERSION),
+        "scan_snapshot_id": scan.get("snapshot_id"),
+        "read_issues": scan.get("read_issues", []),
+        "entrypoint_candidates": scan.get("entrypoint_candidates", []),
         "required_documents": scan["required_documents"],
         "deterministic_findings": lint_result.get("findings", []),
         "dlp": dlp,
@@ -5327,6 +5263,8 @@ def build_preflight(
         "discovery_schema_version": DISCOVERY_SCHEMA_VERSION,
         "discovery_id": discovery_id,
         "discovery_hash": discovery_hash,
+        "scan_schema_version": scan.get("scan_schema_version", DISCOVERY_SCHEMA_VERSION),
+        "scan_snapshot_id": scan.get("snapshot_id"),
         "capability_preview": capability_preview(
             pages, scan, discovery_id, capability_coverage
         ),
@@ -5348,17 +5286,27 @@ def build_preflight(
                 "data_schema",
                 "documentation",
                 "behavioral_test",
-            ],
-            "excluded": [
                 "ci_cd",
                 "iac",
-                "build_dev_tooling",
+                "engineering_tooling",
+            ],
+            "excluded": [
                 "dependencies",
                 "generated",
                 "binary",
                 "credentials",
             ]
             + (["framework_adapters"] if settings.scan_profile == "target" else []),
+            "project_owned": [
+                "runtime_source",
+                "runtime_config",
+                "data_schema",
+                "documentation",
+                "behavioral_test",
+                "ci_cd",
+                "iac",
+                "engineering_tooling",
+            ],
         },
         "inventory": scan,
         "coverage": coverage,
@@ -5476,6 +5424,8 @@ def build_pack(
         "knowledge_contract": KNOWLEDGE_CONTRACT,
         "discovery_id": preflight["discovery_id"],
         "preflight_id": preflight["preflight_id"],
+        "scan_schema_version": preflight.get("scan_schema_version", DISCOVERY_SCHEMA_VERSION),
+        "scan_snapshot_id": preflight.get("scan_snapshot_id"),
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "git_revision": git_revision(root),
         "profile": settings.profile,

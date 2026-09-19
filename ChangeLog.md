@@ -8,6 +8,10 @@
 
 ### Added
 
+- **共用 source-first project scanner**：新增 `scan-project.py` 與掃描模組，依明確專案 root
+  盤點所有自有 UTF-8 source、CI/CD、IaC、scripts、tools、bin、巢狀 repository、入口候選、
+  雜湊、排除原因與 snapshot；NotebookLM exporter 與 Code Audit 共用同一份 inventory。
+
 - **Codebase 靜態健檢**：新增 `code_audit` intent、共用入口追查工作流、繁中報告模板、
   Copilot prompt、Codex recipe 與多入口驗收 fixture。明確健檢請求預設保存含證據、finding IDs
   與逐入口 coverage 的 Wiki 報告；待確認業務規則分開標示，使用者指定只回報時零寫入。
@@ -36,7 +40,21 @@
 
 ### Changed
 
-- **Codebase audit 逐功能 Review 與重跑追蹤**：audit 報告 v2 以 `FUNC-*` 功能／使用情境
+- **Scanner 設定與 Audit v3 綁定強化**：standalone scanner 與 NotebookLM exporter 共用嚴格的
+  scanner-owned 設定解析與 framework-adapter boundary；target profile 的直接 evidence expansion
+  也排除 `.github/instructions`。v3 報告新增必要 `scan_profile`，validator 會重跑 shared scanner，
+  比對 snapshot、完整逐檔 path set、category 與 disposition；缺少欄位或舊 v3 報告需重建。
+
+- **Scanner boundary and Audit v3 contract hardening**：修正 linked regular file 的 boundary 記錄，
+  standalone scanner 拒絕 symlink/reparse `notebooklm.toml`，target profile 排除已安裝的
+  `.github/instructions` adapter；Audit v3 validator 與 template 共用來源／排除 category allowlist，
+  並補齊跨平台回歸測試。
+
+- **Audit v3 與 NotebookLM discovery schema v2**：Code Audit 報告綁定 scanner snapshot，
+  逐檔記錄處置並保留 MergeReviewer 式觸發條件、證據、影響與修正方向；NotebookLM 不再因
+  目錄名稱排除專案自有 CI/CD、IaC 與工程 tooling，v2 coverage ledger 要求逐檔 disposition。
+
+- **Codebase audit 逐功能 Review 與重跑追蹤**：audit 報告 v3 以 `FUNC-*` 功能／使用情境
   呈現結果、以 API／UI／CLI／job／event／公開介面入口核對 coverage，並要求正常／邊界、驗證／
   授權、狀態、transaction／副作用、重試／冪等、設定／相容性、效能與錯誤可觀測性等情境留有
   檢查證據。每個 finding 同時連結功能與入口；同範圍重跑沿用 ID 並標示 `new`、`still-present`、

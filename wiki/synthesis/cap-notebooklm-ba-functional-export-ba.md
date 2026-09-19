@@ -13,19 +13,23 @@ notebooklm_role: business
 notebooklm_terms: [NotebookLM Enterprise, BA, SA, discovery, 一次確認, source pack]
 sources:
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
+  - .agents/skills/codebase-wiki/scripts/project_scanner.py
+  - .agents/skills/codebase-wiki/scripts/scan-project.py
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .github/prompts/export-notebooklm.prompt.md
   - notebooklm.toml
   - tests/notebooklm/test_notebooklm_acceptance.py
-source_digest: sha256:8ef9f4f5d3ff48627314c263b0da302b64881dac3775dda4fb7dc05ac59acba0
+source_digest: sha256:ef9e7f30590ff87f57e0e84150bdc6ece67e977053f1c80a189e715e9626d053
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4172"
+  - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
+  - ".agents/skills/codebase-wiki/scripts/project_scanner.py:1"
   - ".agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:1"
   - ".github/prompts/export-notebooklm.prompt.md:1"
   - "notebooklm.toml:1"
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-sa]]"]
-last_updated: 2026-09-09
+last_updated: 2026-09-19
 tags: [synthesis, business-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -35,7 +39,7 @@ status: active
 <!-- codebase-wiki:managed:start -->
 ## 功能目的、角色與觸發
 
-知識維護者發起 Export NotebookLM 時，框架把當下 Codebase 整理成 Business Analyst 與 System Analyst 可在單一 Notebook 搜尋、問答的現況知識。Codebase 包含程式、設定、資料結構、behavioral tests、README、規格與註解；內容衝突時以程式碼為主。
+知識維護者發起 Export NotebookLM 時，框架先以 `scan-project.py` 綁定指定 root 的完整檔案 snapshot，再把當下 Codebase 整理成 Business Analyst 與 System Analyst 可在單一 Notebook 搜尋、問答的現況知識。Codebase 包含程式、設定、資料結構、behavioral tests、README、規格與註解；內容衝突時以程式碼為主。
 
 ## 前置條件、流程與規則
 

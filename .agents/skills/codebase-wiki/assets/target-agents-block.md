@@ -13,8 +13,10 @@ authorization.
 
 - Query and general Wiki workflows read `wiki/index.md` and relevant pages
   before raw sources. Codebase audit starts with the current Codebase tree and
-  registered entrypoints, and consults Wiki only for business-rule context gaps;
-  Wiki pages never define the audit scan boundary.
+  the shared `scripts/scan-project.py` inventory, then reconciles registered
+  entrypoints and consults Wiki only for business-rule context gaps; Wiki pages never define the audit scan boundary. The inventory includes project-owned
+  CI/CD, IaC, scripts, tools and bin content under the explicit root while
+  preserving generated/dependency/sensitive/framework-adapter boundaries.
 - Keep evidence, inference, speculation, contradictions, and gaps distinct.
 - Use real repo-relative raw paths in `sources`; put Wiki dependencies in
   `derived_from` as `[[wikilinks]]`.
@@ -28,7 +30,7 @@ authorization.
   chat-only findings.
 - Audit reports use `FUNC-*` capability／user-scenario rows for presentation and
   entrypoint rows for coverage control. Every entrypoint maps to a capability,
-  and version-2 reports record `new`, `still-present`,
+  and version-3 reports record `new`, `still-present`,
   `rechecked-no-longer-observed`, or `not-rechecked` finding state on reruns.
 - Synchronize `wiki/index.md` for page additions, removals, renames, or major
   updates, and append one valid log operation for durable Wiki changes.

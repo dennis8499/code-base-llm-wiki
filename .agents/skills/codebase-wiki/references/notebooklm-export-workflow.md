@@ -41,6 +41,8 @@ Include every UTF-8 project-owned text file in these categories:
 - database schemas, migrations, messages, and interface schemas;
 - existing README, specifications, and project documentation;
 - behavioral tests and acceptance specifications (included by default).
+- project-owned CI/CD, IaC, deployment manifests, engineering scripts, tools,
+  examples, and bin entrypoints that explain system operation.
 
 `notebooklm.toml` may designate exact repo-relative UTF-8 files or directories
 as `business_source_paths`. These are business-owned requirements, process
@@ -51,9 +53,10 @@ symlink/reparse safety boundaries. PDF, Word,
 and Excel are not parsed in v1;
 record them as explicit knowledge gaps.
 
-Exclude CI/CD, IaC, build/development tooling, dependency and generated
-directories, binaries, credentials/secrets, the Wiki, export output, and
-installed Codebase LLM Wiki adapter/schema files. Versioned product
+Exclude dependency and generated directories, binaries, credentials/secrets,
+the Wiki, export output, and installed Codebase LLM Wiki adapter/schema files.
+Classify project-owned CI/CD, IaC, and engineering tooling as evidence rather
+than excluding them by directory name. Versioned product
 requirements, historical change summaries, and plans remain normal
 documentation inputs. A production entrypoint is
 runtime source even if it lives under a scripts directory. Walk the filesystem
@@ -69,18 +72,31 @@ report never reads or hashes content from that tree.
 Set `analysis_include_tests = false` only when the user explicitly narrows the
 analysis contract. Every included safe file must be classified in
 `wiki/synthesis/codebase-functional-coverage.md` as `functional-evidence`,
-`supporting-technical`, `no-observable-behavior`, or `analysis-gap`. Export is
-blocked for uncovered files, any remaining `analysis-gap`, a missing required
-functional-requirement link, or a dangling requirement link.
+`supporting-technical`, `no-observable-behavior`, or `analysis-gap`. Coverage
+schema v2 records the exact path, scanner SHA-256, category, function/process
+association, and disposition reason; a directory prefix or stale hash never
+satisfies the gate. Export is blocked for uncovered files, any remaining
+`analysis-gap`, a missing required functional-requirement link, or a dangling
+requirement link.
 
 ## Source order
 
-1. Read `wiki/index.md` and every Wiki Markdown page except `wiki/log.md`.
-2. Run the deterministic frontmatter, stale-source, and Wiki lint checks.
+1. Run the shared source-first inventory before using Wiki coverage:
+
+   ```powershell
+   python .agents\skills\codebase-wiki\scripts\scan-project.py `
+     --root . --profile target --format json
+   ```
+
+   The returned `snapshot_id` binds every file hash, category, exclusion, read
+   issue, and entrypoint candidate to this discovery. The scanner includes
+   nested repositories and ignored/untracked files under the explicit root.
+2. Read `wiki/index.md` and every Wiki Markdown page except `wiki/log.md`.
+3. Run the deterministic frontmatter, stale-source, and Wiki lint checks.
    NotebookLM preflight keeps the structural and content checks but disables
    Git dirty-path, commit-date, and log-baseline lookups; the preflight remains
    filesystem-only.
-3. Run the read-only inventory:
+4. Run the read-only exporter preflight:
 
    ```powershell
    python .agents\skills\codebase-wiki\scripts\export-notebooklm.py `
@@ -267,7 +283,13 @@ and rejects legacy `include_traceability`,
 the default and excludes installed framework adapters. The framework repository
 uses `framework`, which treats its `.agents`, `.codex`, non-CI `.github`, and
 release tooling as product evidence while retaining secret/generated/CI
-exclusions.
+exclusions. The target adapter boundary covers `.agents/skills/codebase-wiki`,
+`.codex`, `.github/prompts`, `.github/hooks`, `.github/instructions`, and managed
+Copilot instruction files; project-owned `.github/workflows` remains evidence.
+The standalone scanner and exporter share the scanner-owned configuration parser:
+an unreadable, malformed, mistyped, or path-escaping `notebooklm.toml` fails closed
+before a source inventory is accepted. A symlink/reparse `notebooklm.toml` is
+rejected before reading configuration.
 
 ## Offline DLP masking
 
