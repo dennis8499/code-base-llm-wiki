@@ -267,8 +267,9 @@ manifest、設定與入口註冊處盤點 API、UI、CLI、排程、事件、plu
 驗證、權限、業務邏輯、資料／狀態、輸出與失敗處理；只有遇到業務規則語意缺口才查 Wiki。明確
 健檢請求會保存含 coverage 的報告；每次重跑都以目前 Codebase 重新建立入口 inventory，既有報告
 只用於對照 findings、沿用 IDs 與保留 user notes。報告以 `FUNC-*` 功能／使用情境呈現，入口表核對
-每個 API、UI、CLI、job、event 或公開介面的 coverage；每個 finding 同時連結功能與入口。v2 重跑
-狀態為 `new`、`still-present`、`rechecked-no-longer-observed`、`not-rechecked`。說「只回報」則不寫 Wiki、index 或 log；完整契約見
+每個 API、UI、CLI、job、event 或公開介面的 coverage；每個 finding 同時連結功能與入口。v4 報告使用
+MergeReviewer 式的白話說明與「操作／輸入、預期結果、實際結果」程式推導案例，並以 P0→P3 排序；
+merge commit 逐一核對 parent 與 merge 結果，再確認目前 source 仍可達。v4 重跑狀態為 `new`、`still-present`、`rechecked-no-longer-observed`、`not-rechecked`。說「只回報」則不寫 Wiki、index 或 log；完整契約見
 [`code-audit` Wiki 頁](wiki/modules/code-audit.md)。
 
 NotebookLM Enterprise 匯出：
@@ -300,10 +301,10 @@ DLP finding 先遮罩，residual 仍有命中才阻擋 apply，且沒有 allowli
 `tests/fixtures/code-audit/` 提供靜態健檢驗收場景，涵蓋共用根因、多入口、交易／設定／邏輯矛盾、
 Git commit 意圖與 diff、待確認技術條件與政策、上游防護及動態入口缺口；它是唯讀分析樣例，不執行
 目標程式。持久化報告可用 `validate-code-audit.py` 檢查摘要計數、finding IDs、來源與 Git history
-欄位是否一致，也會在 `audit_report_version: 3` 報告中依 `scan_profile` 重跑 shared scanner，驗證
+欄位是否一致，也會在 `audit_report_version: 4` 報告中依 `scan_profile` 重跑 shared scanner，驗證
 scanner snapshot、完整逐檔處置、category／disposition、功能／入口關聯與重跑計數；它不執行 target
 code，也不是外部分析器。沒有版本標記的既有報告維持 legacy 驗證相容性，缺少 `scan_profile` 的既有
-v3 報告則必須重建。
+v3 報告仍可依舊契約驗證；新一輪 Audit 才升級為 v4。
 
 為避免把框架檔案寫進版本化樣例，請先複製樣例到暫存目錄，再安裝任一 surface。完整步驟與預期結果請看 [samples/README.md](samples/README.md)。
 

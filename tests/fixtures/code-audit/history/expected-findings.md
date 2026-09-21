@@ -35,6 +35,14 @@ current tree is reviewed together with its targeted history:
 - The report must include the full HEAD, dirty/clean worktree state, the
   `current-first-targeted` query scope, every deeply reviewed commit's complete
   body/message and diff location, and any unreviewed history limitation.
+- For a merge commit, the report must compare every parent with the merge result,
+  list the full merge/parent SHAs and affected path, and confirm the suspected
+  loss remains in current source. Without parent evidence, a squash/rebase issue
+  is a behavior finding only and is not attributed to manual merging.
+- The merge fixture explicitly covers a lost authorization guard, a follow-up
+  restoration, a worktree repair, and a separate guarded caller. A missing
+  parent row is invalid evidence, and no parent evidence means no manual merge
+  attribution.
 - A rerun must merge the shared root cause, continue finding IDs, preserve the
   user-notes block, and retain an old record with a link to a new ID if a
   finding classification changes between `BUG-*`, `RISK-*`, and `BIZ-*`.
@@ -44,6 +52,9 @@ current tree is reviewed together with its targeted history:
 - A same-scope rerun keeps each finding ID and records `new`, `still-present`,
   `rechecked-no-longer-observed`, or `not-rechecked` rather than inferring a
   fix from missing evidence.
+- v4 findings use P0–P3, plain-language impact, and a code-derived/not-executed
+  operation/input, expected-result, and actual or conditional-result example;
+  old `not-rechecked` findings retain their original severity and appear last.
 
 The expected v2 report also includes a function table with checked scenarios and
 limitations, a ten-column entrypoint table whose first column is the function

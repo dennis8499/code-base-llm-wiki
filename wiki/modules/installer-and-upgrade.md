@@ -16,7 +16,7 @@ sources:
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:d289e5602aa23f29478de165f18bb35bead700a736874f6398b7047580ad93e8
+source_digest: sha256:4e6e001dc2936690576f87f68df329fa61c240f8c8181c4c146e0c82fd0fd305
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-19
 tags: [module, installer, upgrade, atomicity]

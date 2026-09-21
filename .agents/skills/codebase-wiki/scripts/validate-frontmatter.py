@@ -217,8 +217,8 @@ def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
         )
 
     audit_report_version = fm.get("audit_report_version")
-    if audit_report_version is not None and str(audit_report_version).strip() != "2":
-        errors.append(f"{rel}: audit_report_version must be 2 when present")
+    if audit_report_version is not None and str(audit_report_version).strip() not in {"2", "3", "4"}:
+        errors.append(f"{rel}: audit_report_version must be 2, 3, or 4 when present")
 
     summary = fm.get("summary")
     if summary is not None and not is_non_empty_string(summary):

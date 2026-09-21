@@ -41,11 +41,13 @@ CLI、排程、事件或公開介面、已檢查的正常／邊界／錯誤／�
 
 先記錄 `git rev-parse HEAD`、`git rev-parse --is-shallow-repository`、`git status --short` 與 `current-first-targeted` 歷史範圍，
 再用唯讀 `git log --follow --name-status` 建立索引，對相關 commit 使用 `git show --format=fuller --stat --patch`
-與 `git blame` 閱讀標題、完整內文和 diff。分開記錄 commit 意圖、diff 可證實的修改與目前
-source 行為；改名／刪除檔案與 shallow 或缺少 object 形成明確歷史限制。Git history 只能作輔助
-證據，不能單獨證明 BUG 或業務政策；不 fetch、不切換分支、不 checkout 其他 revision，也不改寫
-歷史。索引只列候選 commit，不代表逐筆閱讀全部歷史；未提交變更仍納入目前 source 判定，並在報告中
-與 HEAD 可達歷史分開標示。
+與 `git blame` 閱讀標題、完整內文和 diff。遇到 merge commit，逐一比較每個 parent 與 merge 結果，
+核對驗證、授權、錯誤處理、設定與資料轉換是否有一側遺失，並以目前 source 確認問題仍可達；報告列出
+完整 merge／parent SHA、路徑與目前核對結果。Squash、rebase 或複製程式碼沒有 parent 證據時，只描述
+行為，不歸因於人工合併。分開記錄 commit 意圖、diff 可證實的修改與目前 source 行為；改名／刪除檔案
+與 shallow 或缺少 object 形成明確歷史限制。Git history 只能作輔助證據，不能單獨證明 BUG 或業務政策；
+不 fetch、不切換分支、不 checkout 其他 revision，也不改寫歷史。索引只列候選 commit，不代表逐筆閱讀
+全部歷史；未提交變更仍納入目前 source 判定，並在報告中與 HEAD 可達歷史分開標示。
 
 程式碼證據足以證明可達錯誤時列為 `BUG-*`；有具體技術疑點但缺少框架、部署或環境證據時列為
 `RISK-*`；程式行為的預期政策未明時列為 `BIZ-*`。合併相同根因並記錄 checked、partial、not
@@ -56,10 +58,13 @@ checked 覆蓋與各類檢查狀態。不可執行目標程式、測試、build�
 的問題維持 `not-rechecked`，不可標為已解決。Git 歷史分析併入這一份 Codebase audit 報告，不
 另建同範圍 Archaeology 報告。
 
-同範圍重跑使用報告格式 `audit_report_version: 3`：新 finding 標為 `new`、再次確認的標為
+同範圍重跑使用報告格式 `audit_report_version: 4`：新 finding 標為 `new`、再次確認的標為
 `still-present`、目前不再觀察到的標為 `rechecked-no-longer-observed`，尚未重查的標為
-`not-rechecked`；摘要必須列出四種數量，並在每個 finding 分類中按 high、medium、low 影響程度排序。保留既有 finding ID、user-notes 與已移除入口的歷史，
+`not-rechecked`；摘要必須列出四種數量，並在每個 finding 分類中按 P0、P1、P2、P3 排序。新 finding 以白話說明及「操作／輸入、預期結果、實際結果」案例呈現，
+並標示 `依程式推導；未實際執行`；保留既有 finding ID、user-notes 與已移除入口的歷史，
 不可把未複查或未觀察到直接宣稱為已驗證修復。
+
+Chat summary: explain the main findings in plain language, include one short operation/input case, link the report, and disclose checked/partial/not checked coverage limits. Do not invent a sample defect when there are no findings; disclose any incomplete scope.
 
 明確健檢請求授權將繁中報告保存到 `wiki/synthesis/code-audit-{scope}.md`，全專案用
 `all`；若要求「只回報」，保持 Wiki、index、log 零寫入。更新同範圍既有報告時保留

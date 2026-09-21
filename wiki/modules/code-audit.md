@@ -12,6 +12,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/project_scanner.py
   - .agents/skills/codebase-wiki/scripts/scan-project.py
   - .github/prompts/code-audit.prompt.md
+  - .github/copilot-instructions.md
   - Codex.md
   - tests/contracts/test_code_audit.py
   - tests/fixtures/code-audit/README.md
@@ -19,9 +20,9 @@ sources:
   - tests/contracts/test_code_audit_validator.py
   - tests/fixtures/code-audit/history/README.md
   - tests/fixtures/code-audit/history/expected-findings.md
-source_digest: sha256:169eaa3888bf6841d87d1822887e74b8af348143611b63e07d39e532249948b8
+source_digest: sha256:440a0367b610e723ef67850ce4344d54104f7dd950d997a4e0c658273629b803
 derived_from: ["[[system-architecture]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-19
+last_updated: 2026-09-21
 tags: [module, code-audit, static-analysis, business-logic, git-history]
 status: active
 notebooklm_group: local-governance
@@ -35,7 +36,7 @@ notebooklm_role: exclude
 Engineer 或維護者可以檢查全專案，或限定在特定模組、route、command、job、event 與公開介面，
 先從目前 Codebase 的目錄、manifest、設定與註冊處盤點入口，再從入口追到共用服務及可觀察的資料／
 狀態改變。Wiki 不決定掃描範圍；只有 source trace 遇到業務規則或政策語意缺口時才查相關頁面，
-接著才定向讀取 Git history 的 commit 完整內文與 diff。不執行目標程式、測試、build、migration 或
+接著才定向讀取 Git history 的 commit 完整內文與 diff；遇到 merge commit 逐一比較每個 parent 與 merge 結果，核對驗證、授權、錯誤處理、設定與資料轉換是否遺失，再確認目前 source 仍可達。不執行目標程式、測試、build、migration 或
 自動修正，原始碼與設定維持唯讀。
 未提交變更也納入目前 source 判定，並在報告中與 HEAD 可達的歷史分開標示。
 
@@ -49,7 +50,7 @@ Audit 報告以穩定的 `FUNC-*` 功能／使用情境呈現結果，以入口�
 
 每個功能至少檢查正常與邊界／缺資料、驗證／授權與安全性、資料／狀態、transaction／副作用、
 重試／並行／冪等、設定／相容性、效能／資源生命週期與錯誤映射／可觀測性。報告格式
-`audit_report_version: 3` 以 `scan_schema_version: 2` 與 `scan_profile` 綁定共用 scanner snapshot，validator 會重跑 shared scanner，要求每個檔案都有逐檔處置、每個入口都關聯功能、每個 finding 都同時列受影響功能與入口，
+`audit_report_version: 4` 以 `scan_schema_version: 2` 與 `scan_profile` 綁定共用 scanner snapshot，validator 會重跑 shared scanner，要求每個檔案都有逐檔處置、每個入口都關聯功能、每個 finding 都同時列受影響功能與入口，
 並讓摘要的功能／入口 coverage 與 finding 計數可由 validator 重算。
 逐檔處置的 Category 沿用 scanner 契約：included 使用來源類別；excluded 或 read-issue 可使用
 `sensitive`、`binary_or_generated`、`binary_or_unsupported_encoding`、`framework_adapter`、
@@ -66,7 +67,7 @@ target，且會拒絕 linked/reparse 的 `notebooklm.toml`。
 - 交易檢查核對 transaction／connection ownership、write set、commit／rollback、例外、重試與不可回滾的外部副作用；
   設定檢查核對 code reads、鍵名／型別、defaults、產生／注入、部署與 fallback；邏輯檢查核對狀態、回傳與 caller assumptions。
 - 報告的 `sources` 只列實際讀取的原始路徑；有來源時必填並隨重跑更新 `source_digest`，Wiki 證據列入 `derived_from`。
-- Severity 依影響描述，與證據確定度分開；每個 finding 分類內依 `high` → `medium` → `low` 排序。
+- Severity 依影響描述，與證據確定度分開；新 finding 使用 P0→P3，先用白話說明，再列操作／輸入、預期結果、實際或條件式結果的程式推導案例。每個 finding 分類內依 P0 → P1 → P2 → P3 排序；`not-rechecked` 舊 finding 保留原分級並置於末尾。
   共用根因合併，列出所有受影響入口。
 - 入口逐一標示 checked、partial 或 not checked；動態路由、外部相依和缺少規格形成明確缺口。
   報告不得把局部無發現解讀成整個專案沒有 BUG。
@@ -84,7 +85,7 @@ target，且會拒絕 linked/reparse 的 `notebooklm.toml`。
 共享操作為 `code_audit`，每次執行都先從目前 Codebase 重新建立入口 inventory；明確健檢請求授權寫入
 `wiki/synthesis/code-audit-{scope}.md`；全專案 scope 為 `all`。指定「只回報」時不修改 Wiki、
 索引或日誌。同範圍重跑沿用 finding IDs 並保留 user-notes 區，未重新檢查的項目維持未確認狀態；既有
-legacy 報告沒有 `audit_report_version` 時仍以舊版結構驗證，下一次 audit 才依目前 source 補齊 v3。
+legacy 報告沒有 `audit_report_version` 時仍以舊版結構驗證；v2／v3 報告保留相容性，下一次 audit 才依目前 source 補齊 v4。
 新增或重大更新報告時，連結相關 Wiki 內容、更新 `wiki/index.md`，並追加一筆 `synthesis`
 操作到 append-only `wiki/log.md`；持久化後以 `validate-code-audit.py` 檢查報告結構、finding IDs、
 來源存在性、入口關聯、coverage／四類檢查計數、Git history 的完整 SHA／diff 位置，以及 scanner

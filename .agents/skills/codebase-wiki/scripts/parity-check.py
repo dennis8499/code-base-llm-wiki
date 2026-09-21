@@ -502,13 +502,13 @@ def main() -> int:
         if 'source_digest: "sha256:' not in audit_template_text:
             issues.append("Codebase audit report template must include its source digest")
         if (
-            "audit_report_version: 3" not in audit_template_text
+            "audit_report_version: 4" not in audit_template_text
             or "scan_schema_version: 2" not in audit_template_text
             or "scan_profile: target" not in audit_template_text
             or "## 功能 Review" not in audit_template_text
             or "## 檔案處置" not in audit_template_text
         ):
-            issues.append("Codebase audit report template must include the v3 scanner-bound review contract")
+            issues.append("Codebase audit report template must include the v4 scanner-bound review contract")
     validator = root / CODE_AUDIT_REPORT_VALIDATOR
     if not validator.is_file():
         issues.append("missing Codebase audit report validator")
@@ -524,6 +524,10 @@ def main() -> int:
             "unknown function ID",
             "affected function/entrypoint association is missing",
             "finding rerun-state counts do not match",
+            "plain-language",
+            "case input/operation field",
+            "P0",
+            "merge commit",
         ):
             if token not in validator_text:
                 issues.append(f"Codebase audit validator missing check: {token}")

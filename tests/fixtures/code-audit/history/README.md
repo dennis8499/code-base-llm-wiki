@@ -28,6 +28,17 @@ explicit commit (a current defect) and a `@db.transactional` framework boundary
 generated defaults, and an explicit fallback; those valid producers must not be
 reported as a missing setting.
 
+Merge-review coverage compares a merge result with each parent when a merge
+commit is in scope: one parent can retain validation while another retains error
+handling, and the merge result must show which behavior survived. A later
+current-source check distinguishes a still-reachable loss from a follow-up fix;
+squash/rebase copies without parent evidence are not blamed on conflict resolution.
+The acceptance history also covers a merge that loses an authorization guard,
+a follow-up commit that restores it, a worktree edit that repairs notification
+ordering, and a separate caller that supplies its own authorization guard. A
+missing parent row is rejected, and a squash/rebase finding without parent
+evidence remains a behavior finding rather than an attribution to manual merge.
+
 The state cases cover a failed operation returned as success and duplicate
 inserts on retry, each paired with an explicit rule so the findings are
 classified as defects rather than style advice.
@@ -46,6 +57,11 @@ When a finding is revisited, the report keeps the same root-cause record and
 finding ID where the issue is unchanged, continues IDs without recycling them,
 preserves the user-notes block, and links an old ID to a new `BUG-*`, `RISK-*`,
 or `BIZ-*` ID when its classification changes.
+
+New v4 findings explain the impact in plain language and include a code-derived,
+not-executed case with operation/input, expected result, and actual or conditional
+result. Their headings use P0–P3; carried-forward `not-rechecked` findings keep
+their old severity and appear after newly classified findings.
 
 Do not execute these modules. They are source evidence for a read-only static
 review.

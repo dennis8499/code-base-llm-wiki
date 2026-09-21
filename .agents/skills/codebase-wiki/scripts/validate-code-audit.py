@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Validate a persisted Codebase audit against the current scanner inventory.
 
+The v4 contract also validates plain-language finding cases.
+
 The validator does not inspect or execute the audited application.  It checks
 that a report is internally consistent, that its current ``sources`` exist,
-and, for v3 reports, that the recorded scan profile, snapshot, file paths,
+and, for v3/v4 reports, that the recorded scan profile, snapshot, file paths,
 categories, and dispositions still match a fresh read-only scanner run.  Git
 history claims must also have the evidence shape required by the audit
 workflow.
@@ -25,7 +27,7 @@ from typing import Any
 
 from frontmatter import configure_utf8_stdio, parse_frontmatter_text
 
-# Keep the v3 report contract aligned with the canonical source-first scanner
+# Keep the v3/v4 report contract aligned with the canonical source-first scanner
 # instead of maintaining a second inventory or allowlist here.
 from project_scanner import (  # noqa: E402
     EXCLUSION_REASON_TO_CATEGORY,
@@ -49,7 +51,8 @@ REQUIRED_FRONTMATTER = {
     "notebooklm_role",
 }
 FINDING_HEADING = re.compile(
-    r"(?m)^###\s+((?:BUG|RISK|BIZ)-[0-9]+)\s+[—-]\s+.+$"
+    r"(?m)^###\s+((?:BUG|RISK|BIZ)-[0-9]+)\s+[—-]\s+"
+    r"(?:\[(P[0-3])\]\s+)?(.+)$"
 )
 FUNCTION_ID = re.compile(
     r"(?<![A-Za-z0-9._-])FUNC-[A-Za-z0-9][A-Za-z0-9._-]*(?![A-Za-z0-9._-])"
@@ -64,6 +67,8 @@ FULL_SHA = re.compile(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])")
 SOURCE_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 SCAN_SNAPSHOT_ID = re.compile(r"^sha256:[0-9a-f]{64}$")
 SCAN_PROFILES = {"target", "framework"}
+SEVERITY_LEVELS = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+LEGACY_SEVERITIES = {"high", "medium", "low"}
 RELATIVE_SOURCE = re.compile(r"^[^/\\][^:]*$")
 SUMMARY_COVERAGE = re.compile(
     r"入口覆蓋[^\n]*?checked\s*([0-9]+)[^\n]*?partial\s*([0-9]+)"
@@ -217,6 +222,12 @@ def _finding_blocks(text: str) -> list[tuple[str, str]]:
     return blocks
 
 
+def _finding_headings(text: str) -> list[tuple[str, str | None]]:
+    """Return finding IDs and optional v4 P0-P3 heading severities."""
+
+    return [(match.group(1), match.group(2)) for match in FINDING_HEADING.finditer(text)]
+
+
 def _has_field(body: str, field: str) -> bool:
     """Match a labelled bullet, allowing the template's explanatory suffix."""
 
@@ -236,6 +247,10 @@ def _field_value(body: str, field: str) -> str:
         body,
     )
     return match.group(1).strip() if match else ""
+
+
+def _has_any_field(body: str, fields: tuple[str, ...]) -> bool:
+    return any(_has_field(body, field) for field in fields)
 
 
 def _cell_value(value: str) -> str:
@@ -458,6 +473,155 @@ def _validate_functional_v2(
     return errors
 
 
+def _validate_v4_findings(
+    managed: str,
+    findings: list[tuple[str, str]],
+) -> list[str]:
+    """Validate the MergeReviewer-inspired evidence and severity contract."""
+
+    errors: list[str] = []
+    headings = _finding_headings(managed)
+    if len(headings) != len(findings):
+        errors.append("v4 finding headings and finding blocks do not match")
+        return errors
+
+    by_class: dict[str, list[tuple[int, str, str | None, str]]] = {
+        "BUG": [],
+        "RISK": [],
+        "BIZ": [],
+    }
+    for (finding_id, body), (heading_id, severity) in zip(findings, headings):
+        if finding_id != heading_id:
+            errors.append(f"v4 finding heading does not match block: {finding_id}")
+            continue
+        prefix = finding_id.split("-", 1)[0]
+        rerun_state = _normalise_status(_field_value(body, "重跑狀態"))
+        carried_forward = rerun_state == "not-rechecked"
+        if severity is None:
+            if not carried_forward:
+                errors.append(
+                    f"{finding_id} must include a [P0], [P1], [P2], or [P3] heading severity"
+                )
+            # A carried-forward v3 finding may retain high/medium/low text.
+            legacy_impact = _field_value(body, "影響程度") or _field_value(body, "可能影響程度")
+            if carried_forward and not any(
+                level in legacy_impact.lower() for level in LEGACY_SEVERITIES
+            ):
+                errors.append(f"{finding_id} retained finding must preserve its legacy severity")
+            by_class[prefix].append((99, finding_id, None, rerun_state))
+        else:
+            impact_field = "可能影響程度" if prefix == "BIZ" else "影響程度"
+            impact = _field_value(body, impact_field)
+            if not re.search(rf"\b{re.escape(severity)}\b", impact):
+                errors.append(
+                    f"{finding_id} heading severity {severity} must agree with {impact_field}"
+                )
+            rank = 99 if carried_forward else SEVERITY_LEVELS[severity]
+            by_class[prefix].append((rank, finding_id, severity, rerun_state))
+
+        # Historical findings that were not rechecked retain their original
+        # text and severity.  Do not force a newly invented example onto them.
+        if carried_forward:
+            continue
+
+        certainty = _normalise_status(_field_value(body, "證據確定度"))
+        expected_certainty = "confirmed" if prefix == "BUG" else "unresolved"
+        if expected_certainty not in certainty:
+            errors.append(
+                f"{finding_id} {prefix} finding must preserve evidence certainty {expected_certainty}"
+            )
+
+        if not _has_field(body, "白話說明"):
+            errors.append(f"{finding_id} missing field: 白話說明")
+        if not _has_field(body, "具體案例"):
+            errors.append(f"{finding_id} missing field: 具體案例")
+
+        # Every case distinguishes what was supplied, what should happen, and
+        # what the current source can produce. RISK/BIZ use conditional wording.
+        if not _has_any_field(body, ("操作／輸入", "操作或輸入", "情境／輸入", "前提／輸入")):
+            errors.append(f"{finding_id} missing case input/operation field")
+        if not _has_any_field(body, ("預期結果", "條件式預期結果", "預期行為")):
+            errors.append(f"{finding_id} missing case expected-result field")
+        result_fields = ("可能結果", "實際結果", "政策差異") if prefix != "BUG" else ("實際結果",)
+        if not _has_any_field(body, result_fields):
+            errors.append(f"{finding_id} missing case result field")
+        if not re.search(
+            r"具體案例[^\n]*?(?:未實際執行|依程式推導|示意)",
+            body,
+        ):
+            errors.append(
+                f"{finding_id} 具體案例 must state that it is code-derived or not executed"
+            )
+        if prefix == "RISK" and not _has_field(body, "成立條件"):
+            errors.append(f"{finding_id} missing field: 成立條件")
+        if prefix == "RISK":
+            if not re.search(
+                r"(?m)^\s*-\s*(?:預期結果|條件式預期結果)[^\n]*(?:條件|不成立)",
+                body,
+            ):
+                errors.append(f"{finding_id} RISK case must state a conditional expected result")
+            if not re.search(r"(?m)^\s*-\s*可能結果[^\n]*(?:條件|成立)", body):
+                errors.append(f"{finding_id} RISK case must state a conditional possible result")
+        if prefix == "BIZ" and not _has_field(body, "確認不同答案可能造成的差異"):
+            errors.append(f"{finding_id} missing field: 確認不同答案可能造成的差異")
+        if prefix == "BIZ":
+            if not re.search(r"(?m)^\s*-\s*預期結果[^\n]*政策答案\s*A", body):
+                errors.append(f"{finding_id} BIZ case must state policy answer A")
+            if not re.search(r"(?m)^\s*-\s*(?:政策差異|預期結果)[^\n]*政策答案\s*B", body):
+                errors.append(f"{finding_id} BIZ case must state policy answer B")
+
+    for prefix, entries in by_class.items():
+        previous = -1
+        for rank, finding_id, severity, _ in entries:
+            if rank < previous:
+                errors.append(
+                    f"{prefix} findings must be ordered P0 to P3; {finding_id} is out of order"
+                )
+            previous = rank
+    return errors
+
+
+# v4 reports document a merge commit parent review in the Git-history section;
+# the marker is intentionally explicit so a reviewer can distinguish it from a
+# generic commit table.
+
+
+def _validate_merge_parent_review(history: str) -> list[str]:
+    """Validate merge-parent rows when a v4 report records any merge commit."""
+
+    errors: list[str] = []
+    if re.search(r"沒有 merge commit|no merge commit", history, re.IGNORECASE):
+        return errors
+    marker = re.search(r"(?im)^###\s+Merge parent 核對\s*$", history)
+    if not marker:
+        return errors
+    review = history[marker.end() :]
+    rows_seen = 0
+    for line in review.splitlines():
+        cells = _table_cells(line)
+        if cells is None or not cells or _is_separator_row(cells):
+            continue
+        if cells[0].strip().lower().startswith("merge commit"):
+            continue
+        if len(cells) < 7:
+            errors.append("Merge parent 核對 rows must include merge SHA, every parent, path, side behavior, merge result, and current-source result")
+            continue
+        rows_seen += 1
+        for index, label in ((0, "merge"), (1, "parent-1")):
+            if not FULL_SHA.fullmatch(cells[index].strip().strip("`")):
+                errors.append(f"Merge parent 核對 {label} must use a full 40-character SHA")
+        # Parent-2 may contain additional parent SHAs in the same cell.
+        if not FULL_SHA.search(cells[2]):
+            errors.append("Merge parent 核對 parent-2 must list at least one full 40-character SHA")
+        if not cells[3].strip() or not PATH_REFERENCE.search(cells[3]):
+            errors.append("Merge parent 核對 must name an affected path and diff/blame location")
+        if any(not cell.strip() for cell in cells[4:7]):
+            errors.append("Merge parent 核對 must preserve both-side behavior, merge result, and current-source result")
+    if rows_seen == 0:
+        errors.append("Merge parent 核對 must contain a merge row or explicitly state no merge commit")
+    return errors
+
+
 def _normalise_status(value: str) -> str:
     return value.strip().strip("`").lower()
 
@@ -634,19 +798,20 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
     frontmatter = parse_frontmatter_text(text)
     report_version = frontmatter.get("audit_report_version")
     version_text = str(report_version).strip() if report_version is not None else ""
-    is_v3 = version_text == "3"
-    is_v2 = version_text in {"2", "3"}
+    is_v4 = version_text == "4"
+    is_v3 = version_text in {"3", "4"}
+    is_v2 = version_text in {"2", "3", "4"}
     scan_profile: str | None = None
     scan_snapshot_id: str | None = None
-    if report_version is not None and version_text not in {"2", "3"}:
-        errors.append("audit_report_version must be integer 2 or 3 when present")
+    if report_version is not None and version_text not in {"2", "3", "4"}:
+        errors.append("audit_report_version must be integer 2, 3, or 4 when present")
     if is_v3:
         scan_schema = frontmatter.get("scan_schema_version")
         if str(scan_schema).strip() != "2":
-            errors.append("scan_schema_version must be integer 2 for audit report v3")
+            errors.append("scan_schema_version must be integer 2 for audit report v3/v4")
         raw_scan_profile = frontmatter.get("scan_profile")
         if not isinstance(raw_scan_profile, str) or raw_scan_profile not in SCAN_PROFILES:
-            errors.append("scan_profile must be 'target' or 'framework' for audit report v3")
+            errors.append("scan_profile must be 'target' or 'framework' for audit report v3/v4")
         else:
             scan_profile = raw_scan_profile
         snapshot_id = frontmatter.get("scan_snapshot_id")
@@ -814,6 +979,8 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
                     disposition_rows,
                 )
             )
+    if is_v4:
+        errors.extend(_validate_v4_findings(managed, findings))
     ids = [finding_id for finding_id, _ in findings]
     duplicates = sorted({finding_id for finding_id in ids if ids.count(finding_id) > 1})
     if duplicates:
@@ -862,6 +1029,14 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
         errors.append("empty business results must state that no business confirmation is needed")
 
     history = _section_body(managed, "Git 歷史與變更線索")
+    if is_v4 and not re.search(
+        r"Merge parent 核對|merge parent|no merge commit|沒有 merge",
+        history,
+        re.IGNORECASE,
+    ):
+        errors.append("v4 Git history section must record merge parent review or state that no merge commit was in scope")
+    if is_v4:
+        errors.extend(_validate_merge_parent_review(history))
     for label in (
         "HEAD",
         "工作樹",
@@ -891,6 +1066,9 @@ def validate_report(report_path: Path, repo_root: Path) -> list[str]:
     in_commit_table = False
     commit_rows = 0
     for line in history.splitlines():
+        if re.match(r"^###\s+Merge parent 核對\s*$", line.strip(), re.IGNORECASE):
+            in_commit_table = False
+            continue
         cells = _table_cells(line)
         if cells is None:
             continue

@@ -211,6 +211,34 @@ def valid_v3_report(head: str, snapshot_id: str) -> str:
     return report
 
 
+def valid_v4_report(head: str, snapshot_id: str) -> str:
+    """A minimal v4 report with a MergeReviewer-style BUG case."""
+
+    report = valid_v3_report(head, snapshot_id).replace(
+        "audit_report_version: 3\n",
+        "audit_report_version: 4\n",
+    )
+    report = report.replace(
+        "## 確定缺陷\n",
+        "### Merge parent 核對\n\n沒有 merge commit 在本次範圍內。\n\n## 確定缺陷\n",
+    )
+    report = report.replace(
+        "### BUG-001 — service result is wrong",
+        "### BUG-001 — [P1] service returns the wrong result",
+    )
+    report = report.replace(
+        "- 證據確定度：`confirmed`\n- 影響程度：`low`\n",
+        "- 證據確定度：`confirmed`\n"
+        "- 白話說明：呼叫服務時使用者會收到錯誤結果。\n"
+        "- 具體案例（依程式推導；未實際執行）：\n"
+        "  - 操作／輸入：呼叫 `GET /service`。\n"
+        "  - 預期結果：回傳正確結果。\n"
+        "  - 實際結果：回傳錯誤結果。\n"
+        "- 影響程度：`P1`\n",
+    )
+    return report
+
+
 def shared_entry_v2_report(head: str) -> str:
     """A valid v2 report where two functions share one entrypoint."""
 
@@ -308,6 +336,189 @@ class CodeAuditValidatorTests(unittest.TestCase):
             report.write_text(valid_v3_report(head, scanner_snapshot(root)), encoding="utf-8")
             result = run_validator(report, root)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_accepts_v4_plain_language_case_and_p_severity(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            report.write_text(valid_v4_report(head, scanner_snapshot(root)), encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_accepts_v4_carried_forward_legacy_finding_without_case(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            text = valid_v4_report(head, scanner_snapshot(root))
+            text = text.replace("[P1] service returns the wrong result", "service returns the wrong result")
+            text = text.replace("- \u91cd\u8dd1\u72c0\u614b\uff1a`new`\n", "- \u91cd\u8dd1\u72c0\u614b\uff1a`not-rechecked`\n", 1)
+            text = text.replace(
+                "- finding \u91cd\u8dd1\u72c0\u614b\uff1anew 1\uff1bstill-present 0\uff1brechecked-no-longer-observed 0\uff1bnot-rechecked 0\n",
+                "- finding \u91cd\u8dd1\u72c0\u614b\uff1anew 0\uff1bstill-present 0\uff1brechecked-no-longer-observed 0\uff1bnot-rechecked 1\n",
+                1,
+            )
+            text = text.replace("- \u5f71\u97ff\u7a0b\u5ea6\uff1a`P1`\n", "- \u5f71\u97ff\u7a0b\u5ea6\uff1a`low`\n", 1)
+            case_tokens = ("\u767d\u8a71\u8aaa\u660e", "\u5177\u9ad4\u6848\u4f8b", "\u64cd\u4f5c\uff0f\u8f38\u5165", "\u9810\u671f\u7d50\u679c", "\u5be6\u969b\u7d50\u679c")
+            text = "".join(line for line in text.splitlines(keepends=True) if not any(token in line for token in case_tokens))
+            report.write_text(text, encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validator_rejects_v4_missing_case_and_invalid_severity(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            text = valid_v4_report(head, scanner_snapshot(root))
+            text = text.replace("[P1] service returns the wrong result", "[P4] service returns the wrong result")
+            text = text.replace("- 白話說明：呼叫服務時使用者會收到錯誤結果。\n", "")
+            report.write_text(text, encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("白話說明", result.stdout)
+            self.assertIn("[P0], [P1], [P2], or [P3]", result.stdout)
+
+    def test_validator_rejects_v4_out_of_order_findings(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            text = valid_v4_report(head, scanner_snapshot(root))
+            text = text.replace("[P1] service returns the wrong result", "[P3] service returns the wrong result")
+            text = text.replace("### BUG-001 — [P3] service returns the wrong result", "### BUG-001 — [P3] service returns the wrong result\n\n### BUG-002 — [P1] another defect")
+            report.write_text(text, encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("must be ordered P0 to P3", result.stdout)
+
+    def test_validator_accepts_v4_conditional_risk_and_business_cases(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            text = valid_v4_report(head, scanner_snapshot(root)).replace(
+                "確定缺陷：1；技術風險：0；待確認業務疑點：0",
+                "確定缺陷：1；技術風險：1；待確認業務疑點：1",
+            )
+            text = text.replace(
+                "finding 重跑狀態：new 1；still-present 0；rechecked-no-longer-observed 0；not-rechecked 0",
+                "finding 重跑狀態：new 3；still-present 0；rechecked-no-longer-observed 0；not-rechecked 0",
+            )
+            text = text.replace(
+                "## 技術風險\n未發現需要技術風險確認的事項。",
+                """## 技術風險
+### RISK-001 — [P2] framework boundary may lose a rollback
+- 狀態：`needs-technical-confirmation`
+- 重跑狀態：`new`
+- 證據確定度：`unresolved`
+- 白話說明：若框架沒有替 caller 管理交易，失敗時可能留下部分更新。
+- 具體案例（依程式推導；未實際執行）：
+  - 操作／輸入：呼叫 `GET /service`。
+  - 預期結果（若成立條件不成立）：所有狀態一起完成或一起回復。
+  - 可能結果（若成立條件成立）：只完成部分狀態更新。
+- 影響程度：`P2`
+- 受影響功能：`FUNC-orders`
+- 受影響入口：`GET /service`
+- 成立條件：框架未替 caller 管理交易時。
+- 可疑呼叫路徑：入口 → service。
+- 目前觀察：`src/service.py:1` 有跨邊界操作。
+- 已核對防護／反證：尚未找到 framework boundary。
+- 歷史證據（若有）：無。
+- 缺少的證據：框架交易文件。
+- 確認方式：閱讀框架文件。
+- 修正方向（不執行修正）：確認 boundary。
+- 建議驗證案例：核對失敗回復。
+""",
+            )
+            text = text.replace(
+                "## 待確認業務疑點\n未發現需要業務確認的事項。",
+                """## 待確認業務疑點
+### BIZ-001 — [P3] service result policy changes the caller flow
+- 狀態：`needs-business-confirmation`
+- 重跑狀態：`new`
+- 證據確定度：`unresolved`
+- 白話說明：不同政策答案會讓 caller 採取不同的後續處理。
+- 具體案例（依程式推導；未實際執行）：
+  - 操作／輸入：服務回傳 `1`。
+  - 預期結果（政策答案 A）：`1` 代表成功。
+  - 政策差異（政策答案 B）：`1` 代表待處理。
+- 可能影響程度：`P3`
+- 受影響功能：`FUNC-orders`
+- 受影響入口：`GET /service`
+- 呼叫路徑：入口 → service。
+- 目前行為：回傳 `1`。
+- 已核對防護／反證：沒有政策 guard。
+- 推論依據：`src/service.py:1`；這是推論。
+- 尚未明確的預期政策：回傳值的業務意義。
+- 需確認的業務問題：`1` 是否為正確結果？
+- 確認不同答案可能造成的差異：caller 可能需要不同處理。
+- 建議驗證案例：確認 caller 對結果的預期。
+""",
+            )
+            report.write_text(text, encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+            invalid_case = (
+                text.replace("預期結果（若成立條件不成立）", "預期結果")
+                .replace("可能結果（若成立條件成立）", "可能結果")
+                .replace("預期結果（政策答案 A）", "預期結果")
+                .replace("政策差異（政策答案 B）", "政策差異")
+            )
+            report.write_text(invalid_case, encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("conditional expected result", result.stdout)
+            self.assertIn("policy answer A", result.stdout)
+
+    def test_validator_checks_merge_parent_rows_and_full_shas(self) -> None:
+        with workspace_temp() as root:
+            (root / "src").mkdir()
+            (root / "src/service.py").write_text("def service():\n    return 1\n", encoding="utf-8")
+            (root / "wiki/synthesis").mkdir(parents=True)
+            head = self._init_git(root)
+            report = root / "wiki/synthesis/code-audit-all.md"
+            merge_table = (
+                "### Merge parent 核對\n\n"
+                "| Merge commit（完整 SHA） | Parent-1 | Parent-2（及其他 parent） | 受影響路徑 | 各 parent 提供的驗證／授權／錯誤處理／設定／資料轉換 | Merge 結果 | 目前 source 核對 |\n"
+                "| --- | --- | --- | --- | --- | --- | --- |\n"
+                f"| `{head}` | `{head}` | `{head}` | `src/service.py:1` | parent-1 validation; parent-2 error handling | validation retained | still reachable |\n\n"
+            )
+            text = valid_v4_report(head, scanner_snapshot(root)).replace(
+                "### Merge parent 核對\n\n沒有 merge commit 在本次範圍內。\n\n",
+                merge_table,
+            )
+            report.write_text(text, encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+            report.write_text(
+                text.replace(
+                    f"| `{head}` | `{head}` | `{head}` |",
+                    f"| `{head}` |  | `{head}` |",
+                ),
+                encoding="utf-8",
+            )
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("parent-1 must use a full 40-character SHA", result.stdout)
+
+            report.write_text(text.replace(f"| `{head}` | `{head}` | `{head}` |", f"| `{head}` | `short` | `{head}` |"), encoding="utf-8")
+            result = run_validator(report, root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("parent-1 must use a full 40-character SHA", result.stdout)
 
     def test_validator_accepts_v3_exclusion_categories(self) -> None:
         with workspace_temp() as root:
@@ -759,8 +970,132 @@ class CodeAuditValidatorTests(unittest.TestCase):
                 "commit", "-qm", "Require refund actor at the service boundary\n\nThe CLI caller must be updated with the new interface.",
             )
             interface_commit = run_git(root, "rev-parse", "HEAD")
+            base_branch = run_git(root, "branch", "--show-current")
+            transaction_cases = root / "src/transaction_cases.py"
+            base_transaction_cases = transaction_cases.read_text(encoding="utf-8")
+            run_git(root, "switch", "-c", "merge-validation")
+            transaction_cases.write_text(
+                base_transaction_cases.replace(
+                    "    transaction = db.begin()",
+                    "    if not getattr(payment, \"validated\", True):\n"
+                    "        return \"rejected\"\n"
+                    "    transaction = db.begin()",
+                ),
+                encoding="utf-8",
+            )
+            run_git(root, "add", "src/transaction_cases.py")
+            run_git(
+                root,
+                "-c", "user.name=Code Audit Test",
+                "-c", "user.email=audit@example.invalid",
+                "commit", "-qm", "Add validation guard on the payment branch",
+            )
+            validation_parent = run_git(root, "rev-parse", "HEAD")
+            run_git(root, "switch", base_branch)
+            run_git(root, "switch", "-c", "merge-authorization")
+            transaction_cases.write_text(
+                base_transaction_cases.replace(
+                    "    transaction = db.begin()",
+                    "    if not getattr(payment, \"authorized\", True):\n"
+                    "        raise PermissionError(\"authorization required\")\n"
+                    "    transaction = db.begin()",
+                ),
+                encoding="utf-8",
+            )
+            run_git(root, "add", "src/transaction_cases.py")
+            run_git(
+                root,
+                "-c", "user.name=Code Audit Test",
+                "-c", "user.email=audit@example.invalid",
+                "commit", "-qm", "Add authorization guard on the payment branch",
+            )
+            authorization_parent = run_git(root, "rev-parse", "HEAD")
+            run_git(root, "switch", "merge-validation")
+            try:
+                run_git(
+                    root,
+                    "-c", "user.name=Code Audit Test",
+                    "-c", "user.email=audit@example.invalid",
+                    "merge", "--no-ff", "--no-commit", "merge-authorization",
+                )
+            except subprocess.CalledProcessError:
+                pass
+            transaction_cases.write_text(
+                transaction_cases.read_text(encoding="utf-8").split("<<<<<<<", 1)[0]
+                if "<<<<<<<" in transaction_cases.read_text(encoding="utf-8")
+                else transaction_cases.read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            # Resolve the merge by retaining validation and deliberately
+            # dropping the authorization guard from the other parent.
+            transaction_cases.write_text(
+                base_transaction_cases.replace(
+                    "    transaction = db.begin()",
+                    "    if not getattr(payment, \"validated\", True):\n"
+                    "        return \"rejected\"\n"
+                    "    transaction = db.begin()",
+                ),
+                encoding="utf-8",
+            )
+            run_git(root, "add", "src/transaction_cases.py")
+            run_git(
+                root,
+                "-c", "user.name=Code Audit Test",
+                "-c", "user.email=audit@example.invalid",
+                "commit", "-qm", "Merge payment guards",
+            )
+            merge_commit = run_git(root, "rev-parse", "HEAD")
+            merge_parents = run_git(root, "rev-list", "--parents", "-n", "1", merge_commit).split()
+            self.assertEqual(len(merge_parents), 3)
+            self.assertEqual(merge_parents[1], validation_parent)
+            self.assertEqual(merge_parents[2], authorization_parent)
+            run_git(root, "switch", base_branch)
+            run_git(root, "merge", "--no-ff", "merge-validation", "-m", "Bring reviewed payment guards into main")
+            followup = root / "src/transaction_cases.py"
+            followup.write_text(
+                followup.read_text(encoding="utf-8").replace(
+                    "    if not getattr(payment, \"validated\", True):\n"
+                    "        return \"rejected\"\n",
+                    "    if not getattr(payment, \"validated\", True):\n"
+                    "        return \"rejected\"\n"
+                    "    if not getattr(payment, \"authorized\", True):\n"
+                    "        raise PermissionError(\"authorization required\")\n",
+                ),
+                encoding="utf-8",
+            )
+            run_git(root, "add", "src/transaction_cases.py")
+            run_git(
+                root,
+                "-c", "user.name=Code Audit Test",
+                "-c", "user.email=audit@example.invalid",
+                "commit", "-qm", "Restore authorization guard after merge review",
+            )
+            followup_commit = run_git(root, "rev-parse", "HEAD")
+            refund_cli = root / "src/refund_cli.py"
+            refund_cli.write_text(
+                refund_cli.read_text(encoding="utf-8")
+                + "\n\ndef guarded_refund_command(payment_id: str, actor: str) -> None:\n"
+                + "    if not actor:\n        raise PermissionError(\"actor required\")\n"
+                + "    refund_payment(payment_id, reason=\"operator\", actor=actor)\n",
+                encoding="utf-8",
+            )
+            run_git(root, "add", "src/refund_cli.py")
+            run_git(
+                root,
+                "-c", "user.name=Code Audit Test",
+                "-c", "user.email=audit@example.invalid",
+                "commit", "-qm", "Add authorization guard to the secondary caller",
+            )
+            secondary_caller_commit = run_git(root, "rev-parse", "HEAD")
             (root / "src/refund_cli.py").write_text(
                 (root / "src/refund_cli.py").read_text(encoding="utf-8") + "\n# uncommitted audit fixture edit\n",
+                encoding="utf-8",
+            )
+            payments.write_text(
+                payments.read_text(encoding="utf-8").replace(
+                    "        notifier.send_receipt(payment.id)\n",
+                    "    notifier.send_receipt(payment.id)\n",
+                ),
                 encoding="utf-8",
             )
             log = run_git(root, "log", "--follow", "--format=%H%n%B", "--", "src/payments.py")
@@ -770,6 +1105,13 @@ class CodeAuditValidatorTests(unittest.TestCase):
             transaction_parent = run_git(root, "show", f"{transaction_commit}^:src/payments.py")
             fixed_diff = run_git(root, "show", "--format=fuller", "--patch", fixed)
             interface_diff = run_git(root, "show", "--format=fuller", "--patch", interface_commit)
+            validation_parent_source = run_git(root, "show", f"{validation_parent}:src/transaction_cases.py")
+            authorization_parent_source = run_git(root, "show", f"{authorization_parent}:src/transaction_cases.py")
+            merge_source = run_git(root, "show", f"{merge_commit}:src/transaction_cases.py")
+            followup_source = run_git(root, "show", f"{followup_commit}:src/transaction_cases.py")
+            secondary_caller_diff = run_git(root, "show", "--format=fuller", "--patch", secondary_caller_commit)
+            current_payments = payments.read_text(encoding="utf-8")
+            current_refund_cli = (root / "src/refund_cli.py").read_text(encoding="utf-8")
             blame = run_git(root, "blame", "src/payments.py")
             self.assertIn(initial, log)
             self.assertIn(transaction_commit, log)
@@ -789,6 +1131,16 @@ class CodeAuditValidatorTests(unittest.TestCase):
             self.assertIn("notifier.send_receipt", transaction_parent)
             self.assertIn("notifier.send(\"settled\")", fixed_diff)
             self.assertIn("actor: str", interface_diff)
+            self.assertIn("validated", validation_parent_source)
+            self.assertIn("authorized", authorization_parent_source)
+            self.assertIn("validated", merge_source)
+            self.assertNotIn("authorized", merge_source)
+            self.assertIn("validated", followup_source)
+            self.assertIn("authorized", followup_source)
+            self.assertIn("actor required", secondary_caller_diff)
+            self.assertIn("actor required", current_refund_cli)
+            self.assertIn("\n    notifier.send_receipt", current_payments)
+            self.assertNotIn("\n        notifier.send_receipt", current_payments)
             self.assertIn(transaction_commit[:8], blame)
             self.assertIn("M src/refund_cli.py", run_git(root, "status", "--short"))
             self.assertIn("docs/payment-rules.md", renamed_log)

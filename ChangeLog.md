@@ -40,6 +40,8 @@
 
 ### Changed
 
+- **Code Audit v4 MergeReviewer-style review**：保留目前 source-first 與逐功能／逐入口覆蓋，新增 merge commit 的逐 parent 邏輯核對、白話 finding 說明、操作／輸入與預期／實際（或條件式）結果案例，以及 P0–P3 嚴重度排序。Validator 新增 v4 案例、分級、排序與 merge parent 欄位檢查；legacy、v2、v3 報告仍可相容驗證。
+
 - **Scanner 設定與 Audit v3 綁定強化**：standalone scanner 與 NotebookLM exporter 共用嚴格的
   scanner-owned 設定解析與 framework-adapter boundary；target profile 的直接 evidence expansion
   也排除 `.github/instructions`。v3 報告新增必要 `scan_profile`，validator 會重跑 shared scanner，

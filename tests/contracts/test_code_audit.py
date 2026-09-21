@@ -86,7 +86,8 @@ class CodeAuditContractTests(unittest.TestCase):
                 ],
                 "finding_classes": ["BUG", "RISK", "BIZ"],
                 "review_unit": "functional_capability_with_entrypoint_coverage",
-                "report_version": 3,
+                "report_version": 4,
+                "legacy_report_versions": [2, 3],
                 "scan_schema_version": 2,
                 "scan_profiles": ["target", "framework"],
                 "scanner": ".agents/skills/codebase-wiki/scripts/scan-project.py",
@@ -103,7 +104,19 @@ class CodeAuditContractTests(unittest.TestCase):
                     "rechecked-no-longer-observed",
                     "not-rechecked",
                 ],
-                "impact_order": ["high", "medium", "low"],
+                "severity_scale": "P0-P3",
+                "impact_order": ["P0", "P1", "P2", "P3"],
+                "finding_examples": [
+                    "plain_language_explanation",
+                    "operation_input_expected_actual_result",
+                    "code_derived_not_executed_marker",
+                ],
+                "merge_parent_review": [
+                    "compare_each_parent_to_merge_result",
+                    "check_validation_authorization_error_handling_configuration_and_transformation",
+                    "confirm_issue_survives_in_current_source",
+                    "do_not_attribute_squash_rebase_or_copy_to_manual_merge",
+                ],
                 "history": {
                     "mode": "current_first_targeted",
                     "commands": ["git log", "git show", "git blame"],
@@ -154,7 +167,12 @@ class CodeAuditContractTests(unittest.TestCase):
             "Functional review model",
             "FUNC-UNCLASSIFIED",
             "rechecked-no-longer-observed",
-            "high to medium to low impact",
+            "P0 through P3",
+            "merge commit",
+            "every parent",
+            "Squash, rebase",
+            "白話說明",
+            "具體案例",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, normalized_workflow)
@@ -176,12 +194,16 @@ class CodeAuditContractTests(unittest.TestCase):
             "RISK-*",
             "validate-code-audit.py",
             "FUNC-*",
-            "audit_report_version: 3",
+            "audit_report_version: 4",
             "new",
             "still-present",
             "rechecked-no-longer-observed",
             "not-rechecked",
-            "high、medium、low",
+            "P0、P1、P2、P3",
+            "merge commit",
+            "parent",
+            "白話說明",
+            "操作／輸入",
         ):
             with self.subTest(prompt_token=required):
                 self.assertIn(required, prompt)
@@ -213,14 +235,25 @@ class CodeAuditContractTests(unittest.TestCase):
             "功能 ID",
             "受影響功能",
             "重跑狀態",
-            "audit_report_version: 3",
+            "audit_report_version: 4",
             "scan_schema_version: 2",
             "scan_profile: target",
             "## 檔案處置",
-            "high` → `medium` → `low",
+            "P0` → `P1` → `P2` → `P3",
+            "Merge parent 核對",
+            "操作／輸入",
+            "預期結果",
+            "實際結果",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, template)
+
+        copilot = (REPO_ROOT / ".github" / "copilot-instructions.md").read_text(
+            encoding="utf-8"
+        )
+        for required in ("v4 報告", "merge commit", "所有 parent", "白話說明", "P0→P3", "v2／v3"):
+            with self.subTest(copilot_token=required):
+                self.assertIn(required, copilot)
 
     def test_fixture_covers_shared_root_cause_policy_gap_guard_and_dynamic_entry(self) -> None:
         expected = (FIXTURE_ROOT / "expected-findings.md").read_text(encoding="utf-8")
@@ -293,6 +326,10 @@ class CodeAuditContractTests(unittest.TestCase):
             "continue finding IDs",
             "preserve the user-notes block",
             "classification changes",
+            "authorization guard",
+            "worktree repair",
+            "missing parent",
+            "manual merge",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, normalized)

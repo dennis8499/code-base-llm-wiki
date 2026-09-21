@@ -6,7 +6,9 @@ current Codebase and its registered entrypoints, then looks for reachable
 defects, cross-file contradictions, and regressions suggested by targeted Git
 history. Wiki pages provide business context only when the source trace leaves
 a policy gap; they never define the scan boundary. It records technical
-uncertainty and business policy uncertainty separately.
+uncertainty and business policy uncertainty separately. Findings use the
+MergeReviewer evidence style: explain the impact in plain language, then give
+a code-derived operation/input, expected result, and actual or conditional result.
 
 ## Request and authorization
 
@@ -72,6 +74,15 @@ uncertainty and business policy uncertainty separately.
    deeply reviewed commit. If the repository is not Git, shallow, or missing
    objects, continue the source audit and record the limitation. Never fetch,
    switch branches, checkout another revision, or rewrite repository history.
+
+6. When the targeted history contains a merge commit, inspect each parent against
+   the merge result. Compare validation, authorization, error handling,
+   configuration, and data transformation supplied by both sides; then confirm
+   any suspected loss is still reachable in the current source. Record the full
+   merge SHA, every parent SHA, affected paths, each side's behavior, the merge
+   result, and the current-source check. Squash, rebase, and copied code without
+   parent evidence may be reviewed for behavior, but a finding must not be
+   attributed to manual conflict resolution.
 
 Do not use the optional tgrep wrapper for Codebase audit discovery: its
 source-discovery contract remains limited to Ingest and Archaeology. Treat
@@ -157,13 +168,26 @@ Use these evidence classes:
   behavior or general convention alone is not policy evidence.
 
 Record evidence certainty separately from impact severity. A confirmed `BUG-*`
-uses `confirmed`; a `BIZ-*` policy gap uses `unresolved`. Use high for likely data loss,
-unauthorized access, financial harm, or a core flow blocked; medium for a
-material but limited or recoverable failure; low for a narrow, non-critical
-impact. Do not turn uncertainty into severity.
-Within each finding class, list findings from high to medium to low impact so
-the report remains actionable while retaining the `BUG-*`, `RISK-*`, and
-`BIZ-*` classification.
+uses `confirmed`; a `BIZ-*` policy gap uses `unresolved`. New and rechecked
+findings use P0–P3: P0 is a broadly triggered data-loss, major security, total
+outage, or deployment-blocking failure; P1 is a high-impact common-flow failure;
+P2 is a concrete limited-scope failure; and P3 is a concrete low-impact or rare
+failure. RISK and BIZ levels describe the impact if their stated condition or
+policy answer holds; they do not make the evidence confirmed. Order each class
+from P0 through P3.
+
+Every v4 finding starts with a direct `[P0]`–`[P3]` title, a `白話說明`, and a
+`具體案例` marked `依程式推導；未實際執行` (or equivalent). The case separates
+`操作／輸入`, `預期結果`, and `實際結果`; RISK uses a conditional expected and
+possible result, and BIZ records how alternative policy answers differ. A carried
+forward `not-rechecked` finding may retain its v3 text and legacy severity, but
+is placed after newly classified findings and is never described as fixed.
+
+Chat summary guidance: use plain language for the main findings and include one
+short operation/input case, the persisted report link, and checked/partial/not
+checked coverage limits. If no finding exists, do not invent a sample defect;
+if any scope is incomplete, disclose it and do not claim the whole project is
+free of problems.
 
 ## Coverage and report updates
 
@@ -198,7 +222,7 @@ the report remains actionable while retaining the `BUG-*`, `RISK-*`, and
   actually inspected; Wiki evidence belongs in `derived_from`. When `sources`
   is non-empty, populate and refresh `source_digest` using the contract in
   `references/frontmatter-spec.md`.
-- New reports set `audit_report_version: 3`, `scan_schema_version: 2`, and
+- New reports set `audit_report_version: 4`, `scan_schema_version: 2`, and
   `scan_profile: target | framework`; the profile is the authoritative scanner
   scope used to rebuild the inventory. Their managed body contains a
   functional review table, a function ID on every entrypoint row, and
@@ -212,7 +236,8 @@ the report remains actionable while retaining the `BUG-*`, `RISK-*`, and
   rows; `sensitive_filename` remains the reason. `excluded_roots` directory
   summaries are scanner metadata, not file rows. A report without this marker is a legacy report and remains valid
   under the legacy structure until its next same-scope audit upgrades it from
-  current source.
+  current source. New v4 reports include plain-language cases and P0–P3
+  severity headings; v2 and v3 reports remain valid until their next rerun.
 - `validate-code-audit.py` rebuilds the shared scanner using `scan_profile`,
   compares `scan_snapshot_id`, and requires an exact per-file disposition set
   with matching scanner categories and compatible dispositions. It still checks

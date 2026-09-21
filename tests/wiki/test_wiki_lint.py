@@ -210,6 +210,25 @@ notebooklm_terms: [cancel order, acceptance]
             self.assertEqual(unsafe.exception.code, 2)
             self.assertIn("unsafe tree", tree_error.getvalue())
 
+    def test_frontmatter_accepts_legacy_v2_v3_and_v4_audit_versions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            wiki = Path(directory) / "wiki"
+            wiki.mkdir()
+            for version in (2, 3, 4):
+                report = wiki / f"audit-v{version}.md"
+                report.write_text(
+                    page("Audit", "synthesis").replace(
+                        "sources: []\n",
+                        f"sources: []\naudit_report_version: {version}\n",
+                    ),
+                    encoding="utf-8",
+                )
+                errors = VALIDATE.validate_page(report, wiki)
+                self.assertFalse(
+                    any("audit_report_version" in error for error in errors),
+                    errors,
+                )
+
     def test_validate_frontmatter_rejects_invalid_utf8_without_traceback(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             wiki = Path(directory) / "wiki"

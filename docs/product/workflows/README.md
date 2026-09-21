@@ -228,16 +228,20 @@ Ingest 與 Archaeology。不得執行目標程式、測試、migration、build �
 輸出以穩定 `FUNC-*` 功能／使用情境呈現，再以入口表核對每個 API、UI、CLI、job、event 或公開
 介面的 coverage；一個功能可連結多個入口。每個功能要記錄正常／邊界／錯誤／授權／狀態／交易／
 設定／相容性／效能情境，無法歸類的入口使用 `FUNC-UNCLASSIFIED-{slug}`。報告的
-`audit_report_version: 3` 另以 `scan_schema_version: 2`、`scan_profile` 與
+`audit_report_version: 4` 另以 `scan_schema_version: 2`、`scan_profile` 與
 `scan_snapshot_id` 綁定 shared scanner；`檔案處置` 必須逐檔列出 exact path set、scanner
 category 與相容 disposition，`excluded_roots` 只作目錄摘要。每個 finding 同時引用受影響
 功能與入口，並在同範圍重跑時沿用 ID、保留 user notes、標記 `new`、`still-present`、
-`rechecked-no-longer-observed` 或 `not-rechecked`；v2 報告仍依既有相容規則驗證。
+`rechecked-no-longer-observed` 或 `not-rechecked`；新 finding 依 P0→P3 排序，並先寫白話說明及
+「操作／輸入、預期結果、實際結果」的程式推導案例；未重查的舊 finding 保留原文與原分級置於分類末尾。
+v2／v3 報告仍依既有相容規則驗證。
 
 先記錄目前 `git rev-parse HEAD`、`git rev-parse --is-shallow-repository`、`git status --short` 與 `current-first-targeted` 範圍，使用
 唯讀 `git log --follow --name-status` 建立目前入口／相關路徑的歷史索引，再以
 `git show --format=fuller --stat --patch` 和 `git blame` 深入閱讀相關 commit 的標題、完整內文
-與 diff。核對父版本、後續修正、刪除／改名、未提交修改，以及 shallow 或缺少 Git object；不
+與 diff。遇到 merge commit，逐一比較每個 parent 與 merge 結果，核對驗證、授權、錯誤處理、設定與
+資料轉換是否遺失，再確認目前 source 仍可達；Squash、rebase 或複製程式碼沒有 parent 證據時不歸因於
+人工合併。核對父版本、後續修正、刪除／改名、未提交修改，以及 shallow 或缺少 Git object；不
 fetch、不切換分支、不 checkout 其他 revision、不改寫歷史。Commit 文字只代表作者意圖，不能
 單獨證明 BUG 或業務規則；歷史證據與目前 source 的結果要放在同一份 Codebase audit 報告。
 未提交變更仍是目前 source 的判定對象，另標示其不屬於 HEAD 可達歷史。

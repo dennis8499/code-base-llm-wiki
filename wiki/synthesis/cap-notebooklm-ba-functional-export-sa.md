@@ -19,7 +19,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/notebooklm/test_notebooklm_acceptance.py
   - tests/notebooklm/test_notebooklm_contract.py
-source_digest: sha256:feced8e6df9bbe7e1d285f7242c4dce6979e1e7afddd5be80fc179cd883f20bb
+source_digest: sha256:c5be10e15afe23d47aef562eae4660ce32ac12c8ba308f29be291506ebc0f5a1
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1922"
   - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"

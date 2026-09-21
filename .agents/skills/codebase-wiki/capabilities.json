@@ -40,7 +40,8 @@
       ],
       "finding_classes": ["BUG", "RISK", "BIZ"],
       "review_unit": "functional_capability_with_entrypoint_coverage",
-      "report_version": 3,
+      "report_version": 4,
+      "legacy_report_versions": [2, 3],
       "scan_schema_version": 2,
       "scan_profiles": ["target", "framework"],
       "scanner": ".agents/skills/codebase-wiki/scripts/scan-project.py",
@@ -57,7 +58,19 @@
         "rechecked-no-longer-observed",
         "not-rechecked"
       ],
-      "impact_order": ["high", "medium", "low"],
+      "severity_scale": "P0-P3",
+      "impact_order": ["P0", "P1", "P2", "P3"],
+      "finding_examples": [
+        "plain_language_explanation",
+        "operation_input_expected_actual_result",
+        "code_derived_not_executed_marker"
+      ],
+      "merge_parent_review": [
+        "compare_each_parent_to_merge_result",
+        "check_validation_authorization_error_handling_configuration_and_transformation",
+        "confirm_issue_survives_in_current_source",
+        "do_not_attribute_squash_rebase_or_copy_to_manual_merge"
+      ],
       "history": {
         "mode": "current_first_targeted",
         "commands": ["git log", "git show", "git blame"],

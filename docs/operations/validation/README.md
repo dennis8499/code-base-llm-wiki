@@ -127,10 +127,13 @@ commit 意圖、diff 與目前 source 分開核對。另以 `validate-code-audit
 摘要與 coverage 計數、必要欄位、目前 sources 存在性、Git HEAD／歷史狀態與完整 SHA 格式。
 v2 報告另須確認 `FUNC-*` 功能與入口的雙向關聯、功能／入口 coverage 計數、finding 受影響功能
 引用與四種重跑狀態計數；沒有 `audit_report_version` 的既有報告仍以 legacy validator 驗證。
-v3 報告另須以 `scan_schema_version: 2` 與 `scan_profile` 綁定 scanner snapshot，逐檔列出
+v4 報告另須以 `scan_schema_version: 2` 與 `scan_profile` 綁定 scanner snapshot，逐檔列出
 included、excluded 或 read-issue；validator 會重跑 shared scanner，比對 snapshot 與完整檔案集合，
 並拒絕目錄 prefix、stale path、錯誤 category 或不相容 disposition。Category 使用共用 scanner
 的來源／排除類別 allowlist，`sensitive_filename` 僅作為 reason。
+v4 findings 另須具備 `[P0]`–`[P3]` 標題、白話說明、程式推導案例及輸入／預期／實際或條件式結果，
+並驗證每個分類的 P0→P3 順序；`not-rechecked` 的 v3 finding 可保留舊分級並排在分類末尾。v2／v3
+仍依既有契約驗證。
 同範圍重跑另須確認 finding IDs 與 user notes 保留；chat-only 要求不得寫 Wiki、index、log。
 若 finding 由 `BUG-*`、`RISK-*` 或 `BIZ-*` 轉類，則保留原紀錄並以關聯欄位連到新 ID；未複查
 項目不可標為已解決。歷史分析仍併入同一份 audit 報告，不另建 Archaeology 報告。

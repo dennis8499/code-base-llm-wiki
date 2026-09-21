@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-19
+last_updated: 2026-09-21
 tags: [log]
 status: active
 ---
@@ -672,3 +672,8 @@ status: active
 - standalone scanner 與 NotebookLM exporter 共用嚴格 scanner 設定解析；TOML 讀取、型別或路徑錯誤一律 fail-closed，target profile 的直接 evidence expansion 也沿用 `.github/instructions` framework boundary。
 - v3 Audit 報告新增 `scan_profile`；validator 依 profile 重跑 shared scanner，拒絕 snapshot 不一致、缺列／多列、目錄 prefix、stale path、錯誤 category 與不相容 disposition。
 - 受影響頁面：[[index]]、[[overview]]、[[code-audit]]、[[notebooklm-exporter]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-21] update | Code Audit v4 review contract
+
+- Added MergeReviewer-style plain-language findings, derived cases, P0-P3 severity, and merge-parent checks; v4 validator retains legacy/v2/v3 compatibility.
+- Affected pages: [[code-audit]], [[overview]], [[platform-adapters-and-release]], [[index]], [[log]]

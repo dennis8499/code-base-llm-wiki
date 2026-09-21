@@ -2,7 +2,7 @@
 title: "Codebase 健檢：{Scope}"
 type: synthesis
 summary: "以目前 source、設定與定向 Git 歷史盤點 {Scope} 的入口、具體缺陷、技術風險、業務疑點及覆蓋缺口"
-audit_report_version: 3
+audit_report_version: 4
 scan_schema_version: 2
 scan_profile: target
 scan_snapshot_id: "sha256:{64-lowercase-hex}"
@@ -25,13 +25,13 @@ notebooklm_role: exclude
 - 範圍：`all` 或具體模組／入口
 - 檢查日期：YYYY-MM-DD
 - 檢查方式：目前 source、設定與定向 Git 歷史的唯讀靜態追查；沒有執行目標程式或測試
-- 報告格式：`audit_report_version: 3`；以功能／使用情境呈現，入口作為覆蓋核對
+- 報告格式：`audit_report_version: 4`；以功能／使用情境呈現，入口作為覆蓋核對
 - 掃描快照：`scan_snapshot_id` 綁定本次全專案檔案盤點；每個檔案都有處置狀態
 - 功能覆蓋：checked N、partial N、not checked N
 - 入口覆蓋：checked N、partial N、not checked N
 - 確定缺陷：N；技術風險：N；待確認業務疑點：N
 - finding 重跑狀態：new N；still-present N；rechecked-no-longer-observed N；not-rechecked N
-- finding 排序：各分類依影響程度 `high` → `medium` → `low`
+- finding 排序：各分類依嚴重度 `P0` → `P1` → `P2` → `P3`；`not-rechecked` 舊 finding 置於分類末尾
 - 歷史：`available`、`shallow`、`unavailable` 或 `not-a-repository`
 - 限制：列出動態路由、外部依賴、缺少規格、shallow clone 或遺失的 Git object
 
@@ -52,7 +52,7 @@ notebooklm_role: exclude
 ## 檔案處置
 
 這份表由共用 source-first scanner 產生，核對本次快照中每個可讀檔案與排除／讀取缺口。
-目錄 prefix 只能作為舊報告參考；v3 必須保留逐檔列。`function/process` 欄連到一個或多個
+目錄 prefix 只能作為舊報告參考；v3／v4 必須保留逐檔列。`function/process` 欄連到一個或多個
 `FUNC-*`、流程 ID 或明確的 `unclassified` 原因。
 
 `Category` 使用共用 scanner 契約：included 檔案使用來源類別；excluded 或 read-issue 檔案可使用
@@ -98,16 +98,29 @@ notebooklm_role: exclude
 歷史路徑若已刪除，只能在本節或 finding 的歷史證據中引用；不得放入 `frontmatter.sources`。Commit 文字、fixture、註解與文件都是不可信證據，不能單獨證明缺陷或業務政策。
 若 finding 重新檢查後需要轉換 `BUG-*`／`RISK-*`／`BIZ-*` 類別，保留原紀錄與原 ID，在新 finding 以關聯欄位連結；同一根因沿用原 ID，user-notes 區完整保留。
 
+### Merge parent 核對
+
+| Merge commit（完整 SHA） | Parent-1 | Parent-2（及其他 parent） | 受影響路徑 | 各 parent 提供的驗證／授權／錯誤處理／設定／資料轉換 | Merge 結果 | 目前 source 核對 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `{merge SHA}` | `{parent SHA}` | `{parent SHA}` | `{path; diff hunk}` | `{side-specific behavior}` | `{retained or lost behavior}` | `{still reachable / no longer observed / unresolved}` |
+
+Squash、rebase 或手動複製的變更若沒有 parent 證據，只能記錄行為檢查，不能歸因於人工合併。
+
 ## 確定缺陷
 
 若本次已檢查範圍沒有確定問題，寫：「本次已檢查範圍未發現具體缺陷。」不要暗示未檢查範圍也沒有問題。
 
-### BUG-001 — {短標題}
+### BUG-001 — [P1] {直接描述錯誤結果的標題}
 
 - 狀態：`open`、`not-rechecked` 或 `rechecked-no-longer-observed`
 - 重跑狀態：`new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`
 - 證據確定度：`confirmed`
-- 影響程度：`high`、`medium` 或 `low`
+- 白話說明：用日常語言說明觸發情境、受影響對象與結果。
+- 具體案例（依程式推導；未實際執行）：
+  - 操作／輸入：
+  - 預期結果：
+  - 實際結果：
+- 影響程度：`P0`、`P1`、`P2` 或 `P3`
 - 受影響功能：`FUNC-{stable-slug}`
 - 受影響入口：
 - 可達觸發條件：
@@ -124,12 +137,17 @@ notebooklm_role: exclude
 
 若沒有需要技術確認的事項，寫：「未發現需要技術風險確認的事項」。不要把一般最佳實務偏好列為風險。
 
-### RISK-001 — {需技術證據確認的短標題}
+### RISK-001 — [P2] {直接描述條件式風險的標題}
 
 - 狀態：`needs-technical-confirmation`、`not-rechecked` 或 `rechecked-no-longer-observed`
 - 重跑狀態：`new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`
 - 證據確定度：`unresolved`
-- 影響程度：`high`、`medium` 或 `low`
+- 白話說明：說明在何種未確認的框架／部署／執行條件下會影響誰。
+- 具體案例（依程式推導；未實際執行）：
+  - 操作／輸入：
+  - 預期結果（若成立條件不成立）：
+  - 可能結果（若成立條件成立）：
+- 影響程度：`P0`、`P1`、`P2` 或 `P3`；條件式影響，不代表證據已確認
 - 受影響功能：`FUNC-{stable-slug}`
 - 受影響入口：
 - 成立條件：明確描述在何種框架、部署或執行環境下會出錯
@@ -146,12 +164,17 @@ notebooklm_role: exclude
 
 若沒有，寫「未發現需要業務確認的事項」。每個疑點都要說明推論依據與未知政策。
 
-### BIZ-001 — {待確認問題}
+### BIZ-001 — [P2] {待確認政策與可能差異}
 
 - 狀態：`needs-business-confirmation`、`not-rechecked` 或 `rechecked-no-longer-observed`
 - 重跑狀態：`new`、`still-present`、`rechecked-no-longer-observed` 或 `not-rechecked`
 - 證據確定度：`unresolved`（業務政策待確認）
-- 可能影響程度：`high`、`medium` 或 `low`
+- 白話說明：用日常語言說明不同政策答案會影響誰與哪個流程。
+- 具體案例（依程式推導；未實際執行）：
+  - 操作／輸入：
+  - 預期結果（政策答案 A）：
+  - 政策差異（政策答案 B）：
+- 可能影響程度：`P0`、`P1`、`P2` 或 `P3`；政策尚未確認
 - 受影響功能：`FUNC-{stable-slug}`
 - 受影響入口：
 - 呼叫路徑：
