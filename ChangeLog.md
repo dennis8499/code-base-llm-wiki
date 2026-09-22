@@ -44,6 +44,8 @@
 
 ### Changed
 
+- **Release validation cross-platform hash fix**：以 Git canonical LF bytes 校正 framework coverage ledger 的 14 個來源雜湊與 analyzed discovery ID，避免 Ubuntu GitHub Actions 將 Windows CRLF ledger 判定為 stale，導致 publish job 被跳過。
+
 - **Code Audit v4 MergeReviewer-style review**：保留目前 source-first 與逐功能／逐入口覆蓋，新增 merge commit 的逐 parent 邏輯核對、白話 finding 說明、操作／輸入與預期／實際（或條件式）結果案例，以及 P0–P3 嚴重度排序。Validator 新增 v4 案例、分級、排序與 merge parent 欄位檢查；legacy、v2、v3 報告仍可相容驗證。
 
 - **Scanner 設定與 Audit v3 綁定強化**：standalone scanner 與 NotebookLM exporter 共用嚴格的
