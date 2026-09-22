@@ -683,3 +683,9 @@ status: active
 - 新增 MIT License 與 tag-triggered `.github/workflows/release.yml`，以 `VERSION` 嚴格驗證 tag，建置 ZIP、TAR.GZ、manifest 與 checksums。
 - installer 排除 framework-only release workflow；parity、release、contract、BDD scenario tests 與 framework coverage ledger 同步覆蓋自動發版契約。
 - 受影響頁面：[[index]]、[[platform-adapters-and-release]]、[[release-and-update]]、[[project-function-catalog]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-22] update | Cross-platform release validation readiness
+
+- 以 Git canonical LF bytes 重新校正 framework coverage ledger 的 14 個跨平台 SHA-256 與 analyzed discovery ID，修正 Ubuntu GitHub Actions 將 Windows CRLF ledger 判定為 stale 的 release gate failure；保留既有 release workflow 與四項資產契約。
+- 同步更新 `wiki/modules/code-audit.md` 的 `source_digest`，清除 release validation 既有的 stale-source gate warning。
+- Affected pages: [[codebase-functional-coverage]], [[platform-adapters-and-release]], [[release-and-update]], [[code-audit]], [[log]]
