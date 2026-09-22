@@ -8,6 +8,10 @@
 
 ### Added
 
+- **0.2.0 GitHub Release automation**：新增 MIT License、tag-triggered GitHub Release
+  workflow、framework-only installer exclusion，以及 release／contract／installer／BDD
+  regression coverage；workflow 會驗證 `VERSION`、建置四項固定資產並自動發布。
+
 - **共用 source-first project scanner**：新增 `scan-project.py` 與掃描模組，依明確專案 root
   盤點所有自有 UTF-8 source、CI/CD、IaC、scripts、tools、bin、巢狀 repository、入口候選、
   雜湊、排除原因與 snapshot；NotebookLM exporter 與 Code Audit 共用同一份 inventory。

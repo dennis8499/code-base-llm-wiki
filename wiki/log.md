@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-21
+last_updated: 2026-09-22
 tags: [log]
 status: active
 ---
@@ -677,3 +677,9 @@ status: active
 
 - Added MergeReviewer-style plain-language findings, derived cases, P0-P3 severity, and merge-parent checks; v4 validator retains legacy/v2/v3 compatibility.
 - Affected pages: [[code-audit]], [[overview]], [[platform-adapters-and-release]], [[index]], [[log]]
+
+## [2026-09-22] update | Tag-triggered GitHub Release automation
+
+- 新增 MIT License 與 tag-triggered `.github/workflows/release.yml`，以 `VERSION` 嚴格驗證 tag，建置 ZIP、TAR.GZ、manifest 與 checksums。
+- installer 排除 framework-only release workflow；parity、release、contract、BDD scenario tests 與 framework coverage ledger 同步覆蓋自動發版契約。
+- 受影響頁面：[[index]]、[[platform-adapters-and-release]]、[[release-and-update]]、[[project-function-catalog]]、[[codebase-functional-coverage]]、[[log]]

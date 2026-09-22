@@ -4,6 +4,8 @@ type: guide
 summary: 從安裝、Wiki-first 操作與 source-first Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界
 sources:
   - README.md
+  - LICENSE
+  - .github/workflows/release.yml
   - Codex.md
   - docs/operations/setup/README.md
   - docs/product/workflows/README.md
@@ -16,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
   - tests/contracts/test_code_audit_validator.py
-source_digest: sha256:86f077291f54e67f33dadaec9ac872b0ba343406acf4806fa3c3977df00caedd
+source_digest: sha256:982dc01fd61fdbb527e45b4af69af1e8e1ec997cf3b11a40ec406b0124821ece
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-09-19
+last_updated: 2026-09-22
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -81,8 +83,8 @@ Wiki。只有沒有 `conflicts` 時才 apply，且不會自動刪除 legacy
 `vX.Y.Z`。安裝或升級後，可在目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION` 查看已安裝版本。
 
-手動建立的 GitHub Release 提供 ZIP、TAR.GZ、`SHA256SUMS` 與
-`update-manifest.json`。未來
+推送與 `VERSION` 相符的版本 tag 後，GitHub Actions 會建立包含 ZIP、TAR.GZ、
+`SHA256SUMS` 與 `update-manifest.json` 的 GitHub Release。未來
 Extension 可比較本地版本與 manifest 版本，驗證 checksum 後呼叫 `upgrade`；
 目前 Extension updater 尚未包含在框架內。完整 tag、發佈與 manifest 契約請看
 `docs/operations/releases/README.md`。
@@ -259,7 +261,7 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 - 架構與資料流：`docs/product/architecture/README.md`
 - 安裝、升級與排錯：`docs/operations/setup/README.md`
 - 十二類意圖與 13 個常用操作情境：`docs/product/workflows/README.md`
-- 本機 deterministic checks 與手動驗收：`docs/operations/validation/README.md`
+- 本機 deterministic checks、tag-triggered release 與手動驗收：`docs/operations/validation/README.md`
 - Codex 獨立手冊：`Codex.md`
 
 ## 相關頁面

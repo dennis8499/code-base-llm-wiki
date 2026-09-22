@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:3f7beee757c52c5b24f907e1b9c7de9a36ebc248665bf57dbc4af483202a5d09
+source_digest: sha256:5df2bf8b43e4d66580c055b6d03973bdb18c91d3ae3197d3af2935f5ce15ef69
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
-last_updated: 2026-09-16
+last_updated: 2026-09-22
 tags: [synthesis, system-design, standards-aligned]
 status: active
 ---
@@ -208,7 +208,7 @@ erDiagram
 
 | Node／Environment | Hosted elements | Connectivity／Trust zone | Scaling／Availability | Configuration／Observability | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| Framework repository | shared skill, both adapters, tests, docs, dogfood Wiki | maintainer workspace | manual local verification | `capabilities.json`, validation commands | [[system-architecture]] |
+| Framework repository | shared skill, both adapters, tests, docs, dogfood Wiki | maintainer workspace | local verification plus tag-triggered release workflow | `capabilities.json`, `.github/workflows/release.yml`, validation commands | [[system-architecture]] |
 | Installed Codex target | shared skill + AGENTS/Codex/.codex + starter Wiki on install | target repo boundary | no service/runtime dependency | install state and hooks | [[installer-and-upgrade]] |
 | Installed Copilot target | shared skill + .github prompts/agents/hooks + starter Wiki on install | target repo boundary | host-dependent prompt execution | install state and static parity | [[platform-adapters-and-release]] |
 | Existing target on upgrade | updated schema/adapters; pre-existing Wiki untouched | local repo authorization | conflict-safe preservation | dry-run plan + fingerprints | `DE-DOC-007` |

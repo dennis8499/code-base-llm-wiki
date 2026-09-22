@@ -1,8 +1,9 @@
 # 本機驗證與發佈前檢查
 
-本 Repo 不使用 GitHub Actions。框架維護者必須在乾淨、隔離的 Git worktree
-手動執行 deterministic checks；公開發版則依
-[版本、發佈與更新契約](../releases/README.md) 手動建立 GitHub Release。
+框架維護者必須在乾淨、隔離的 Git worktree 執行 deterministic checks；公開發版則由
+`.github/workflows/release.yml` 在推送符合 `v*.*.*` 的 tag 時自動執行。流程完成
+Python 3.11／3.14 validation、固定四項資產建置與 GitHub Release publish；詳細契約見
+[版本、發佈與更新契約](../releases/README.md)。
 
 ## 驗證狀態用語
 
@@ -71,8 +72,8 @@ deterministic tool checks，不增加五項 active agent runtime 情境。
 `lint-wiki.py` 的 missing-module coverage 與 contradictions 會保持
 `agent_review_required`；維護者另行完成人工語意審查並保存結論。另須確認：
 
-- `.github/workflows/` 下沒有 `.yml` 或 `.yaml`；
-- 目前文件沒有把 CI 或 tag push 描述成自動發版；
+- `.github/workflows/release.yml` 是唯一 workflow，且只由符合 `v*.*.*` 的 tag push 觸發；
+- release workflow 先完成 validation，再建置四項固定資產並以 `GITHUB_TOKEN` 建立 Release；
 - 所有保留的 Copilot prompts 都使用 built-in `agent` metadata，且 Repo 不含 Wiki
   custom-agent profiles；
 - Codex 三個 hooks 可從 repo root、Git 子目錄，以及非 Git 安裝 root 啟動；
@@ -160,12 +161,12 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - [ ] Copilot 標示為 `static-compatible / runtime-unverified`，沒有誤稱 runtime pass。
 - [ ] 若宣告 v6 host runtime verified，五個 active 情境各有 3/3 證據；否則維持 `runtime-unverified`。
 - [ ] Raw source before/after hashes 相同，Wiki 寫入數與 operation coupling 正確。
-- [ ] `.github/workflows/` 沒有 workflow YAML。
+- [ ] `.github/workflows/release.yml` 是唯一 workflow，且只在版本 tag push 時觸發。
 - [ ] `wiki/index.md` 已同步，`wiki/log.md` 只追加一筆本次 framework update。
 - [ ] ChangeLog 已記錄 durable behavior change。
 - [ ] BA／SA／SD contract、frontmatter、NotebookLM、installer 與語意驗收均通過。
 - [ ] `VERSION` 是穩定 `X.Y.Z`，發版 tag 嚴格對應 `vX.Y.Z`。
-- [ ] 專案擁有者已加入明確 LICENSE；缺少時 release readiness gate 必須阻擋。
+- [x] 本次 `0.2.0` 已加入 MIT `LICENSE`；缺少時 release readiness gate 必須阻擋。
 - [ ] Release builder 僅先用 fixture 驗證，正式資產通過 manifest 與 SHA-256 檢查。
 - [ ] `bundled_tools` 描述 tgrep 1.0.5 的路徑、平台與 SHA-256，archive 含 binary，且
   `.tgrep/` generated state 未被封裝。

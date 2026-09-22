@@ -6,6 +6,7 @@ notebooklm_group: function-install-upgrade
 notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/scripts/install-framework.py
+  - .github/workflows/release.yml
   - .agents/skills/codebase-wiki/references/install-workflow.md
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - .agents/skills/codebase-wiki/capabilities.json
@@ -16,9 +17,9 @@ sources:
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:4e6e001dc2936690576f87f68df329fa61c240f8c8181c4c146e0c82fd0fd305
+source_digest: sha256:9caa2f532a502322ad9c22f5b87d8d728fcb5dfe1878b8e477cd6a0b4abc04f2
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-19
+last_updated: 2026-09-22
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -42,8 +43,9 @@ status: active
 - Installer source tree 若包含 symlink 或 Windows junction/reparse point 也會 fail closed，避免 framework source 讀取 repo 外內容。
 - 共用 Skill 以同一份受管 surface 安裝 tgrep wrapper、manifest 與 Windows x64 binary；
   Copilot／Codex 不各自維護副本，且 installer 不建立 target 的 `.tgrep/` index/server。
-- Copilot surface 直接枚舉目前 `.github/` 內容；Repo 不再含 workflows，因此 installer
-  不需要 CI/release workflow 特例，也不會把 workflow YAML 安裝到目標。
+- Copilot surface 直接枚舉目前 `.github/` 內容；framework-only 的
+  `.github/workflows/release.yml` 由 installer 明確排除，不會把 release workflow
+  安裝到 target，其他 surface contract 維持不變。
 - v6 隨共用 Skill 安裝三份 standards-aligned templates/workflows 與兩份 NotebookLM
   current-state BA／SA templates，Copilot surface 另取得
   BA／SA／SD／Codebase audit 薄 prompt adapters；共用 Codebase audit workflow、報告模板與
