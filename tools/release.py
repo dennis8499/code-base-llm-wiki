@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import hashlib
-import io
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -18,17 +17,17 @@ import re
 import subprocess
 import stat
 import sys
-import tarfile
 import zipfile
-import gzip
 from typing import Iterable, Sequence
 
 
 PRODUCT_ID = "codebase-llm-wiki"
-INSTALLER_CONTRACT_VERSION = 3
+INSTALLER_CONTRACT_VERSION = 6
 VERSION_FILE = "VERSION"
 VERSION_PATTERN = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
-ARCHIVE_NAMES = ("codebase-llm-wiki.zip", "codebase-llm-wiki.tar.gz")
+SURFACES = ("codex", "copilot")
+ARCHIVE_NAMES = tuple(f"{PRODUCT_ID}-{surface}.zip" for surface in SURFACES)
+ARCHIVE_BY_SURFACE = dict(zip(SURFACES, ARCHIVE_NAMES))
 MANIFEST_NAME = "update-manifest.json"
 BUNDLED_TOOL_MANIFEST = ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
 EXPECTED_TGREP = {
@@ -73,6 +72,18 @@ SENSITIVE_NAMES = {
 SENSITIVE_SUFFIXES = (".pem", ".p12", ".pfx", ".key")
 SENSITIVE_PATTERNS = ("*.env", ".env.*", "*credential*", "*secret*", "id_rsa*")
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+SURFACE_ROOTS = {
+    "codex": ("Codex.md", ".codex"),
+    "copilot": (
+        ".github/copilot-instructions.md",
+        ".github/prompts",
+        ".github/instructions",
+        ".github/hooks",
+    ),
+}
+COMMON_ROOTS = ("AGENTS.md", "VERSION", ".agents/skills/codebase-wiki")
+PACKAGE_README_NAME = "README.md"
 
 
 def configure_utf8_stdio() -> None:
@@ -282,32 +293,160 @@ def release_files(root: Path = REPO_ROOT, output: Path | None = None) -> list[Pa
     return files
 
 
-def _archive_member(path: Path, root: Path, version: str) -> str:
-    relative = path.relative_to(root).as_posix()
-    return f"{PRODUCT_ID}-{version}/{relative}"
+def _license_name(root: Path) -> str:
+    for name in ("LICENSE", "LICENSE.md", "LICENSE.txt"):
+        path = root / name
+        if path.is_file() and path.stat().st_size > 0:
+            return name
+    raise ReleaseError("public release is blocked until the project owner adds an explicit LICENSE")
 
 
-def _write_zip(path: Path, files: Iterable[Path], root: Path, version: str) -> None:
+def _collect_package_path(
+    root: Path,
+    relative_root: str,
+    output_root: Path | None = None,
+) -> list[Path]:
+    """Collect one explicitly allowed package path with the normal boundary checks."""
+
+    source = root / relative_root
+    if not source.exists():
+        raise ReleaseError(f"required {relative_root} is missing from the release source")
+    if _is_reparse_point(source):
+        raise ReleaseError(f"release source must not contain symlink or reparse point: {relative_root}")
+    if source.is_file():
+        return [source]
+
+    files: list[Path] = []
+    for path in sorted(source.rglob("*")):
+        if output_root is not None:
+            try:
+                path.relative_to(output_root)
+            except ValueError:
+                pass
+            else:
+                continue
+        relative_parts = path.relative_to(root).parts
+        if any(part.lower() in EXCLUDED_PARTS_LOWER for part in relative_parts):
+            continue
+        if _is_generated_transaction_path(relative_parts):
+            continue
+        if path.name.lower().endswith(GENERATED_SUFFIXES):
+            continue
+        if _is_sensitive_path(relative_parts):
+            continue
+        if _is_reparse_point(path):
+            relative = path.relative_to(root).as_posix()
+            raise ReleaseError(f"release source must not contain symlink or reparse point: {relative}")
+        if path.is_file():
+            files.append(path)
+    return files
+
+
+def package_files(
+    root: Path = REPO_ROOT,
+    surface: str = "",
+    output: Path | None = None,
+) -> list[Path]:
+    """Return the deterministic, surface-specific release allowlist."""
+
+    if surface not in SURFACES:
+        raise ReleaseError(f"unknown release surface: {surface!r}")
+    root = root.resolve()
+    output_root: Path | None = None
+    if output is not None:
+        output_root = output.resolve(strict=False)
+        if output_root == root:
+            raise ReleaseError("release output must be outside the repository root")
+        try:
+            output_root.relative_to(root)
+        except ValueError:
+            output_root = None
+    license_name = _license_name(root)
+    relative_roots = (*COMMON_ROOTS[:1], VERSION_FILE, license_name, COMMON_ROOTS[2], *SURFACE_ROOTS[surface])
+    required = (
+        "AGENTS.md",
+        VERSION_FILE,
+        ".agents/skills/codebase-wiki/SKILL.md",
+        ".agents/skills/codebase-wiki/scripts/install-framework.py",
+        ".agents/skills/codebase-wiki/assets/wiki-starter",
+        *SURFACE_ROOTS[surface],
+    )
+    files: dict[str, Path] = {}
+    for relative in required:
+        if not _collect_package_path(root, relative, output_root):
+            raise ReleaseError(f"required {relative} is empty in the release source")
+    for relative in relative_roots:
+        for path in _collect_package_path(root, relative, output_root):
+            files[path.relative_to(root).as_posix()] = path
+    return [files[relative] for relative in sorted(files)]
+
+
+def package_readme(surface: str, version: str) -> bytes:
+    """Render the small README shipped in each platform installer package."""
+
+    label = "OpenAI Codex" if surface == "codex" else "GitHub Copilot"
+    command = (
+        f"python .agents/skills/codebase-wiki/scripts/install-framework.py "
+        f"install --target C:\\path\\to\\your-repo --surface {surface} "
+        "--guard-mode wiki-only --format json"
+    )
+    apply_command = command.replace(" --format json", " --apply --format json")
+    upgrade_command = command.replace(" install ", " upgrade ")
+    return (
+        f"# Codebase LLM Wiki — {label} package\n\n"
+        f"This is the {label} surface of Codebase LLM Wiki, version {version}. "
+        "It contains the shared codebase-wiki skill and only the selected platform adapter.\n\n"
+        "## Install\n\n"
+        "From this package directory, preview the installation first:\n\n"
+        f"```powershell\n{command}\n```\n\n"
+        "Review the JSON plan, then apply it:\n\n"
+        f"```powershell\n{apply_command}\n```\n\n"
+        "For an existing installation, use the same command with `upgrade`:\n\n"
+        f"```powershell\n{upgrade_command}\n```\n\n"
+        "The installer preserves target Wiki content and reports conflicts before writing. "
+        "The framework is based on the upstream LLM Wiki method; see "
+        "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f.\n"
+    ).encode("utf-8")
+
+
+def package_entries(
+    root: Path,
+    files: Iterable[Path],
+    surface: str,
+    version: str,
+) -> list[tuple[str, bytes]]:
+    """Build archive entries, replacing the framework AGENTS file with its target template."""
+
+    root = root.resolve()
+    entries: list[tuple[str, bytes]] = []
+    target_agents = root / ".agents/skills/codebase-wiki/assets/target-agents-block.md"
+    if not target_agents.is_file():
+        raise ReleaseError("missing target AGENTS template in the shared skill")
+    for source in files:
+        relative = source.relative_to(root).as_posix()
+        data = target_agents.read_bytes() if relative == "AGENTS.md" else source.read_bytes()
+        entries.append((relative, data))
+    entries.append((PACKAGE_README_NAME, package_readme(surface, version)))
+    return sorted(entries, key=lambda entry: entry[0])
+
+
+def _archive_member(relative: str, version: str, surface: str) -> str:
+    return f"{PRODUCT_ID}-{surface}-{version}/{relative}"
+
+
+def _write_zip(
+    path: Path,
+    entries: Iterable[tuple[str, bytes]],
+    version: str,
+    surface: str,
+) -> None:
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for source in files:
-            info = zipfile.ZipInfo(_archive_member(source, root, version))
+        for relative, data in entries:
+            info = zipfile.ZipInfo(_archive_member(relative, version, surface))
             info.date_time = (1980, 1, 1, 0, 0, 0)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
-            archive.writestr(info, source.read_bytes())
-
-
-def _write_tarball(path: Path, files: Iterable[Path], root: Path, version: str) -> None:
-    with path.open("wb") as output:
-        with gzip.GzipFile(fileobj=output, mode="wb", mtime=0) as compressed:
-            with tarfile.open(fileobj=compressed, mode="w") as archive:
-                for source in files:
-                    data = source.read_bytes()
-                    info = tarfile.TarInfo(_archive_member(source, root, version))
-                    info.size = len(data)
-                    info.mode = 0o644
-                    info.mtime = 0
-                    archive.addfile(info, io.BytesIO(data))
+            archive.writestr(info, data)
 
 
 def sha256(path: Path) -> str:
@@ -413,26 +552,29 @@ def build_release(
     repo = repository_name(root, repository)
     bundled_tools = bundled_tool_metadata(root)
     output.mkdir(parents=True, exist_ok=True)
-    files = release_files(root, output)
 
-    zip_path = output / ARCHIVE_NAMES[0]
-    tar_path = output / ARCHIVE_NAMES[1]
-    _write_zip(zip_path, files, root, version)
-    _write_tarball(tar_path, files, root, version)
+    archive_paths: dict[str, Path] = {}
+    for surface in SURFACES:
+        files = package_files(root, surface, output)
+        entries = package_entries(root, files, surface, version)
+        archive_path = output / ARCHIVE_BY_SURFACE[surface]
+        _write_zip(archive_path, entries, version, surface)
+        archive_paths[surface] = archive_path
 
     base_url = f"https://github.com/{repo}/releases/download/{tag}"
     release_url = f"https://github.com/{repo}/releases/tag/{tag}"
     assets = [
         {
-            "name": name,
-            "format": "zip" if name.endswith(".zip") else "tar.gz",
-            "download_url": f"{base_url}/{name}",
-            "sha256": sha256(output / name),
+            "name": ARCHIVE_BY_SURFACE[surface],
+            "surface": surface,
+            "format": "zip",
+            "download_url": f"{base_url}/{ARCHIVE_BY_SURFACE[surface]}",
+            "sha256": sha256(archive_paths[surface]),
         }
-        for name in ARCHIVE_NAMES
+        for surface in SURFACES
     ]
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "product": PRODUCT_ID,
         "version": version,
         "tag": tag,
@@ -448,7 +590,7 @@ def build_release(
         encoding="utf-8",
     )
 
-    checksum_paths = [output / name for name in (*ARCHIVE_NAMES, MANIFEST_NAME)]
+    checksum_paths = [archive_paths[surface] for surface in SURFACES] + [manifest_path]
     checksum_text = "".join(f"{sha256(path)}  {path.name}\n" for path in checksum_paths)
     (output / CHECKSUMS_NAME).write_text(checksum_text, encoding="utf-8")
     return {
@@ -486,10 +628,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             version = validate_tag(args.tag)
             validate_release_readiness()
             bundled_tools = bundled_tool_metadata()
+            for surface in SURFACES:
+                package_files(REPO_ROOT, surface)
             payload = {
                 "ok": True,
                 "version": version,
                 "tag": args.tag,
+                "surfaces": list(SURFACES),
                 "bundled_tools": bundled_tools,
             }
         else:

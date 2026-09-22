@@ -16,7 +16,7 @@ SCENARIO_TESTS = {
         "tests.release.test_release.ReleaseTests.test_build_creates_manifest_archives_and_checksums",
     ),
     "BDD-RELEASE-003": (
-        "tests.installer.test_install_framework.FrameworkInstallerTests.test_copilot_surface_excludes_codex_files",
+        "tests.release.test_release.ReleaseTests.test_surface_archives_install_and_reject_the_wrong_surface_before_writes",
     ),
 }
 EXPECTED_SCENARIOS = (*SCENARIO_TESTS, "BDD-RELEASE-004")

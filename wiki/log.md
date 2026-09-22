@@ -689,3 +689,18 @@ status: active
 - 以 Git canonical LF bytes 重新校正 framework coverage ledger 的 14 個跨平台 SHA-256 與 analyzed discovery ID，修正 Ubuntu GitHub Actions 將 Windows CRLF ledger 判定為 stale 的 release gate failure；保留既有 release workflow 與四項資產契約。
 - 同步更新 `wiki/modules/code-audit.md` 的 `source_digest`，清除 release validation 既有的 stale-source gate warning。
 - Affected pages: [[codebase-functional-coverage]], [[platform-adapters-and-release]], [[release-and-update]], [[code-audit]], [[log]]
+
+## [2026-09-22] update | Surface-specific Codex and Copilot release packages
+
+- Release builder、workflow、manifest schema v2、installer package boundary 與測試現在共同交付 `codebase-llm-wiki-codex.zip` 和 `codebase-llm-wiki-copilot.zip`；每包只含對應 adapter、共用 Skill、installer、Wiki starter 與 pinned tgrep bundle。
+- 更新 README、Release／validation 文件、Changelog、surface Wiki、coverage ledger hash 與 analyzed discovery ID；舊的完整 Repo ZIP、TAR.GZ 與舊檔名不再由 builder 產生。
+- 受影響頁面：[[index]]、[[platform-adapters-and-release]]、[[release-and-update]]、[[installer-and-upgrade]]、[[codebase-functional-coverage]]、[[log]]
+
+## [2026-09-22] update | Release package boundary hardening
+
+- Release allowlist now excludes an output tree nested under an allowed Skill path, and package validation rejects empty required roots while accepting the supported LICENSE filename variants; refreshed source digests and the coverage discovery ID after the final implementation.
+- Affected pages: [[platform-adapters-and-release]], [[installer-and-upgrade]], [[codebase-functional-coverage]], [[log]]
+## [2026-09-22] update | Prepare v0.2.1 release
+
+- Promoted the surface-specific package work to product version  .2.1; refreshed current release instructions, manifest examples, validation notes, and current-version Wiki statements while preserving the historical v0.2.0 record.
+- Affected pages: [[platform-adapters-and-release]], [[release-and-update]], [[system-architecture]], [[system-analysis]], [[project-function-catalog]], [[codebase-functional-coverage]], [[log]]

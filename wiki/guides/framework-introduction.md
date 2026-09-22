@@ -18,7 +18,7 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
   - tests/contracts/test_code_audit_validator.py
-source_digest: sha256:982dc01fd61fdbb527e45b4af69af1e8e1ec997cf3b11a40ec406b0124821ece
+source_digest: sha256:8e03ba2084c15a84c5d5aee53e2338b86254294346a53a695d5b86279bb2cf46
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-09-22
 tags: [guide, onboarding, framework, copilot, codex]
@@ -83,8 +83,8 @@ Wiki。只有沒有 `conflicts` 時才 apply，且不會自動刪除 legacy
 `vX.Y.Z`。安裝或升級後，可在目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION` 查看已安裝版本。
 
-推送與 `VERSION` 相符的版本 tag 後，GitHub Actions 會建立包含 ZIP、TAR.GZ、
-`SHA256SUMS` 與 `update-manifest.json` 的 GitHub Release。未來
+推送與 `VERSION` 相符的版本 tag 後，GitHub Actions 會建立包含 Codex／Copilot
+精簡 ZIP、`SHA256SUMS` 與 `update-manifest.json` 的 GitHub Release。未來
 Extension 可比較本地版本與 manifest 版本，驗證 checksum 後呼叫 `upgrade`；
 目前 Extension updater 尚未包含在框架內。完整 tag、發佈與 manifest 契約請看
 `docs/operations/releases/README.md`。

@@ -32,8 +32,8 @@ class GitHubReleaseWorkflowTests(unittest.TestCase):
             'gh release create "${GITHUB_REF_NAME}"',
             "--verify-tag",
             "--generate-notes",
-            "dist/codebase-llm-wiki.zip",
-            "dist/codebase-llm-wiki.tar.gz",
+            "dist/codebase-llm-wiki-codex.zip",
+            "dist/codebase-llm-wiki-copilot.zip",
             "dist/update-manifest.json",
             "dist/SHA256SUMS",
         ):

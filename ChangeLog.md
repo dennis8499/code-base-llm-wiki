@@ -6,7 +6,14 @@
 
 ## [Unreleased]
 
+## [0.2.1] ? 2026-09-22
+
 ### Added
+
+- **Codex／GitHub Copilot surface release packages**：Release builder 現在建立
+  `codebase-llm-wiki-codex.zip` 與 `codebase-llm-wiki-copilot.zip` 兩個精簡安裝包，
+  各自只包含對應 adapter 與共用 Skill；manifest schema v2、surface metadata、
+  checksums、workflow、installer package boundary 與回歸測試同步更新。
 
 - **0.2.0 GitHub Release automation**：新增 MIT License、tag-triggered GitHub Release
   workflow、framework-only installer exclusion，以及 release／contract／installer／BDD

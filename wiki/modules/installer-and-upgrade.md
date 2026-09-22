@@ -1,7 +1,7 @@
 ---
 title: Installer 與 Upgrade
 type: module
-summary: Installer v6 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle
+summary: Installer v6 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle
 notebooklm_group: function-install-upgrade
 notebooklm_role: traceability
 sources:
@@ -17,7 +17,7 @@ sources:
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:9caa2f532a502322ad9c22f5b87d8d728fcb5dfe1878b8e477cd6a0b4abc04f2
+source_digest: sha256:20dd41321bb74a6ebd989268e715922d1d958f89cc9437fb94363b0dd021aead
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-22
 tags: [module, installer, upgrade, atomicity]
@@ -46,6 +46,9 @@ status: active
 - Copilot surface 直接枚舉目前 `.github/` 內容；framework-only 的
   `.github/workflows/release.yml` 由 installer 明確排除，不會把 release workflow
   安裝到 target，其他 surface contract 維持不變。
+- Release package README marker 啟用額外完整性 gate：在任何 target 寫入前確認共用
+  Skill、Wiki starter、VERSION、target `AGENTS.md` template 與所選 Codex／Copilot
+  adapter 都存在；選錯平台包會 fail closed。
 - v6 隨共用 Skill 安裝三份 standards-aligned templates/workflows 與兩份 NotebookLM
   current-state BA／SA templates，Copilot surface 另取得
   BA／SA／SD／Codebase audit 薄 prompt adapters；共用 Codebase audit workflow、報告模板與

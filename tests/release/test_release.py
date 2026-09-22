@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 import subprocess
 import sys
-import tarfile
 import tempfile
 import unittest
 import zipfile
@@ -39,6 +38,35 @@ def add_bundled_tgrep(root: Path) -> None:
         + "\n",
         encoding="utf-8",
     )
+
+
+def add_release_package_surfaces(root: Path) -> None:
+    """Create the minimal two-surface source expected by the release builder."""
+
+    skill = root / ".agents/skills/codebase-wiki"
+    (skill / "assets/wiki-starter").mkdir(parents=True, exist_ok=True)
+    (skill / "scripts").mkdir(parents=True, exist_ok=True)
+    (skill / "SKILL.md").write_text("shared skill\n", encoding="utf-8")
+    shutil.copyfile(
+        REPO_ROOT / ".agents/skills/codebase-wiki/scripts/install-framework.py",
+        skill / "scripts/install-framework.py",
+    )
+    shutil.copyfile(
+        REPO_ROOT / ".agents/skills/codebase-wiki/assets/target-agents-block.md",
+        skill / "assets/target-agents-block.md",
+    )
+    (skill / "assets/wiki-starter/overview.md").write_text("starter\n", encoding="utf-8")
+    (root / "AGENTS.md").write_text("framework rules\n", encoding="utf-8")
+    (root / "Codex.md").write_text("codex adapter\n", encoding="utf-8")
+    (root / ".codex").mkdir(exist_ok=True)
+    (root / ".codex/config.toml").write_text("[wiki_guard]\nmode = 'framework'\n", encoding="utf-8")
+    (root / ".github/prompts").mkdir(parents=True, exist_ok=True)
+    (root / ".github/instructions").mkdir(parents=True, exist_ok=True)
+    (root / ".github/hooks").mkdir(parents=True, exist_ok=True)
+    (root / ".github/copilot-instructions.md").write_text("copilot adapter\n", encoding="utf-8")
+    (root / ".github/prompts/query-wiki.prompt.md").write_text("query\n", encoding="utf-8")
+    (root / ".github/instructions/wiki-pages.instructions.md").write_text("pages\n", encoding="utf-8")
+    (root / ".github/hooks/config.toml").write_text("[wiki_guard]\nmode = 'framework'\n", encoding="utf-8")
 
 
 def create_directory_reparse_point(link: Path, target: Path) -> None:
@@ -83,6 +111,7 @@ class ReleaseTests(unittest.TestCase):
                 encoding="utf-8",
             )
             add_bundled_tgrep(root)
+            add_release_package_surfaces(root)
             cli_path = root / "tools/release.py"
             cli_path.parent.mkdir(parents=True)
             cli_path.write_text(RELEASE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
@@ -131,7 +160,12 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(payload["bundled_tools"][0]["sha256"], TGREP_SHA256)
             self.assertEqual(
                 set(payload["files"]),
-                {"codebase-llm-wiki.zip", "codebase-llm-wiki.tar.gz", "update-manifest.json", "SHA256SUMS"},
+                {
+                    "codebase-llm-wiki-codex.zip",
+                    "codebase-llm-wiki-copilot.zip",
+                    "update-manifest.json",
+                    "SHA256SUMS",
+                },
             )
             self.assertTrue((output / "SHA256SUMS").is_file())
 
@@ -160,8 +194,8 @@ class ReleaseTests(unittest.TestCase):
             "python tools/release.py validate --tag",
             "python tools/release.py build --output dist",
             "gh release create",
-            "dist/codebase-llm-wiki.zip",
-            "dist/codebase-llm-wiki.tar.gz",
+            "dist/codebase-llm-wiki-codex.zip",
+            "dist/codebase-llm-wiki-copilot.zip",
             "dist/update-manifest.json",
             "dist/SHA256SUMS",
             "bundled_tools",
@@ -174,8 +208,8 @@ class ReleaseTests(unittest.TestCase):
 
     def test_version_is_stable_semver_and_tag_matches(self) -> None:
         release = load_release()
-        self.assertEqual(release.read_version(REPO_ROOT), "0.2.0")
-        self.assertEqual(release.validate_tag("v0.2.0", REPO_ROOT), "0.2.0")
+        self.assertEqual(release.read_version(REPO_ROOT), "0.2.1")
+        self.assertEqual(release.validate_tag("v0.2.1", REPO_ROOT), "0.2.1")
         self.assertEqual(release.repository_name(REPO_ROOT, "owner/example.git"), "owner/example")
         with self.assertRaises(release.ReleaseError):
             release.validate_tag("0.2.0", REPO_ROOT)
@@ -202,6 +236,7 @@ class ReleaseTests(unittest.TestCase):
                 encoding="utf-8",
             )
             add_bundled_tgrep(source_root)
+            add_release_package_surfaces(source_root)
             payload = release.build_release(
                 output,
                 root=source_root,
@@ -225,8 +260,8 @@ class ReleaseTests(unittest.TestCase):
                     "bundled_tools",
                 },
             )
-            self.assertEqual(manifest["schema_version"], 1)
-            self.assertEqual(manifest["installer_contract_version"], 3)
+            self.assertEqual(manifest["schema_version"], 2)
+            self.assertEqual(manifest["installer_contract_version"], 6)
             self.assertEqual(manifest["release_url"], "https://github.com/owner/example/releases/tag/v0.2.0")
             self.assertEqual(
                 manifest["bundled_tools"],
@@ -242,8 +277,11 @@ class ReleaseTests(unittest.TestCase):
                 ],
             )
             self.assertEqual(
-                [asset["name"] for asset in manifest["assets"]],
-                ["codebase-llm-wiki.zip", "codebase-llm-wiki.tar.gz"],
+                [(asset["surface"], asset["name"]) for asset in manifest["assets"]],
+                [
+                    ("codex", "codebase-llm-wiki-codex.zip"),
+                    ("copilot", "codebase-llm-wiki-copilot.zip"),
+                ],
             )
 
             checksum_lines = (output / "SHA256SUMS").read_text(encoding="utf-8").splitlines()
@@ -258,14 +296,28 @@ class ReleaseTests(unittest.TestCase):
                     asset["download_url"],
                 )
 
-            zip_names = zipfile.ZipFile(output / "codebase-llm-wiki.zip").namelist()
-            tar_names = tarfile.open(output / "codebase-llm-wiki.tar.gz", "r:gz").getnames()
-            for names in (zip_names, tar_names):
+            zip_names_by_surface = {
+                surface: zipfile.ZipFile(output / f"codebase-llm-wiki-{surface}.zip").namelist()
+                for surface in ("codex", "copilot")
+            }
+            for surface, names in zip_names_by_surface.items():
+                self.assertTrue(any(name.endswith(f"codebase-llm-wiki-{surface}-0.2.0/README.md") for name in names))
+                self.assertTrue(any(name.endswith("/AGENTS.md") for name in names))
                 self.assertTrue(any(name.endswith("/VERSION") for name in names))
-                self.assertTrue(any(name.endswith("/tools/release.py") for name in names))
+                self.assertFalse(any("/docs/" in name for name in names))
+                self.assertFalse(any("/tests/" in name for name in names))
+                self.assertFalse(any("/wiki/" in name for name in names))
                 self.assertFalse(any("/.git/" in name for name in names))
                 self.assertFalse(any("/__pycache__/" in name for name in names))
                 self.assertFalse(any("/logs/" in name for name in names))
+                if surface == "codex":
+                    self.assertTrue(any(name.endswith("/Codex.md") for name in names))
+                    self.assertTrue(any("/.codex/" in name for name in names))
+                    self.assertFalse(any("/.github/" in name for name in names))
+                else:
+                    self.assertTrue(any(name.endswith("/.github/copilot-instructions.md") for name in names))
+                    self.assertTrue(any("/.github/prompts/" in name for name in names))
+                    self.assertFalse(any("/.codex/" in name for name in names))
                 self.assertTrue(
                     any(
                         name.endswith(
@@ -278,6 +330,148 @@ class ReleaseTests(unittest.TestCase):
     def test_public_release_readiness_passes_with_the_selected_license(self) -> None:
         release = load_release()
         release.validate_release_readiness(REPO_ROOT)
+
+    def test_surface_archives_install_and_reject_the_wrong_surface_before_writes(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "source"
+            output = Path(directory) / "dist"
+            (root / "docs/history").mkdir(parents=True)
+            (root / "VERSION").write_text("0.2.0\n", encoding="utf-8")
+            (root / "LICENSE").write_text("Test fixture license\n", encoding="utf-8")
+            (root / "docs/history/llm-wiki.md").write_text(
+                "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f\n",
+                encoding="utf-8",
+            )
+            add_bundled_tgrep(root)
+            add_release_package_surfaces(root)
+            release.build_release(output, root=root, repository="owner/example")
+
+            with tempfile.TemporaryDirectory() as extracted_directory:
+                extracted = Path(extracted_directory)
+                with zipfile.ZipFile(output / "codebase-llm-wiki-codex.zip") as archive:
+                    archive.extractall(extracted)
+                package_root = extracted / "codebase-llm-wiki-codex-0.2.0"
+                installer = package_root / ".agents/skills/codebase-wiki/scripts/install-framework.py"
+                target = Path(directory) / "target"
+                target.mkdir()
+
+                preview = subprocess.run(
+                    [
+                        sys.executable,
+                        str(installer),
+                        "install",
+                        "--target",
+                        str(target),
+                        "--surface",
+                        "codex",
+                        "--format",
+                        "json",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    check=False,
+                )
+                self.assertEqual(preview.returncode, 0, preview.stdout + preview.stderr)
+                self.assertEqual(list(target.iterdir()), [])
+
+                applied = subprocess.run(
+                    [
+                        sys.executable,
+                        str(installer),
+                        "install",
+                        "--target",
+                        str(target),
+                        "--surface",
+                        "codex",
+                        "--apply",
+                        "--format",
+                        "json",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    check=False,
+                )
+                self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+                local_note = target / "wiki/local-note.md"
+                local_note.write_text("keep me\n", encoding="utf-8")
+                upgraded = subprocess.run(
+                    [
+                        sys.executable,
+                        str(installer),
+                        "upgrade",
+                        "--target",
+                        str(target),
+                        "--surface",
+                        "codex",
+                        "--apply",
+                        "--format",
+                        "json",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    check=False,
+                )
+                self.assertEqual(upgraded.returncode, 0, upgraded.stdout + upgraded.stderr)
+                self.assertEqual(local_note.read_text(encoding="utf-8"), "keep me\n")
+
+                wrong_surface_target = Path(directory) / "wrong-surface-target"
+                wrong_surface_target.mkdir()
+                wrong = subprocess.run(
+                    [
+                        sys.executable,
+                        str(installer),
+                        "install",
+                        "--target",
+                        str(wrong_surface_target),
+                        "--surface",
+                        "copilot",
+                        "--apply",
+                        "--format",
+                        "json",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    check=False,
+                )
+                self.assertEqual(wrong.returncode, 2)
+                self.assertEqual(list(wrong_surface_target.iterdir()), [])
+
+                copilot_extracted = Path(extracted_directory) / "copilot"
+                copilot_extracted.mkdir()
+                with zipfile.ZipFile(output / "codebase-llm-wiki-copilot.zip") as archive:
+                    archive.extractall(copilot_extracted)
+                copilot_root = copilot_extracted / "codebase-llm-wiki-copilot-0.2.0"
+                copilot_installer = copilot_root / ".agents/skills/codebase-wiki/scripts/install-framework.py"
+                copilot_target = Path(directory) / "copilot-target"
+                copilot_target.mkdir()
+                for action, apply_flag in (("install", False), ("install", True), ("upgrade", True)):
+                    arguments = [
+                        sys.executable,
+                        str(copilot_installer),
+                        action,
+                        "--target",
+                        str(copilot_target),
+                        "--surface",
+                        "copilot",
+                    ]
+                    if apply_flag:
+                        arguments.append("--apply")
+                    arguments.append("--format")
+                    arguments.append("json")
+                    result = subprocess.run(
+                        arguments,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertTrue((copilot_target / ".github/copilot-instructions.md").exists())
 
     def test_release_rejects_bundled_tgrep_metadata_or_hash_drift(self) -> None:
         release = load_release()
@@ -385,6 +579,7 @@ class ReleaseTests(unittest.TestCase):
                 encoding="utf-8",
             )
             add_bundled_tgrep(root)
+            add_release_package_surfaces(root)
             (root / ".env").write_text("TOKEN=private\n", encoding="utf-8")
             (root / "secrets").mkdir()
             (root / "secrets/runtime.toml").write_text("token='private'\n", encoding="utf-8")
@@ -393,27 +588,31 @@ class ReleaseTests(unittest.TestCase):
             (output / "old.txt").write_text("old artifact\n", encoding="utf-8")
 
             payload = release.build_release(output, root=root, repository="owner/example")
-            names = zipfile.ZipFile(output / "codebase-llm-wiki.zip").namelist()
-
             self.assertTrue(payload["manifest"])
-            self.assertFalse(any(name.endswith("/.env") for name in names))
-            self.assertFalse(any("/secrets/" in name for name in names))
-            self.assertFalse(any(name.endswith("/private.pem") for name in names))
-            self.assertFalse(any("/artifacts/" in name for name in names))
-            self.assertTrue(
-                any(
-                    name.endswith(
-                        "/.agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+            names_by_surface = {
+                surface: zipfile.ZipFile(output / f"codebase-llm-wiki-{surface}.zip").namelist()
+                for surface in ("codex", "copilot")
+            }
+            for names in names_by_surface.values():
+                self.assertFalse(any(name.endswith("/.env") for name in names))
+                self.assertFalse(any("/secrets/" in name for name in names))
+                self.assertFalse(any(name.endswith("/private.pem") for name in names))
+                self.assertFalse(any("/artifacts/" in name for name in names))
+                self.assertTrue(
+                    any(
+                        name.endswith(
+                            "/.agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
+                        )
+                        for name in names
                     )
-                    for name in names
                 )
-            )
 
             release.build_release(output, root=root, repository="owner/example")
-            names_after_repeat = zipfile.ZipFile(
-                output / "codebase-llm-wiki.zip"
-            ).namelist()
-            self.assertEqual(names, names_after_repeat)
+            for surface, names in names_by_surface.items():
+                names_after_repeat = zipfile.ZipFile(
+                    output / f"codebase-llm-wiki-{surface}.zip"
+                ).namelist()
+                self.assertEqual(names, names_after_repeat)
 
     def test_release_builder_rejects_symlinked_output_without_overwriting_victim(self) -> None:
         release = load_release()
@@ -431,7 +630,7 @@ class ReleaseTests(unittest.TestCase):
             output.mkdir()
             victim.write_text("must survive\n", encoding="utf-8")
             try:
-                os.symlink(victim, output / "codebase-llm-wiki.zip")
+                os.symlink(victim, output / "codebase-llm-wiki-codex.zip")
             except (OSError, NotImplementedError) as exc:
                 self.skipTest(f"symlink creation unavailable: {exc}")
 

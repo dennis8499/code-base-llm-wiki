@@ -15,7 +15,7 @@ sources:
   - docs/operations/releases/README.md
   - tests/contracts/test_contracts.py
   - tests/wiki/test_wiki_lint.py
-source_digest: sha256:595076e82a6d8c34b661eb9ccab0c3efe936c078ae6acdc72278434258452e29
+source_digest: sha256:75f0b68357a86389629773e80de22a77d71208eedf4358d5fb376245ecb4977f
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
 last_updated: 2026-09-22
 tags: [synthesis, system-analysis, standards-aligned]
@@ -249,7 +249,7 @@ sequenceDiagram
 
 | 項目 | 內容 |
 | --- | --- |
-| 系統 / 範圍 | Codebase LLM Wiki framework v0.2.0 |
+| 系統 / 範圍 | Codebase LLM Wiki framework v0.2.1 |
 | 產出日期 | 2026-08-21 |
 | 來源基準 | Codebase LLM Wiki + verified framework sources |
 | 文件狀態 | active；公開 release licensing 為明確 gap |
@@ -423,7 +423,7 @@ guard 與 NotebookLM profile。維護者在乾淨隔離 worktree 以 Python 3.11
 
 | 風險 | 影響 | 建議 |
 | --- | --- | --- |
-| Tag-triggered publish 尚未執行 | 尚無 `v0.2.0` 公開 Release 證據 | 合併到 `main` 後推送 tag，驗證 workflow 與四項資產 |
+| Tag-triggered publish 尚未執行 | 尚無 `v0.2.1` 公開 Release 證據 | 合併到 `main` 後推送 tag，驗證 workflow 與四項資產 |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
 | NotebookLM retrieval drift | query-index、project-map 與 source roles 可對齊 BA／SA capability 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以 `docs/operations/validation/notebooklm-ba-uat.md` 固定題組手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
@@ -445,7 +445,7 @@ guard 與 NotebookLM profile。維護者在乾淨隔離 worktree 以 Python 3.11
 
 ## 待確認事項
 
-- [ ] 合併到 `main` 並推送 `v0.2.0`，確認 workflow 與四項 Release assets。
+- [ ] 合併到 `main` 並推送 `v0.2.1`，確認 workflow 與四項 Release assets。
 - [ ] 在 NotebookLM Enterprise 以 `docs/operations/validation/notebooklm-ba-uat.md` 固定題組驗證答案、引用與 gap 行為。
 - [ ] 在實際 Copilot host 驗證 prompts、permission 與 coexist audit context 呈現。
 

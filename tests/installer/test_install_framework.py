@@ -66,7 +66,7 @@ class FrameworkInstallerTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(payload["contract_version"], 6)
-            self.assertEqual(payload["framework_version"], "0.2.0")
+            self.assertEqual(payload["framework_version"], "0.2.1")
             self.assertEqual(payload["action"], "install")
             self.assertEqual(payload["surface"], "codex")
             self.assertEqual(payload["guard_mode"], "wiki-only")
@@ -236,7 +236,7 @@ class FrameworkInstallerTests(unittest.TestCase):
                 (target / ".agents" / "skills" / "codebase-wiki" / "VERSION").read_text(
                     encoding="utf-8"
                 ),
-                "0.2.0\n",
+                "0.2.1\n",
             )
             self.assertTrue((target / ".codex" / "hooks.json").exists())
             self.assertTrue(

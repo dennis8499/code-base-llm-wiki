@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 tag-triggered GitHub Release 維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索
+summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -33,7 +33,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:ed78b9e1637833660bfb4123317b8bbfe385ed7c40d015741f008c3cbbbf24bc
+source_digest: sha256:918c562bf75052bfdb0ebca2e45df30debb0b480d96ff5930ce8ec62e7441371
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-09-22
 tags: [module, adapters, validation, release, parity]
@@ -66,8 +66,9 @@ status: active
 - Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
 - 以根 `VERSION` 作為產品版號唯一來源；`.github/workflows/release.yml` 只在
-  `v*.*.*` tag push 時觸發，先以 Python 3.11／3.14 完成 validation，再明列 ZIP、
-  TAR.GZ、`update-manifest.json` 與 `SHA256SUMS` 四個 assets 建立 GitHub Release。
+  `v*.*.*` tag push 時觸發，先以 Python 3.11／3.14 完成 validation，再明列
+  `codebase-llm-wiki-codex.zip`、`codebase-llm-wiki-copilot.zip`、
+  `update-manifest.json` 與 `SHA256SUMS` 四個 assets 建立 GitHub Release。
 - 本 Repo 採用 MIT License；workflow 使用 job-level `contents: write` 發布，installer
   將 framework-only release workflow 排除在 target surface 之外。
 
@@ -94,16 +95,22 @@ status: active
 - 本機驗證以 Python 3.11 與 3.14 執行 unit、compile、parity、frontmatter、stale、
   log、stats、lint 與 index check；lint 的兩項語意檢查另由人工完成。
 - `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、LICENSE、
-  repository name、資產邊界與 checksum。
+  repository name、surface package allowlist、資產邊界與 checksum。
 - Release builder 排除 cache、hook/NotebookLM state、transaction artifacts 與敏感
-  paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry；它驗證
-  `bundled_tools` 中 tgrep 1.0.5 的固定 path、platform 與 SHA-256，且排除 `.tgrep/`。
-- `update-manifest.json` 以 `bundled_tools` 描述隨 ZIP/TAR.GZ 發佈的 wrapper、manifest
-  與 binary；這不是額外 asset，也不改變四項 GitHub Release asset 契約。
+  paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry；它只從
+  明確的共用 Skill、LICENSE、VERSION、target AGENTS template 與選定 adapter 收集檔案，
+  驗證 `bundled_tools` 中 tgrep 1.0.5 的固定 path、platform 與 SHA-256，且排除 `.tgrep/`。
+- `update-manifest.json` 使用 schema v2，以每個 asset 的 `surface` 分別描述兩個
+  精簡 ZIP；`bundled_tools` 描述隨兩包發佈的 wrapper、manifest 與 binary。這不是額外
+  asset，installer contract version 與目前實作一致為 6。
+
+- 解壓後的精簡 package README 提供 install／upgrade 預覽與套用指令。Installer 會
+  識別 package marker，在任何 target 寫入前檢查共用 Skill、Wiki starter 與所選 adapter
+  的完整性；把 Copilot package 選成 Codex surface（或反向）會 fail closed。
 
 ## Contradictions
 
-- `VERSION=0.2.0` 是目前產品版號；MIT License 已加入，但 `v0.2.0` tag 與 GitHub
+- `VERSION=0.2.1` 是目前產品版號；MIT License 已加入，但 `v0.2.1` tag 與 GitHub
   Release 仍須由合併後的 tag push workflow 建立。
 - 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v6 或
   未測 host/version 的保證。
@@ -116,7 +123,7 @@ status: active
 ## Gaps
 
 - Copilot host runtime 尚未執行，因此維持 `runtime-unverified`。
-- `v0.2.0` 的實際 tag push、workflow run、公開發佈日期、套件簽章、SBOM 與
+- `v0.2.1` 的實際 tag push、workflow run、公開發佈日期、套件簽章、SBOM 與
   provenance attestation 仍待人工作業或後續決策。
 
 ## 相關頁面

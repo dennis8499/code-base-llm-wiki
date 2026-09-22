@@ -161,7 +161,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
   NotebookLM 生成式問答。
 - **可驗證**：以 Python 3.11/3.14 在隔離 worktree 執行 unit、compile、parity、
   frontmatter、digest freshness、log/index 與唯讀 lint；推送版本 tag 後，
-  `.github/workflows/release.yml` 會在相同矩陣重新驗證並發布固定 Release assets。
+  `.github/workflows/release.yml` 會在相同矩陣重新驗證並發布 Codex／Copilot 精簡 Release assets。
 
 ---
 
@@ -216,24 +216,26 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.2.0`。Installer 會把目前版本保存到目標 Repo 的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.2.1`。Installer 會把目前版本保存到目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
 installer contract 版本。
 
-本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.2.0` tag 後，
+本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.2.1` tag 後，
 `.github/workflows/release.yml` 會自動完成 validation、build 與 GitHub Release publish；
 這個 framework-only workflow 不會被 installer 安裝到 target repository。
 
 最新版本與下載：
 
 - [查看所有 GitHub Releases](https://github.com/dennis8499/code-base-llm-wiki/releases)
-- [下載 ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/codebase-llm-wiki.zip)
-- [下載 TAR.GZ](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/codebase-llm-wiki.tar.gz)
+- [下載 Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/codebase-llm-wiki-codex.zip)
+- [下載 GitHub Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/codebase-llm-wiki-copilot.zip)
 - [下載更新 manifest](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/update-manifest.json)
 
-壓縮包包含完整框架 Repo；解壓後可依需求使用 `--surface copilot` 或
-`--surface codex` 執行既有 installer。未來 Extension 可讀取 update manifest、
-比較本地版本、驗證 SHA-256，再呼叫 `upgrade`；本 Repo 目前不包含 updater。
+兩個 ZIP 分別是精簡的 Codex 與 GitHub Copilot 安裝包，包含共用 Skill、installer、
+Wiki starter、固定 tgrep bundle 與單一平台 adapter。解壓後使用對應的
+`--surface codex` 或 `--surface copilot` 執行 installer；選錯平台包會在寫入前失敗。
+未來 Extension 可讀取 update manifest、比較本地版本、驗證 SHA-256，再呼叫
+`upgrade`；本 Repo 目前不包含 updater。
 
 完整發佈流程請參閱 [版本、發佈與更新契約](docs/operations/releases/README.md)。
 

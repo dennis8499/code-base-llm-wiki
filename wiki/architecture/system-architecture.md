@@ -18,7 +18,7 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-source_digest: sha256:77f0ca560c6adad08c4298363e8212c13763182753edd2dea0b51b51ff4ebf4e
+source_digest: sha256:31f5fe9054cb9b6df000827218bd942f71a81a431771c105b00297c0b2bfe383
 derived_from: ["[[overview]]"]
 last_updated: 2026-09-22
 tags: [architecture, framework, data-flow, safety]
@@ -126,7 +126,7 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 ## Gaps
 
 - 尚未提供 SaaS、NotebookLM API、自動 upload、多租戶權限管理或 Advanced DLP template 同步。
-- MIT License 已加入；`v0.2.0` 的實際 tag push、workflow run 與公開 Release 尚待人工作業。
+- MIT License 已加入；`v0.2.1` 的實際 tag push、workflow run 與公開 Release 尚待人工作業。
 
 ## Related Pages
 

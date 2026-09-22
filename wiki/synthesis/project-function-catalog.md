@@ -33,7 +33,7 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
 | 平台與發布 | 驗證 Copilot/Codex 契約、建立版本資產 | parity、本機 UAT、`release.py`、`gh` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
 發布功能標為 partial，原因是本機 builder、tag-triggered workflow 與固定資產契約已具備，
-但 `v0.2.0` 的實際 tag push、workflow run 與公開 Release 尚未完成。
+但 `v0.2.1` 的實際 tag push、workflow run 與公開 Release 尚未完成。
 
 ## 跨功能能力
 

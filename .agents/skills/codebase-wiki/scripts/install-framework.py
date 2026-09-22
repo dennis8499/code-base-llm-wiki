@@ -24,6 +24,19 @@ SURFACE_PATHS = {
     "codex": ("Codex.md", ".codex"),
     "copilot": (".github",),
 }
+RELEASE_PACKAGE_MARKER = "surface of Codebase LLM Wiki"
+RELEASE_PACKAGE_REQUIRED = {
+    "codex": (
+        "Codex.md",
+        ".codex",
+    ),
+    "copilot": (
+        ".github/copilot-instructions.md",
+        ".github/prompts",
+        ".github/instructions",
+        ".github/hooks",
+    ),
+}
 FRAMEWORK_ONLY_PATHS = {".github/workflows/release.yml"}
 WIKI_STARTER_PATH = ".agents/skills/codebase-wiki/assets/wiki-starter"
 TARGET_AGENTS_BLOCK_PATH = ".agents/skills/codebase-wiki/assets/target-agents-block.md"
@@ -116,6 +129,58 @@ def _surface_files(root: Path, surface: str, action: str = "install") -> list[tu
     for source, relative in files:
         unique[relative] = source
     return [(source, relative) for relative, source in sorted(unique.items())]
+
+
+def _validate_release_package_source(root: Path, surface: str) -> None:
+    """Fail before writes when a generated single-surface package is incomplete."""
+
+    readme = root / "README.md"
+    if not readme.is_file():
+        return
+    try:
+        is_release_package = RELEASE_PACKAGE_MARKER in readme.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise OSError(f"unable to inspect release package README: {readme}") from exc
+    if not is_release_package:
+        return
+
+    # Traverse the actual framework and selected adapter first so symlink and
+    # reparse-point failures retain the existing fail-closed boundary behavior.
+    for relative_root in (*COMMON_SURFACE_PATHS, *SURFACE_PATHS[surface]):
+        _files(root, relative_root)
+
+    required = (
+        "AGENTS.md",
+        "VERSION",
+        ".agents/skills/codebase-wiki/SKILL.md",
+        ".agents/skills/codebase-wiki/scripts/install-framework.py",
+        ".agents/skills/codebase-wiki/assets/wiki-starter",
+        *RELEASE_PACKAGE_REQUIRED[surface],
+    )
+    for relative in required:
+        path = root / relative
+        _validate_framework_source_path(root, path)
+        if not path.exists():
+            raise OSError(
+                f"release package is incomplete for {surface}: missing {relative}"
+            )
+        if path.is_dir() and not _files(root, relative):
+            raise OSError(
+                f"release package is incomplete for {surface}: {relative} is empty"
+            )
+        if path.is_file() and path.stat().st_size == 0:
+            raise OSError(
+                f"release package is incomplete for {surface}: {relative} is empty"
+            )
+    if not any(
+        (root / name).is_file()
+        and not _is_reparse_point(root / name)
+        and (root / name).stat().st_size > 0
+        for name in ("LICENSE", "LICENSE.md", "LICENSE.txt")
+    ):
+        raise OSError(
+            f"release package is incomplete for {surface}: missing a non-empty LICENSE file"
+        )
 
 
 def _managed_block(source_root: Path, source: Path, relative: str) -> bytes:
@@ -434,6 +499,8 @@ def _prepare_plan(
         raise ValueError(f"unknown action: {action}")
     if guard_mode not in {"wiki-only", "coexist"}:
         raise ValueError(f"unknown guard mode: {guard_mode}")
+
+    _validate_release_package_source(source_root, surface)
 
     state = _load_state(target_root)
     state_files = state.get("files", {}) if state else {}

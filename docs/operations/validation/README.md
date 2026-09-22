@@ -2,7 +2,7 @@
 
 框架維護者必須在乾淨、隔離的 Git worktree 執行 deterministic checks；公開發版則由
 `.github/workflows/release.yml` 在推送符合 `v*.*.*` 的 tag 時自動執行。流程完成
-Python 3.11／3.14 validation、固定四項資產建置與 GitHub Release publish；詳細契約見
+Python 3.11／3.14 validation、兩個平台 ZIP、manifest、checksum 建置與 GitHub Release publish；詳細契約見
 [版本、發佈與更新契約](../releases/README.md)。
 
 ## 驗證狀態用語
@@ -73,7 +73,7 @@ deterministic tool checks，不增加五項 active agent runtime 情境。
 `agent_review_required`；維護者另行完成人工語意審查並保存結論。另須確認：
 
 - `.github/workflows/release.yml` 是唯一 workflow，且只由符合 `v*.*.*` 的 tag push 觸發；
-- release workflow 先完成 validation，再建置四項固定資產並以 `GITHUB_TOKEN` 建立 Release；
+- release workflow 先完成 validation，再建置 Codex／Copilot 兩項 ZIP、manifest 與 checksum，並以 `GITHUB_TOKEN` 建立 Release；
 - 所有保留的 Copilot prompts 都使用 built-in `agent` metadata，且 Repo 不含 Wiki
   custom-agent profiles；
 - Codex 三個 hooks 可從 repo root、Git 子目錄，以及非 Git 安裝 root 啟動；
@@ -166,7 +166,7 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - [ ] ChangeLog 已記錄 durable behavior change。
 - [ ] BA／SA／SD contract、frontmatter、NotebookLM、installer 與語意驗收均通過。
 - [ ] `VERSION` 是穩定 `X.Y.Z`，發版 tag 嚴格對應 `vX.Y.Z`。
-- [x] 本次 `0.2.0` 已加入 MIT `LICENSE`；缺少時 release readiness gate 必須阻擋。
+- [x] 本次 `0.2.1` 已加入 MIT `LICENSE`；缺少時 release readiness gate 必須阻擋。
 - [ ] Release builder 僅先用 fixture 驗證，正式資產通過 manifest 與 SHA-256 檢查。
 - [ ] `bundled_tools` 描述 tgrep 1.0.5 的路徑、平台與 SHA-256，archive 含 binary，且
   `.tgrep/` generated state 未被封裝。

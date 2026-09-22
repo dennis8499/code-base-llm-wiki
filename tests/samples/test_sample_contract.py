@@ -79,7 +79,7 @@ class SampleContractTests(unittest.TestCase):
                             / "codebase-wiki"
                             / "VERSION"
                         ).read_text(encoding="utf-8"),
-                        "0.2.0\n",
+                        "0.2.1\n",
                     )
                     self.assertIn(
                         "status: placeholder",

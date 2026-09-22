@@ -65,10 +65,10 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
-| [[code-audit]] | 先用共用 scanner 盤點完整 Codebase 與入口候選，再以完整呼叫路徑和定向 Git 歷史追查可證明缺陷；v4 以白話案例、P0–P3 與 merge parent 核對呈現逐功能、逐檔覆蓋 |
-| [[installer-and-upgrade]] | Installer v6 以 dry-run、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
+| [[code-audit]] | 先用共用 scanner 盤點目前 Codebase 的功能與入口，再以完整呼叫路徑和定向 Git 歷史追查可證明缺陷，並保留逐功能、逐檔重跑狀態與覆蓋限制 |
+| [[installer-and-upgrade]] | Installer v6 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
 | [[notebooklm-exporter]] | 以全專案 scanner、schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack |
-| [[platform-adapters-and-release]] | 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 tag-triggered GitHub Release 維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索 |
+| [[platform-adapters-and-release]] | 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索 |
 | [[platform-hooks-and-guards]] | 共用 canonical hooks 以 Git-root 定位與三種 guard modes 維持跨 cwd 寫入邊界 |
 | [[wiki-quality-and-provenance]] | 以安全來源解析、內容摘要、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |
 
@@ -94,7 +94,7 @@ _（尚無頁面）_
 |------|------|
 | [[framework-introduction]] | 從安裝、Wiki-first 操作與 source-first Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界 |
 | [[notebooklm-export]] | 依全量 discovery、一次確認、每功能 BA／SA 與自動 readiness 安全產生 schema-v6 source pack |
-| [[release-and-update]] | 以 VERSION、本機驗證、tag-triggered GitHub Actions 與授權 gate 管理框架發布 |
+| [[release-and-update]] | 以 VERSION、本機驗證、surface-specific ZIP、tag-triggered GitHub Actions 與授權 gate 管理框架發布 |
 
 ## Synthesis
 
