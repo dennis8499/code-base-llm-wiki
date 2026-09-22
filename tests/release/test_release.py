@@ -152,7 +152,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(invalid_tag.returncode, 2)
             self.assertIn("release validation failed", invalid_tag.stdout)
 
-    def test_release_guide_names_the_exact_manual_assets(self) -> None:
+    def test_release_guide_names_the_exact_release_assets(self) -> None:
         guide = (REPO_ROOT / "docs" / "operations" / "releases" / "README.md").read_text(
             encoding="utf-8"
         )
@@ -167,6 +167,7 @@ class ReleaseTests(unittest.TestCase):
             "bundled_tools",
             ".tgrep/",
             "--verify-tag",
+            "--generate-notes",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, guide)
@@ -274,10 +275,9 @@ class ReleaseTests(unittest.TestCase):
                     )
                 )
 
-    def test_public_release_is_blocked_until_owner_selects_a_license(self) -> None:
+    def test_public_release_readiness_passes_with_the_selected_license(self) -> None:
         release = load_release()
-        with self.assertRaisesRegex(release.ReleaseError, "explicit LICENSE"):
-            release.validate_release_readiness(REPO_ROOT)
+        release.validate_release_readiness(REPO_ROOT)
 
     def test_release_rejects_bundled_tgrep_metadata_or_hash_drift(self) -> None:
         release = load_release()

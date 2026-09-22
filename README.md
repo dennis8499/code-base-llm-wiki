@@ -159,9 +159,9 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
   結果與失敗分支；共用 scanner snapshot 與 schema-v2 逐檔 coverage 會記錄 hash、分類、功能流程關聯與理由，並在實際上傳 bytes 檢查規則正文是否存在。一次確認後自動完成 readiness，
   透過雙識別碼、DLP masking、容量檢查與 stable source mapping 保持可驗證；這不等於已驗證
   NotebookLM 生成式問答。
-- **可驗證**：以 Python 3.11/3.14 在隔離 worktree 手動執行 unit、compile、
-  parity、frontmatter、digest freshness、log/index 與唯讀 lint；本 Repo 不配置
-  GitHub Actions。
+- **可驗證**：以 Python 3.11/3.14 在隔離 worktree 執行 unit、compile、parity、
+  frontmatter、digest freshness、log/index 與唯讀 lint；推送版本 tag 後，
+  `.github/workflows/release.yml` 會在相同矩陣重新驗證並發布固定 Release assets。
 
 ---
 
@@ -220,8 +220,9 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
 installer contract 版本。
 
-本 Repo 尚未由擁有者選定 LICENSE，因此 release validate/build 會刻意阻擋新的
-公開資產；下列連結只代表既有或未來正式發布位置，不代表 v0.2.0 已公開授權。
+本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.2.0` tag 後，
+`.github/workflows/release.yml` 會自動完成 validation、build 與 GitHub Release publish；
+這個 framework-only workflow 不會被 installer 安裝到 target repository。
 
 最新版本與下載：
 

@@ -20,9 +20,9 @@ sources:
   - tests/contracts/test_code_audit_validator.py
   - tests/fixtures/code-audit/history/README.md
   - tests/fixtures/code-audit/history/expected-findings.md
-source_digest: sha256:440a0367b610e723ef67850ce4344d54104f7dd950d997a4e0c658273629b803
+source_digest: sha256:e7a291fb93214c998e2350f65bb5c04f64e9b4dd68184946d6d492010374ded7
 derived_from: ["[[system-architecture]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-21
+last_updated: 2026-09-22
 tags: [module, code-audit, static-analysis, business-logic, git-history]
 status: active
 notebooklm_group: local-governance

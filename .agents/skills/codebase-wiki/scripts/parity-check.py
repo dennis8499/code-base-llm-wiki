@@ -175,6 +175,27 @@ SOURCE_DISCOVERY_REFERENCE = ".agents/skills/codebase-wiki/references/source-dis
 TGREP_MANIFEST_PATH = ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
 TGREP_BINARY_PATH = ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
 TGREP_SHA256 = "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7"
+RELEASE_WORKFLOW_PATH = ".github/workflows/release.yml"
+RELEASE_WORKFLOW_REQUIRED_TOKENS = (
+    "name: Release",
+    "on:\n  push:",
+    "tags:",
+    '- "v*.*.*"',
+    "actions/checkout@v7",
+    "actions/setup-python@v7",
+    "contents: write",
+    'python tools/release.py validate --tag "${GITHUB_REF_NAME}"',
+    'python tools/release.py build --output dist --repository "${GITHUB_REPOSITORY}"',
+    'GH_TOKEN: ${{ github.token }}',
+    'gh release create "${GITHUB_REF_NAME}"',
+    "--verify-tag",
+    "--generate-notes",
+    "dist/codebase-llm-wiki.zip",
+    "dist/codebase-llm-wiki.tar.gz",
+    "dist/update-manifest.json",
+    "dist/SHA256SUMS",
+)
+RELEASE_WORKFLOW_ALLOWED_PERMISSION_NAMES = {"contents"}
 TGREP_INTEGRATION = {
     "provider": "tgrep",
     "version": "1.0.5",
@@ -684,6 +705,10 @@ def main() -> int:
     )
     for surface in ("copilot", "codex"):
         planned = [relative for _, relative in surface_files(root, surface, "install")]
+        if RELEASE_WORKFLOW_PATH in planned:
+            issues.append(
+                f"framework-only release workflow must not be installed: {surface}"
+            )
         leaked = [
             path
             for path in planned
@@ -711,8 +736,36 @@ def main() -> int:
         for suffix in ("*.yml", "*.yaml")
         for path in workflow_root.glob(suffix)
     )
-    if workflows:
-        issues.append("GitHub workflow files must be absent: " + ", ".join(workflows))
+    if workflows != [RELEASE_WORKFLOW_PATH]:
+        issues.append(
+            "GitHub workflow files must contain only the release workflow: "
+            + ", ".join(workflows)
+        )
+    release_workflow = root / RELEASE_WORKFLOW_PATH
+    if release_workflow.is_file():
+        workflow_text = release_workflow.read_text(encoding="utf-8")
+        for token in RELEASE_WORKFLOW_REQUIRED_TOKENS:
+            if token not in workflow_text:
+                issues.append(f"release workflow contract missing {token!r}")
+        permission_names = {
+            match.group(1)
+            for match in re.finditer(
+                r"(?m)^\s+([A-Za-z0-9_-]+):\s+(?:read|write|none)\s*$",
+                workflow_text,
+            )
+        }
+        unexpected_permissions = sorted(
+            permission_names - RELEASE_WORKFLOW_ALLOWED_PERMISSION_NAMES
+        )
+        if unexpected_permissions:
+            issues.append(
+                "release workflow grants unexpected permissions: "
+                + ", ".join(unexpected_permissions)
+            )
+        if "workflow_dispatch" in workflow_text:
+            issues.append("release workflow must be tag-triggered only")
+        if "dist/*" in workflow_text:
+            issues.append("release workflow must list exact assets, not dist/*")
     payload = {"ok": not issues, "contract_version": manifest.get("contract_version", 0), "issues": issues}
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0 if not issues else 1

@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Compile Python sources
+        run: python -m compileall -q .agents/skills/codebase-wiki/scripts tools tests
+
+      - name: Check platform parity
+        run: python .agents/skills/codebase-wiki/scripts/parity-check.py
+
+      - name: Validate Wiki frontmatter
+        run: python .agents/skills/codebase-wiki/scripts/validate-frontmatter.py wiki
+
+      - name: Check stale Wiki sources
+        run: python .agents/skills/codebase-wiki/scripts/check-stale.py wiki .
+
+      - name: Validate append-only Wiki log
+        run: python .agents/skills/codebase-wiki/scripts/validate-log.py wiki/log.md --repo-root .
+
+      - name: Report Wiki statistics
+        run: python .agents/skills/codebase-wiki/scripts/wiki-stats.py wiki
+
+      - name: Lint Wiki
+        run: python .agents/skills/codebase-wiki/scripts/lint-wiki.py wiki --repo-root .
+
+      - name: Check Wiki index
+        run: python .agents/skills/codebase-wiki/scripts/rebuild-index.py wiki --check
+
+      - name: Scan framework sources
+        run: python .agents/skills/codebase-wiki/scripts/scan-project.py --root . --profile framework --format json
+
+      - name: Validate release readiness and tag
+        run: python tools/release.py validate --tag "${GITHUB_REF_NAME}"
+
+  publish:
+    name: Build and publish GitHub Release
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Build release assets
+        run: python tools/release.py build --output dist --repository "${GITHUB_REPOSITORY}" --format json
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/codebase-llm-wiki.zip \
+            dist/codebase-llm-wiki.tar.gz \
+            dist/update-manifest.json \
+            dist/SHA256SUMS \
+            --verify-tag \
+            --title "Codebase LLM Wiki ${GITHUB_REF_NAME}" \
+            --generate-notes

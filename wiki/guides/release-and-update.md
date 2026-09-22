@@ -1,21 +1,29 @@
 ---
 title: Codebase LLM Wiki — 版本、發佈與更新
 type: guide
-summary: 以 VERSION、本機驗證、手動 GitHub Release 與授權 gate 管理框架發布
+summary: 以 VERSION、本機驗證、tag-triggered GitHub Actions 與授權 gate 管理框架發布
 sources:
   - VERSION
+  - LICENSE
+  - .github/workflows/release.yml
   - tools/release.py
   - docs/operations/releases/README.md
   - docs/operations/validation/README.md
   - README.md
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/parity-check.py
+  - .agents/skills/codebase-wiki/scripts/install-framework.py
+  - tests/contracts/test_contracts.py
+  - tests/release/test_github_release_workflow.py
+  - tests/release/features/github-release.feature
+  - tests/release/scenario_runner.py
+  - tests/release/test_release.py
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:d0d8690ff80cb1f1518e38f46931b81cbedf1dcb74c56ada362c69e1880b9640
+source_digest: sha256:2a82ade54527bbb170a3f4c93718b0283a115c40bfb1616d4f4375b937cbde3c
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-09-19
+last_updated: 2026-09-22
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -33,6 +41,8 @@ notebooklm_role: traceability
 - Git tag 必須是 `vX.Y.Z`，且必須與 `VERSION` 完全一致。
 - `contract_version: 6` 是 installer/capability contract，不是產品版號。
 - Installer 將版號保存至 `.agents/skills/codebase-wiki/VERSION`。
+- `.github/workflows/release.yml` 是 framework-only 的正式發版入口，只在符合
+  `v*.*.*` 的 tag push 時觸發；installer 不會把它安裝到 target repository。
 - Framework workflow changes, including the shared Query/Lint follow-up action
   contract, must be reflected in the release documentation, ChangeLog, Wiki
   index, and append-only update log before publishing.
@@ -48,22 +58,32 @@ notebooklm_role: traceability
 
 ## 發佈流程
 
-1. 更新 `VERSION` 與 `ChangeLog.md`。
-2. 由專案擁有者選定並加入明確 `LICENSE`。
-3. 在乾淨隔離 worktree，以 Python 3.11 與 3.14 手動執行 unit、compile、parity、
+1. 更新 `VERSION` 與 `ChangeLog.md`，並確認 `LICENSE` readiness。
+2. 在乾淨隔離 worktree，以 Python 3.11 與 3.14 執行 unit、compile、parity、
    frontmatter、stale、log、stats、lint、index checks，並完成人工 semantic review。
-4. 執行 `python tools/release.py validate --tag vX.Y.Z` 與
-   `python tools/release.py build --output dist --repository OWNER/NAME`。
-5. 確認 ZIP、TAR.GZ、`update-manifest.json`、`SHA256SUMS` 四個資產及 checksum。
-6. 建立並推送對應 `vX.Y.Z` tag。
-7. 手動執行：
+3. 執行 `python tools/release.py validate --tag vX.Y.Z` 與
+   `python tools/release.py build --output dist --repository OWNER/NAME`，確認
+   ZIP、TAR.GZ、`update-manifest.json`、`SHA256SUMS` 四個資產及 checksum。
+4. 將變更合併到 `main`，建立並推送對應 `vX.Y.Z` tag。
+5. `.github/workflows/release.yml` 會重新執行 Python 3.11／3.14 validation，並以
+   `gh release create --verify-tag --generate-notes` 明列四個資產建立 GitHub Release；
+   以下是 workflow 內部的 publish step，維護者不需要手動執行：
 
-```powershell
-gh release create vX.Y.Z dist/codebase-llm-wiki.zip dist/codebase-llm-wiki.tar.gz dist/update-manifest.json dist/SHA256SUMS --verify-tag --title "Codebase LLM Wiki vX.Y.Z" --generate-notes
+```yaml
+# .github/workflows/release.yml
+run: |
+  gh release create "${GITHUB_REF_NAME}" \
+    dist/codebase-llm-wiki.zip \
+    dist/codebase-llm-wiki.tar.gz \
+    dist/update-manifest.json \
+    dist/SHA256SUMS \
+    --verify-tag \
+    --title "Codebase LLM Wiki ${GITHUB_REF_NAME}" \
+    --generate-notes
 ```
 
-Repo 不配置 GitHub Actions；不得把 push tag 描述為自動測試或自動發布，也不得以
-`dist/*` 取代四個明列 assets。
+Workflow 不以 `dist/*` 取代四個明列 assets；它只在版本 tag push 時執行，並將
+`GITHUB_TOKEN` 限定為建立 Release 所需的 `contents: write`。
 
 Release builder 會排除 `.git`、`logs`、`.codex-hook-logs`、`.github-hook-logs`、
 `cache`、`.venv`、`__pycache__`、`.mypy_cache`、`.ruff_cache`、`.notebooklm` 與 `dist` 等產生物，也會排除
@@ -96,9 +116,9 @@ Extension 的最小流程是：讀取本地 version marker、取得 manifest、�
 目前框架只發布 manifest 與本地版本標記，不負責 Extension 的檢查排程、下載
 UI 或更新套用邏輯。
 
-目前 Repo 尚未加入 LICENSE；`release.py validate/build` 會明確失敗。這是公開發布
-前置條件，不是測試或 installer 錯誤。上游方法論文件只保留原創摘要、作者與來源
-連結，未鏡像缺少再散布授權的全文。
+目前 Repo 已加入 MIT `LICENSE`；`release.py validate/build` 仍會明確驗證授權、版本、
+tag 與上游 attribution。上游方法論文件只保留原創摘要、作者與來源連結，未鏡像
+缺少再散布授權的全文。
 
 ## 相關頁面
 

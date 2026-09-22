@@ -6,7 +6,7 @@ notebooklm_group: project
 notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[code-audit]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]"]
-last_updated: 2026-09-17
+last_updated: 2026-09-22
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -17,7 +17,7 @@ status: active
 
 本目錄以 `scan_profile="framework"` 將共用 Skill、Codex/Copilot adapters 與
 release tooling 視為產品證據。Tests、samples、cache、secrets、Wiki 與 export
-output 仍依安全 inventory 分類；本機驗證與手動發版行為由專門 Wiki 頁面
+output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行為由專門 Wiki 頁面
 引用，而不是當作 NotebookLM raw runtime evidence 自動納入。
 
 ## 功能覆蓋矩陣
@@ -32,8 +32,8 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 | NotebookLM 準備 | 全量發現後建立每功能現況 BA／SA，一次確認後產生單一 Notebook 離線 pack | `export-notebooklm.py` | discovery/readiness 雙 ID、BA／SA pair、locator、DLP、容量、manifest v6 | [[notebooklm-exporter]] | covered |
 | 平台與發布 | 驗證 Copilot/Codex 契約、建立版本資產 | parity、本機 UAT、`release.py`、`gh` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
-發布功能標為 partial，原因是本機 builder 與手動程序已具備，但專案擁有者尚未
-選擇 LICENSE，公開 release gate 會刻意拒絕建立資產。
+發布功能標為 partial，原因是本機 builder、tag-triggered workflow 與固定資產契約已具備，
+但 `v0.2.0` 的實際 tag push、workflow run 與公開 Release 尚未完成。
 
 ## 跨功能能力
 
@@ -65,7 +65,7 @@ output 仍依安全 inventory 分類；本機驗證與手動發版行為由專�
 
 - 不提供 RAG、向量資料庫、常駐搜尋 runtime 或自動雲端同步；`query-index` 是匯出的
   Markdown 路由來源，不是本機搜尋服務。
-- 缺少 LICENSE、SBOM、簽章與公開 release 實際演練。
+- 缺少 SBOM、簽章與公開 release 實際演練。
 - Query 只使用 Wiki 與 Repo source evidence，不提供即時資料庫連線或工具 fallback。
 
 ## 相關頁面

@@ -10,11 +10,14 @@ sources:
   - .agents/skills/codebase-wiki/references/analysis-document-standards.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/capabilities.json
+  - tools/release.py
+  - .github/workflows/release.yml
+  - docs/operations/releases/README.md
   - tests/contracts/test_contracts.py
   - tests/wiki/test_wiki_lint.py
-source_digest: sha256:6665b207a797bb10113bf4c4f0055d7ac6c7018edb67eb5f1c497d7f950b3d37
+source_digest: sha256:595076e82a6d8c34b661eb9ccab0c3efe936c078ae6acdc72278434258452e29
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
-last_updated: 2026-09-17
+last_updated: 2026-09-22
 tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
@@ -265,7 +268,7 @@ sequenceDiagram
 | Data model and data flow | covered | frontmatter、manifest、preflight、install state |
 | External integrations | partial | Codex/Copilot adapter covered；NotebookLM 僅離線 |
 | Security and permissions | partial | authorization、guard、untrusted evidence、secret exclusions、本機 Basic DLP gate；Copilot shell permission 需 host 驗證 |
-| Deployment and operations | covered | dependency-free CLI、本機驗證與手動 release |
+| Deployment and operations | covered | dependency-free CLI、本機驗證與 tag-triggered GitHub Release |
 | Non-functional requirements | partial | correctness/atomicity、200-page lint 與 500 個 synthetic module 的 Wiki full preflight/apply regression covered；query benchmark gap |
 | Errors and failure modes | covered | conflicts、stale、invalid ID、limit/atomic failures |
 | Risks and technical debt | covered | licensing、semantic review、host variation |
@@ -305,7 +308,7 @@ BA／SA pair 與已登記 gaps。詳見 [[system-architecture]]。
 | Wiki quality | Schema、freshness、links、index、log | [[wiki-quality-and-provenance]] |
 | Hooks | Host context 與 write boundary | [[platform-hooks-and-guards]] |
 | Exporter | Preflight 與 incremental source pack | [[notebooklm-exporter]] |
-| Adapter/release | Copilot static parity、Codex UAT、local gates、manual release | [[platform-adapters-and-release]] |
+| Adapter/release | Copilot static parity、Codex UAT、local gates、tag-triggered GitHub Release | [[platform-adapters-and-release]] |
 
 ## 主要流程 / Use Cases
 
@@ -392,9 +395,9 @@ BA／SA pair 與已登記 gaps。詳見 [[system-architecture]]。
 ## 設定 / 部署 / 維運
 
 系統使用 Python 標準函式庫，沒有資料庫 migration 或 daemon。Repo-local TOML 控制
-guard 與 NotebookLM profile。本 Repo 不配置 GitHub Actions；維護者在乾淨隔離
-worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LICENSE 與
-四個 assets 都通過後手動建立 GitHub Release。
+guard 與 NotebookLM profile。維護者在乾淨隔離 worktree 以 Python 3.11/3.14
+執行完整本機 gates；合併後推送版本 tag 時，`.github/workflows/release.yml` 重新
+執行 validation、建置四個 assets 並建立 GitHub Release。
 
 ## 非功能需求
 
@@ -414,13 +417,13 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 - installer local+upstream 同時變更 → conflict，目標不寫入。
 - stale preflight ID 或不完整文件 → export exit 2，不建立／替換 pack。
 - source slot/byte/word 超限 → export 失敗並保留舊 pack。
-- 無 LICENSE → release validate/build 失敗。
+- LICENSE、版本或 tag readiness 不符 → release validate/build 失敗。
 
 ## 風險 / 技術債
 
 | 風險 | 影響 | 建議 |
 | --- | --- | --- |
-| LICENSE 未決 | 無法公開 release | 專案擁有者選擇授權後再 tag |
+| Tag-triggered publish 尚未執行 | 尚無 `v0.2.0` 公開 Release 證據 | 合併到 `main` 後推送 tag，驗證 workflow 與四項資產 |
 | Page-level digest | 無法定位單一 claim drift | 重要 claim 維持 path+symbol body citation |
 | Semantic review 非機械化 | 可能存在未識別矛盾 | 每次重大 ingest 執行 agent review |
 | NotebookLM retrieval drift | query-index、project-map 與 source roles 可對齊 BA／SA capability 路由，但不能控制 NotebookLM 私有模型的檢索與回答展開 | 以 `docs/operations/validation/notebooklm-ba-uat.md` 固定題組手測；若需要 deterministic 結果，仍使用本地 Wiki Query |
@@ -442,7 +445,7 @@ worktree 以 Python 3.11/3.14 執行完整本機 gates，並在 tag/version、LI
 
 ## 待確認事項
 
-- [ ] 專案擁有者選定 LICENSE，解除公開 release gate。
+- [ ] 合併到 `main` 並推送 `v0.2.0`，確認 workflow 與四項 Release assets。
 - [ ] 在 NotebookLM Enterprise 以 `docs/operations/validation/notebooklm-ba-uat.md` 固定題組驗證答案、引用與 gap 行為。
 - [ ] 在實際 Copilot host 驗證 prompts、permission 與 coexist audit context 呈現。
 

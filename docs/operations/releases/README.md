@@ -1,4 +1,4 @@
-# 版本、手動發佈與更新契約
+# 版本、GitHub Actions 發佈與更新契約
 
 ## 版本來源與 readiness gate
 
@@ -7,18 +7,21 @@
 `vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
 的本地版本標記；`contract_version: 6` 則是獨立的 installer/API contract。
 
-公開 Release 前，專案擁有者必須選定並加入明確 `LICENSE`。目前尚未作出
-授權選擇，因此 `tools/release.py validate` 與 `build` 會刻意阻擋本 Repo 的
-正式資產。不得用參數或修改 fixture 以外的資料繞過此 readiness gate。
+公開 Release 前，專案擁有者必須選定並加入明確 `LICENSE`。本 Repo 採用 MIT
+License，`tools/release.py validate` 與 `build` 會在建立正式資產前驗證授權、
+版本與上游 attribution readiness。不得用參數或修改 fixture 以外的資料繞過此 gate。
 
-## 手動建立 GitHub Release
+## 由 GitHub Actions 建立 Release
 
-本 Repo 沒有 GitHub Actions 發版流程。維護者須在乾淨、隔離的 worktree
-依序完成下列步驟。
+`.github/workflows/release.yml` 是 framework 專用的正式發版流程，只在推送符合
+`v*.*.*` 的 tag 時觸發。它以 Python 3.11 與 3.14 矩陣執行 deterministic checks，
+再由 Python 3.14 建置固定四項資產，最後以 `GITHUB_TOKEN` 建立 GitHub Release。
+Installer 不會把這個 framework-only workflow 安裝到 target repository。
 
 1. 更新 `VERSION` 與 `ChangeLog.md`，並確認 LICENSE readiness。
 2. 依 [本機驗證手冊](../validation/README.md) 以 Python 3.11 與 3.14 執行完整
-   unit、compile、parity、frontmatter、stale、log、stats、lint 與 index checks。
+   unit、compile、parity、frontmatter、stale、log、stats、lint 與 index checks；
+   同一組檢查也會由 tag-triggered workflow 執行。
 3. 驗證版本/tag 契約並建置四個資產：
 
 ```powershell
@@ -44,15 +47,27 @@ git tag v0.2.0
 git push origin v0.2.0
 ```
 
-6. 明列四個資產，手動建立 GitHub Release：
+6. 將變更合併到 `main` 後推送對應 tag；workflow 會以 `--verify-tag` 明列四個資產，
+   並使用 `--generate-notes` 建立 GitHub Release。以下是 workflow 內部的 publish
+   step，維護者不需要手動執行：
 
-```powershell
-gh release create v0.2.0 dist/codebase-llm-wiki.zip dist/codebase-llm-wiki.tar.gz dist/update-manifest.json dist/SHA256SUMS --verify-tag --title "Codebase LLM Wiki v0.2.0" --generate-notes
+```yaml
+# .github/workflows/release.yml
+run: |
+  gh release create "${GITHUB_REF_NAME}" \
+    dist/codebase-llm-wiki.zip \
+    dist/codebase-llm-wiki.tar.gz \
+    dist/update-manifest.json \
+    dist/SHA256SUMS \
+    --verify-tag \
+    --title "Codebase LLM Wiki ${GITHUB_REF_NAME}" \
+    --generate-notes
 ```
 
 不得以 `dist/*` 取代明列資產；這可避免把額外暫存檔誤發佈。完成後從 GitHub
-下載四個資產，重新核對 `SHA256SUMS` 與 manifest URL。本次框架維護不會選擇
-LICENSE、不改 `VERSION`、不建立 tag，也不執行上述實際發佈命令。
+下載四個資產，重新核對 `SHA256SUMS` 與 manifest URL。本次框架維護不會修改
+`VERSION`、不在本機建立或推送 tag，也不執行上述實際發佈命令；推送 tag 後的
+publish 由 workflow 負責。
 
 套件包含完整框架 Repo；安裝時仍以 installer 的 `--surface copilot` 或
 `--surface codex` 選擇平台入口。Release builder 會排除 generated/cache、

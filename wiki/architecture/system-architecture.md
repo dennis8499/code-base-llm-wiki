@@ -7,6 +7,8 @@ notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
+  - .github/workflows/release.yml
+  - LICENSE
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
   - .agents/skills/codebase-wiki/scripts/hooks/common.py
@@ -16,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-source_digest: sha256:b3777a6a6d2da091e8e1aa6d9c643623a625c8af17bca2cc2dbc78bd13d8e2c5
+source_digest: sha256:77f0ca560c6adad08c4298363e8212c13763182753edd2dea0b51b51ff4ebf4e
 derived_from: ["[[overview]]"]
-last_updated: 2026-09-19
+last_updated: 2026-09-22
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -54,7 +56,7 @@ tgrep 的 Ingest／Archaeology 使用範圍。
 | tgrep source discovery | 固定版本 Windows x64 binary、manifest、root/path containment 與 allowlisted read-only search | `.agents/skills/codebase-wiki/scripts/tgrep-search.py`、`.agents/skills/codebase-wiki/bin/tgrep-manifest.json` |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
 | NotebookLM exporter | 完整 discovery、每 capability BA／SA 配對、雙識別碼、DLP、容量與單一 Notebook source plan | [[notebooklm-exporter]] |
-| Platform/release surface | Copilot 靜態契約、Codex UAT、本機 gates、版本與手動發布 | [[platform-adapters-and-release]] |
+| Platform/release surface | Copilot 靜態契約、Codex UAT、本機 gates、版本與 tag-triggered GitHub Release | [[platform-adapters-and-release]] |
 
 ## Data Flow
 
@@ -91,8 +93,8 @@ Archaeology 候選定位，不會自動執行 `index` 或 `serve`。Git 僅供�
 與可選 manifest provenance 使用，NotebookLM export inventory 與 preflight 不要求 Git。
 安裝後的 `.notebooklm/`、`.tgrep/` 與 hook logs 是本機生成物，不進入 release；框架不
 管理 target tgrep index/server。
-框架不配置 GitHub Actions；維護者在隔離 worktree 手動驗證，再明列資產建立
-GitHub Release。
+框架以 `.github/workflows/release.yml` 在版本 tag push 時執行 Python 3.11／3.14
+validation、固定資產建置與 GitHub Release；維護者仍須先完成 review、合併並推送 tag。
 
 ## Evidence
 
@@ -124,7 +126,7 @@ GitHub Release。
 ## Gaps
 
 - 尚未提供 SaaS、NotebookLM API、自動 upload、多租戶權限管理或 Advanced DLP template 同步。
-- 公開 Release 仍等待專案擁有者選擇明確 LICENSE。
+- MIT License 已加入；`v0.2.0` 的實際 tag push、workflow run 與公開 Release 尚待人工作業。
 
 ## Related Pages
 

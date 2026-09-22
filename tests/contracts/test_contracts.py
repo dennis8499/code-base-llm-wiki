@@ -529,10 +529,31 @@ class ContractTests(unittest.TestCase):
         ):
             self.assertTrue((skill_root / "assets" / template).is_file())
 
-    def test_validation_and_release_are_local_manual_workflows(self) -> None:
+    def test_validation_and_release_use_the_tagged_release_workflow(self) -> None:
         workflow_root = REPO_ROOT / ".github" / "workflows"
-        self.assertEqual(list(workflow_root.glob("*.yml")), [])
-        self.assertEqual(list(workflow_root.glob("*.yaml")), [])
+        self.assertEqual(
+            sorted(path.name for path in workflow_root.glob("*.y*ml")),
+            ["release.yml"],
+        )
+        workflow = (workflow_root / "release.yml").read_text(encoding="utf-8")
+        for token in (
+            '"v*.*.*"',
+            "contents: write",
+            'python tools/release.py validate --tag "${GITHUB_REF_NAME}"',
+            'gh release create "${GITHUB_REF_NAME}"',
+            "--verify-tag",
+            "--generate-notes",
+        ):
+            with self.subTest(document="release workflow", token=token):
+                self.assertIn(token, workflow)
+        permission_names = {
+            match.group(1)
+            for match in re.finditer(
+                r"(?m)^\s+([A-Za-z0-9_-]+):\s+(?:read|write|none)\s*$",
+                workflow,
+            )
+        }
+        self.assertEqual(permission_names, {"contents"})
 
         validation = (REPO_ROOT / "docs" / "operations" / "validation" / "README.md").read_text(
             encoding="utf-8"
@@ -545,6 +566,7 @@ class ContractTests(unittest.TestCase):
             "validate-log.py wiki/log.md --repo-root .",
             "rebuild-index.py wiki --check",
             "lint-wiki.py wiki --repo-root .",
+            ".github/workflows/release.yml",
         ):
             with self.subTest(document="validation", token=token):
                 self.assertIn(token, validation)
@@ -556,6 +578,7 @@ class ContractTests(unittest.TestCase):
             "python tools/release.py validate --tag",
             "python tools/release.py build --output dist",
             "gh release create",
+            ".github/workflows/release.yml",
             "dist/codebase-llm-wiki.zip",
             "dist/codebase-llm-wiki.tar.gz",
             "dist/update-manifest.json",

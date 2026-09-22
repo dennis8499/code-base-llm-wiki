@@ -24,6 +24,7 @@ SURFACE_PATHS = {
     "codex": ("Codex.md", ".codex"),
     "copilot": (".github",),
 }
+FRAMEWORK_ONLY_PATHS = {".github/workflows/release.yml"}
 WIKI_STARTER_PATH = ".agents/skills/codebase-wiki/assets/wiki-starter"
 TARGET_AGENTS_BLOCK_PATH = ".agents/skills/codebase-wiki/assets/target-agents-block.md"
 EXCLUDED_PARTS = {"__pycache__", "logs", ".venv", "cache"}
@@ -85,6 +86,7 @@ def _files(root: Path, relative_root: str) -> list[tuple[Path, str]]:
             and not any(part in EXCLUDED_PARTS for part in path.relative_to(root).parts)
             and path.suffix != ".pyc"
             and relative != INSTALL_STATE_PATH
+            and relative not in FRAMEWORK_ONLY_PATHS
         ):
             files.append((path, relative))
     return files

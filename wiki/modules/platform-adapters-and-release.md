@@ -1,7 +1,7 @@
 ---
-title: 平台 Adapter 與手動 Release
+title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與手動發版維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索
+summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 tag-triggered GitHub Release 維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -17,6 +17,14 @@ sources:
   - tests/fixtures/code-audit/history/expected-findings.md
   - tools/release.py
   - docs/operations/releases/README.md
+  - docs/operations/validation/README.md
+  - LICENSE
+  - .github/workflows/release.yml
+  - .agents/skills/codebase-wiki/scripts/install-framework.py
+  - tests/release/test_github_release_workflow.py
+  - tests/release/features/github-release.feature
+  - tests/release/scenario_runner.py
+  - tests/release/test_release.py
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - tests/tgrep/test_tgrep_search.py
@@ -25,14 +33,14 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:c3b9a57422e1af9982554ed164e850b48e54fbd40b4248f718f5f252e71dd370
+source_digest: sha256:ed78b9e1637833660bfb4123317b8bbfe385ed7c40d015741f008c3cbbbf24bc
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-19
+last_updated: 2026-09-22
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
 
-# 平台 Adapter 與手動 Release
+# 平台 Adapter 與 GitHub Release
 
 ## 職責
 
@@ -57,16 +65,19 @@ status: active
   指定只回報時維持零寫入，持久化後通過 `validate-code-audit.py`。
 - Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
-- 以根 `VERSION` 作為產品版號唯一來源；本機建置後由維護者明列四個 assets，
-  手動執行 `gh release create`。
-- 在專案擁有者選定 LICENSE 前阻擋公開 release；本次維護不改版號、不發版。
+- 以根 `VERSION` 作為產品版號唯一來源；`.github/workflows/release.yml` 只在
+  `v*.*.*` tag push 時觸發，先以 Python 3.11／3.14 完成 validation，再明列 ZIP、
+  TAR.GZ、`update-manifest.json` 與 `SHA256SUMS` 四個 assets 建立 GitHub Release。
+- 本 Repo 採用 MIT License；workflow 使用 job-level `contents: write` 發布，installer
+  將 framework-only release workflow 排除在 target surface 之外。
 
 ## Evidence
 
 - `parity-check.py` 驗證 contract 6、十二個 operation mapping、Codebase audit 的四類檢查／Git history／
   validator contract、靜態邊界、prompt coupling、built-in
   prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
-  root-resolved hooks，並要求 Repo 不含 GitHub workflow YAML。
+  root-resolved hooks，並驗證唯一 release workflow 的 trigger、權限、版本驗證、資產
+  清單與 publish 命令；installer parity 同時保證它不流入 target。
 - Copilot prompts（含新增 BA／SD 與保留 SA 入口）是連結 authoritative workflow 的薄
   adapter，不複製完整規則；
   Interactive/Batch authorization 與 Query/Lint/Archaeology completion coupling
@@ -88,24 +99,25 @@ status: active
   paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry；它驗證
   `bundled_tools` 中 tgrep 1.0.5 的固定 path、platform 與 SHA-256，且排除 `.tgrep/`。
 - `update-manifest.json` 以 `bundled_tools` 描述隨 ZIP/TAR.GZ 發佈的 wrapper、manifest
-  與 binary；這不是額外 asset，也不改變四項手動 Release asset 契約。
+  與 binary；這不是額外 asset，也不改變四項 GitHub Release asset 契約。
 
 ## Contradictions
 
-- `VERSION=0.2.0` 代表目前產品版號，不代表已取得 LICENSE 或已有可公開的
-  `v0.2.0` 資產。
+- `VERSION=0.2.0` 是目前產品版號；MIT License 已加入，但 `v0.2.0` tag 與 GitHub
+  Release 仍須由合併後的 tag push workflow 建立。
 - 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v6 或
   未測 host/version 的保證。
 
 ## Inferences
 
-- 移除 hosted automation 後，發版責任明確落在執行本機矩陣、檢查 assets、推送
-  tag 與呼叫 GitHub CLI 的維護者；deterministic scripts 仍提供相同可稽核 gate。
+- 發版責任分成兩層：維護者完成 review、合併並推送版本 tag；GitHub Actions 重新執行
+  deterministic matrix、建置 assets 並呼叫 GitHub CLI 建立 Release。
 
 ## Gaps
 
 - Copilot host runtime 尚未執行，因此維持 `runtime-unverified`。
-- LICENSE、公開發佈日期、套件簽章、SBOM 與 provenance attestation 仍待擁有者決策。
+- `v0.2.0` 的實際 tag push、workflow run、公開發佈日期、套件簽章、SBOM 與
+  provenance attestation 仍待人工作業或後續決策。
 
 ## 相關頁面
 
