@@ -704,3 +704,8 @@ status: active
 
 - Promoted the surface-specific package work to product version  .2.1; refreshed current release instructions, manifest examples, validation notes, and current-version Wiki statements while preserving the historical v0.2.0 record.
 - Affected pages: [[platform-adapters-and-release]], [[release-and-update]], [[system-architecture]], [[system-analysis]], [[project-function-catalog]], [[codebase-functional-coverage]], [[log]]
+
+## [2026-09-22] update | Release gate digest refresh
+
+- Refresh the Wiki source digests and coverage ledger hashes after the final v0.2.1 release documentation changes, and bind the analyzed discovery ID to the current deterministic framework scan so Python 3.11／3.14 release validation remains green.
+- Affected pages: [[framework-introduction]], [[release-and-update]], [[platform-adapters-and-release]], [[overview]], [[system-analysis]], [[codebase-functional-coverage]], [[log]]
