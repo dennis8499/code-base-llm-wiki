@@ -1,6 +1,6 @@
 # Intent Routing
 
-Use this table as the source of truth for the twelve user-facing intent groups.
+Use this table as the source of truth for the thirteen user-facing intent groups.
 `capabilities.json` maps each group to one machine operation. NotebookLM export
 has a separate artifact and authorization contract.
 
@@ -15,6 +15,7 @@ has a separate artifact and authorization contract.
 | Synthesis | save analysis, synthesis | Persist durable cross-cutting analysis under `wiki/synthesis/`. |
 | Business Analysis / BA | BA文件, 業務分析文件, business analysis document | Generate a standard-aligned Markdown BA document under `wiki/synthesis/` from wiki-first evidence. |
 | System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a solution-neutral, standard-aligned Markdown SA document under `wiki/synthesis/`. |
+| Development specification | 開發規格、功能敘述、Megin Issue specification | Load `development-spec-workflow.md`; inspect evidence, ask blocking questions, produce a standalone five-section draft or ready specification. |
 | System Design / SD | SD文件, 系統設計, system design, SDD | Generate a standard-aligned Markdown SD document under `wiki/synthesis/` with architecture views and decisions. |
 | NotebookLM export | NotebookLM, export, source pack, upload plan, BA／SA 匯出 | Scan the complete safe text scope under the explicit project root first, preview capabilities and BA／SA gaps, use Wiki only as supplemental context, obtain one confirmation, update the complete confirmed knowledge set, then run readiness and generate `.notebooklm/` automatically. |
 | Archaeology | why, history, legacy, git, 考古 | Trace concrete entrypoints, call paths, and non-destructive git history; separate evidence from inference. |

@@ -68,6 +68,7 @@ allowlisted command contract and fallback behavior.
 | `/code-audit [scope]` | `請依 Codebase 健檢流程先從目前 Codebase 盤點全專案或 {scope} 的入口，再追查呼叫路徑；只有遇到業務規則缺口才查 Wiki，並交叉核對 transaction、設定引用、邏輯／狀態與定向 Git history，分列 BUG、技術風險和待確認業務疑點，將覆蓋缺口保存至 Wiki；若我說只回報則不寫入。` |
 | `/business-analysis-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned BA 文件，保留人工 notes、明列 Gap，並更新 index 與 log。` |
 | `/system-analysis-doc {scope}` | `請基於目前 wiki 產出 {scope} 的 solution-neutral SA 文件，以 SR/NFR/IF 建立需求與驗證追溯，並更新 index 與 log。` |
+| `/development-spec {scope}` | `請使用 $codebase-wiki，在 Group 下釐清 {scope} 的功能需求，先詢問必要決策，再產生可貼入 Issue 給 Megin 的五段規格；未決問題保持 draft，不自動開 Issue。` |
 | `/system-design-doc {scope}` | `請使用 $codebase-wiki 產出 {scope} 的 standard-aligned SD 文件，建立 concerns、views、DE/ADR 與 SA 追溯，並更新 index 與 log。` |
 | `/export-notebooklm`          | `請使用現況 BA／SA NotebookLM export：全量預覽當下 Codebase 與缺口，取得一次確認後建立每功能 BA／SA，自動 readiness 並產生單一 Notebook 的本機 pack。` |
 | `/update-index`                | `請重新掃描 wiki/ 目錄，依現有 frontmatter 重建 wiki/index.md，並追加 wiki/log.md。`                                   |

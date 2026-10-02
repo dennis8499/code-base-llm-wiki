@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-02
+
+### Added
+
+- Independent development_spec intent: evidence-backed clarification, standalone five-section Megin specifications, readiness validation, and Copilot/Codex entrypoints. Existing BA/SA/SD and NotebookLM contracts remain unchanged.
+
 ## [0.2.1] ? 2026-09-22
 
 ### Added

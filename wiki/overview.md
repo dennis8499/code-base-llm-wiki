@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:d1b21092c7ad805f80914ebbec819210752782824eb8d6fe4de1526ee2f0d2f4
+source_digest: sha256:0b6df1b0578f5de95094d5c52f64fffdf070380ced0b7affbab0b6ff2b05a77b
 derived_from: []
-last_updated: 2026-09-22
+last_updated: 2026-10-02
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core

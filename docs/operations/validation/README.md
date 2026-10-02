@@ -84,7 +84,7 @@ deterministic tool checks，不增加五項 active agent runtime 情境。
 
 Contract tests 另固定驗證：
 
-- capability manifest 為 v6、12 operations／12 intent groups；`code_audit` 採
+- capability manifest 為 v6、13 operations／13 intent groups；`code_audit` 採
   explicit-request report authorization，BA／SA／SD 同樣採 `explicit_request`；
 - capability manifest 的 tgrep source-discovery metadata 只包含 Ingest／Archaeology，
   `query_enabled`、auto index 與 auto serve 都是 false；wrapper、manifest 與 binary 的
@@ -181,3 +181,7 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - Sources、inference、speculation、contradiction 與 gaps 的標示彼此一致。
 - Query workflow 與雙平台 adapters 不含即時資料庫存取、資料庫工具或 fallback 指令。
 - `.sql`、migration 與 schema 仍可被辨識為唯讀 `data_schema` evidence。
+
+## Group 開發規格
+
+`tests/contracts/test_development_spec.py` 固定五部分、SCN Given／When／Then、draft／ready、未決必要問題與範本佔位驗證。此路由先查來源、逐題釐清；Issue 由使用者建立，文件排除 NotebookLM 匯出。Megin 另行核准與驗收。

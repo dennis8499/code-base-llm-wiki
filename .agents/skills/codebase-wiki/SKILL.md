@@ -4,7 +4,7 @@ description: >
   Operate a persistent, wiki-first Markdown knowledge base; Codebase audit is a
   current-source-first exception. Use for framework install or maintenance,
   ingest, query, lint, ADR, synthesis, system analysis, business analysis,
-  system design, or code archaeology.
+  system design, development specifications for Megin, or code archaeology.
 ---
 
 # Codebase LLM Wiki
@@ -44,6 +44,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Durable synthesis creation | `references/synthesis-workflow.md` |
 | BA document generation, business coverage, gap handling | `references/business-analysis-workflow.md` |
 | Solution-neutral SA requirements and verification needs | `references/system-analysis-workflow.md` |
+| Requester feature clarification and standalone Megin specification | `references/development-spec-workflow.md` |
 | SD architecture views, decisions, and quality strategy | `references/system-design-workflow.md` |
 | BA／SA／SD standards profiles and traceability | `references/analysis-document-standards.md` |
 | Code archaeology and git-history evidence | `references/code-archaeology-workflow.md` |
@@ -101,7 +102,7 @@ append one operation from `references/log-operations.md`.
   logic/state and change-completeness checks; findings are `BUG-*`, `RISK-*`,
   or `BIZ-*`, functional reports associate every entrypoint with a `FUNC-*`
   capability and persisted reports pass `validate-code-audit.py`;
-- ADR, synthesis, BA, SA, and SD: explicit creation request authorizes output.
+- ADR, synthesis, BA, SA, SD, and development specifications: explicit creation request authorizes output.
 
 ## Verification
 

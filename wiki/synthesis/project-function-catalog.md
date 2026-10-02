@@ -5,8 +5,8 @@ summary: 將安裝、Wiki 品質、source-first Codebase 健檢、Hooks、BA／S
 notebooklm_group: project
 notebooklm_role: traceability
 sources: []
-derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[code-audit]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]"]
-last_updated: 2026-09-22
+derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[code-audit]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]", "[[development-specification]]"]
+last_updated: 2026-10-02
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -29,11 +29,12 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
 | Codebase 健檢 | 先從目前 Codebase 盤點全專案或指定入口，再交叉檢查 source、設定、transaction、邏輯／狀態與定向 Git history；Wiki 只補充業務規則缺口，分列 BUG、RISK、BIZ 並保留逐入口覆蓋缺口 | `/code-audit [scope]`、Codex recipe + shared workflow | entrypoint、呼叫路徑、四類檢查、finding IDs、source／commit evidence、coverage 與 gaps | [[code-audit]] | covered |
 | 平台 Hooks | 載入 Wiki context、限制寫入、提醒 log | Codex/Copilot hook events | tool payload、guard config、audit output | [[platform-hooks-and-guards]] | covered |
 | 分析／設計文件 | 獨立產出 standard-aligned BA、solution-neutral SA 與 SD，建立 Gap-visible 三層追溯 | BA／SA／SD prompt/recipe + shared workflows | profiles、coverage、BA/SR/NFR/IF/DE/VIEW/ADR IDs、markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] | partial |
+| 開發規格 | 先讀取程式碼事實、逐題確認必要決策，交付可獨立貼入 Issue 的五部分規格 | `development_spec` shared workflow／validator | `spec_revision`、`spec_status`、SCN、必要問題 | [[development-specification]] | covered |
 | NotebookLM 準備 | 全量發現後建立每功能現況 BA／SA，一次確認後產生單一 Notebook 離線 pack | `export-notebooklm.py` | discovery/readiness 雙 ID、BA／SA pair、locator、DLP、容量、manifest v6 | [[notebooklm-exporter]] | covered |
 | 平台與發布 | 驗證 Copilot/Codex 契約、建立版本資產 | parity、本機 UAT、`release.py`、`gh` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
 
 發布功能標為 partial，原因是本機 builder、tag-triggered workflow 與固定資產契約已具備，
-但 `v0.2.1` 的實際 tag push、workflow run 與公開 Release 尚未完成。
+但 `v0.3.0` 的實際 tag push、workflow run 與公開 Release 尚未完成。
 
 ## 跨功能能力
 
@@ -41,7 +42,7 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
 | --- | --- | --- | --- |
 | Raw-source read-only | 所有 Wiki intents | `AGENTS.md`、`SKILL.md` | covered |
 | Untrusted evidence | Ingest、Query、NotebookLM、SA | `SKILL.md`、`ingest-workflow.md` | covered |
-| 明確授權 | 十二個 machine operations／十二個 intent groups | `capabilities.json` | covered |
+| 明確授權 | 十三個 machine operations／十三個 intent groups | `capabilities.json` | covered |
 | 原子交付 | Installer、NotebookLM exporter | 兩個 canonical Python modules | covered |
 | 跨平台 parity | Copilot、Codex | `parity-check.py` | covered |
 
@@ -67,6 +68,7 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
   Markdown 路由來源，不是本機搜尋服務。
 - 缺少 SBOM、簽章與公開 release 實際演練。
 - Query 只使用 Wiki 與 Repo source evidence，不提供即時資料庫連線或工具 fallback。
+- 開發規格是獨立的需求交接文件，排除 NotebookLM 匯出；Issue 建立、拆分與指派由使用者處理。
 
 ## 相關頁面
 
@@ -75,3 +77,4 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
 - [[system-analysis]]
 - [[business-analysis]]
 - [[system-design]]
+- [[development-specification]]

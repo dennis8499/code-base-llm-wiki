@@ -1,10 +1,18 @@
 {
   "contract_version": 6,
-  "surfaces": ["copilot", "codex"],
+  "surfaces": [
+    "copilot",
+    "codex"
+  ],
   "guard_modes": {
     "default": "wiki-only",
-    "installed": ["wiki-only", "coexist"],
-    "legacy_alias": {"target": "wiki-only"},
+    "installed": [
+      "wiki-only",
+      "coexist"
+    ],
+    "legacy_alias": {
+      "target": "wiki-only"
+    },
     "framework": "framework"
   },
   "intents": {
@@ -38,12 +46,22 @@
         "logic_state_consistency",
         "change_regression"
       ],
-      "finding_classes": ["BUG", "RISK", "BIZ"],
+      "finding_classes": [
+        "BUG",
+        "RISK",
+        "BIZ"
+      ],
       "review_unit": "functional_capability_with_entrypoint_coverage",
       "report_version": 4,
-      "legacy_report_versions": [2, 3],
+      "legacy_report_versions": [
+        2,
+        3
+      ],
       "scan_schema_version": 2,
-      "scan_profiles": ["target", "framework"],
+      "scan_profiles": [
+        "target",
+        "framework"
+      ],
       "scanner": ".agents/skills/codebase-wiki/scripts/scan-project.py",
       "inventory_contract": "file_hash_category_disposition_snapshot",
       "functional_review": [
@@ -59,7 +77,12 @@
         "not-rechecked"
       ],
       "severity_scale": "P0-P3",
-      "impact_order": ["P0", "P1", "P2", "P3"],
+      "impact_order": [
+        "P0",
+        "P1",
+        "P2",
+        "P3"
+      ],
       "finding_examples": [
         "plain_language_explanation",
         "operation_input_expected_actual_result",
@@ -73,7 +96,11 @@
       ],
       "history": {
         "mode": "current_first_targeted",
-        "commands": ["git log", "git show", "git blame"],
+        "commands": [
+          "git log",
+          "git show",
+          "git blame"
+        ],
         "read_only": true
       },
       "report_validator": ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
@@ -112,39 +139,99 @@
       "writes_by_default": false,
       "requires_confirmation": true,
       "authorization_policy": "preview_then_confirm",
-      "confirmation_stages": ["discovery_plan"],
+      "confirmation_stages": [
+        "discovery_plan"
+      ],
       "audience": "business-and-system-analyst",
       "knowledge_contract": "codebase-ba-sa-v1"
+    },
+    "development_spec": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request"
     }
   },
   "intent_groups": {
-    "install_setup": ["install"],
-    "ingest": ["ingest"],
-    "query": ["query"],
-    "lint": ["lint"],
-    "code_audit": ["code_audit"],
-    "adr": ["adr"],
-    "synthesis": ["synthesis"],
-    "business_analysis": ["business_analysis"],
-    "system_analysis": ["system_analysis"],
-    "system_design": ["system_design"],
-    "notebooklm_export": ["notebooklm_export"],
-    "archaeology": ["archaeology"]
+    "install_setup": [
+      "install"
+    ],
+    "ingest": [
+      "ingest"
+    ],
+    "query": [
+      "query"
+    ],
+    "lint": [
+      "lint"
+    ],
+    "code_audit": [
+      "code_audit"
+    ],
+    "adr": [
+      "adr"
+    ],
+    "synthesis": [
+      "synthesis"
+    ],
+    "business_analysis": [
+      "business_analysis"
+    ],
+    "system_analysis": [
+      "system_analysis"
+    ],
+    "system_design": [
+      "system_design"
+    ],
+    "notebooklm_export": [
+      "notebooklm_export"
+    ],
+    "archaeology": [
+      "archaeology"
+    ],
+    "development_spec": [
+      "development_spec"
+    ]
   },
   "entrypoints": {
     "copilot": {
       "install": [],
-      "ingest": ["ingest-module.prompt.md", "ingest-batch.prompt.md"],
-      "query": ["query-wiki.prompt.md"],
-      "lint": ["lint-wiki.prompt.md"],
-      "code_audit": ["code-audit.prompt.md"],
-      "archaeology": ["code-archaeology.prompt.md"],
-      "adr": ["new-adr.prompt.md"],
-      "synthesis": ["save-synthesis.prompt.md"],
-      "business_analysis": ["business-analysis-doc.prompt.md"],
-      "system_analysis": ["system-analysis-doc.prompt.md"],
-      "system_design": ["system-design-doc.prompt.md"],
-      "notebooklm_export": ["export-notebooklm.prompt.md"]
+      "ingest": [
+        "ingest-module.prompt.md",
+        "ingest-batch.prompt.md"
+      ],
+      "query": [
+        "query-wiki.prompt.md"
+      ],
+      "lint": [
+        "lint-wiki.prompt.md"
+      ],
+      "code_audit": [
+        "code-audit.prompt.md"
+      ],
+      "archaeology": [
+        "code-archaeology.prompt.md"
+      ],
+      "adr": [
+        "new-adr.prompt.md"
+      ],
+      "synthesis": [
+        "save-synthesis.prompt.md"
+      ],
+      "business_analysis": [
+        "business-analysis-doc.prompt.md"
+      ],
+      "system_analysis": [
+        "system-analysis-doc.prompt.md"
+      ],
+      "system_design": [
+        "system-design-doc.prompt.md"
+      ],
+      "notebooklm_export": [
+        "export-notebooklm.prompt.md"
+      ],
+      "development_spec": [
+        "development-spec.prompt.md"
+      ]
     },
     "codex": {
       "recipe_document": "Codex.md"
@@ -158,13 +245,22 @@
     "source_discovery": {
       "provider": "tgrep",
       "version": "1.0.5",
-      "platforms": ["windows-x86_64"],
-      "operations": ["ingest", "archaeology"],
+      "platforms": [
+        "windows-x86_64"
+      ],
+      "operations": [
+        "ingest",
+        "archaeology"
+      ],
       "fallback": "host-native-search",
       "index_policy": "existing-index-or-full-scan",
       "auto_index": false,
       "auto_serve": false,
-      "exit_codes": {"match": 0, "no_match": 1, "error": 2},
+      "exit_codes": {
+        "match": 0,
+        "no_match": 1,
+        "error": 2
+      },
       "writes": false,
       "query_enabled": false,
       "wrapper": ".agents/skills/codebase-wiki/scripts/tgrep-search.py",
@@ -176,7 +272,10 @@
     "project_scanner": {
       "provider": "host-native-filesystem",
       "version": "2",
-      "operations": ["code_audit", "notebooklm_export"],
+      "operations": [
+        "code_audit",
+        "notebooklm_export"
+      ],
       "wrapper": ".agents/skills/codebase-wiki/scripts/scan-project.py",
       "module": ".agents/skills/codebase-wiki/scripts/project_scanner.py",
       "read_only": true,

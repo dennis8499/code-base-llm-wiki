@@ -18,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-source_digest: sha256:31f5fe9054cb9b6df000827218bd942f71a81a431771c105b00297c0b2bfe383
-derived_from: ["[[overview]]"]
-last_updated: 2026-09-22
+source_digest: sha256:d7e51d6d517ae60e7fbdcaae21d1a4c2e1eee821a7f0ef4ffb3fa20f052c2354
+derived_from: ["[[overview]]", "[[development-specification]]"]
+last_updated: 2026-10-02
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -30,8 +30,8 @@ status: active
 ## Overview
 
 系統採三層模型：目標專案原始來源是唯讀證據、`wiki/` 是可持續累積的知識層、
-`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十二個 machine
-operations、十二個 intent groups 與 authorization policy 由
+`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十三個 machine
+operations、十三個 intent groups 與 authorization policy 由
 `.agents/skills/codebase-wiki/capabilities.json` 描述，詳細流程由 Skill references
 按意圖載入。Windows x64 的 tgrep wrapper 是同一 Skill 內的選用唯讀來源定位層，
 只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper
@@ -51,6 +51,7 @@ tgrep 的 Ingest／Archaeology 使用範圍。
 | Skill 與 references | 意圖路由、授權、不變量、完成條件 | `.agents/skills/codebase-wiki/SKILL.md` |
 | Installer v6 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
+| 開發規格 | Group 子 Repo 的程式碼事實、逐題釐清、五部分獨立 Issue 正文、draft／ready 與 SCN | [[development-specification]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Codebase audit | 入口 inventory、transaction／設定／邏輯交叉檢查、定向 Git history、finding evidence、coverage gaps 與 Wiki report | [[code-audit]] |
 | tgrep source discovery | 固定版本 Windows x64 binary、manifest、root/path containment 與 allowlisted read-only search | `.agents/skills/codebase-wiki/scripts/tgrep-search.py`、`.agents/skills/codebase-wiki/bin/tgrep-manifest.json` |
@@ -69,6 +70,7 @@ User intent
   -> Ingest/Archaeology source gap -> optional Windows x64 tgrep locator
   -> direct re-read of current source before evidence claim
   -> BA why/outcome -> SA solution-neutral requirements -> SD design views
+  -> Development specification：source facts -> required decisions -> five sections + SCN -> draft/ready
   -> authorized Wiki/framework write
   -> frontmatter + digest + index + append-only log checks
   -> full safe discovery + capability/document-gap preview + one confirmation
@@ -86,6 +88,9 @@ discovery ID 只綁定 raw snapshot 與 discovery 設定，文件更新只使 re
 再次掃描 raw/Wiki，檢查雙 ID 與 output containment，最後原子替換本機 pack。
 
 ## Deployment
+
+開發規格輸出至 Group 的 `wiki/synthesis/`，同步索引與來源紀錄；規格頁面排除 NotebookLM
+匯出，必要問題未回答時保持 draft。ready 後由使用者建立、拆分與指派 Issue。
 
 框架沒有必須常駐的服務或資料庫。執行環境只需要 Python 標準函式庫，以及支援 Codex 或
 GitHub Copilot 的專案入口；Windows x64 Skill 另帶 tgrep 1.0.5，但只供 Ingest／
@@ -126,7 +131,7 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 ## Gaps
 
 - 尚未提供 SaaS、NotebookLM API、自動 upload、多租戶權限管理或 Advanced DLP template 同步。
-- MIT License 已加入；`v0.2.1` 的實際 tag push、workflow run 與公開 Release 尚待人工作業。
+- MIT License 已加入；`v0.3.0` 已建立本機套件，實際 tag push、workflow run 與公開 Release 尚待人工作業。
 
 ## Related Pages
 
@@ -135,4 +140,5 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 - [[business-analysis]]
 - [[system-analysis]]
 - [[system-design]]
+- [[development-specification]]
 - [[framework-introduction]]

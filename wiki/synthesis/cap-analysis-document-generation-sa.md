@@ -17,7 +17,7 @@ sources:
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - tests/contracts/test_contracts.py
-source_digest: sha256:1b579961e51e74270ecfef28dda9a0f94d260c0cfc428d60f3dd5e4e83bad763
+source_digest: sha256:3c45c5ba4963385b88561348cb7f9fef954c6236d84a265568a09cd42f416c3d
 source_locators:
   - ".agents/skills/codebase-wiki/references/business-analysis-workflow.md:12"
   - ".agents/skills/codebase-wiki/references/system-analysis-workflow.md:13"
@@ -25,7 +25,7 @@ source_locators:
   - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215"
   - "tests/contracts/test_contracts.py:1"
 derived_from: ["[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[cap-analysis-document-generation-ba]]"]
-last_updated: 2026-09-22
+last_updated: 2026-10-02
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
 status: active
 ---

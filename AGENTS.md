@@ -24,7 +24,7 @@ knowledge over time.
 ## Routing
 
 Use `$codebase-wiki` for install, ingest, query, lint, code audit, ADR,
-synthesis, business analysis, solution-neutral system analysis, system design,
+synthesis, business analysis, solution-neutral system analysis, system design, development specifications,
 NotebookLM export, archaeology, Wiki maintenance, or framework maintenance.
 Classify the branch with
 `.agents/skills/codebase-wiki/references/intent-routing.md` and load its exact

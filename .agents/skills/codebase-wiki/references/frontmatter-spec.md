@@ -251,3 +251,7 @@ page-shape source of truth.
     `evidence-gap` / `business-confirmation`。
 21. `gap_classification` 若存在，必須是 `none` / `analysis-gap` /
     `evidence-gap` / `business-confirmation`。
+
+### Development specifications
+
+`development-spec` synthesis pages use `spec_revision` (positive integer), `spec_status: draft | ready`, `blocking_questions` (string list), and `notebooklm_role: exclude`. A ready page has no blocking questions; freshness `status` is independent. Validate with `scripts/validate-development-spec.py`.

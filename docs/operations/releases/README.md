@@ -3,7 +3,7 @@
 ## 版本來源與 readiness gate
 
 產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer
-`MAJOR.MINOR.PATCH`；目前版號是 `0.2.1`。Git tag 必須是完全對應的
+`MAJOR.MINOR.PATCH`；目前版號是 `0.3.0`。Git tag 必須是完全對應的
 `vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
 的本地版本標記；`contract_version: 6` 則是獨立的 installer/API contract。
 
@@ -26,7 +26,7 @@ Installer 不會把這個 framework-only workflow 安裝到 target repository。
 3. 驗證版本/tag 契約並建置兩個平台資產：
 
 ```powershell
-python tools/release.py validate --tag v0.2.1
+python tools/release.py validate --tag v0.3.0
 python tools/release.py build --output dist --repository dennis8499/code-base-llm-wiki
 ```
 
@@ -44,8 +44,8 @@ Skill 工具。此次 bundle 是 Windows x64 tgrep 1.0.5，release builder 會�
 5. 提交核准的變更，建立並推送與 `VERSION` 完全相符的 tag：
 
 ```powershell
-git tag v0.2.1
-git push origin v0.2.1
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 6. 將變更合併到 `main` 後推送對應 tag；workflow 會以 `--verify-tag` 明列四個資產，
@@ -96,11 +96,11 @@ Windows x64 binary 則會隨兩個 ZIP 一起發佈。解壓後仍以 installer 
 {
   "schema_version": 2,
   "product": "codebase-llm-wiki",
-  "version": "0.2.1",
-  "tag": "v0.2.1",
+  "version": "0.3.0",
+  "tag": "v0.3.0",
   "channel": "stable",
   "installer_contract_version": 6,
-  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.2.1",
+  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.3.0",
   "bundled_tools": [
     {
       "tool": "tgrep",
@@ -116,14 +116,14 @@ Windows x64 binary 則會隨兩個 ZIP 一起發佈。解壓後仍以 installer 
       "name": "codebase-llm-wiki-codex.zip",
       "surface": "codex",
       "format": "zip",
-      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.2.1/codebase-llm-wiki-codex.zip",
+      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/codebase-llm-wiki-codex.zip",
       "sha256": "..."
     },
     {
       "name": "codebase-llm-wiki-copilot.zip",
       "surface": "copilot",
       "format": "zip",
-      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.2.1/codebase-llm-wiki-copilot.zip",
+      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/codebase-llm-wiki-copilot.zip",
       "sha256": "..."
     }
   ]

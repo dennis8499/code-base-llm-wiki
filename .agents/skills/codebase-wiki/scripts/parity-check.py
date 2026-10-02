@@ -24,6 +24,7 @@ EXPECTED_OPERATIONS = {
     "business_analysis",
     "system_analysis",
     "system_design",
+    "development_spec",
     "notebooklm_export",
 }
 EXPECTED_INTENT_CONTRACT = {
@@ -38,6 +39,7 @@ EXPECTED_INTENT_CONTRACT = {
     "business_analysis": (True, False, "explicit_request"),
     "system_analysis": (True, False, "explicit_request"),
     "system_design": (True, False, "explicit_request"),
+    "development_spec": (True, False, "explicit_request"),
     "notebooklm_export": (False, True, "preview_then_confirm"),
 }
 CODE_AUDIT_CHECKS = [
@@ -97,6 +99,7 @@ EXPECTED_GROUPS = {
     "business_analysis": ["business_analysis"],
     "system_analysis": ["system_analysis"],
     "system_design": ["system_design"],
+    "development_spec": ["development_spec"],
     "notebooklm_export": ["notebooklm_export"],
     "archaeology": ["archaeology"],
 }
@@ -285,6 +288,13 @@ COPILOT_PROMPT_CONTRACT = {
         "wiki/index.md",
         "wiki/log.md",
     ),
+    "development-spec.prompt.md": (
+        "references/development-spec-workflow.md",
+        "assets/development-spec-template.md",
+        "spec_status",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
     "system-design-doc.prompt.md": (
         "references/system-design-workflow.md",
         "assets/system-design-template.md",
@@ -402,7 +412,7 @@ def main() -> int:
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
-        issues.append("manifest intents must define the twelve canonical operations")
+        issues.append("manifest intents must define the thirteen canonical operations")
         intents = {}
     for operation, expected in EXPECTED_INTENT_CONTRACT.items():
         contract = intents.get(operation, {})
@@ -428,7 +438,7 @@ def main() -> int:
 
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
-        issues.append("manifest must define the exact twelve user-facing intent groups")
+        issues.append("manifest must define the exact thirteen user-facing intent groups")
         groups = {}
     grouped = [operation for values in groups.values() if isinstance(values, list) for operation in values]
     if len(grouped) != len(set(grouped)) or set(grouped) != EXPECTED_OPERATIONS:

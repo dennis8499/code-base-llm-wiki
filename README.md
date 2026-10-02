@@ -103,7 +103,7 @@ flowchart LR
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 | 輸出 | `wiki/` | `wiki/` |
 
-兩個入口維持十二個使用者意圖群組、十二個 machine operations 與相同安全邊界；
+兩個入口維持十三個使用者意圖群組、十三個 machine operations 與相同安全邊界；
 工作由目前 Agent 透過共用 Skill 與平台入口完成。
 
 Copilot prompt files 是 VS Code 本機 Agent 入口，不是 GitHub Copilot coding agent
@@ -216,11 +216,11 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.2.1`。Installer 會把目前版本保存到目標 Repo 的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.3.0`。Installer 會把目前版本保存到目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
 installer contract 版本。
 
-本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.2.1` tag 後，
+本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.3.0` tag 後，
 `.github/workflows/release.yml` 會自動完成 validation、build 與 GitHub Release publish；
 這個 framework-only workflow 不會被 installer 安裝到 target repository。
 
@@ -320,7 +320,7 @@ v3 報告仍可依舊契約驗證；新一輪 Audit 才升級為 v4。
 | [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
 | [架構與資料流](docs/product/architecture/README.md) | 三層模型、雙入口、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/operations/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/product/workflows/README.md) | 十二類意圖、13 個操作情境、平台對照與輸出契約 |
+| [工作流手冊](docs/product/workflows/README.md) | 十三類意圖、14 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/operations/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/operations/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
@@ -348,3 +348,7 @@ Wiki Query 不連線即時資料庫，也不呼叫 tgrep、資料庫工具或 fa
 Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
 本 Repo 尚未宣告軟體授權；請勿從參考專案的授權狀態推定本專案授權。
+
+## Group 開發規格
+
+從 Group 根目錄使用 `$codebase-wiki` 描述新功能，會進入獨立的 `development_spec` 流程：先查來源、逐題確認必要決策，再產生五段、可直接貼入 Issue 的規格。未回答的必要問題保持 draft；ready 不取代 Megin 核准及驗收。BA／SA／SD 保留原有用途。

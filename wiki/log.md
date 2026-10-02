@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-09-22
+last_updated: 2026-10-02
 tags: [log]
 status: active
 ---
@@ -709,3 +709,8 @@ status: active
 
 - Refresh the Wiki source digests and coverage ledger hashes after the final v0.2.1 release documentation changes, and bind the analyzed discovery ID to the current deterministic framework scan so Python 3.11／3.14 release validation remains green.
 - Affected pages: [[framework-introduction]], [[release-and-update]], [[platform-adapters-and-release]], [[overview]], [[system-analysis]], [[codebase-functional-coverage]], [[log]]
+
+## [2026-10-02] update | Group development specification v0.3.0
+
+- 新增 development_spec 獨立路由、五部分規格、SCN、逐題釐清與 draft／ready 驗證；同步 Codex／Copilot parity、版本、文件及來源紀錄。保留 BA／SA／SD 與 NotebookLM，Issue 由使用者建立。
+- 同步來源摘要與 coverage ledger；受影響頁面：[[development-specification]]、[[platform-adapters-and-release]]、[[release-and-update]]、[[system-architecture]]、[[project-function-catalog]]、[[index]]、[[codebase-functional-coverage]]。

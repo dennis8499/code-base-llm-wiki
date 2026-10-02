@@ -33,9 +33,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:bba8d51a3d4623e2a6cc01aea7a9b2a9004f9519b2c185b70dd65c26e2867cf1
+source_digest: sha256:ce3a65ff342569050b94a735eaccabf43df832bde75631d18e96035bb002a4eb
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-22
+last_updated: 2026-10-02
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -44,9 +44,12 @@ status: active
 
 ## 職責
 
+- `development_spec` 的獨立規格、逐題釐清與 draft／ready 邊界見 [[development-specification]]；
+  此路由透過 Codex／Copilot 共用同一模板和驗證器。
+
 - 維持 Copilot prompts/hooks 與 Codex recipes/hooks 的共同 intent、
   authorization 與 completion contract。
-- 以 `capabilities.json` contract version 6 描述十二個 manifest-declared operations／intent groups；
+- 以 `capabilities.json` contract version 6 描述十三個 manifest-declared operations／intent groups；
   BA／SA／SD 與既有操作的
   名稱與 authorization policy 不因平台 adapter 改變。
 - 將 Copilot `.github/prompts/` 限定為 VS Code 本機 Agent 入口；其他 Copilot
@@ -74,7 +77,7 @@ status: active
 
 ## Evidence
 
-- `parity-check.py` 驗證 contract 6、十二個 operation mapping、Codebase audit 的四類檢查／Git history／
+- `parity-check.py` 驗證 contract 6、十三個 operation mapping、Codebase audit 的四類檢查／Git history／
   validator contract、靜態邊界、prompt coupling、built-in
   prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
   root-resolved hooks，並驗證唯一 release workflow 的 trigger、權限、版本驗證、資產
@@ -110,7 +113,7 @@ status: active
 
 ## Contradictions
 
-- `VERSION=0.2.1` 是目前產品版號；MIT License 已加入，但 `v0.2.1` tag 與 GitHub
+- `VERSION=0.3.0` 是目前產品版號；MIT License 已加入，但 `v0.3.0` tag 與 GitHub
   Release 仍須由合併後的 tag push workflow 建立。
 - 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v6 或
   未測 host/version 的保證。
@@ -123,7 +126,7 @@ status: active
 ## Gaps
 
 - Copilot host runtime 尚未執行，因此維持 `runtime-unverified`。
-- `v0.2.1` 的實際 tag push、workflow run、公開發佈日期、套件簽章、SBOM 與
+- `v0.3.0` 的實際 tag push、workflow run、公開發佈日期、套件簽章、SBOM 與
   provenance attestation 仍待人工作業或後續決策。
 
 ## 相關頁面
