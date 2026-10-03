@@ -13,6 +13,10 @@ Python 3.11／3.14 validation、兩個平台 ZIP、manifest、checksum 建置與
 | OpenAI Codex | `static-compatible / v6 runtime-unverified` | v6 contract、installer 與 deterministic gates 通過；尚未重跑 host runtime UAT |
 
 Copilot runtime 不可用時，狀態固定停在 `static-compatible / runtime-unverified`。
+公開發版的必要門檻是本頁完整 deterministic checks 與 release readiness 全部通過。
+尚未重跑 host runtime UAT 時可發佈，但文件及 Release 說明必須保留
+`runtime-unverified`；只有五項 active Codex 情境各取得完整 3/3 後，才能宣告
+相應 host/runtime 的 `runtime-verified`。
 任何未來 host UAT 任一 run 失敗時不得取多數決；修復後須重新取得該情境完整 3/3。
 
 ## 目前驗收結果

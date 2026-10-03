@@ -66,9 +66,9 @@ run: |
 ```
 
 不得以 `dist/*` 取代明列資產；這可避免把額外暫存檔誤發佈。完成後從 GitHub
-下載四個資產，重新核對 `SHA256SUMS` 與 manifest URL。本次框架維護不會修改
-`VERSION`、不在本機建立或推送 tag，也不執行上述實際發佈命令；推送 tag 後的
-publish 由 workflow 負責。
+下載四個資產，重新核對 `SHA256SUMS` 與 manifest URL。推送 tag 後的 publish
+由 workflow 負責；維護者完成本機檢查、合併及 tag 推送後，仍須確認 workflow
+成功並下載正式資產核對 checksum。
 
 每個 ZIP 是一個精簡平台安裝包，包含完整共用 `codebase-wiki` skill、內嵌 installer、
 Wiki starter、固定 tgrep bundle、`VERSION`、LICENSE、target `AGENTS.md` 模板，以及
@@ -140,8 +140,11 @@ Windows x64 binary 則會隨兩個 ZIP 一起發佈。解壓後仍以 installer 
   `release.py` 會在建立資產前失敗。
 - tgrep manifest、固定版本／平台／路徑或 binary SHA-256 不一致時，`release.py build`
   會在建立 archive 前失敗；這不會自動下載或替換 binary。
-- 任一 deterministic check 或五項 active Codex UAT 未達 3/3 時，不得發版；目前
-  Codex v6 host runtime 尚未重跑，不能宣告 `runtime-verified`。
+- 任一 deterministic check 失敗時不得發版。完整自動檢查通過後可發佈標示
+  `static-compatible / runtime-unverified` 的版本；目前 Codex v6 host runtime
+  尚未重跑，Release 說明必須保留此限制。
+- 只有五項 active Codex UAT 各取得完整 3/3 時，才能宣告相應 host runtime
+  `runtime-verified`；歷史 v4 結果不能代替目前版本的驗收。
 - `gh release create` 前若 tag 未推送，`--verify-tag` 會拒絕發布。
 - 下載後應先驗證 `SHA256SUMS`，再執行 installer。
 - `upgrade` 發現目標檔案有人工修改時會回報 conflict，不會覆寫 Wiki 或其他

@@ -9,8 +9,8 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .github/prompts/development-spec.prompt.md
   - tests/contracts/test_development_spec.py
-source_digest: sha256:5a37701012382cbb47cd79dd99dc5b49bc38595f4e29225af42b96c6b3b294df
-last_updated: 2026-10-02
+source_digest: "sha256:1c73773e0eab8481bc29a0101c79a5720f1e6873cae03cd089074a0c8c2f44b8"
+last_updated: 2026-10-03
 tags: [module, development-spec, group-workflow]
 status: active
 notebooklm_group: development-spec

@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-02
+last_updated: 2026-10-03
 tags: [log]
 status: active
 ---
@@ -714,3 +714,9 @@ status: active
 
 - 新增 development_spec 獨立路由、五部分規格、SCN、逐題釐清與 draft／ready 驗證；同步 Codex／Copilot parity、版本、文件及來源紀錄。保留 BA／SA／SD 與 NotebookLM，Issue 由使用者建立。
 - 同步來源摘要與 coverage ledger；受影響頁面：[[development-specification]]、[[platform-adapters-and-release]]、[[release-and-update]]、[[system-architecture]]、[[project-function-catalog]]、[[index]]、[[codebase-functional-coverage]]。
+
+## [2026-10-03] update | Canonical LF release readiness for v0.3.0
+
+- 以乾淨 Git checkout 的 canonical LF bytes 重新核對來源摘要與 coverage ledger，修正跨平台發版預檢的雜湊差異。
+- 統一發版與驗證文件：完整 deterministic gates 為發版門檻，未重跑的 host runtime 保留 runtime-unverified；UAT 3/3 是宣告 runtime-verified 的條件。
+- Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[overview]], [[index]], [[log]]

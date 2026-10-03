@@ -33,9 +33,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:ce3a65ff342569050b94a735eaccabf43df832bde75631d18e96035bb002a4eb
+source_digest: "sha256:9623e28d2374feaecf1873f74286b23a8c76bec17ee3dae6d9531d8d81d822f0"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-02
+last_updated: 2026-10-03
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -97,6 +97,9 @@ status: active
   結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。
 - 本機驗證以 Python 3.11 與 3.14 執行 unit、compile、parity、frontmatter、stale、
   log、stats、lint 與 index check；lint 的兩項語意檢查另由人工完成。
+- 發版檢查與套件建置使用乾淨 Git checkout 的 canonical LF bytes；來源摘要與
+  coverage discovery identity 必須對應相同來源。完整 deterministic gates 通過後
+  可發佈標示 `runtime-unverified` 的版本，host runtime 保證另須取得 active UAT 3/3。
 - `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、LICENSE、
   repository name、surface package allowlist、資產邊界與 checksum。
 - Release builder 排除 cache、hook/NotebookLM state、transaction artifacts 與敏感

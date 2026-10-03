@@ -21,9 +21,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:a41082e9a0be400513478c2683ced3de8f93daadc05957002c5d164626776abc
+source_digest: "sha256:27c7c76a409e93446410ddf5c79a9d2c5c6352a119158bc23229b10d79e470ca"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-02
+last_updated: 2026-10-03
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -61,6 +61,10 @@ notebooklm_role: traceability
 1. 更新 `VERSION` 與 `ChangeLog.md`，並確認 `LICENSE` readiness。
 2. 在乾淨隔離 worktree，以 Python 3.11 與 3.14 執行 unit、compile、parity、
    frontmatter、stale、log、stats、lint、index checks，並完成人工 semantic review。
+   source digest 與 coverage ledger 使用此乾淨 checkout 的 canonical LF bytes。
+   完整自動檢查通過後可發佈；尚未重跑的 Codex／Copilot host runtime 在文件與
+   Release 說明保留 `runtime-unverified`。只有五項 active Codex 情境各取得完整
+   3/3 後，才宣告相應 host/runtime 的 `runtime-verified`。
 3. 執行 `python tools/release.py validate --tag vX.Y.Z` 與
    `python tools/release.py build --output dist --repository OWNER/NAME`，確認
    `codebase-llm-wiki-codex.zip`、`codebase-llm-wiki-copilot.zip`、

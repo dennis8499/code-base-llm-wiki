@@ -6,11 +6,16 @@
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-10-02
+## [0.3.0] - 2026-10-03
 
 ### Added
 
 - Independent development_spec intent: evidence-backed clarification, standalone five-section Megin specifications, readiness validation, and Copilot/Codex entrypoints. Existing BA/SA/SD and NotebookLM contracts remain unchanged.
+
+### Fixed
+
+- Refresh Wiki source digests and the coverage discovery identity from a clean Git checkout with canonical LF bytes so release validation is consistent across platforms.
+- Align the release and validation guides: complete deterministic checks gate publication; untested host runtimes remain explicitly `runtime-unverified`.
 
 ## [0.2.1] ? 2026-09-22
 
