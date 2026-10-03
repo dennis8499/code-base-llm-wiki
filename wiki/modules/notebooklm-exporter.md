@@ -13,14 +13,17 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: sha256:9fdc5b97e11f896432a4131930cf011863d19e8d4709463db1450ba71a322e0a
+source_digest: "sha256:621dbb5636d62e8c739f82f5d8d71919018c704f2b59c55e14d6969503fae9a9"
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
-last_updated: 2026-09-19
+last_updated: 2026-10-03
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
 
 # NotebookLM 現況 BA／SA 匯出器
+
+Discovery identity 排除 generated Git metadata；相同來源在一般 clone 的 `.git/`
+目錄與 worktree 的 `.git` 檔案之間維持相同 ID，實際來源內容變更仍會改變 ID。
 
 ## 職責
 

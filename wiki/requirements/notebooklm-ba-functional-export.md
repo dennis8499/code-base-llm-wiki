@@ -16,9 +16,9 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: sha256:aaa8f88c4ac1fd1a17f59db0e5cd49dbf13a94c27f8f58d1b88949cc00ca786a
+source_digest: "sha256:6b295d7aa0d38354f8b6d6b33edfaeb1555a30b5782e62850002352f59985b39"
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-09-19
+last_updated: 2026-10-03
 tags: [business-requirement, notebooklm, export, dlp]
 status: active
 ---

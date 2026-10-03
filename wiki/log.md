@@ -720,3 +720,9 @@ status: active
 - 以乾淨 Git checkout 的 canonical LF bytes 重新核對來源摘要與 coverage ledger，修正跨平台發版預檢的雜湊差異。
 - 統一發版與驗證文件：完整 deterministic gates 為發版門檻，未重跑的 host runtime 保留 runtime-unverified；UAT 3/3 是宣告 runtime-verified 的條件。
 - Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[overview]], [[index]], [[log]]
+
+## [2026-10-03] update | Portable discovery identity release regression
+
+- Discovery identity 與 scanner snapshot 一致排除 generated Git metadata，讓 clone 的 .git 目錄與 worktree 的 .git 檔案維持相同 ID；實際來源變更仍使 ID 更新。
+- 新增跨 clone/worktree 的回歸測試，重新同步來源摘要與 coverage identity。
+- Affected pages: [[notebooklm-exporter]], [[notebooklm-export]], [[codebase-functional-coverage]], [[index]], [[log]]

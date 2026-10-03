@@ -4933,7 +4933,7 @@ def _discovery_identity(
         "excluded": [
             {"path": item["path"], "reason": item["reason"]}
             for item in scan["excluded"]
-            if not is_export_artifact(item)
+            if not is_export_artifact(item) and not is_volatile(item)
         ],
         # Directory counts and byte totals intentionally stay out of the ID.
         "excluded_roots": [

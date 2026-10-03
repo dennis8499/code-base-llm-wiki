@@ -15,6 +15,29 @@ from .test_export_notebooklm import load_canonical_exporter
 
 
 class ProjectScannerTests(unittest.TestCase):
+    def test_discovery_identity_is_stable_for_clone_and_worktree_git_metadata(self) -> None:
+        module = load_canonical_exporter()
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            clone = parent / "clone"
+            worktree = parent / "worktree"
+            for root in (clone, worktree):
+                root.mkdir()
+                (root / "app.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (clone / ".git").mkdir()
+            (clone / ".git/HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+            (worktree / ".git").write_text("gitdir: ../metadata/worktrees/worktree\n", encoding="utf-8")
+
+            def identity(root: Path) -> str:
+                settings = module.load_settings(root)
+                scan = module.scan_project(root, settings, [])
+                return module._discovery_identity(root, settings, scan)[1]
+
+            self.assertEqual(identity(clone), identity(worktree))
+            before = identity(worktree)
+            (worktree / "app.py").write_text("VALUE = 2\n", encoding="utf-8")
+            self.assertNotEqual(before, identity(worktree))
+
     def settings(self, profile: str = "target") -> SimpleNamespace:
         return SimpleNamespace(
             scan_profile=profile,

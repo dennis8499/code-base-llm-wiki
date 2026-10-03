@@ -16,6 +16,7 @@
 
 - Refresh Wiki source digests and the coverage discovery identity from a clean Git checkout with canonical LF bytes so release validation is consistent across platforms.
 - Align the release and validation guides: complete deterministic checks gate publication; untested host runtimes remain explicitly `runtime-unverified`.
+- Keep discovery identities stable across Git clones and worktrees by excluding generated Git metadata while retaining changes to real source files.
 
 ## [0.2.1] ? 2026-09-22
 
