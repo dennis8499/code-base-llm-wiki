@@ -6,7 +6,7 @@ notebooklm_group: project
 notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[code-audit]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]", "[[development-specification]]"]
-last_updated: 2026-10-02
+last_updated: 2026-10-04
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -31,10 +31,10 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
 | 分析／設計文件 | 獨立產出 standard-aligned BA、solution-neutral SA 與 SD，建立 Gap-visible 三層追溯 | BA／SA／SD prompt/recipe + shared workflows | profiles、coverage、BA/SR/NFR/IF/DE/VIEW/ADR IDs、markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] | partial |
 | 開發規格 | 先讀取程式碼事實、逐題確認必要決策，交付可獨立貼入 Issue 的五部分規格 | `development_spec` shared workflow／validator | `spec_revision`、`spec_status`、SCN、必要問題 | [[development-specification]] | covered |
 | NotebookLM 準備 | 全量發現後建立每功能現況 BA／SA，一次確認後產生單一 Notebook 離線 pack | `export-notebooklm.py` | discovery/readiness 雙 ID、BA／SA pair、locator、DLP、容量、manifest v6 | [[notebooklm-exporter]] | covered |
-| 平台與發布 | 驗證 Copilot/Codex 契約、建立版本資產 | parity、本機 UAT、`release.py`、`gh` | capability contract、VERSION、checksums | [[platform-adapters-and-release]] | partial |
+| 平台契約驗證 | 驗證 Copilot／Codex contract、adapter 與 Release workflow | parity、本機驗證、`release.py` | capability contract、runtime UAT 狀態 | [[platform-adapters-and-release]] | partial |
+| Release 發布 | 建置並公開 Codex／Copilot 版本資產 | `release.py`、tag-triggered workflow | v0.3.0 tag、CI、四項資產 | [[platform-adapters-and-release]] | covered |
 
-發布功能標為 partial，原因是本機 builder、tag-triggered workflow 與固定資產契約已具備，
-但 `v0.3.0` 的實際 tag push、workflow run 與公開 Release 尚未完成。
+平台契約驗證仍為 partial，因 Codex v6 與 Copilot host runtime UAT 尚未執行；v0.3.0 Release 已由成功 CI 發布，發布流程與資產覆蓋為 covered。
 
 ## 跨功能能力
 

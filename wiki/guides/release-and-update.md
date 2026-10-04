@@ -21,9 +21,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: "sha256:27c7c76a409e93446410ddf5c79a9d2c5c6352a119158bc23229b10d79e470ca"
+source_digest: "sha256:ef62cc3dd029a9c8b7bcfbb58055e8bc74f2b9dba8abd694e3b62404dbab3a69"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-03
+last_updated: 2026-10-04
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides

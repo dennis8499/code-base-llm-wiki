@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-03
+last_updated: 2026-10-04
 tags: [log]
 status: active
 ---
@@ -726,3 +726,10 @@ status: active
 - Discovery identity 與 scanner snapshot 一致排除 generated Git metadata，讓 clone 的 .git 目錄與 worktree 的 .git 檔案維持相同 ID；實際來源變更仍使 ID 更新。
 - 新增跨 clone/worktree 的回歸測試，重新同步來源摘要與 coverage identity。
 - Affected pages: [[notebooklm-exporter]], [[notebooklm-export]], [[codebase-functional-coverage]], [[index]], [[log]]
+
+## [2026-10-04] update | Synchronize v0.3.0 release documentation
+
+- ?? Wiki ? MIT ??? v0.3.0 ?????????? SHA?Python 3.11?3.14 CI ??????????Codex v6 host runtime ??? runtime-unverified?
+- ???? development specification source-first ?????? 13 ????14 ??????????????????????
+- ? canonical LF bytes ???????196 ? coverage ledger ??? analyzed discovery ID?
+- Affected pages: [[index]], [[framework-introduction]], [[release-and-update]], [[platform-adapters-and-release]], [[system-architecture]], [[project-function-catalog]], [[overview]], [[notebooklm-export]], [[codebase-functional-coverage]], [[log]]

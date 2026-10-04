@@ -7,9 +7,20 @@
 `vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
 的本地版本標記；`contract_version: 6` 則是獨立的 installer/API contract。
 
-公開 Release 前，專案擁有者必須選定並加入明確 `LICENSE`。本 Repo 採用 MIT
-License，`tools/release.py validate` 與 `build` 會在建立正式資產前驗證授權、
-版本與上游 attribution readiness。不得用參數或修改 fixture 以外的資料繞過此 gate。
+本 Repo 採用 MIT License。`tools/release.py validate` 與 `build` 會在建立正式資產前
+驗證授權、版本與上游 attribution readiness。不得用參數或修改 fixture 以外的資料
+繞過此 gate。
+
+## 目前正式版本：v0.3.0
+
+Codebase LLM Wiki v0.3.0 已於 2026-10-03 發布，來源 tag 指向
+[`538712f`](https://github.com/dennis8499/code-base-llm-wiki/commit/538712f553457d53b8e451d1733fe97a01c6aff6)。
+已通過 Python 3.11 與 3.14 release checks；[正式 Release](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.3.0)
+包含 [Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/codebase-llm-wiki-codex.zip)、
+[Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/codebase-llm-wiki-copilot.zip)、
+[update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/update-manifest.json)
+及 [SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/SHA256SUMS)。
+本機 runtime 驗收仍標示 `runtime-unverified`，CI 通過不代表已完成宿主環境 UAT。
 
 ## 由 GitHub Actions 建立 Release
 

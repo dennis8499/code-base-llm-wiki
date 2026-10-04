@@ -33,9 +33,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:9623e28d2374feaecf1873f74286b23a8c76bec17ee3dae6d9531d8d81d822f0"
+source_digest: "sha256:761575a2c8ccd40368dd9dc1f8e4c28f7d1662763ff36d6091cd2c3be326e47c"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-03
+last_updated: 2026-10-04
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -116,10 +116,15 @@ status: active
 
 ## Contradictions
 
-- `VERSION=0.3.0` 是目前產品版號；MIT License 已加入，但 `v0.3.0` tag 與 GitHub
-  Release 仍須由合併後的 tag push workflow 建立。
+- `v0.3.0` Release 已公開；版本、附件及發版 CI 證據見下方現行發版紀錄。
 - 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v6 或
   未測 host/version 的保證。
+
+### v0.3.0 現行發版紀錄
+
+- [Codebase LLM Wiki v0.3.0](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.3.0) 於 2026-10-03 發布，tag 指向 commit `538712f553457d53b8e451d1733fe97a01c6aff6`。
+- [發版 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/37133823578) 已成功，Python 3.11／3.14 deterministic checks 通過；v0.3.0 包含 Codex／Copilot ZIP、`SHA256SUMS` 與 `update-manifest.json`。
+- Codex 與 Copilot host runtime UAT 尚未執行，狀態維持 `static-compatible / runtime-unverified`。
 
 ## Inferences
 
@@ -129,8 +134,7 @@ status: active
 ## Gaps
 
 - Copilot host runtime 尚未執行，因此維持 `runtime-unverified`。
-- `v0.3.0` 的實際 tag push、workflow run、公開發佈日期、套件簽章、SBOM 與
-  provenance attestation 仍待人工作業或後續決策。
+- Codex v6 host runtime UAT 尚未執行，因此與 Copilot 相同，維持 `runtime-unverified`。
 
 ## 相關頁面
 

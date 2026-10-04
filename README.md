@@ -8,7 +8,7 @@
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-7C3AED?logo=obsidian)](https://obsidian.md/)
 [![Latest Release](https://img.shields.io/github/v/release/dennis8499/code-base-llm-wiki?display_name=tag&sort=semver)](https://github.com/dennis8499/code-base-llm-wiki/releases/latest)
 
-Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`；一般查詢先讀 Wiki，Codebase audit 則先從目前 Codebase 盤點入口與呼叫路徑，只有遇到業務規則語意缺口才回查 Wiki。
+Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`；一般查詢先讀 Wiki，Codebase audit 則先從目前 Codebase 盤點入口與呼叫路徑，只有遇到業務規則語意缺口才回查 Wiki。Group 開發規格會先讀取所選子 Repo 的目前原始碼，再逐題釐清必要決策。
 
 它不是 RAG：不建立向量資料庫、不複製完整原始碼，也不要求常駐本機搜尋服務。Windows x64
 另可用隨 Skill 提供的 tgrep 加速 Ingest／Archaeology 的來源探索；知識仍以可閱讀、可版本控制、
@@ -347,7 +347,7 @@ NotebookLM export 產生的是本地 `.notebooklm/`；其中只有 `sources/*.md
 Wiki Query 不連線即時資料庫，也不呼叫 tgrep、資料庫工具或 fallback；
 Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
-本 Repo 尚未宣告軟體授權；請勿從參考專案的授權狀態推定本專案授權。
+本 Repo 採用 MIT License，請參閱 [`LICENSE`](LICENSE)。
 
 ## Group 開發規格
 

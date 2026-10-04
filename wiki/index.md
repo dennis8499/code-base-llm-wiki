@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-10-03
+last_updated: 2026-10-04
 tags: [index]
 status: active
 notebooklm_group: wiki-navigation
@@ -11,8 +11,8 @@ notebooklm_role: exclude
 
 # Codebase Wiki — 索引
 
-> Query 先讀本頁與少量相關頁面；Codebase audit 先從目前 Codebase 盤點入口，只有遇到業務規則
-> 語意缺口才查 Wiki。純 Query 與唯讀 Lint 不修改索引。標記內清單由 `rebuild-index.py` 維護，
+> Query 先讀本頁與少量相關頁面；Codebase audit 與 Group 開發規格先讀目前 source，再依各自流程
+> 盤點入口或逐題釐清。Codebase audit 只有遇到業務規則語意缺口才查 Wiki。純 Query 與唯讀 Lint 不修改索引。標記內清單由 `rebuild-index.py` 維護，
 > 標記外可保留人工導覽。
 
 ## 使用方式
@@ -95,7 +95,7 @@ _（尚無頁面）_
 
 | 頁面 | 摘要 |
 |------|------|
-| [[framework-introduction]] | 從安裝、Wiki-first 操作與 source-first Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界 |
+| [[framework-introduction]] | 從安裝、Wiki-first 操作、source-first Codebase 健檢與 Group 開發規格，到驗證及升級的框架使用路線 |
 | [[notebooklm-export]] | 依全量 discovery、一次確認、每功能 BA／SA 與自動 readiness 安全產生 schema-v6 source pack |
 | [[release-and-update]] | 以 VERSION、本機驗證、surface-specific ZIP、tag-triggered GitHub Actions 與授權 gate 管理框架發布 |
 

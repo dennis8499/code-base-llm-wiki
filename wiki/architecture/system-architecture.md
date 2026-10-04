@@ -20,7 +20,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
 source_digest: "sha256:41203b83fa4e4bd5f02d7e85919ea95cf2d68af9c672c26852c60cdf150de895"
 derived_from: ["[[overview]]", "[[development-specification]]"]
-last_updated: 2026-10-03
+last_updated: 2026-10-04
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -131,7 +131,7 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 ## Gaps
 
 - 尚未提供 SaaS、NotebookLM API、自動 upload、多租戶權限管理或 Advanced DLP template 同步。
-- MIT License 已加入；`v0.3.0` 已建立本機套件，實際 tag push、workflow run 與公開 Release 尚待人工作業。
+- v0.3.0 已公開發布，版本、資產與 CI 證據見 [[platform-adapters-and-release]]；Codex 與 Copilot host runtime UAT 尚待執行。
 
 ## Related Pages
 

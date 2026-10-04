@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki — 使用指南
 type: guide
-summary: 從安裝、Wiki-first 操作與 source-first Codebase 靜態健檢到驗證與升級的框架使用路線，包含受限的 Windows x64 tgrep 來源探索邊界
+summary: 從安裝、Wiki-first 操作、source-first Codebase 健檢與 Group 開發規格，到驗證及升級的框架使用路線
 sources:
   - README.md
   - LICENSE
@@ -18,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
   - tests/contracts/test_code_audit_validator.py
-source_digest: "sha256:75ec867cbb6d19ec6fc5ff77e034e307cfa32fae9e6c5b3ccab3fdbaf769a10d"
+source_digest: "sha256:3f2cd100cc704296606afa21b15759c83d8d3941ad32b3db13de8fc430f86a95"
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-10-03
+last_updated: 2026-10-04
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -133,9 +133,10 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | System Analysis / SA | solution-neutral 邊界、needs、SR/NFR/IF 與 verification needs | synthesis + index + log |
 | System Design / SD | concerns/viewpoints、決策、元件、runtime、資料、介面、部署、安全與品質策略 | synthesis + index + log |
 | NotebookLM export | 全量盤點當下 Codebase 並重建每功能現況 BA／SA | `.notebooklm/` documents、upload sources、schema v6、governance；不自動上傳 |
+| Development specification | 釐清 Group 子 Repo 的功能需求與必要決策 | 五段 Issue 規格；未答問題維持 draft，ready 後由使用者建立 Issue |
 
 完整提示詞與輸出契約位於 `docs/product/workflows/README.md`。
-目前工作流手冊列出十二類意圖、13 個常用操作情境；其中 Interactive／Batch Ingest 是同一 intent。
+目前工作流手冊列出十三類意圖、14 個常用操作情境；其中 Interactive／Batch Ingest 共用一個 intent。
 
 ## Codebase 健檢
 
@@ -260,7 +261,7 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 - 文件總覽：`docs/README.md`
 - 架構與資料流：`docs/product/architecture/README.md`
 - 安裝、升級與排錯：`docs/operations/setup/README.md`
-- 十二類意圖與 13 個常用操作情境：`docs/product/workflows/README.md`
+- 13 類意圖與 14 個常用操作情境：`docs/product/workflows/README.md`
 - 本機 deterministic checks、tag-triggered release 與手動驗收：`docs/operations/validation/README.md`
 - Codex 獨立手冊：`Codex.md`
 

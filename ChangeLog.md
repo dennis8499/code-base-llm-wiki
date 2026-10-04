@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 將公開文件、framework Wiki 與 v0.3.0 Release 說明同步至已發布的 `development_spec`、MIT 授權及 Release 證據；host runtime 仍標示為未驗收。
+
 ## [0.3.0] - 2026-10-03
 
 ### Added

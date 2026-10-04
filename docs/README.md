@@ -34,5 +34,5 @@
 `.github/` 與 `.codex/`；`docs/`、`samples/`、`tests/` 與框架自己的
 `wiki/` 是維護與驗證內容，不屬於 installer surface。
 
-文件只描述目前已由程式、設定、測試或 Wiki 證據支持的行為。專案目前尚未宣告
-LICENSE，因此公開 release readiness gate 仍會阻擋發布資產。
+文件只描述目前已由程式、設定、測試或 Wiki 證據支持的行為。本 Repo 採用
+MIT License（`LICENSE`）；v0.3.0 已依其 Release readiness gate 發布。
