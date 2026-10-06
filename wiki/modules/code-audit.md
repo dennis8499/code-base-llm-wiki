@@ -20,7 +20,7 @@ sources:
   - tests/contracts/test_code_audit_validator.py
   - tests/fixtures/code-audit/history/README.md
   - tests/fixtures/code-audit/history/expected-findings.md
-source_digest: "sha256:3069f823da80b01cbc098ac7b543f99829def08a1b1856772dfe60337e72d213"
+source_digest: "sha256:1b15c99563e56cbf197ea2543fda3870499642dfff2716ceb17ac3d31bba0788"
 derived_from: ["[[system-architecture]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-10-03
 tags: [module, code-audit, static-analysis, business-logic, git-history]

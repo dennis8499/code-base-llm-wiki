@@ -8,7 +8,8 @@
 
 ### Changed
 
-- 將公開文件、framework Wiki 與 v0.3.0 Release 說明同步至已發布的 `development_spec`、MIT 授權及 Release 證據；host runtime 仍標示為未驗收。
+- 開發規格改為依目前單一 Codebase 寫出來源相對、可交接給任意實作流程的文件，不再要求 Group、Repo 清單或 Megin。
+- 將原生開發規格入口、範本與驗證器限定為單一 Codebase；GitlabWorkSpace 的 Group 清冊、共用 Wiki 與交接流程改由獨立覆層提供。
 
 ## [0.3.0] - 2026-10-03
 

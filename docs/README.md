@@ -35,4 +35,4 @@
 `wiki/` 是維護與驗證內容，不屬於 installer surface。
 
 文件只描述目前已由程式、設定、測試或 Wiki 證據支持的行為。本 Repo 採用
-MIT License（`LICENSE`）；v0.3.0 已依其 Release readiness gate 發布。
+MIT License（`LICENSE`）；v0.3.0 已依其 Release readiness gate 發布，v0.4.0 原生套件正在準備中。

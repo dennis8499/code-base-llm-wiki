@@ -8,7 +8,7 @@
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-7C3AED?logo=obsidian)](https://obsidian.md/)
 [![Latest Release](https://img.shields.io/github/v/release/dennis8499/code-base-llm-wiki?display_name=tag&sort=semver)](https://github.com/dennis8499/code-base-llm-wiki/releases/latest)
 
-Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`；一般查詢先讀 Wiki，Codebase audit 則先從目前 Codebase 盤點入口與呼叫路徑，只有遇到業務規則語意缺口才回查 Wiki。Group 開發規格會先讀取所選子 Repo 的目前原始碼，再逐題釐清必要決策。
+Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`；一般查詢先讀 Wiki，Codebase audit 則先從目前 Codebase 盤點入口與呼叫路徑，只有遇到業務規則語意缺口才回查 Wiki。開發規格會先讀取目前 Codebase 的原始碼，再逐題釐清必要決策，產出可交接給任意實作流程的文件。
 
 它不是 RAG：不建立向量資料庫、不複製完整原始碼，也不要求常駐本機搜尋服務。Windows x64
 另可用隨 Skill 提供的 tgrep 加速 Ingest／Archaeology 的來源探索；知識仍以可閱讀、可版本控制、
@@ -216,11 +216,11 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.3.0`。Installer 會把目前版本保存到目標 Repo 的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.4.0`。Installer 會把目前版本保存到目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
 installer contract 版本。
 
-本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.3.0` tag 後，
+本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.4.0` tag 後，
 `.github/workflows/release.yml` 會自動完成 validation、build 與 GitHub Release publish；
 這個 framework-only workflow 不會被 installer 安裝到 target repository。
 
@@ -349,6 +349,6 @@ Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
 本 Repo 採用 MIT License，請參閱 [`LICENSE`](LICENSE)。
 
-## Group 開發規格
+## 開發規格
 
-從 Group 根目錄使用 `$codebase-wiki` 描述新功能，會進入獨立的 `development_spec` 流程：先查來源、逐題確認必要決策，再產生五段、可直接貼入 Issue 的規格。未回答的必要問題保持 draft；ready 不取代 Megin 核准及驗收。BA／SA／SD 保留原有用途。
+在單一 Codebase 使用 `$codebase-wiki` 描述新功能，會進入獨立的 `development_spec` 流程：先查來源、逐題確認必要決策，再產生五段、可交接的規格。未回答的必要問題保持 draft；ready 代表資訊完整，不會替任何下游流程核准或建立 Issue。BA／SA／SD 保留原有用途。

@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-04
+last_updated: 2026-10-06
 tags: [log]
 status: active
 ---
@@ -733,3 +733,23 @@ status: active
 - ???? development specification source-first ?????? 13 ????14 ??????????????????????
 - ? canonical LF bytes ???????196 ? coverage ledger ??? analyzed discovery ID?
 - Affected pages: [[index]], [[framework-introduction]], [[release-and-update]], [[platform-adapters-and-release]], [[system-architecture]], [[project-function-catalog]], [[overview]], [[notebooklm-export]], [[codebase-functional-coverage]], [[log]]
+## [2026-10-06] update | Make development specifications standalone
+
+- 開發規格改為以目前單一 Codebase 為範圍，使用通用專案欄位，並移除對 Group、Megin 與 GitLab Issue 的強制相依。
+- 受影響頁面：[[development-specification]]、[[system-architecture]]、[[framework-introduction]]、[[index]]、[[log]]
+
+
+## [2026-10-06] update | Refresh source and coverage evidence fingerprints
+
+- Reconcile the 14 changed development-specification, release, and test source hashes against the current inventory while retaining their existing supporting-technical dispositions; refresh the overview digest and append-only log date.
+- Affected pages: [[overview]], [[codebase-functional-coverage]], [[log]]
+
+## [2026-10-06] update | Align v0.4.0 examples and installer evidence
+
+- Align release examples, installer expectations, and the coverage ledger with the new native Wiki 0.4.0 package.
+- Affected pages: [[release-and-update]], [[codebase-functional-coverage]], [[log]]
+
+## [2026-10-06] update | Refresh Wiki sources after the standalone workflow split
+
+- Recompute current source fingerprints for 8 Wiki pages that cite the changed framework, release, and test files; the reviewed page content and existing coverage dispositions remain intact.
+- Affected pages: [[code-audit]], [[development-specification]], [[framework-introduction]], [[installer-and-upgrade]], [[notebooklm-export]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]], [[log]]

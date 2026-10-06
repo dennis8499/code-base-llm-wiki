@@ -51,7 +51,7 @@ tgrep 的 Ingest／Archaeology 使用範圍。
 | Skill 與 references | 意圖路由、授權、不變量、完成條件 | `.agents/skills/codebase-wiki/SKILL.md` |
 | Installer v6 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
-| 開發規格 | Group 子 Repo 的程式碼事實、逐題釐清、五部分獨立 Issue 正文、draft／ready 與 SCN | [[development-specification]] |
+| 開發規格 | 目前 Codebase 的程式碼事實、逐題釐清、五部分獨立實作規格、draft／ready 與 SCN | [[development-specification]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Codebase audit | 入口 inventory、transaction／設定／邏輯交叉檢查、定向 Git history、finding evidence、coverage gaps 與 Wiki report | [[code-audit]] |
 | tgrep source discovery | 固定版本 Windows x64 binary、manifest、root/path containment 與 allowlisted read-only search | `.agents/skills/codebase-wiki/scripts/tgrep-search.py`、`.agents/skills/codebase-wiki/bin/tgrep-manifest.json` |

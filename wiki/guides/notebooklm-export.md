@@ -9,7 +9,7 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/product/workflows/README.md
-source_digest: "sha256:8e6a49fa8dd752628e731acf391ad5f36d05976e8b89496e7274197ab07ab886"
+source_digest: "sha256:542c16c4895c66e8f5948a26fd2458eaab89816eca3ba7e1deb29bd9b1609ac2"
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[notebooklm-exporter]]", "[[business-analysis]]"]
 last_updated: 2026-10-04
 tags: [guide, notebooklm, export, ba-first, enterprise]

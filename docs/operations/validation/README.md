@@ -186,6 +186,6 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - Query workflow 與雙平台 adapters 不含即時資料庫存取、資料庫工具或 fallback 指令。
 - `.sql`、migration 與 schema 仍可被辨識為唯讀 `data_schema` evidence。
 
-## Group 開發規格
+## 開發規格
 
-`tests/contracts/test_development_spec.py` 固定五部分、SCN Given／When／Then、draft／ready、未決必要問題與範本佔位驗證。此路由先查來源、逐題釐清；Issue 由使用者建立，文件排除 NotebookLM 匯出。Megin 另行核准與驗收。
+`tests/contracts/test_development_spec.py` 固定五部分、SCN Given／When／Then、draft／ready、未決必要問題、通用專案範圍與範本佔位驗證。此路由在單一 Codebase 先查來源、逐題釐清；Issue 由使用者建立，文件排除 NotebookLM 匯出，任何下游流程都要自行核准與驗收。

@@ -9,7 +9,7 @@ import re
 
 from frontmatter import parse_frontmatter_text, configure_utf8_stdio
 
-SECTIONS = ("目的與範圍", "適用 Repo", "功能行為與限制", "相依契約與確認決策", "驗收情境")
+SECTIONS = ("目的與範圍", "適用專案", "功能行為與限制", "相依契約與確認決策", "驗收情境")
 
 
 def validate(text: str) -> list[str]:

@@ -33,7 +33,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:761575a2c8ccd40368dd9dc1f8e4c28f7d1662763ff36d6091cd2c3be326e47c"
+source_digest: "sha256:1b2ea5f9f1b2a1f15ac943c3c774e97c6e74983b6cc0573a0dea7ac7ce6ae52f"
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-04
 tags: [module, adapters, validation, release, parity]

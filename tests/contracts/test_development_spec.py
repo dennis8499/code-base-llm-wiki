@@ -23,7 +23,7 @@ blocking_questions: {questions}
 # 登入規格
 ## 1. 目的與範圍
 會員登入；不包含註冊。
-## 2. 適用 Repo
+## 2. 適用專案
 auth
 ## 3. 功能行為與限制
 憑證錯誤回傳 401。
@@ -48,6 +48,9 @@ POST /login 接受 account/password，成功回傳 token。
         document = self.document().replace("成功回傳 token。", '成功回傳 {"token": "value"}。')
         self.assertEqual([], module.validate(document))
         self.assertTrue(module.validate(document + "\n## 6. Extra appendix\nContent\n"))
+
+    def test_target_section_is_generic_and_no_longer_group_repo_scoped(self):
+        self.assertTrue(module.validate(self.document().replace("適用專案", "適用 Repo")))
 
 
 if __name__ == "__main__":

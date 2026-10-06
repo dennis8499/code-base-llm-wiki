@@ -1,16 +1,15 @@
 # Development Specification
 
-Use this independent branch for a requester describing a new feature, asking
-for a development specification, or preparing an Issue for Megin. Do not run
-BA, SA, SD, or NotebookLM preparation first. Existing analysis workflows retain
-their own contracts.
+Use this independent branch for a requester describing a new feature or asking
+for implementation-ready requirements. Do not run BA, SA, SD, or NotebookLM
+preparation first. Existing analysis workflows retain their own contracts.
 
 ## Discover and ask
 
-1. Resolve the explicit Group root (which need not be a Git repository) and
-   direct-child target Repos. Read `wiki/index.md` and relevant evidence, then
-   inspect current source/config read-only to confirm behavior and interfaces.
-   Source paths are Group-relative, such as `payments/src/service.ts`.
+1. Resolve the one target codebase from the current project or the user's
+   explicit path. Read `wiki/index.md` and relevant evidence, then inspect that
+   codebase's current source/config read-only to confirm behavior and interfaces.
+   Source paths are relative to its root.
 2. Separate observed facts, requester decisions, technical choices for Megin,
    and unresolved business questions. Resolve discoverable facts from sources;
    do not ask the requester where code is or invent business rules from code.
@@ -48,6 +47,6 @@ Before marking ready, confirm all blocking decisions are answered and every
 SCN states input/precondition, action, and observable expected result. Run
 `scripts/validate-development-spec.py <file>`, then the shared frontmatter,
 source, index and log checks. Synchronize `wiki/index.md` and append one
-`synthesis` log operation. Ready authorizes the requester to copy the document;
-Megin still performs requirements discovery, plan approval, independent review,
-verification and human acceptance.
+`synthesis` log operation. The document is self-contained for handoff to any
+implementation workflow. Downstream tools establish their own review,
+verification, acceptance, and delivery steps.
