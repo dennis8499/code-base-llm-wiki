@@ -32,6 +32,7 @@ REMOVED_PATHS = {
 }
 
 ACTIVE_PROMPTS = {
+    "functional-exploration.prompt.md",
     "development-spec.prompt.md",
     "business-analysis-doc.prompt.md",
     "code-archaeology.prompt.md",
@@ -63,8 +64,8 @@ class CapabilityRemovalBehaviorTests(unittest.TestCase):
         manifest = json.loads((SKILL_ROOT / "capabilities.json").read_text(encoding="utf-8"))
 
         self.assertEqual(manifest["contract_version"], 6)
-        self.assertEqual(len(manifest["intents"]), 13)
-        self.assertEqual(len(manifest["intent_groups"]), 13)
+        self.assertEqual(len(manifest["intents"]), 14)
+        self.assertEqual(len(manifest["intent_groups"]), 14)
         self.assertTrue({"guide", "delegation"}.isdisjoint(manifest["intents"]))
         self.assertTrue({"guide", "delegation"}.isdisjoint(manifest["intent_groups"]))
         self.assertTrue(

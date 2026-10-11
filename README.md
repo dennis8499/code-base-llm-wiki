@@ -352,3 +352,7 @@ Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 ## 開發規格
 
 在單一 Codebase 使用 `$codebase-wiki` 描述新功能，會進入獨立的 `development_spec` 流程：先查來源、逐題確認必要決策，再產生五段、可交接的規格。未回答的必要問題保持 draft；ready 代表資訊完整，不會替任何下游流程核准或建立 Issue。BA／SA／SD 保留原有用途。
+
+### 功能探索（0.5.0）
+
+請求「完整功能探索」會先查目前原始碼，回報每項功能的入口、流程、依賴、來源與覆蓋缺口；預設不寫任何文件。只有明確要求保存才產生授權文件。一般 Query 仍優先查 Wiki。詳見 `.agents/skills/codebase-wiki/references/functional-exploration-workflow.md`。

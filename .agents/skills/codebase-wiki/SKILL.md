@@ -1,9 +1,9 @@
 ---
 name: codebase-wiki
 description: >
-  Operate a persistent, wiki-first Markdown knowledge base; Codebase audit is a
-  current-source-first exception. Use for framework install or maintenance,
-  ingest, query, lint, ADR, synthesis, system analysis, business analysis,
+  Operate a persistent, wiki-first Markdown knowledge base; Functional exploration and Codebase audit are
+  current-source-first exceptions. Use for framework install or maintenance,
+  functional exploration, ingest, query, lint, ADR, synthesis, system analysis, business analysis,
   system design, standalone development specifications, or code archaeology.
 ---
 
@@ -30,6 +30,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Intent routing | `references/intent-routing.md` |
 | NotebookLM Enterprise export | `references/notebooklm-export-workflow.md` |
 | Ingest sequence, page creation rules, dependency ordering | `references/ingest-workflow.md` |
+| Current-source functional inventory, coverage and gaps | `references/functional-exploration-workflow.md` |
 | Wiki-first query and citations | `references/query-workflow.md` |
 | Query/Lint follow-up action choices | `references/follow-up-actions.md` |
 | Wiki health checks, severities, report format | `references/lint-checklist.md` |
@@ -94,6 +95,7 @@ append one operation from `references/log-operations.md`.
 - install/upgrade: dry-run, then `--apply`;
 - interactive ingest: preview, then confirmation;
 - explicit batch ingest: scoped Wiki writes authorized;
+- functional exploration: current source first, zero writes by default; persist only on an explicit request;
 - query and default archaeology: read-only;
 - lint: report, then confirm repairs;
 - explicit Codebase audit: save a coverage-aware Synthesis report; requests for

@@ -149,6 +149,15 @@
       "writes_by_default": true,
       "requires_confirmation": false,
       "authorization_policy": "explicit_request"
+    },
+    "functional_exploration": {
+      "writes_by_default": false,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_persist",
+      "source_order": "current_source_first",
+      "report_schema": "codebase-functional-exploration/v1",
+      "scanner": ".agents/skills/codebase-wiki/scripts/explore-functions.py",
+      "coverage": "all_included_files_and_entrypoint_candidates"
     }
   },
   "intent_groups": {
@@ -190,6 +199,9 @@
     ],
     "development_spec": [
       "development_spec"
+    ],
+    "functional_exploration": [
+      "functional_exploration"
     ]
   },
   "entrypoints": {
@@ -231,6 +243,9 @@
       ],
       "development_spec": [
         "development-spec.prompt.md"
+      ],
+      "functional_exploration": [
+        "functional-exploration.prompt.md"
       ]
     },
     "codex": {
@@ -274,7 +289,8 @@
       "version": "2",
       "operations": [
         "code_audit",
-        "notebooklm_export"
+        "notebooklm_export",
+        "functional_exploration"
       ],
       "wrapper": ".agents/skills/codebase-wiki/scripts/scan-project.py",
       "module": ".agents/skills/codebase-wiki/scripts/project_scanner.py",

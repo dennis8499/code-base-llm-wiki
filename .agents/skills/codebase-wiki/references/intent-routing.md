@@ -1,6 +1,6 @@
 # Intent Routing
 
-Use this table as the source of truth for the thirteen user-facing intent groups.
+Use this table as the source of truth for the fourteen user-facing intent groups.
 `capabilities.json` maps each group to one machine operation. NotebookLM export
 has a separate artifact and authorization contract.
 
@@ -10,6 +10,7 @@ has a separate artifact and authorization contract.
 | Ingest | document, analyze, ingest, add to wiki, 文件化 | Read wiki state, inspect raw sources read-only, then create or update wiki pages. |
 | Query | explain, find, where, how, 查詢 | Read `wiki/index.md`, then relevant pages; inspect sources only if wiki evidence is insufficient, stale, or contradictory. |
 | Lint | Wiki health, stale, broken links, lint, Wiki 品質 | Audit Wiki quality and report findings before broad repairs. |
+| Functional exploration | 功能探索、功能盤點、完整功能、functional exploration | Load `functional-exploration-workflow.md`; inventory current source, trace capabilities and dependencies, reconcile every included file and entrypoint, report coverage and gaps; no writes unless explicitly requested. |
 | Codebase audit | code health, codebase audit, bugs, logic review, 程式健檢, BUG 檢查 | Read `code-audit-workflow.md`; start from the current Codebase tree and registered entrypoints, trace reachable call paths, consult Wiki only for business-rule context gaps, then inspect transactions, configuration references, logic/state contracts, and targeted Git history statically before saving a coverage-aware report. Explicit 「只回報」 requests stay read-only. |
 | ADR | decision, ADR, architecture choice | Create or update a record under `wiki/decisions/` with ADR frontmatter. |
 | Synthesis | save analysis, synthesis | Persist durable cross-cutting analysis under `wiki/synthesis/`. |

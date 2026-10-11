@@ -18,6 +18,7 @@ EXPECTED_OPERATIONS = {
     "query",
     "lint",
     "code_audit",
+    "functional_exploration",
     "archaeology",
     "adr",
     "synthesis",
@@ -33,6 +34,7 @@ EXPECTED_INTENT_CONTRACT = {
     "query": (False, False, "read_only"),
     "lint": (False, True, "confirm_repairs"),
     "code_audit": (True, False, "explicit_request"),
+    "functional_exploration": (False, False, "explicit_persist"),
     "archaeology": (False, True, "explicit_persist"),
     "adr": (True, False, "explicit_request"),
     "synthesis": (True, False, "explicit_request"),
@@ -94,6 +96,7 @@ EXPECTED_GROUPS = {
     "query": ["query"],
     "lint": ["lint"],
     "code_audit": ["code_audit"],
+    "functional_exploration": ["functional_exploration"],
     "adr": ["adr"],
     "synthesis": ["synthesis"],
     "business_analysis": ["business_analysis"],
@@ -412,7 +415,7 @@ def main() -> int:
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
-        issues.append("manifest intents must define the thirteen canonical operations")
+        issues.append("manifest intents must define the fourteen canonical operations")
         intents = {}
     for operation, expected in EXPECTED_INTENT_CONTRACT.items():
         contract = intents.get(operation, {})
@@ -438,7 +441,7 @@ def main() -> int:
 
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
-        issues.append("manifest must define the exact thirteen user-facing intent groups")
+        issues.append("manifest must define the exact fourteen user-facing intent groups")
         groups = {}
     grouped = [operation for values in groups.values() if isinstance(values, list) for operation in values]
     if len(grouped) != len(set(grouped)) or set(grouped) != EXPECTED_OPERATIONS:

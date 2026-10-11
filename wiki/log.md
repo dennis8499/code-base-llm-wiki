@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-06
+last_updated: 2026-10-12
 tags: [log]
 status: active
 ---
@@ -753,3 +753,13 @@ status: active
 
 - Recompute current source fingerprints for 8 Wiki pages that cite the changed framework, release, and test files; the reviewed page content and existing coverage dispositions remain intact.
 - Affected pages: [[code-audit]], [[development-specification]], [[framework-introduction]], [[installer-and-upgrade]], [[notebooklm-export]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]], [[log]]
+
+## [2026-10-11] update | Add source-first functional exploration
+
+- Add read-only functional inventory, source snapshot validation and explicit coverage/gap reconciliation; synchronize version, platform adapters and reviewed source fingerprints.
+- Affected pages: [[functional-exploration]], [[overview]], [[codebase-functional-coverage]], [[platform-adapters-and-release]], [[log]]
+
+## [2026-10-12] update | Canonical and reproducible v0.5.0 release
+
+- Normalize release sources to canonical Git LF and use fixed ZIP metadata without compressor dependencies; refresh source and coverage hashes without changing the reviewed functional contracts.
+- Affected pages: [[business-analysis]], [[cap-analysis-document-generation-sa]], [[cap-notebooklm-ba-functional-export-sa]], [[code-audit]], [[codebase-functional-coverage]], [[development-specification]], [[framework-introduction]], [[functional-exploration]], [[generate-analysis-document]], [[index]], [[installer-and-upgrade]], [[log]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]], [[system-architecture]], [[system-design]]

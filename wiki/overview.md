@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: "sha256:ccda9be927037d775c1cd2341e92c375e004e5da2d4aad71b1956129d140ef46"
+source_digest: "sha256:c0f7064359fe3b01809d44765a8164ae6749dcf4bcb9e3f4500cf049950c6901"
 derived_from: []
-last_updated: 2026-10-04
+last_updated: 2026-10-12
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -153,3 +153,5 @@ readiness preflight。
 - [[system-design]] — profiles、workflows、adapters、validators、installer 與 exporter views
 - [[code-audit]] — 本機 Codebase 健檢與逐入口覆蓋，不進 NotebookLM upload sources
 <!-- notebooklm:local-only:end -->
+
+完整功能探索請查 [[functional-exploration]]：先查目前 source，預設零寫入，一般 Query 仍維持 Wiki-first。

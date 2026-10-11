@@ -296,3 +296,7 @@ Skill does not trigger:
 - Invoke it explicitly with `$codebase-wiki`.
 - Check that `.agents/skills/codebase-wiki/SKILL.md` exists under the repo root or a parent directory scanned by Codex.
 - Restart Codex if the skill was just added.
+
+## /functional-exploration
+
+使用 `$codebase-wiki`，完整載入 `references/functional-exploration-workflow.md`。先讀目前原始碼，完整盤點功能、入口、流程與依賴，列出來源、逐檔覆蓋、排除與缺口。預設唯讀；只有明確要求保存時才寫入授權文件。一般 Query 仍維持 Wiki-first。

@@ -43,8 +43,8 @@ class ContractTests(unittest.TestCase):
             manifest["intents"]["notebooklm_export"]["audience"],
             "business-and-system-analyst",
         )
-        self.assertEqual(len(manifest["intents"]), 13)
-        self.assertEqual(len(manifest["intent_groups"]), 13)
+        self.assertEqual(len(manifest["intents"]), 14)
+        self.assertEqual(len(manifest["intent_groups"]), 14)
         grouped = [
             operation
             for operations in manifest["intent_groups"].values()

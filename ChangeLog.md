@@ -4,6 +4,12 @@
 
 ---
 
+## 0.5.0 - 2026-10-12
+
+- 新增 source-first、預設零寫入的 functional_exploration 路由與雙平台入口。
+- 功能報告綁定來源快照，強制對帳所有納入檔案與入口，保留排除、讀取失敗及缺口。
+- 發行使用 canonical LF、固定 ZIP 中繼資料與無壓縮儲存，讓不同平台產生相同來源雜湊。
+
 ## [Unreleased]
 
 ### Changed

@@ -440,12 +440,14 @@ def _write_zip(
     version: str,
     surface: str,
 ) -> None:
-    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+    # Avoid producer OS and zlib differences in the hashes pinned by consumers.
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
         for relative, data in entries:
             info = zipfile.ZipInfo(_archive_member(relative, version, surface))
             info.date_time = (1980, 1, 1, 0, 0, 0)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
+            info.create_system = 3
+            info.compress_type = zipfile.ZIP_STORED
+            info.external_attr = 0o100644 << 16
             archive.writestr(info, data)
 
 
@@ -588,11 +590,12 @@ def build_release(
     manifest_path.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
     checksum_paths = [archive_paths[surface] for surface in SURFACES] + [manifest_path]
     checksum_text = "".join(f"{sha256(path)}  {path.name}\n" for path in checksum_paths)
-    (output / CHECKSUMS_NAME).write_text(checksum_text, encoding="utf-8")
+    (output / CHECKSUMS_NAME).write_text(checksum_text, encoding="utf-8", newline="\n")
     return {
         "product": PRODUCT_ID,
         "version": version,

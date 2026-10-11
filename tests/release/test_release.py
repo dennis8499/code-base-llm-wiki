@@ -98,6 +98,21 @@ def load_release():
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_zip_bytes_have_portable_fixed_metadata(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory() as directory:
+            first, second = Path(directory) / "first.zip", Path(directory) / "second.zip"
+            entries = [("example.py", b"print('example')\n")]
+            release._write_zip(first, entries, "0.5.0", "codex")
+            release._write_zip(second, entries, "0.5.0", "codex")
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            with zipfile.ZipFile(first) as archive:
+                info = archive.infolist()[0]
+                self.assertEqual(info.create_system, 3)
+                self.assertEqual(info.compress_type, zipfile.ZIP_STORED)
+                self.assertEqual(info.date_time, (1980, 1, 1, 0, 0, 0))
+                self.assertEqual(info.external_attr >> 16, 0o100644)
+
     def test_release_cli_validate_and_build_contract(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / "source"
@@ -208,8 +223,8 @@ class ReleaseTests(unittest.TestCase):
 
     def test_version_is_stable_semver_and_tag_matches(self) -> None:
         release = load_release()
-        self.assertEqual(release.read_version(REPO_ROOT), "0.4.0")
-        self.assertEqual(release.validate_tag("v0.4.0", REPO_ROOT), "0.4.0")
+        self.assertEqual(release.read_version(REPO_ROOT), "0.5.0")
+        self.assertEqual(release.validate_tag("v0.5.0", REPO_ROOT), "0.5.0")
         self.assertEqual(release.repository_name(REPO_ROOT, "owner/example.git"), "owner/example")
         with self.assertRaises(release.ReleaseError):
             release.validate_tag("0.2.0", REPO_ROOT)

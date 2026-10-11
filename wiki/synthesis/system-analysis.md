@@ -15,9 +15,9 @@ sources:
   - docs/operations/releases/README.md
   - tests/contracts/test_contracts.py
   - tests/wiki/test_wiki_lint.py
-source_digest: "sha256:431d7052cd36d36bfbabd117d0b7405cfb6531b1e7649c3c4d4bc5b27a2564e7"
+source_digest: "sha256:cd7747b9408879675d39432fe272d4ef67b3f66a6c7231e8638b1444d8434159"
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
-last_updated: 2026-10-04
+last_updated: 2026-10-12
 tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
