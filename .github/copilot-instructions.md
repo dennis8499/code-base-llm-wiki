@@ -26,6 +26,11 @@ workflow、schema、template 與 hook logic 的共同來源。
 - 保留人工內容，`wiki/log.md` 維持 append-only。
 - page add/delete/rename/major update 同步 `wiki/index.md`。
 - Lint 先報告 findings，再確認 repairs。
+- Query 的建議與執行載入 `references/follow-up-actions.md`：先回答、核對來源並預覽
+  目標與變更；選擇前零寫入，選擇後沿用一次確認完成更新／保存／合併流程與驗證。
+  同範圍不重複 Ingest 或 Synthesis 確認；暫不處理或未選擇維持零寫入。
+- 全量 Ingest 載入 `references/ingest-workflow.md`，以共用 scanner 的快照與
+  `scripts/ingest-coverage.py` 核對逐檔 hash、處置與頁面映射；不完整只回報部分完成。
 - Interactive/Batch Ingest 與 Code Archaeology 可依
   `references/source-discovery-workflow.md` 使用 Windows x64 tgrep wrapper 作候選 locator；
   形成 claim 前必須直接重讀目前 source，Query 維持 Wiki-first 且不使用 tgrep 或 CLI fallback。

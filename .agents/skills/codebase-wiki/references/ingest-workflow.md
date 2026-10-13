@@ -9,6 +9,14 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
 
 ## 兩種模式
 
+入口分成「單一路徑」與「全部專案」。單一路徑接受檔案、目錄或 glob，採下列
+Interactive／Batch 流程；「Ingest 全部／全量」預設目前專案，採 Batch 與全量完成性
+契約，不得將 `src/`、Git tracked files 或現有 Wiki 頁面當作全部來源。
+
+若使用者已選擇 `follow-up-actions.md` 的具體預覽，該選擇就是本次寫入授權。
+保留預覽範圍直接完成流程，不再次要求摘要／命名確認。只有範圍擴大、必要決策未答
+或來源實質改變使預覽失效時才重新詢問。
+
 ### Interactive 模式（Codex recipe: `請依照 Interactive Ingest 流程分析 {path}`）
 
 適用於日常維護、逐模組深入理解。
@@ -29,6 +37,7 @@ Ingest 是將 codebase 原始碼轉化為結構化 wiki 頁面的核心操作。
      - 使用的設計模式
      - 潛在問題或特殊邏輯
    - 等待使用者確認或補充指示
+     （已選擇查詢後續預覽的同一範圍，沿用既有確認）
 4. **寫入階段**：
    - 建立/更新 module 頁面（`wiki/modules/{name}.md`）
    - 建立新發現的 entity 頁面（`wiki/entities/`）
@@ -80,6 +89,30 @@ preflight，apply 使用第二次 ID。流程缺口另外標成 `analysis-gap`�
 `evidence-gap`（已查來源但沒有證據）或 `business-confirmation`（已知實作行為但政策／
 責任待確認）；前者阻擋匯出，後兩者保留已知行為。一次確認後的整批更新只追加一筆
 `ingest` log。
+
+### 全量完成性契約
+
+1. 唯讀執行 `python .agents/skills/codebase-wiki/scripts/ingest-coverage.py inventory
+   --root .`，以共用 scanner 建立安全來源快照。涵蓋程式、設定、schema、文件、測試、
+   CI／部署與工具，包含未追蹤、被 Git ignore 及巢狀 Repo 的安全來源。排除理由由
+   scanner 決定；`exports/megin/` 是交付產物，其他 `exports/` 仍可作來源。
+   全量 Ingest 固定納入測試，不受 NotebookLM 的 `analysis_include_tests = false`
+   限縮；巢狀 Repo 的 `exports/megin/` 亦排除。
+2. 在獲授權的 Batch 寫入階段保存 `wiki/ingest-coverage.json`。逐檔保留 path、sha256、
+   category、status、pages 與 reason；已讀且完成處理才標 `processed`，指向實際 Wiki
+   頁面或說明不需成頁的理由。無法讀取／尚未分析標 `blocked`，不得自行改成排除。
+   scanner 的排除檔案和目錄邊界另保留 `excluded` 與理由，不開啟敏感排除內容。
+3. 完成後執行 `ingest-coverage.py validate --root . --ledger wiki/ingest-coverage.json`。
+   必須使用原本請求的 scope／Repo 選擇重新掃描；不得拿清單內已縮小的範圍驗自己。
+   漏檔、重複、缺少處置／映射、受阻項目、來源或 Repo 快照改變，都回報部分完成。
+4. 通過覆蓋檢查後，仍須由 Agent 核對來源事實、頁面內容與 Wiki 品質，才可宣告全量
+   完成。驗證器只證明處置與快照完整，不證明語意理解。同步相關頁面、index，整批
+   追加一筆 `ingest` 日誌並回報覆蓋、排除與缺口。
+
+GitlabWorkSpace Group profile 使用 `--scope group`，預設所有合法直屬本機 Git Repo，
+不以 GitLab mapping 限縮；使用者明確指定清單時逐一使用 `--repo <name>`，inventory
+與 validate 必須傳相同選擇。Group 來源用 `Repo/path`，清單與 Wiki 放 Group root。
+原生單專案模式不得向父 Group 擴張。框架自身維護才使用 `--profile framework`。
 
 ---
 
@@ -161,4 +194,6 @@ Ingest is complete only when:
 - every added, renamed, deleted, or majorly updated page appears in
   `wiki/index.md`;
 - one append-only `ingest` entry records all affected pages;
+- full-project mode has a complete, unchanged scanner snapshot and validated
+  per-file disposition ledger; otherwise report partial completion;
 - frontmatter, stale-source, and Wiki lint checks pass without Critical issues.

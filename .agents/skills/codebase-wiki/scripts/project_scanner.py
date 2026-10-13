@@ -365,6 +365,9 @@ def exclusion_reason(relative: str, settings: Any, *, business_override: bool = 
         return "binary_or_generated"
     if lower == output or lower.startswith(output + "/"):
         return "export_output"
+    lowered_parts = PurePosixPath(lower).parts
+    if any(lowered_parts[i:i + 2] == ("exports", "megin") for i in range(len(lowered_parts) - 1)):
+        return "export_output"
     if lower == "wiki" or lower.startswith("wiki/"):
         return "wiki_knowledge_layer"
     if parts & DEFAULT_GENERATED_PARTS or parts & DEFAULT_DEPENDENCY_PARTS:

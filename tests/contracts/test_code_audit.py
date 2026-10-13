@@ -136,7 +136,7 @@ class CodeAuditContractTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["integrations"]["project_scanner"]["operations"],
-            ["code_audit", "notebooklm_export", "functional_exploration"],
+            ["code_audit", "notebooklm_export", "functional_exploration", "ingest"],
         )
 
         workflow = (SKILL_ROOT / "references" / "code-audit-workflow.md").read_text(

@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: "sha256:d1ee707edf42202600f5665512cf7653823695ec40dc45ca985c29102d296a11"
+source_digest: "sha256:bc88dfca3d411c7a806c4b8d5e004615208d46da15c4ab8ddb13a3e1331a969a"
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 tags: [synthesis, system-design, standards-aligned]
 status: active
 ---

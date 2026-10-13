@@ -7,7 +7,7 @@ has a separate artifact and authorization contract.
 | Intent | User signals | Default action |
 | --- | --- | --- |
 | Install / setup | install, setup, use this framework, Codex bundle | Read `README.md` and `Codex.md`; explain or copy the required entrypoint surfaces. |
-| Ingest | document, analyze, ingest, add to wiki, 文件化 | Read wiki state, inspect raw sources read-only, then create or update wiki pages. |
+| Ingest | document, analyze, ingest, add to wiki, 文件化、單一路徑、Ingest 全部 | Load `ingest-workflow.md`; single path uses Interactive/Batch; all-project uses scanner snapshot and `ingest-coverage.py` ledger validation before claiming completion. |
 | Query | explain, find, where, how, 查詢 | Read `wiki/index.md`, then relevant pages; inspect sources only if wiki evidence is insufficient, stale, or contradictory. |
 | Lint | Wiki health, stale, broken links, lint, Wiki 品質 | Audit Wiki quality and report findings before broad repairs. |
 | Functional exploration | 功能探索、功能盤點、完整功能、functional exploration | Load `functional-exploration-workflow.md`; inventory current source, trace capabilities and dependencies, reconcile every included file and entrypoint, report coverage and gaps; no writes unless explicitly requested. |
@@ -44,4 +44,9 @@ has a separate artifact and authorization contract.
   BA. 只有裸稱 `BA`、沒有 document/export context 時才要求澄清。
 - Interactive Ingest previews before confirmation; explicit Batch Ingest
   authorizes scoped Wiki writes.
-- Lint reports before repairs, and Query is read-only.
+- Lint reports before repairs, and Query is read-only until a concrete follow-up
+  preview is selected. Read `follow-up-actions.md`; that one selection authorizes
+  the bounded mapped update/save workflow and checks without a repeated gate.
+- Downstream profile-specific export routing takes precedence over the generic
+  NotebookLM export keyword. The standalone distribution supplies only generic
+  development specifications; downstream Megin delivery is a separate extension.

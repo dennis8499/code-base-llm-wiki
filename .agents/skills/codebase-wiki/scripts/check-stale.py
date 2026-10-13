@@ -44,6 +44,13 @@ DIGEST_EXCLUDED_PARTS = {
 }
 
 
+def digest_excluded(relative: pathlib.Path) -> bool:
+    parts = tuple(part.casefold() for part in relative.parts)
+    return bool(set(relative.parts) & DIGEST_EXCLUDED_PARTS) or any(
+        parts[i:i + 2] == ("exports", "megin") for i in range(len(parts) - 1)
+    )
+
+
 def parse_frontmatter(filepath: pathlib.Path) -> dict:
     """解析 markdown 檔案的 YAML frontmatter。"""
     return parse_frontmatter_text(filepath.read_text(encoding="utf-8"))
@@ -113,7 +120,7 @@ def _filesystem_source_files(
                 relative = path.resolve().relative_to(resolved_root)
             except ValueError:
                 continue
-            if set(relative.parts) & DIGEST_EXCLUDED_PARTS:
+            if digest_excluded(relative):
                 continue
             try:
                 if path.is_dir() and not path.is_symlink():
@@ -175,7 +182,7 @@ def _source_files(
             relative = path.resolve().relative_to(repo_root.resolve())
         except ValueError:
             continue
-        if set(relative.parts) & DIGEST_EXCLUDED_PARTS:
+        if digest_excluded(relative):
             continue
         files.append(path)
     return sorted(set(files), key=lambda item: item.resolve().as_posix())

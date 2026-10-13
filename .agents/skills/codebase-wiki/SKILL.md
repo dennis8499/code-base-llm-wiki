@@ -4,7 +4,7 @@ description: >
   Operate a persistent, wiki-first Markdown knowledge base; Functional exploration and Codebase audit are
   current-source-first exceptions. Use for framework install or maintenance,
   functional exploration, ingest, query, lint, ADR, synthesis, system analysis, business analysis,
-  system design, standalone development specifications, or code archaeology.
+  system design, standalone development specifications, NotebookLM export, or code archaeology.
 ---
 
 # Codebase LLM Wiki
@@ -29,7 +29,7 @@ Keep `SKILL.md` as the router. Load deeper files only when the task needs them:
 | Framework maintenance | `references/framework-maintenance.md` |
 | Intent routing | `references/intent-routing.md` |
 | NotebookLM Enterprise export | `references/notebooklm-export-workflow.md` |
-| Ingest sequence, page creation rules, dependency ordering | `references/ingest-workflow.md` |
+| Single-path/full-project Ingest and coverage completion | `references/ingest-workflow.md` and `scripts/ingest-coverage.py` |
 | Current-source functional inventory, coverage and gaps | `references/functional-exploration-workflow.md` |
 | Wiki-first query and citations | `references/query-workflow.md` |
 | Query/Lint follow-up action choices | `references/follow-up-actions.md` |
@@ -96,7 +96,9 @@ append one operation from `references/log-operations.md`.
 - interactive ingest: preview, then confirmation;
 - explicit batch ingest: scoped Wiki writes authorized;
 - functional exploration: current source first, zero writes by default; persist only on an explicit request;
-- query and default archaeology: read-only;
+- query and default archaeology: read-only; a selected concrete Query follow-up
+  preview authorizes its mapped workflow without duplicate confirmation
+  (`references/follow-up-actions.md`);
 - lint: report, then confirm repairs;
 - explicit Codebase audit: save a coverage-aware Synthesis report; requests for
   chat-only findings make no Wiki, index, or log changes. Audit reads current

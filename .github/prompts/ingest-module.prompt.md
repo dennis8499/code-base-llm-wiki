@@ -13,7 +13,8 @@ argument-hint: "模組路徑，例如：src/auth 或 app/services/user"
 需要定位大量 import/export 或 symbol 時，依 [Source Discovery with tgrep](../../.agents/skills/codebase-wiki/references/source-discovery-workflow.md)
 使用共用唯讀 wrapper；搜尋結果只作 locator，必須重新讀取目前 source。
 先探索並摘要職責、公開介面、相依性、特殊分支與風險，然後**等待確認**；
-確認前不得寫檔。確認後只修改授權的 Wiki surface，並完成 frontmatter、
+確認前不得寫檔。若來自已選定的 Query 後續具體預覽，沿用該次確認，
+同範圍不再次詢問。確認後只修改授權的 Wiki surface，並完成 frontmatter、
 `source_digest`、wikilinks、`wiki/index.md` 與單一 `wiki/log.md` ingest entry。
 
 Raw sources 全程唯讀。只有 workflow completion criterion 全部成立才回報完成。

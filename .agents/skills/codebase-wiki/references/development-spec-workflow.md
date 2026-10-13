@@ -10,7 +10,7 @@ preparation first. Existing analysis workflows retain their own contracts.
    explicit path. Read `wiki/index.md` and relevant evidence, then inspect that
    codebase's current source/config read-only to confirm behavior and interfaces.
    Source paths are relative to its root.
-2. Separate observed facts, requester decisions, technical choices for Megin,
+2. Separate observed facts, requester decisions, implementation choices,
    and unresolved business questions. Resolve discoverable facts from sources;
    do not ask the requester where code is or invent business rules from code.
 3. Ask the single highest-impact unresolved question each round. Offer concrete
@@ -26,7 +26,7 @@ preparation first. Existing analysis workflows retain their own contracts.
 ## Produce a small, standalone specification
 
 Use `assets/development-spec-template.md`. Keep exactly five primary sections:
-purpose/scope, target Repos, behavior/constraints, dependency contracts/confirmed
+purpose/scope, target project, behavior/constraints, dependency contracts/confirmed
 decisions, and SCN acceptance scenarios. Include normal, relevant boundary and
 failure outcomes. Include the actual interface shape only where it constrains
 implementation. Avoid standards matrices, repeated summaries and source dumps.
@@ -44,8 +44,19 @@ Preserve user notes when updating an existing document. Cite real sources and
 Wiki evidence with the shared frontmatter/provenance rules.
 
 Before marking ready, confirm all blocking decisions are answered and every
-SCN states input/precondition, action, and observable expected result. Run
-`scripts/validate-development-spec.py <file>`, then the shared frontmatter,
+SCN states input/precondition, action, and observable expected result. Keep
+`draft` while running `scripts/validate-development-spec.py <file>`; the JSON
+reports `structural_status`, `semantic_status` and the current `review_digest`.
+The Agent must separately read the five sections as if no Wiki/BA/SA/SD were
+available: can a developer identify tasks, permissions, exceptions, interface
+fields and all SCN expected results without inventing a decision? Inline any
+missing necessary rule. A script pass is not that semantic review.
+
+After that review passes, record `self_contained_review: passed` and
+`reviewed_spec_digest: <review_digest>` in frontmatter, then mark `ready` and
+rerun the validator. The digest binds the review to the body and spec_revision;
+edits invalidate it. Unresolved decisions or incomplete semantic review keep
+the document `draft`. Follow with the shared frontmatter,
 source, index and log checks. Synchronize `wiki/index.md` and append one
 `synthesis` log operation. The document is self-contained for handoff to any
 implementation workflow. Downstream tools establish their own review,

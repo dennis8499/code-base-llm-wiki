@@ -1,6 +1,6 @@
 # Wiki-First Query Workflow
 
-Query is read-only.
+Query is read-only until the user selects a concrete follow-up preview.
 
 Query uses only Wiki pages and repository source files. It must not connect to
 live databases or invoke database tools, MCP servers, apps, or CLI fallbacks.
@@ -21,10 +21,14 @@ Query does not use tgrep to discover or rank source files.
 
 The recommendation block suggests a separate operation; it does not write or
 enter another workflow automatically. Persistence remains an explicit operation.
+Once a previewed action is selected, follow `follow-up-actions.md` through its
+mapped workflow and checks. That selection is the write confirmation; do not
+ask the same Ingest or Synthesis question again within its scope.
 
 ## Completion Criterion
 
 The query is complete when every material conclusion is supported by a Wiki
 page or source path; contradictions and gaps are
 visible; eligible durable or corrective follow-ups are clearly offered; and no
-file state was changed.
+file state was changed during the Query phase. A selected follow-up is complete
+only after its separate authorized workflow and verification finish.

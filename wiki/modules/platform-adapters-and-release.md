@@ -33,9 +33,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:0d56a414ed9d0163d64b78975c45113313ec3e6ba09fae390eb69692e955e530"
+source_digest: "sha256:6e357a6c562cb64e5b37a544f0886c520365f325753d887f52645573deda63aa"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -49,7 +49,7 @@ status: active
 
 - 維持 Copilot prompts/hooks 與 Codex recipes/hooks 的共同 intent、
   authorization 與 completion contract。
-- 以 `capabilities.json` contract version 6 描述十三個 manifest-declared operations／intent groups；
+- 以 `capabilities.json` contract version 6 描述十四個 manifest-declared operations／intent groups；
   BA／SA／SD 與既有操作的
   名稱與 authorization policy 不因平台 adapter 改變。
 - 將 Copilot `.github/prompts/` 限定為 VS Code 本機 Agent 入口；其他 Copilot
@@ -77,7 +77,9 @@ status: active
 
 ## Evidence
 
-- `parity-check.py` 驗證 contract 6、十三個 operation mapping、Codebase audit 的四類檢查／Git history／
+- 查詢具體預覽的一次授權及全量 Ingest 逐檔完成性見 [[query-follow-ups-and-ingest]]；
+  Codex 與 Copilot 共用相同 reference，原生套件保留通用規格，Megin 專屬匯出由下游擴充。
+- `parity-check.py` 驗證 contract 6、十四個 operation mapping、Codebase audit 的四類檢查／Git history／
   validator contract、靜態邊界、prompt coupling、built-in
   prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
   root-resolved hooks，並驗證唯一 release workflow 的 trigger、權限、版本驗證、資產

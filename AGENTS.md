@@ -48,6 +48,12 @@ reference before acting.
 - Cite source paths with backticks, for example `src/auth/service.ts`.
 - Distinguish evidence-backed statements from inference or speculation.
 - Preserve user-authored Wiki content.
+- Query follow-ups use the concrete preview and single-selection authorization
+  in `references/follow-up-actions.md`. No selection or none means zero writes;
+  a selected bounded update/save operation carries its confirmation into Ingest
+  and Synthesis through verification, without duplicate gates.
+- Full Ingest uses the scanner-backed `ingest-coverage.py` snapshot and per-file
+  ledger; omissions, blockers or drift prevent a complete result.
 - Optional tgrep source discovery is limited to Ingest and Archaeology; use the
   Skill wrapper, re-read current sources before claims, and keep Query
   Wiki-first without CLI fallback.

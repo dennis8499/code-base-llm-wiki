@@ -109,7 +109,15 @@ Wiki-first query:
 Query 若發現長期有價值的分析、Wiki stale/gap 或品質問題，會依
 `.agents/skills/codebase-wiki/references/follow-up-actions.md` 顯示最多三個
 有原因的後續選項與「暫不處理」。選項只是建議；Query 不會自動寫入或
-切換工作流程。
+切換工作流程。每個選項列出已核對的來源證據、目標頁面與具體變更預覽；同時需要
+更新與保存時提供合併選項。選擇預覽後即授權該範圍，直接完成 Ingest／Synthesis 與
+驗證，不再重複確認。未選擇或暫不處理維持零寫入；只有範圍擴大、必要決策未答或
+來源實質改變使預覽失效時才再詢問。
+
+全量攝入可說「請使用 $codebase-wiki Ingest 全部專案」。以 `ingest-coverage.py`
+inventory 建立 scanner 快照，保存 `wiki/ingest-coverage.json`，完成後 validate
+逐檔 hash、處置與頁面／不需成頁理由。涵蓋 src 外、ignored、untracked 與巢狀 Repo
+安全來源；漏檔、受阻或快照改變只能回報部分完成。
 
 Lint:
 

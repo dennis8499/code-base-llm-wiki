@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 tags: [log]
 status: active
 ---
@@ -763,3 +763,8 @@ status: active
 
 - Normalize release sources to canonical Git LF and use fixed ZIP metadata without compressor dependencies; refresh source and coverage hashes without changing the reviewed functional contracts.
 - Affected pages: [[business-analysis]], [[cap-analysis-document-generation-sa]], [[cap-notebooklm-ba-functional-export-sa]], [[code-audit]], [[codebase-functional-coverage]], [[development-specification]], [[framework-introduction]], [[functional-exploration]], [[generate-analysis-document]], [[index]], [[installer-and-upgrade]], [[log]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]], [[system-architecture]], [[system-design]]
+
+## [2026-10-13] update | Complete query follow-ups, full Ingest and self-contained specifications
+
+- Add concrete Query update/save/combined previews with one bounded confirmation; preserve notes and finish mapped workflow checks. Add scanner-backed full-Ingest dispositions and source-drift checks, recorded self-contained specification review and portable downstream export checks. Synchronize platform instructions, v0.6.0 release metadata, reviewed source fingerprints and coverage identity. Megin delivery remains exclusive to the GitlabWorkSpace extension.
+- Affected pages: [[business-analysis]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[code-audit]], [[codebase-functional-coverage]], [[development-specification]], [[framework-introduction]], [[functional-exploration]], [[generate-analysis-document]], [[index]], [[installer-and-upgrade]], [[log]], [[notebooklm-export]], [[notebooklm-exporter]], [[overview]], [[platform-adapters-and-release]], [[query-follow-ups-and-ingest]], [[release-and-update]], [[system-analysis]], [[system-architecture]], [[system-design]], [[wiki-quality-and-provenance]]

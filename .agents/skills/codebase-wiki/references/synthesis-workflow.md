@@ -20,6 +20,11 @@ technical debt, risk review, architecture summary, or query findings under
 
 ## Writing Rules
 
+- A selected concrete Query follow-up preview already authorizes its target
+  and content. Do not repeat naming/content confirmation; ask only for an
+  unanswered necessary decision or a material change to that preview.
+- Search for an existing same-topic Synthesis and update it before creating a
+  duplicate. Preserve human notes and distinguish refreshed from new findings.
 - Do not paste a chat transcript directly. Convert it into a structured page:
   summary, detailed analysis, findings, recommendations, sources, and related
   pages.

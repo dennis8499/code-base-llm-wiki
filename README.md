@@ -353,6 +353,21 @@ Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
 在單一 Codebase 使用 `$codebase-wiki` 描述新功能，會進入獨立的 `development_spec` 流程：先查來源、逐題確認必要決策，再產生五段、可交接的規格。未回答的必要問題保持 draft；ready 代表資訊完整，不會替任何下游流程核准或建立 Issue。BA／SA／SD 保留原有用途。
 
+### 查詢後續處理與全量 Ingest（0.6.0）
+
+查詢先唯讀回答，再視內容提出最多三項具體建議及「暫不處理」。建議列出原因、核對
+來源、目標頁面與變更預覽；選擇一次後完成更新 Wiki、保存 Synthesis 或合併操作及
+驗證。同範圍不再重複 Ingest／Synthesis 確認；未選擇維持零寫入。
+
+可指定「Ingest 單一路徑」或「Ingest 全部專案」。全量流程使用共用 scanner 建立快照，
+保存 `wiki/ingest-coverage.json`，以 `ingest-coverage.py validate` 核對逐檔 hash、
+處置與頁面／不需成頁理由；包含 src 外、ignored、untracked 與巢狀 Repo 安全來源。
+缺漏、受阻或來源漂移只能回報部分完成。
+
+通用開發規格的 ready 現在要求結構檢查，以及綁定正文與版次的 Agent 自足性檢查
+紀錄。舊 ready 規格須重新檢查後補上 `self_contained_review`、`reviewed_spec_digest`。
+結構成功不能取代語意審查。Megin 專屬匯出僅由 GitlabWorkSpace 擴充提供。
+
 ### 功能探索（0.5.0）
 
 請求「完整功能探索」會先查目前原始碼，回報每項功能的入口、流程、依賴、來源與覆蓋缺口；預設不寫任何文件。只有明確要求保存才產生授權文件。一般 Query 仍優先查 Wiki。詳見 `.agents/skills/codebase-wiki/references/functional-exploration-workflow.md`。

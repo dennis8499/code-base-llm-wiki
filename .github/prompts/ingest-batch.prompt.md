@@ -8,6 +8,9 @@ argument-hint: "目標路徑，例如：src/、services/ 或 packages/core"
 ---
 
 對 `${input:targetPath}` 執行 **Batch Ingest**。
+若指定「全部／全量專案」，scope 為目前專案 root，執行 shared workflow 的
+`ingest-coverage.py` inventory／validate，保存逐檔處置清單。漏檔、受阻或來源漂移
+回報部分完成，不將 `src/` 或 tracked files 當作全專案。
 
 完整載入並遵守 [Ingest workflow](../../.agents/skills/codebase-wiki/references/ingest-workflow.md)。
 Windows x64 可依 [Source Discovery with tgrep](../../.agents/skills/codebase-wiki/references/source-discovery-workflow.md)

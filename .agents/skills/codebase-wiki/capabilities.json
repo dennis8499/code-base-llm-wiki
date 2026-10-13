@@ -24,7 +24,13 @@
     "ingest": {
       "writes_by_default": false,
       "requires_confirmation": true,
-      "authorization_policy": "interactive_preview_or_explicit_batch"
+      "authorization_policy": "interactive_preview_or_explicit_batch",
+      "modes": [
+        "single-path",
+        "all-project"
+      ],
+      "coverage_validator": "scripts/ingest-coverage.py",
+      "coverage_ledger": "wiki/ingest-coverage.json"
     },
     "query": {
       "writes_by_default": false,
@@ -148,7 +154,12 @@
     "development_spec": {
       "writes_by_default": true,
       "requires_confirmation": false,
-      "authorization_policy": "explicit_request"
+      "authorization_policy": "explicit_request",
+      "semantic_review": "recorded_against_body_and_spec_revision",
+      "review_fields": [
+        "self_contained_review",
+        "reviewed_spec_digest"
+      ]
     },
     "functional_exploration": {
       "writes_by_default": false,
@@ -290,7 +301,8 @@
       "operations": [
         "code_audit",
         "notebooklm_export",
-        "functional_exploration"
+        "functional_exploration",
+        "ingest"
       ],
       "wrapper": ".agents/skills/codebase-wiki/scripts/scan-project.py",
       "module": ".agents/skills/codebase-wiki/scripts/project_scanner.py",
@@ -299,5 +311,18 @@
       "snapshot": "sha256",
       "entrypoint_candidates": true
     }
+  },
+  "query_follow_up": {
+    "reference": "references/follow-up-actions.md",
+    "actions": [
+      "reingest",
+      "save-synthesis",
+      "refresh-and-save",
+      "lint",
+      "none"
+    ],
+    "authorization": "one_selection_of_concrete_preview",
+    "writes_before_selection": false,
+    "repeat_confirmation": false
   }
 }

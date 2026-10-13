@@ -16,4 +16,7 @@ argument-hint: "你想問的 codebase 問題，例如：登入流程在哪裡實
 contradiction 與 gap。
 
 只有 shared contract 判定 eligible 時才提供最多三個有理由的後續選項。
-本 Query 零寫入、零自動切換工作流程。
+每個建議列出來源證據、目標頁面與具體變更預覽，保留「暫不處理」。
+本 Query 零寫入、零自動切換工作流程；未選擇或暫不處理時維持零寫入。
+選擇已預覽動作後，依 shared contract 執行更新、保存或合併操作及驗證；
+同範圍沿用這一次確認，不重複要求 Interactive Ingest／Synthesis 確認。
