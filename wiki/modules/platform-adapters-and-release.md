@@ -1,10 +1,14 @@
 ---
 title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供 source-first Codebase 靜態健檢及受限 tgrep 來源探索
+summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供共用 Concise 輸出規則、source-first Codebase 靜態健檢及受限 tgrep 來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
+  - .agents/skills/codebase-wiki/SKILL.md
+  - .agents/skills/codebase-wiki/assets/target-agents-block.md
+  - AGENTS.md
+  - .github/copilot-instructions.md
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/parity-check.py
   - tests/contracts/test_contracts.py
@@ -33,14 +37,23 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:6e357a6c562cb64e5b37a544f0886c520365f325753d887f52645573deda63aa"
+source_digest: "sha256:e267d820df97841736cee33a57a002cb1ffb8d7a7505383489ba6ff24061eee3"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-13
+last_updated: 2026-10-15
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
 
 # 平台 Adapter 與 GitHub Release
+
+## 共用輸出風格
+
+Codex、Copilot 與安裝後入口共用 `.agents/skills/codebase-wiki/SKILL.md` 的
+Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給答案或目前結果，省略開場、
+逐步旁白及收尾重述；簡單問答預設一至三句，要求詳解時完整說明。
+
+正式文件在既有摘要或首個敘述段落交代重點，不限制句數。必要章節、識別碼、問題、
+覆蓋缺口、限制、錯誤、失敗測試輸出及原始證據完整保留。既有授權與工作流契約維持原規則。
 
 ## 職責
 

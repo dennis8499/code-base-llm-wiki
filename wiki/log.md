@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-13
+last_updated: 2026-10-15
 tags: [log]
 status: active
 ---
@@ -768,3 +768,9 @@ status: active
 
 - Add concrete Query update/save/combined previews with one bounded confirmation; preserve notes and finish mapped workflow checks. Add scanner-backed full-Ingest dispositions and source-drift checks, recorded self-contained specification review and portable downstream export checks. Synchronize platform instructions, v0.6.0 release metadata, reviewed source fingerprints and coverage identity. Megin delivery remains exclusive to the GitlabWorkSpace extension.
 - Affected pages: [[business-analysis]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[code-audit]], [[codebase-functional-coverage]], [[development-specification]], [[framework-introduction]], [[functional-exploration]], [[generate-analysis-document]], [[index]], [[installer-and-upgrade]], [[log]], [[notebooklm-export]], [[notebooklm-exporter]], [[overview]], [[platform-adapters-and-release]], [[query-follow-ups-and-ingest]], [[release-and-update]], [[system-analysis]], [[system-architecture]], [[system-design]], [[wiki-quality-and-provenance]]
+
+## [2026-10-15] update | 統一 Concise 輸出風格
+
+- Codex、Copilot 與安裝後入口共用結果先行的輸出規則，涵蓋對話、進度及新增或更新文件；必要章節、證據、缺口及錯誤資訊完整保留。
+- 同步平台說明、索引、已核對來源摘要及完整性清單，保留既有人工內容與歷史紀錄。
+- Affected pages: [[code-audit]], [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[installer-and-upgrade]], [[log]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]]

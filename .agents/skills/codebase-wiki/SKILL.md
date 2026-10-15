@@ -14,6 +14,22 @@ knowledge workflows use the Wiki first; Codebase audit is the explicit
 current-source-first exception and consults Wiki only when a business-rule
 context gap needs clarification.
 
+## Output style
+
+Apply [Claude Code Concise](https://code.claude.com/docs/en/output-styles#concise)
+to progress messages, answers, and newly created or updated human-readable
+artifacts on both Codex and Copilot:
+
+- Start with the answer or current result. Omit preambles, step-by-step
+  narration, and closing recaps.
+- Answer simple questions in one to three sentences. Provide full explanations
+  when requested; formal documents have no sentence limit.
+- Put the main point in the document's existing summary or first prose paragraph,
+  retaining required frontmatter, sections, identifiers, and evidence.
+- Keep all findings, coverage gaps, limitations, and information needed to act.
+  Preserve complete error reports, failing test output, security warnings, and
+  destructive-action confirmations; keep raw evidence verbatim.
+
 ## Route
 
 Classify the request with `references/intent-routing.md`, then load the matching

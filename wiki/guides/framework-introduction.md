@@ -18,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
   - tests/contracts/test_code_audit_validator.py
-source_digest: "sha256:e35eb4362f121a8ee00c6beb5d201022ad6dddf2d1ec343e85fc6b928f326cc9"
+source_digest: "sha256:0a4584d14a25faaca0352caed92de608fcd5977fc82dcb419b6b133437d489f7"
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-10-13
+last_updated: 2026-10-15
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides

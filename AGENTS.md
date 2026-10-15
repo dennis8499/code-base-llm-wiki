@@ -30,6 +30,9 @@ Classify the branch with
 `.agents/skills/codebase-wiki/references/intent-routing.md` and load its exact
 reference before acting.
 
+Apply the [shared output style](.agents/skills/codebase-wiki/SKILL.md#output-style)
+to progress messages, answers, and newly created or updated human-readable artifacts.
+
 ## Durable Invariants
 
 - Raw sources remain read-only during Wiki tasks.

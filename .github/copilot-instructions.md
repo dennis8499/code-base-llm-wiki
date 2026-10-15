@@ -14,6 +14,9 @@ workflow、schema、template 與 hook logic 的共同來源。
 使用 `.agents/skills/codebase-wiki/SKILL.md` 路由，並在行動前完整載入
 `references/intent-routing.md` 選出的 workflow reference。
 
+對話、進度與新增或更新文件一律套用
+[共用輸出風格](../.agents/skills/codebase-wiki/SKILL.md#output-style)。
+
 ## 不變量
 
 - Wiki-first 適用 Query 與一般 Wiki 知識工作流：先讀 index、相關頁面，最後才回溯 evidence gap 的
