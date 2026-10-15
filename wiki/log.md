@@ -781,3 +781,10 @@ status: active
 - 將十四個意圖的路由集中至單一索引，精簡 Skill 入口並明列來源順序、授權與完成條件；補充整合情境，維持原 capability 及副作用契約。
 - 同步平台知識、索引、受影響來源摘要及逐檔 coverage；保留既有人工內容與歷史紀錄。
 - Affected pages: [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[index]], [[log]], [[code-audit]]
+
+
+## [2026-10-15] update | Release Skills patch v0.6.1
+
+- 發布 0.6.1，納入雙平台 Concise 輸出、集中式路由及完成條件；同步版本文件、來源摘要與 coverage。
+- Host runtime 保留 runtime-unverified。
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[log]], [[overview]], [[release-and-update]]

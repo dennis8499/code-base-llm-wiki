@@ -21,7 +21,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: "sha256:7b3a384dd64c6361303eb8cf052d6ecf59ca75f71da21e883d9904da860f92f1"
+source_digest: "sha256:1a03ba8a152815e8f2cb0bb35cf4860c3dac3c01c9df181921d01a0dc16841a1"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-10-15
 tags: [guide, release, version, extension]
@@ -34,6 +34,10 @@ notebooklm_role: traceability
 
 > 本指南給框架維護者與未來 Extension 作者，說明版號來源、GitHub Release
 > 資產與更新 manifest。相關安裝背景請先閱讀 [[framework-introduction]]。
+
+## 0.6.1 Skills 修正版
+
+本版同步雙平台的 Concise 輸出、集中式意圖路由與逐分支完成條件，重新建置 Codex／Copilot 安裝包及更新資訊。產品版號為 0.6.1，installer contract 維持 v6。Host runtime 保留 `runtime-unverified`。
 
 ## 版本規則
 
