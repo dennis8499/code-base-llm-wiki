@@ -1,11 +1,12 @@
 ---
 title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供共用 Concise 輸出規則、source-first Codebase 靜態健檢及受限 tgrep 來源探索
+summary: 以 contract v6、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供共用 Concise 輸出、source-first 靜態健檢及受限來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
   - .agents/skills/codebase-wiki/SKILL.md
+  - .agents/skills/codebase-wiki/references/intent-routing.md
   - .agents/skills/codebase-wiki/assets/target-agents-block.md
   - AGENTS.md
   - .github/copilot-instructions.md
@@ -37,7 +38,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:e267d820df97841736cee33a57a002cb1ffb8d7a7505383489ba6ff24061eee3"
+source_digest: "sha256:29b0f5cd61db91495346f96e5e79429e0fa1f785333be0c20bb6dccc3fea9ef0"
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-15
 tags: [module, adapters, validation, release, parity]
@@ -45,6 +46,16 @@ status: active
 ---
 
 # 平台 Adapter 與 GitHub Release
+
+## Skill 分流與完成條件
+
+Skill 入口保留共用邊界、輸出及完成條件；十四個意圖的 workflow 與授權路由統一由
+`references/intent-routing.md` 維護，只載入目前分支的參考文件。Query 先查 Wiki；
+功能探索、Codebase audit、開發規格與 NotebookLM 依各自 source-first 流程讀取目前來源。
+明確的合併／上版分支審查保持其原流程，不轉成 Wiki 健檢。
+
+查詢後的具體預覽只需一次範圍授權；完整 Ingest／探索／audit 保留逐檔及入口覆蓋、
+未讀項與漂移缺口。精簡入口不改變 capability schema、靜態審查邊界或 index/log 耦合。
 
 ## 共用輸出風格
 

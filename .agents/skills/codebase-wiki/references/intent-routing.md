@@ -1,52 +1,55 @@
 # Intent Routing
 
-Use this table as the source of truth for the fourteen user-facing intent groups.
-`capabilities.json` maps each group to one machine operation. NotebookLM export
-has a separate artifact and authorization contract.
+This is the single workflow index for fourteen user-facing intent groups.
+`capabilities.json` maps them to machine operations and authorization policies.
+Interpret signals in the requested Wiki/framework context; the explicit deliverable
+takes precedence over generic words such as "explain", "analyze" or "review".
 
-| Intent | User signals | Default action |
+| Intent | User signals | Read and perform |
 | --- | --- | --- |
-| Install / setup | install, setup, use this framework, Codex bundle | Read `README.md` and `Codex.md`; explain or copy the required entrypoint surfaces. |
-| Ingest | document, analyze, ingest, add to wiki, 文件化、單一路徑、Ingest 全部 | Load `ingest-workflow.md`; single path uses Interactive/Batch; all-project uses scanner snapshot and `ingest-coverage.py` ledger validation before claiming completion. |
-| Query | explain, find, where, how, 查詢 | Read `wiki/index.md`, then relevant pages; inspect sources only if wiki evidence is insufficient, stale, or contradictory. |
-| Lint | Wiki health, stale, broken links, lint, Wiki 品質 | Audit Wiki quality and report findings before broad repairs. |
-| Functional exploration | 功能探索、功能盤點、完整功能、functional exploration | Load `functional-exploration-workflow.md`; inventory current source, trace capabilities and dependencies, reconcile every included file and entrypoint, report coverage and gaps; no writes unless explicitly requested. |
-| Codebase audit | code health, codebase audit, bugs, logic review, 程式健檢, BUG 檢查 | Read `code-audit-workflow.md`; start from the current Codebase tree and registered entrypoints, trace reachable call paths, consult Wiki only for business-rule context gaps, then inspect transactions, configuration references, logic/state contracts, and targeted Git history statically before saving a coverage-aware report. Explicit 「只回報」 requests stay read-only. |
-| ADR | decision, ADR, architecture choice | Create or update a record under `wiki/decisions/` with ADR frontmatter. |
-| Synthesis | save analysis, synthesis | Persist durable cross-cutting analysis under `wiki/synthesis/`. |
-| Business Analysis / BA | BA文件, 業務分析文件, business analysis document | Generate a standard-aligned Markdown BA document under `wiki/synthesis/` from wiki-first evidence. |
-| System Analysis / SA | SA文件, 系統分析, system analysis, SAD | Generate a solution-neutral, standard-aligned Markdown SA document under `wiki/synthesis/`. |
-| Development specification | 開發規格、功能敘述、可交接的實作需求 | Load `development-spec-workflow.md`; inspect the current codebase, ask blocking questions, produce a standalone five-section draft or ready specification. |
-| System Design / SD | SD文件, 系統設計, system design, SDD | Generate a standard-aligned Markdown SD document under `wiki/synthesis/` with architecture views and decisions. |
-| NotebookLM export | NotebookLM, export, source pack, upload plan, BA／SA 匯出 | Scan the complete safe text scope under the explicit project root first, preview capabilities and BA／SA gaps, use Wiki only as supplemental context, obtain one confirmation, update the complete confirmed knowledge set, then run readiness and generate `.notebooklm/` automatically. |
-| Archaeology | why, history, legacy, git, 考古 | Trace concrete entrypoints, call paths, and non-destructive git history; separate evidence from inference. |
+| Install / setup | install or upgrade this Wiki framework | [install-workflow.md](install-workflow.md); inspect `README.md` and `Codex.md`; dry-run before apply. |
+| Ingest | 文件化、加入 Wiki、單一路徑、Ingest 全部 | [ingest-workflow.md](ingest-workflow.md); interactive preview/confirmation or explicit scoped Batch authorization. Full-project completion requires scanner snapshot and `ingest-coverage.py` ledger validation. |
+| Query | 查詢、解釋 Wiki 中的功能、where/how | [query-workflow.md](query-workflow.md); start with `wiki/index.md` and relevant pages, inspect sources only for missing, stale or contradictory evidence. Read-only until a concrete follow-up is selected. |
+| Lint | Wiki health, stale links, Wiki 品質 | [lint-checklist.md](lint-checklist.md); report findings, then confirm repairs. |
+| Functional exploration | 功能探索、盤點目前完整功能 | [functional-exploration-workflow.md](functional-exploration-workflow.md); inventory current source, reconcile every included file/entrypoint, report capabilities, dependencies, coverage and gaps. Zero writes unless persistence is requested. |
+| Codebase audit | 程式健檢、Codebase audit、目前程式的邏輯缺陷 | [code-audit-workflow.md](code-audit-workflow.md); rebuild the current source/entrypoint inventory, trace reachable paths, consult Wiki only for business-rule gaps, then check transactions, config, logic/state and targeted Git history statically. Save a coverage-aware report unless chat-only is requested. |
+| ADR | record an architecture decision, ADR | [adr-workflow.md](adr-workflow.md); explicit creation authorizes an ADR under `wiki/decisions/`. |
+| Synthesis | save this cross-cutting analysis | [synthesis-workflow.md](synthesis-workflow.md); explicit creation authorizes durable output under `wiki/synthesis/`. |
+| Business Analysis / BA | BA文件、業務分析文件 | [business-analysis-workflow.md](business-analysis-workflow.md); produce a standard-aligned BA document from Wiki-first evidence. |
+| System Analysis / SA | SA文件、系統分析、SAD | [system-analysis-workflow.md](system-analysis-workflow.md); produce solution-neutral requirements and verification needs from Wiki-first evidence. |
+| Development specification | 開發規格、可交接的功能敘述 | [development-spec-workflow.md](development-spec-workflow.md); inspect current code, resolve blocking questions, produce a standalone five-section draft/ready specification. Explicit creation authorizes output. |
+| System Design / SD | SD文件、系統設計、SDD | [system-design-workflow.md](system-design-workflow.md); produce standard-aligned architecture views, decisions and quality strategy from Wiki-first evidence. |
+| NotebookLM export | NotebookLM、source pack、BA／SA 匯出 | [notebooklm-export-workflow.md](notebooklm-export-workflow.md); scan the full safe text scope of the explicit project first, preview capabilities/gaps, obtain one confirmation, update the confirmed knowledge set, then run readiness and generate `.notebooklm/`. Wiki supplements current source. |
+| Archaeology | why this code changed, legacy, Git 考古 | [code-archaeology-workflow.md](code-archaeology-workflow.md); trace entrypoints/calls and non-destructive Git history, separating evidence from inference. Read-only by default. |
 
-## Notes
+## Resolve overlaps
 
-- Framework maintenance is a scope overlay on the selected intent, not an
-  additional machine operation. Load `framework-maintenance.md` whenever the
-  target is this framework repository.
-- A Codebase audit starts with the current source tree and entrypoint
-  registrations, regardless of Wiki coverage. It checks current code paths for
-  concrete defects, technical risks needing framework/deployment evidence, and
-  business questions needing policy confirmation. It consults relevant Wiki
-  pages only when the source trace exposes a business-rule context gap, then
-  may use targeted read-only Git history after current source review. It does
-  not run the target application, tests, or automatic fixes. The explicit audit
-  request authorizes a Wiki report unless the user asks for a chat-only report.
-- Interactive Ingest and Batch Ingest are ingest modes, not separate intents.
-- Existing `type: guide` pages remain readable legacy Wiki data. This framework
-  no longer routes requests to a Guide creation operation or supplies a Guide
-  workflow, template, or prompt.
-- Explicit creation requests authorize ADR, Synthesis, BA, SA, and SD output.
-- `BA文件` routes to Business Analysis. Any request containing `NotebookLM`,
-  `export`, or `source pack` routes to NotebookLM export even if it also says
-  BA. 只有裸稱 `BA`、沒有 document/export context 時才要求澄清。
-- Interactive Ingest previews before confirmation; explicit Batch Ingest
-  authorizes scoped Wiki writes.
-- Lint reports before repairs, and Query is read-only until a concrete follow-up
-  preview is selected. Read `follow-up-actions.md`; that one selection authorizes
-  the bounded mapped update/save workflow and checks without a repeated gate.
-- Downstream profile-specific export routing takes precedence over the generic
-  NotebookLM export keyword. The standalone distribution supplies only generic
-  development specifications; downstream Megin delivery is a separate extension.
+- Framework maintenance overlays the selected intent. When changing this framework,
+  also load [framework-maintenance.md](framework-maintenance.md).
+- NotebookLM/export/source-pack context takes precedence over BA/SA document wording.
+  A downstream profile-specific export takes precedence over generic NotebookLM routing.
+  只有裸稱 `BA`、沒有 document/export context 時才要求澄清。
+- Explicit creation authorizes ADR, Synthesis, BA, SA, SD and development-spec output.
+  Standalone specifications stay independent of implementation/delivery tooling;
+  downstream Megin delivery is a separate extension.
+- Interactive and Batch are Ingest modes. Query/Lint follow-up choices use
+  [follow-up-actions.md](follow-up-actions.md): a selected concrete preview authorizes
+  its bounded update/save and checks once; no selection or none means zero writes.
+- A branch-to-branch merge/release review is distinct from a static current-source
+  Codebase audit. Follow the requested review workflow rather than converting it into Wiki work.
+- Existing `type: guide` pages remain readable legacy data; there is no Guide creation operation.
+- Audit does not execute the target application/tests or automatic fixes. Missing or
+  incomplete Wiki coverage never narrows its current-source inventory.
+
+## Integrated routing examples
+
+- **「說明退款流程」** → Query reads index/pages and cites evidence. Missing/stale facts
+  may justify source reads; an offered save/update stays a preview until selected.
+- **「盤點目前全部功能，只在聊天回答」** → Functional exploration scans current source,
+  accounts for every included file/entrypoint and reports gaps; Wiki/index/log remain unchanged.
+- **「程式健檢，只回報」** → Audit traces current entrypoints and targeted history,
+  separates `BUG-*` / `RISK-*` / `BIZ-*`, reports coverage and makes no Wiki writes.
+- **「把 BA 匯出給 NotebookLM」** → Export scans current source before the one confirmation;
+  it then finishes confirmed knowledge updates, readiness and the source pack as one workflow.
+- **「整理成可交接的開發規格」** → Development specification resolves blocking behavior
+  and verifies a self-contained draft/ready document; it does not start implementation.

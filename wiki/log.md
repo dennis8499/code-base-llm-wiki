@@ -774,3 +774,10 @@ status: active
 - Codex、Copilot 與安裝後入口共用結果先行的輸出規則，涵蓋對話、進度及新增或更新文件；必要章節、證據、缺口及錯誤資訊完整保留。
 - 同步平台說明、索引、已核對來源摘要及完整性清單，保留既有人工內容與歷史紀錄。
 - Affected pages: [[code-audit]], [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[installer-and-upgrade]], [[log]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]]
+
+
+## [2026-10-15] update | Skill 分流、載入與完成條件優化
+
+- 將十四個意圖的路由集中至單一索引，精簡 Skill 入口並明列來源順序、授權與完成條件；補充整合情境，維持原 capability 及副作用契約。
+- 同步平台知識、索引、受影響來源摘要及逐檔 coverage；保留既有人工內容與歷史紀錄。
+- Affected pages: [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[index]], [[log]], [[code-audit]]

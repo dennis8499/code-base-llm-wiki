@@ -72,7 +72,7 @@ notebooklm_role: exclude
 | [[functional-exploration]] | ??????????????????????? |
 | [[installer-and-upgrade]] | Installer v6 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
 | [[notebooklm-exporter]] | 以全專案 scanner、schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack |
-| [[platform-adapters-and-release]] | 以 contract v6、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供共用 Concise 輸出規則、source-first Codebase 靜態健檢及受限 tgrep 來源探索 |
+| [[platform-adapters-and-release]] | 以 contract v6、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供共用 Concise 輸出、source-first 靜態健檢及受限來源探索 |
 | [[platform-hooks-and-guards]] | 共用 canonical hooks 以 Git-root 定位與三種 guard modes 維持跨 cwd 寫入邊界 |
 | [[query-follow-ups-and-ingest]] | 查詢先提供具體預覽，選擇一次後完成更新或保存；全量 Ingest 用安全快照與逐檔處置驗證完成性 |
 | [[wiki-quality-and-provenance]] | 以安全來源解析、內容摘要、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |

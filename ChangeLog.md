@@ -21,6 +21,7 @@
 
 ### Changed
 
+- 精簡 Skill 入口，將十四個意圖的分流集中至單一索引，明列 source-first 例外、一次授權與逐分支完成條件；新增整合情境，保留既有 capability、驗證及副作用契約。
 - Codex、Copilot 與安裝後入口共用 Concise 輸出規則，涵蓋對話、進度及新增或更新文件；保留完整證據、必要結構及錯誤資訊。
 - 開發規格改為依目前單一 Codebase 寫出來源相對、可交接給任意實作流程的文件，不再要求 Group、Repo 清單或 Megin。
 - 將原生開發規格入口、範本與驗證器限定為單一 Codebase；GitlabWorkSpace 的 Group 清冊、共用 Wiki 與交接流程改由獨立覆層提供。
