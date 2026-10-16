@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v6、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供共用 Concise 輸出、source-first 靜態健檢及受限來源探索
+summary: 以 contract v6、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -44,7 +44,7 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:3629720525c8e7dabff59c855a4b29d2da3c3ff6f2ded79e2103126a7cc01e13"
+source_digest: "sha256:39b1a2579123f23062e0c990b0b9a8cf824848cce448ae0fee3515c708604902"
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-16
 tags: [module, adapters, validation, release, parity]
@@ -64,6 +64,10 @@ Skill 入口保留共用邊界、輸出及完成條件；十四個意圖的 work
 未讀項與漂移缺口。精簡入口不改變 capability schema、靜態審查邊界或 index/log 耦合。
 
 ## 共用輸出風格
+
+目前選定 Skills root 已安裝 `output-style/SKILL.md` 時，先載入 `$output-style`，
+由它依任務或使用者明確選擇的模式取代以下通用呈現。Wiki 的必要文件結構、
+來源證據、授權及完成條件維持原契約；獨立安裝沒有該 Skill 時才使用既有 fallback。
 
 Codex、Copilot 與安裝後入口共用 `.agents/skills/codebase-wiki/SKILL.md` 的
 Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給答案或目前結果，省略開場、

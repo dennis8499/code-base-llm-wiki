@@ -26,6 +26,7 @@
 
 ### Changed
 
+- 目前 Skills root 已安裝 `output-style` 時，優先依其自動或明確指定模式呈現進度、回答與文件；獨立安裝缺少該 Skill 時保留既有 Concise 輸出，Wiki 的必要結構、來源證據與授權流程維持原契約。
 - 正式發版改用 PR／main 預先驗證與固定產物提升；相同提交、完整矩陣與近期可信證據才可重用，缺漏或失效時重跑全部 gates，發布支援同內容附件的安全重試。
 - 新增 `tools/validate_release.py` 聚合 deterministic checks，frontmatter／stale／log 與 lint 共用同次結果；來源日期、列舉及 SHA 使用操作內快取，保留各關卡診斷、耗時、退出碼與語意審查要求。
 - 下一版準備使用 `tools/prepare_release.py`，只對已完整分析候選提交的 VERSION／README metadata 刷新既有證據，拒絕未分析來源及人工 Wiki 變更；支援內容精確且可重試的 metadata 更新，不宣稱新分析。

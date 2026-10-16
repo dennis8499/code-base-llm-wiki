@@ -797,3 +797,16 @@ status: active
 - 同步框架來源摘要、逐檔 coverage、索引及維護文件，保留 host runtime-unverified。
 - 下一版 metadata 準備只重用已完整分析候選提交，僅刷新 VERSION／README 對應證據；拒絕未分析來源與人工 Wiki 變更，保留可重試的精確產物與既有 disposition。
 - Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[installer-and-upgrade]], [[log]], [[notebooklm-export]], [[notebooklm-exporter]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]], [[system-architecture]], [[wiki-quality-and-provenance]]
+
+
+## [2026-10-16] update | 可選 Output Style 與原有輸出的相容路由
+
+- 已安裝 Output Style 時，以其自動或使用者指定的模式取代通用呈現；缺少該 Skill 時保留原 Concise，獨立套件不新增必要相依。
+- 保留 Wiki 必要欄位、來源證據、缺口、授權與完成條件；同步框架說明、平台知識、索引與已核對來源摘要。
+- Affected pages: [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[index]], [[log]]
+
+
+## [2026-10-16] update | Refresh Output Style and local version evidence
+
+- 核對可選 Output Style 優先、原 Concise fallback 與正式欄位保留；版本更新為本機候選 0.6.2。更新四筆已知來源（Skill 入口、README、ChangeLog、VERSION）的 coverage hash，以及引用這些來源的頁面摘要；未新增功能覆蓋或宣稱正式發布。
+- Affected pages: [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[framework-introduction]], [[release-and-update]], [[code-audit]], [[overview]]

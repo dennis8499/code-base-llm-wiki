@@ -15,7 +15,7 @@ Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent
 可交叉引用的 Markdown 持續累積。
 
 對話、進度及新增或更新文件採用
-[Concise 輸出規則](.agents/skills/codebase-wiki/SKILL.md#output-style)：結果先行、刪除贅述，保留必要章節、證據、缺口及錯誤資訊；使用者要求詳解時完整說明。
+[輸出風格路由](.agents/skills/codebase-wiki/SKILL.md#output-style)：目前 Skills root 已安裝 `output-style` 時，由它依任務或使用者指定選擇呈現；未安裝則保留原 Concise 規則。兩者均保留必要章節、證據、缺口及錯誤資訊。
 
 ---
 
