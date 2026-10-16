@@ -21,6 +21,12 @@ sources:
   - tests/fixtures/code-audit/history/README.md
   - tests/fixtures/code-audit/history/expected-findings.md
   - tools/release.py
+  - tools/validate_release.py
+  - tools/prepare_release.py
+  - tests/release/test_prepare_release.py
+  - scripts/release_ci.py
+  - scripts/test_release_ci.py
+  - tests/release/test_validation.py
   - docs/operations/releases/README.md
   - docs/operations/validation/README.md
   - LICENSE
@@ -38,9 +44,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:a66717f562f8691faa7fac5396afbc4df3bfd92b51b8c76f5da9e5c7f4b7c349"
+source_digest: "sha256:3629720525c8e7dabff59c855a4b29d2da3c3ff6f2ded79e2103126a7cc01e13"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-15
+last_updated: 2026-10-16
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -92,8 +98,8 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
   指定只回報時維持零寫入，持久化後通過 `validate-code-audit.py`。
 - Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
-- 以根 `VERSION` 作為產品版號唯一來源；`.github/workflows/release.yml` 只在
-  `v*.*.*` tag push 時觸發，先以 Python 3.11／3.14 完成 validation，再明列
+- 以根 `VERSION` 作為產品版號唯一來源；`.github/workflows/release.yml` 在 PR、main、手動及 reusable
+  呼叫時以 Python 3.11／3.14 完成 validation；只有版本 tag push 可發布，明列
   `codebase-llm-wiki-codex.zip`、`codebase-llm-wiki-copilot.zip`、
   `update-manifest.json` 與 `SHA256SUMS` 四個 assets 建立 GitHub Release。
 - 本 Repo 採用 MIT License；workflow 使用 job-level `contents: write` 發布，installer
@@ -122,12 +128,20 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
   Git 狀態、情境 assertions 與 deterministic outputs；受修復影響的情境皆捨棄首輪
   結果後重新取得完整 3/3，證據只留在隔離且不提交的本機驗收目錄。
 - 本機驗證以 Python 3.11 與 3.14 執行 unit、compile、parity、frontmatter、stale、
-  log、stats、lint 與 index check；lint 的兩項語意檢查另由人工完成。
+  log、stats、lint 與 index check；`tools/validate_release.py` 共用同次 component 結果，
+  保留獨立 gate 的診斷與退出碼。Lint 的兩項語意檢查另由人工完成。
+- 正式 tag 只重用七天內、可信 main push 或 main 手動執行、相同提交、完整矩陣與來源／環境／workflow／政策
+  摘要相符的驗證證據；失效時重跑全矩陣。單一 cell 建置 assets，publish 核對後提升同份 bytes。
+- `scripts/release_ci.py` 驗證固定提交及附件 SHA，重試時保留相同附件、補缺漏，
+  拒絕同名不同內容，完成後重新下載正式資產核對；PR 驗證不能作為可信發布證據。
 - 發版檢查與套件建置使用乾淨 Git checkout 的 canonical LF bytes；來源摘要與
   coverage discovery identity 必須對應相同來源。完整 deterministic gates 通過後
   可發佈標示 `runtime-unverified` 的版本，host runtime 保證另須取得 active UAT 3/3。
 - `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、LICENSE、
   repository name、surface package allowlist、資產邊界與 checksum。
+- `tools/prepare_release.py` 只對已完整分析且 preflight ready 的固定 HEAD 候選提交更新 release
+  metadata 證據。VERSION／README 以外的來源變更、人工 Wiki 改動及新增檔案會阻擋；原有
+  disposition 不增加，生成內容綁定候選提交及目標版本，部分完成或跨日重試仍須精確一致。
 - Release builder 排除 cache、hook/NotebookLM state、transaction artifacts 與敏感
   paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry；它只從
   明確的共用 Skill、LICENSE、VERSION、target AGENTS template 與選定 adapter 收集檔案，
@@ -154,8 +168,8 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 
 ## Inferences
 
-- 發版責任分成兩層：維護者完成 review、合併並推送版本 tag；GitHub Actions 重新執行
-  deterministic matrix、建置 assets 並呼叫 GitHub CLI 建立 Release。
+- 發版責任分成兩層：維護者完成 review、合併並推送版本 tag；GitHub Actions 選取符合
+  固定來源及政策的完整證據，必要時重新驗證，再提升已驗證 assets 建立 Release。
 
 ## Gaps
 

@@ -7,6 +7,12 @@ sources:
   - LICENSE
   - .github/workflows/release.yml
   - tools/release.py
+  - tools/validate_release.py
+  - tools/prepare_release.py
+  - tests/release/test_prepare_release.py
+  - scripts/release_ci.py
+  - scripts/test_release_ci.py
+  - tests/release/test_validation.py
   - docs/operations/releases/README.md
   - docs/operations/validation/README.md
   - README.md
@@ -21,9 +27,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: "sha256:1a03ba8a152815e8f2cb0bb35cf4860c3dac3c01c9df181921d01a0dc16841a1"
+source_digest: "sha256:c3ac9c56e9297531b0b8305839d979bf92ef06965f79578b3261ab393d667627"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-15
+last_updated: 2026-10-16
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -45,8 +51,8 @@ notebooklm_role: traceability
 - Git tag 必須是 `vX.Y.Z`，且必須與 `VERSION` 完全一致。
 - `contract_version: 6` 是 installer/capability contract，不是產品版號。
 - Installer 將版號保存至 `.agents/skills/codebase-wiki/VERSION`。
-- `.github/workflows/release.yml` 是 framework-only 的正式發版入口，只在符合
-  `v*.*.*` 的 tag push 時觸發；installer 不會把它安裝到 target repository。
+- `.github/workflows/release.yml` 是 framework-only 的驗證與發版入口；PR、main、手動及 reusable
+  呼叫先完整驗證，只有版本 tag push 可發布。Installer 不會把它安裝到 target repository。
 - Framework workflow changes, including the shared Query/Lint follow-up action
   contract, must be reflected in the release documentation, ChangeLog, Wiki
   index, and append-only update log before publishing.
@@ -63,8 +69,13 @@ notebooklm_role: traceability
 ## 發佈流程
 
 1. 更新 `VERSION` 與 `ChangeLog.md`，並確認 `LICENSE` readiness。
-2. 在乾淨隔離 worktree，以 Python 3.11 與 3.14 執行 unit、compile、parity、
-   frontmatter、stale、log、stats、lint、index checks，並完成人工 semantic review。
+   Release manager 的版本準備則從已完整分析、Wiki ready 的候選提交出發，只變更
+   VERSION／README 現行 metadata，再呼叫 `tools/prepare_release.py --baseline <candidate-SHA>
+   --version X.Y.Z --format json`。Helper 刷新既有 coverage／摘要／log，不建立新分析；其他來源
+   或人工 Wiki 改動會阻擋，重試只接受精確預期結果。
+2. 在乾淨隔離 worktree，以 Python 3.11 與 3.14 執行 unit 與
+   `python tools/validate_release.py --format json`，涵蓋 compile、parity、frontmatter、stale、
+   log、stats、lint、index 及 scan，並完成人工 semantic review。
    source digest 與 coverage ledger 使用此乾淨 checkout 的 canonical LF bytes。
    完整自動檢查通過後可發佈；尚未重跑的 Codex／Copilot host runtime 在文件與
    Release 說明保留 `runtime-unverified`。只有五項 active Codex 情境各取得完整
@@ -74,12 +85,12 @@ notebooklm_role: traceability
    `codebase-llm-wiki-codex.zip`、`codebase-llm-wiki-copilot.zip`、
    `update-manifest.json`、`SHA256SUMS` 四個資產及 checksum。
 4. 將變更合併到 `main`，建立並推送對應 `vX.Y.Z` tag。
-5. `.github/workflows/release.yml` 會重新執行 Python 3.11／3.14 validation，並以
-   `gh release create --verify-tag --generate-notes` 明列四個資產建立 GitHub Release；
-   以下是 workflow 內部的 publish step，維護者不需要手動執行：
+5. `.github/workflows/release.yml` 的 `scripts/release_ci.py` 只重用七天內可信 main push／main 手動執行、相同提交、
+   完整 Python 3.11／3.14 矩陣及來源／workflow／政策／環境一致的證據；缺漏即重跑全部 gates。
+   Publish 核對附件 SHA 後提升已建置資產，不重建；以下是首次發布的等價命令，正常由 helper 執行：
 
 ```yaml
-# .github/workflows/release.yml
+# scripts/release_ci.py 首次發布的等價命令
 run: |
   gh release create "${GITHUB_REF_NAME}" \
     dist/codebase-llm-wiki-codex.zip \
@@ -91,8 +102,9 @@ run: |
     --generate-notes
 ```
 
-Workflow 不以 `dist/*` 取代四個明列 assets；它只在版本 tag push 時執行，並將
-`GITHUB_TOKEN` 限定為建立 Release 所需的 `contents: write`。
+Workflow 不以 `dist/*` 取代四個明列 assets；只有版本 tag push 可發布，並將
+`GITHUB_TOKEN` 的 `contents: write` 限於 publish job。重試只補缺漏或確認相同內容，
+同名不同 SHA 即停止；完成後重新下載正式附件核對摘要並保存 publication 證據。
 
 Release builder 會排除 `.git`、`logs`、`.codex-hook-logs`、`.github-hook-logs`、
 `cache`、`.venv`、`__pycache__`、`.mypy_cache`、`.ruff_cache`、`.notebooklm` 與 `dist` 等產生物，也會排除

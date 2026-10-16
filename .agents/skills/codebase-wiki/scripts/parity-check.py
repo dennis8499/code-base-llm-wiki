@@ -186,22 +186,21 @@ RELEASE_WORKFLOW_REQUIRED_TOKENS = (
     "name: Release",
     "on:\n  push:",
     "tags:",
-    '- "v*.*.*"',
+    "- 'v*'",
     "actions/checkout@v7",
     "actions/setup-python@v7",
     "contents: write",
-    'python tools/release.py validate --tag "${GITHUB_REF_NAME}"',
-    'python tools/release.py build --output dist --repository "${GITHUB_REPOSITORY}"',
+    'tools/release.py validate --tag "${GITHUB_REF_NAME}"',
+    'tools/release.py build --output dist --repository "${GITHUB_REPOSITORY}"',
     'GH_TOKEN: ${{ github.token }}',
-    'gh release create "${GITHUB_REF_NAME}"',
-    "--verify-tag",
-    "--generate-notes",
-    "dist/codebase-llm-wiki-codex.zip",
-    "dist/codebase-llm-wiki-copilot.zip",
-    "dist/update-manifest.json",
-    "dist/SHA256SUMS",
+    "scripts/release_ci.py select",
+    "scripts/release_ci.py record",
+    "scripts/release_ci.py publish",
+    "--fallback-current-run",
+    "retention-days: 14",
+    "needs: [select, build]",
 )
-RELEASE_WORKFLOW_ALLOWED_PERMISSION_NAMES = {"contents"}
+RELEASE_WORKFLOW_ALLOWED_PERMISSION_NAMES = {"contents", "actions"}
 TGREP_INTEGRATION = {
     "provider": "tgrep",
     "version": "1.0.5",
@@ -775,8 +774,8 @@ def main() -> int:
                 "release workflow grants unexpected permissions: "
                 + ", ".join(unexpected_permissions)
             )
-        if "workflow_dispatch" in workflow_text:
-            issues.append("release workflow must be tag-triggered only")
+        if "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')" not in workflow_text:
+            issues.append("release publication must be gated to pushed tags")
         if "dist/*" in workflow_text:
             issues.append("release workflow must list exact assets, not dist/*")
     payload = {"ok": not issues, "contract_version": manifest.get("contract_version", 0), "issues": issues}

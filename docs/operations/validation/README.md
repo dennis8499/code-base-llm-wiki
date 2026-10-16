@@ -1,8 +1,9 @@
 # 本機驗證與發佈前檢查
 
 框架維護者必須在乾淨、隔離的 Git worktree 執行 deterministic checks；公開發版則由
-`.github/workflows/release.yml` 在推送符合 `v*.*.*` 的 tag 時自動執行。流程完成
-Python 3.11／3.14 validation、兩個平台 ZIP、manifest、checksum 建置與 GitHub Release publish；詳細契約見
+`.github/workflows/release.yml` 在推送版本 tag 時提升已驗證產物。PR、main、手動與 reusable workflow
+先執行 Python 3.11／3.14 validation；tag 只重用相同提交且完整可信的近期證據，否則重跑完整矩陣。
+兩個平台 ZIP、manifest、checksum 只建置一次，publish 核對後提升原始位元組；詳細契約見
 [版本、發佈與更新契約](../releases/README.md)。
 
 ## 驗證狀態用語
@@ -44,6 +45,18 @@ UAT 首輪暴露並修復三項缺口；受影響情境修正後均重新取得�
 
 ```powershell
 python -m unittest discover -s tests -v
+python tools/validate_release.py --format json
+```
+
+聚合入口執行 compile、parity、frontmatter、stale、log、stats、lint、index 與 framework scan，
+每個 gate 保留結果、診斷、耗時與原有退出碼。Frontmatter／stale／log 的結果在同次 lint 中重用，
+來源日期、目錄清單與內容 SHA 僅在單次 stale 操作內快取；下一次檢查會重讀，仍能發現同日修改、
+新增檔案及還原。任何 gate 失敗都令聚合入口失敗；語意檢查仍保留 `agent_review_required`。
+加上 `--tag vX.Y.Z` 可一併檢查版本與 release readiness，不會打包或發布。
+
+需要單項診斷時，原有命令保持可用；同次正式驗證選用上方聚合入口即可：
+
+```powershell
 python -m compileall -q .agents/skills/codebase-wiki/scripts tools tests
 python .agents/skills/codebase-wiki/scripts/parity-check.py
 python .agents/skills/codebase-wiki/scripts/validate-frontmatter.py wiki
@@ -76,8 +89,8 @@ deterministic tool checks，不增加五項 active agent runtime 情境。
 `lint-wiki.py` 的 missing-module coverage 與 contradictions 會保持
 `agent_review_required`；維護者另行完成人工語意審查並保存結論。另須確認：
 
-- `.github/workflows/release.yml` 是唯一 workflow，且只由符合 `v*.*.*` 的 tag push 觸發；
-- release workflow 先完成 validation，再建置 Codex／Copilot 兩項 ZIP、manifest 與 checksum，並以 `GITHUB_TOKEN` 建立 Release；
+- `.github/workflows/release.yml` 是唯一 workflow，完整 validation 支援 PR、main、手動及 reusable 呼叫；只有版本 tag push 可發布；
+- release workflow 先驗證兩個 Python matrix cells 與來源／環境／workflow 證據，再由單一 cell 建置 ZIP、manifest 與 checksum；publish 使用 `GITHUB_TOKEN` 提升已驗證產物，不重新建置；
 - 所有保留的 Copilot prompts 都使用 built-in `agent` metadata，且 Repo 不含 Wiki
   custom-agent profiles；
 - Codex 三個 hooks 可從 repo root、Git 子目錄，以及非 Git 安裝 root 啟動；

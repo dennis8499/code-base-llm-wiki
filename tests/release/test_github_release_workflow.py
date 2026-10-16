@@ -11,7 +11,7 @@ FEATURE_PATH = REPO_ROOT / "tests" / "release" / "features" / "github-release.fe
 
 
 class GitHubReleaseWorkflowTests(unittest.TestCase):
-    def test_release_workflow_is_tag_driven_and_publishes_exact_assets(self) -> None:
+    def test_release_workflow_prepares_main_proof_and_promotes_exact_tag_assets(self) -> None:
         workflow_root = REPO_ROOT / ".github" / "workflows"
         self.assertEqual(
             sorted(path.name for path in workflow_root.glob("*.y*ml")),
@@ -21,21 +21,21 @@ class GitHubReleaseWorkflowTests(unittest.TestCase):
         for required in (
             "name: Release",
             "tags:",
-            '- "v*.*.*"',
+            "- 'v*'",
             "permissions:",
             "contents: write",
             "actions/checkout@v7",
             "actions/setup-python@v7",
-            'python tools/release.py validate --tag "${GITHUB_REF_NAME}"',
-            'python tools/release.py build --output dist --repository "${GITHUB_REPOSITORY}"',
+            'tools/release.py validate --tag "${GITHUB_REF_NAME}"',
+            'tools/release.py build --output dist --repository "${GITHUB_REPOSITORY}"',
             'GH_TOKEN: ${{ github.token }}',
-            'gh release create "${GITHUB_REF_NAME}"',
-            "--verify-tag",
-            "--generate-notes",
-            "dist/codebase-llm-wiki-codex.zip",
-            "dist/codebase-llm-wiki-copilot.zip",
-            "dist/update-manifest.json",
-            "dist/SHA256SUMS",
+            "scripts/release_ci.py select",
+            "scripts/release_ci.py record",
+            "scripts/release_ci.py publish",
+            "--fallback-current-run",
+            "retention-days: 14",
+            "workflow_dispatch:",
+            "needs: [select, build]",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, workflow)
@@ -46,8 +46,12 @@ class GitHubReleaseWorkflowTests(unittest.TestCase):
                 workflow,
             )
         }
-        self.assertEqual(permission_names, {"contents"})
+        self.assertEqual(permission_names, {"contents", "actions"})
         self.assertNotIn("dist/*", workflow)
+        before_publish, publish = workflow.split("\n  publish:\n")
+        self.assertNotIn("contents: write", before_publish)
+        self.assertIn("github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')", publish)
+        self.assertNotIn("tools/release.py build", publish)
 
     def test_release_feature_has_stable_scenarios(self) -> None:
         feature = FEATURE_PATH.read_text(encoding="utf-8")

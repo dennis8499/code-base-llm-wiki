@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: "sha256:8eccb71cd8d9636269ef2dc3c0e7f3b72faa7a249feedcd79959ff9a7223d3fa"
+source_digest: "sha256:cde68a9ab5ebbe3487809db3fc03aef5b0fcd5b10b69133c822fad3f0ed66055"
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
-last_updated: 2026-10-13
+last_updated: 2026-10-16
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---

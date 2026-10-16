@@ -59,7 +59,9 @@ def finding(
 
 
 def lint_wiki(
-    wiki_dir: Path, repo_root: Path, *, use_git: bool = True
+    wiki_dir: Path, repo_root: Path, *, use_git: bool = True,
+    components: dict[str, Any] | None = None,
+    precomputed: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run Wiki checks, optionally disabling Git freshness/baseline checks."""
 
@@ -70,12 +72,17 @@ def lint_wiki(
     stale = load_script("check_stale_for_lint", "check-stale.py")
     log_validator = load_script("validate_log_for_lint", "validate-log.py")
 
+    frontmatter_errors: list[str] = []
     for path in pages:
         relative = path.relative_to(wiki_dir).as_posix()
-        for error in validate.validate_page(path, wiki_dir):
+        errors = (precomputed["frontmatter"]["by_page"][relative] if precomputed is not None
+                  else validate.validate_page(path, wiki_dir))
+        frontmatter_errors.extend(errors)
+        for error in errors:
             findings.append(finding("critical", "frontmatter", error, relative))
 
-    stale_results = stale.check_stale(wiki_dir, repo_root, use_git=use_git)
+    stale_results = (precomputed["stale"] if precomputed is not None
+                     else stale.check_stale(wiki_dir, repo_root, use_git=use_git))
     for item in stale_results["critical"]:
         page = str(item["page"])
         if "invalid_sources" in item:
@@ -126,7 +133,11 @@ def lint_wiki(
                 )
             )
 
-    log_result = log_validator.validate_log(wiki_dir / "log.md", repo_root, use_git=use_git)
+    log_result = (precomputed["log"] if precomputed is not None
+                  else log_validator.validate_log(wiki_dir / "log.md", repo_root, use_git=use_git))
+    if components is not None:
+        components.update(frontmatter={"errors": frontmatter_errors, "pages": len(pages)},
+                          stale=stale_results, log=log_result)
     for message in log_result["errors"]:
         findings.append(finding("critical", "log_integrity", message, "log.md"))
     for message in log_result["warnings"]:

@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-15
+last_updated: 2026-10-16
 tags: [log]
 status: active
 ---
@@ -788,3 +788,12 @@ status: active
 - 發布 0.6.1，納入雙平台 Concise 輸出、集中式路由及完成條件；同步版本文件、來源摘要與 coverage。
 - Host runtime 保留 runtime-unverified。
 - Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[log]], [[overview]], [[release-and-update]]
+
+
+## [2026-10-16] update | 固定產物提升與驗證效能優化
+
+- 完整 PR／main 矩陣先驗證，tag 僅重用固定提交、完整可信近期證據，失效則重跑；發布提升相同資產，驗證正式下載並支援同內容重試。
+- 聚合 deterministic checks 共用 frontmatter／stale／log 結果；來源日期、列舉及 hash 僅在單次操作內快取，保留原有退出碼、診斷與語意審查要求。
+- 同步框架來源摘要、逐檔 coverage、索引及維護文件，保留 host runtime-unverified。
+- 下一版 metadata 準備只重用已完整分析候選提交，僅刷新 VERSION／README 對應證據；拒絕未分析來源與人工 Wiki 變更，保留可重試的精確產物與既有 disposition。
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[installer-and-upgrade]], [[log]], [[notebooklm-export]], [[notebooklm-exporter]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]], [[system-architecture]], [[wiki-quality-and-provenance]]

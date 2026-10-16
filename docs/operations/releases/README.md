@@ -24,16 +24,30 @@ Codebase LLM Wiki v0.3.0 已於 2026-10-03 發布，來源 tag 指向
 
 ## 由 GitHub Actions 建立 Release
 
-`.github/workflows/release.yml` 是 framework 專用的正式發版流程，只在推送符合
-`v*.*.*` 的 tag 時觸發。它以 Python 3.11 與 3.14 矩陣執行 deterministic checks，
-再由 Python 3.14 建置兩個平台精簡安裝 ZIP、manifest 與 checksum，最後以
-`GITHUB_TOKEN` 建立 GitHub Release。
+`.github/workflows/release.yml` 在 PR、main push、手動與 reusable 呼叫時執行完整
+Python 3.11／3.14 deterministic matrix，由 Python 3.14 cell 建置一次兩個平台精簡 ZIP、
+manifest 與 checksum。只有版本 tag push 可透過 `GITHUB_TOKEN` 建立正式 GitHub Release。
+Tag 優先重用七天內、可信 main push 或 main 手動執行、相同提交與完整矩陣的成功證據；workflow／驗證政策、
+環境、來源與產物摘要不符或附件過期時，重跑完整矩陣後才發布，不降低既有 gates。
+Publish 下載並驗證證據與四個資產，直接提升同一份位元組，不重新建置。
 Installer 不會把這個 framework-only workflow 安裝到 target repository。
 
 1. 更新 `VERSION` 與 `ChangeLog.md`，並確認 LICENSE readiness。
+   使用工作台的 release manager 準備下一版時，候選提交須已完成來源分析與 Wiki readiness。
+   Manager 只更新 `VERSION` 與 README 的現行版本資訊，再執行：
+
+```text
+python tools/prepare_release.py --baseline <candidate-SHA> --version X.Y.Z --format json
+```
+
+   Helper 先驗證固定候選提交的完整 Wiki preflight，只重用既有分析，刷新版本 metadata 的
+   coverage hash、discovery ID、來源摘要及 append-only log。任何其他來源、README 正文、Wiki
+   人工內容或新增檔案都會阻擋，不建立新 disposition，也不代替框架維護。相同輸入重試產生相同
+   bytes；已完成部分寫入時僅接受原始或精確預期的產物。Log 日期固定於候選提交與既有紀錄，避免
+   跨日重試漂移。Release notes 存在工作台證據目錄，不新增 framework raw-source 檔案。
 2. 依 [本機驗證手冊](../validation/README.md) 以 Python 3.11 與 3.14 執行完整
-   unit、compile、parity、frontmatter、stale、log、stats、lint 與 index checks；
-   同一組檢查也會由 tag-triggered workflow 執行。
+   unit 與 `python tools/validate_release.py --format json`。聚合入口涵蓋 compile、parity、
+   frontmatter、stale、log、stats、lint、index 與 scan；PR/main CI 也執行同一組 gates。
 3. 驗證版本/tag 契約並建置兩個平台資產：
 
 ```powershell
@@ -52,19 +66,19 @@ python tools/release.py build --output dist --repository dennis8499/code-base-ll
 Skill 工具。此次 bundle 是 Windows x64 tgrep 1.0.5，release builder 會驗證 manifest
 中的固定 binary path 與 SHA-256，然後將相同 metadata 寫入 `update-manifest.json`。
 
-5. 提交核准的變更，建立並推送與 `VERSION` 完全相符的 tag：
+5. 提交核准變更並合併至 `main`，再建立並推送與 `VERSION` 完全相符的 tag：
 
 ```powershell
 git tag v0.4.0
 git push origin v0.4.0
 ```
 
-6. 將變更合併到 `main` 後推送對應 tag；workflow 會以 `--verify-tag` 明列四個資產，
-   並使用 `--generate-notes` 建立 GitHub Release。以下是 workflow 內部的 publish
-   step，維護者不需要手動執行：
+6. Workflow 的 `scripts/release_ci.py publish` 重新確認版本/tag、固定提交、完整證據與
+   SHA-256，驗證已推送 tag、產生 Release notes，並明列四個資產建立 GitHub Release。
+   下例顯示首次建立 Release 的等價命令；正常發布由 helper 執行，維護者無須手動執行：
 
 ```yaml
-# .github/workflows/release.yml
+# scripts/release_ci.py 首次發布的等價命令
 run: |
   gh release create "${GITHUB_REF_NAME}" \
     dist/codebase-llm-wiki-codex.zip \
@@ -77,9 +91,9 @@ run: |
 ```
 
 不得以 `dist/*` 取代明列資產；這可避免把額外暫存檔誤發佈。完成後從 GitHub
-下載四個資產，重新核對 `SHA256SUMS` 與 manifest URL。推送 tag 後的 publish
-由 workflow 負責；維護者完成本機檢查、合併及 tag 推送後，仍須確認 workflow
-成功並下載正式資產核對 checksum。
+下載四個資產，重新核對 `SHA256SUMS` 與 manifest URL。Publish 可重試：既有同名附件必須
+內容相同，只補齊缺漏附件；不同內容即停止，不覆寫既有資產。發布完成後重新下載正式附件
+核對摘要，並保存 publication 證據。維護者完成本機檢查、合併及 tag 推送後，仍須確認 workflow 成功。
 
 每個 ZIP 是一個精簡平台安裝包，包含完整共用 `codebase-wiki` skill、內嵌 installer、
 Wiki starter、固定 tgrep bundle、`VERSION`、LICENSE、target `AGENTS.md` 模板，以及

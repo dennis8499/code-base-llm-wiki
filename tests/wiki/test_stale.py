@@ -23,6 +23,36 @@ check_stale = check_stale_module.check_stale
 
 
 class StaleTests(unittest.TestCase):
+    def test_repeated_sources_share_git_enumeration_and_hashes_only_within_one_check(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            (root / "wiki").mkdir()
+            (root / "src").mkdir()
+            source = root / "src/service.py"
+            source.write_bytes(b"return 1\n")
+            digest = check_stale_module.compute_source_digest(root, ["src"], use_git=False)
+            for name in ("one", "two"):
+                (root / f"wiki/{name}.md").write_text(
+                    "---\ntitle: Service\nsources: [src, src/service.py]\n"
+                    f"source_digest: {digest}\nlast_updated: 2026-07-01\n---\n", encoding="utf-8")
+            original_sha = check_stale_module.hashlib.sha256
+            with (mock.patch.object(check_stale_module, "latest_source_date", return_value=None) as dates,
+                  mock.patch.object(check_stale_module, "_source_files", wraps=check_stale_module._source_files) as files,
+                  mock.patch.object(check_stale_module.hashlib, "sha256", wraps=original_sha) as hashes):
+                first = check_stale(root / "wiki", root)
+                self.assertFalse(first["critical"] or first["warning"])
+                self.assertEqual(dates.call_count, 2)
+                self.assertEqual(files.call_count, 2)
+                self.assertEqual(sum(call.args == (b"return 1\n",) for call in hashes.call_args_list), 1)
+                source.write_bytes(b"return 2\n")
+                (root / "src/new.py").write_bytes(b"added\n")
+                second = check_stale(root / "wiki", root)
+                self.assertEqual(len(second["warning"]), 2)
+                self.assertEqual(dates.call_count, 4)
+                self.assertEqual(files.call_count, 4)
+                self.assertEqual(sum(call.args == (b"return 2\n",) for call in hashes.call_args_list), 1)
+                self.assertEqual(sum(call.args == (b"added\n",) for call in hashes.call_args_list), 1)
+
     def test_check_stale_cli_reports_success_warning_and_input_errors(self) -> None:
         script = str(SCRIPTS / "check-stale.py")
         with tempfile.TemporaryDirectory() as directory:

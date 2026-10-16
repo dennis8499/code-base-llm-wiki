@@ -223,8 +223,9 @@ class ReleaseTests(unittest.TestCase):
 
     def test_version_is_stable_semver_and_tag_matches(self) -> None:
         release = load_release()
-        self.assertEqual(release.read_version(REPO_ROOT), "0.6.1")
-        self.assertEqual(release.validate_tag("v0.6.1", REPO_ROOT), "0.6.1")
+        version = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        self.assertEqual(release.read_version(REPO_ROOT), version)
+        self.assertEqual(release.validate_tag("v" + version, REPO_ROOT), version)
         self.assertEqual(release.repository_name(REPO_ROOT, "owner/example.git"), "owner/example")
         with self.assertRaises(release.ReleaseError):
             release.validate_tag("0.2.0", REPO_ROOT)

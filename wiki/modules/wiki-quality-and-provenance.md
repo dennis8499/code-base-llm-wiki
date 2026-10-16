@@ -10,9 +10,12 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-log.py
   - tests/wiki/test_stale.py
   - tests/wiki/test_wiki_lint.py
-source_digest: "sha256:1072344be88526b1812f6ec9edfb37379798d1592b2147d43b1597afb5ff3b23"
+  - .agents/skills/codebase-wiki/scripts/lint-wiki.py
+  - tools/validate_release.py
+  - tests/release/test_validation.py
+source_digest: "sha256:28cf1daec1d31e742162acd01bb93c5633565ae47958ee1a4858450f748b808e"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-13
+last_updated: 2026-10-16
 tags: [module, lint, provenance, frontmatter, freshness]
 status: active
 ---
@@ -55,6 +58,10 @@ completeness 是兩個獨立判定。持久化 archaeology page 還必須由相�
 
 ## Evidence
 
+- `tools/validate_release.py` 保留每個 deterministic gate 的結果、退出碼、診斷及耗時，
+  frontmatter／stale／log 的結果直接提供同次 lint，避免重複檢查。
+- `check-stale.py` 只在單次操作內重用來源的 Git 日期、目錄清單及 resolved-file SHA；
+  不跨次保存快取，下一次檢查重新讀取新增或改變的來源，source containment 與語意審查規則維持原契約。
 - `validate-frontmatter.py` 驗證 `summary`、`derived_from`、digest、BA page types 與
   NotebookLM role/term 契約，以及 standards profile/coverage 的合法值。
 - `check-stale.py` 對排序後 path/file hash records 建立 aggregate SHA-256。

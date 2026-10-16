@@ -537,12 +537,14 @@ class ContractTests(unittest.TestCase):
         )
         workflow = (workflow_root / "release.yml").read_text(encoding="utf-8")
         for token in (
-            '"v*.*.*"',
+            "'v*'",
             "contents: write",
-            'python tools/release.py validate --tag "${GITHUB_REF_NAME}"',
-            'gh release create "${GITHUB_REF_NAME}"',
-            "--verify-tag",
-            "--generate-notes",
+            'tools/release.py validate --tag "${GITHUB_REF_NAME}"',
+            "scripts/release_ci.py select",
+            "scripts/release_ci.py record",
+            "scripts/release_ci.py publish",
+            "--fallback-current-run",
+            "retention-days: 14",
         ):
             with self.subTest(document="release workflow", token=token):
                 self.assertIn(token, workflow)
@@ -553,7 +555,7 @@ class ContractTests(unittest.TestCase):
                 workflow,
             )
         }
-        self.assertEqual(permission_names, {"contents"})
+        self.assertEqual(permission_names, {"contents", "actions"})
 
         validation = (REPO_ROOT / "docs" / "operations" / "validation" / "README.md").read_text(
             encoding="utf-8"

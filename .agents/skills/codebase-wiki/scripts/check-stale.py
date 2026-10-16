@@ -188,16 +188,51 @@ def _source_files(
     return sorted(set(files), key=lambda item: item.resolve().as_posix())
 
 
+class SourceCache:
+    """One check's source snapshot; never retain Git/filesystem data across calls."""
+
+    def __init__(self, repo_root: pathlib.Path, use_git: bool):
+        self.repo_root = repo_root
+        self.use_git = use_git
+        self.dates: dict[str, _datetime.date | None] = {}
+        self.files: dict[str, list[pathlib.Path]] = {}
+        self.hashes: dict[pathlib.Path, str] = {}
+
+    @staticmethod
+    def key(source: str) -> str:
+        return source.replace("\\", "/").rstrip("/")
+
+    def latest_date(self, source: str) -> _datetime.date | None:
+        key = self.key(source)
+        if key not in self.dates:
+            self.dates[key] = latest_source_date(self.repo_root, key)
+        return self.dates[key]
+
+    def source_files(self, source: str) -> list[pathlib.Path]:
+        key = self.key(source)
+        if key not in self.files:
+            self.files[key] = _source_files(self.repo_root, key, use_git=self.use_git)
+        return self.files[key]
+
+    def file_digest(self, path: pathlib.Path) -> str:
+        key = path.resolve()
+        if key not in self.hashes:
+            self.hashes[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+        return self.hashes[key]
+
+
 def compute_source_digest(
-    repo_root: pathlib.Path, sources: list[str], *, use_git: bool = True
+    repo_root: pathlib.Path, sources: list[str], *, use_git: bool = True,
+    cache: SourceCache | None = None,
 ) -> str:
     """Return the stable aggregate digest for existing raw source files."""
 
+    cache = cache if cache is not None else SourceCache(repo_root, use_git)
     records: dict[str, str] = {}
     for source in sources:
-        for path in _source_files(repo_root, source, use_git=use_git):
+        for path in cache.source_files(source):
             relative = path.resolve().relative_to(repo_root.resolve()).as_posix()
-            records[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+            records[relative] = cache.file_digest(path)
     aggregate = hashlib.sha256()
     for relative, digest in sorted(records.items()):
         aggregate.update(relative.encode("utf-8"))
@@ -216,6 +251,7 @@ def check_stale(
     results: dict[str, list[Any]] = {"critical": [], "warning": [], "ok": []}
 
     dirty_paths = git_dirty_paths(repo_root) if use_git else set()
+    cache = SourceCache(repo_root, use_git)
     for fp in md_files:
         fm = parse_frontmatter(fp)
         sources = fm.get("sources", [])
@@ -281,7 +317,7 @@ def check_stale(
             changed_after_page = bool(
                 use_git
                 and page_date
-                and (latest := latest_source_date(repo_root, normalized))
+                and (latest := cache.latest_date(normalized))
                 and latest > page_date
             )
             if dirty or changed_after_page:
@@ -289,7 +325,7 @@ def check_stale(
 
         declared_digest = fm.get("source_digest")
         if isinstance(declared_digest, str) and existing and not missing and not invalid:
-            current_digest = compute_source_digest(repo_root, existing, use_git=use_git)
+            current_digest = compute_source_digest(repo_root, existing, use_git=use_git, cache=cache)
             if declared_digest != current_digest:
                 digest_mismatch = {
                     "declared": declared_digest,
