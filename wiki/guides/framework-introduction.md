@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki — 使用指南
 type: guide
-summary: 從安裝、Wiki-first 操作、source-first Codebase 健檢與獨立開發規格，到驗證及升級的框架使用路線
+summary: 從安裝、Wiki-first 操作、source-first Codebase 健檢，到驗證及升級的框架使用路線
 sources:
   - README.md
   - LICENSE
@@ -18,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
   - tests/contracts/test_code_audit_validator.py
-source_digest: "sha256:581ae6eb1e744936cdff28ab6b5e892344a81dd37c0b45d66e85dce6a968e1a7"
+source_digest: sha256:6a8e764a85c47c7f755ca5dfca5b76800517975b1b3632b393aca9089fe53df8
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-10-16
+last_updated: 2026-10-17
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -133,7 +133,6 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | System Analysis / SA | solution-neutral 邊界、needs、SR/NFR/IF 與 verification needs | synthesis + index + log |
 | System Design / SD | concerns/viewpoints、決策、元件、runtime、資料、介面、部署、安全與品質策略 | synthesis + index + log |
 | NotebookLM export | 全量盤點當下 Codebase 並重建每功能現況 BA／SA | `.notebooklm/` documents、upload sources、schema v6、governance；不自動上傳 |
-| Development specification | 釐清目前 Codebase 的功能需求與必要決策 | 五段獨立規格；未答問題維持 draft，由下游流程決定是否建立 Issue |
 
 完整提示詞與輸出契約位於 `docs/product/workflows/README.md`。
 目前工作流手冊列出十三類意圖、14 個常用操作情境；其中 Interactive／Batch Ingest 共用一個 intent。

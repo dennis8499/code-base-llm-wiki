@@ -3,7 +3,7 @@ name: codebase-wiki
 description: >
   Build and maintain an evidence-backed codebase Wiki. Use for install/upgrade,
   ingest, Wiki queries or lint, functional exploration, static Codebase audit,
-  ADR/synthesis, business analysis, system analysis/design, development specifications,
+  ADR/synthesis, business analysis, system analysis/design,
   NotebookLM export, and Git archaeology. Implementation and branch-to-branch
   merge/release reviews follow their own workflows.
 ---
@@ -11,8 +11,8 @@ description: >
 # Codebase LLM Wiki
 
 Build durable knowledge under `wiki/`. Query uses the Wiki first. Codebase audit is the explicit
-current-source-first exception to Wiki-first knowledge lookup; functional exploration,
-development specifications and NotebookLM export also use their branch's source-first order.
+current-source-first exception to Wiki-first knowledge lookup; functional exploration
+and NotebookLM export also use their branch's source-first order.
 
 ## Output style
 

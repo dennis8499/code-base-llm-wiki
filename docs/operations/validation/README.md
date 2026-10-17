@@ -199,6 +199,6 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - Query workflow 與雙平台 adapters 不含即時資料庫存取、資料庫工具或 fallback 指令。
 - `.sql`、migration 與 schema 仍可被辨識為唯讀 `data_schema` evidence。
 
-## 開發規格
+## 已撤下功能的升級驗證
 
-`tests/contracts/test_development_spec.py` 固定五部分、SCN Given／When／Then、draft／ready、未決必要問題、通用專案範圍與範本佔位驗證。此路由在單一 Codebase 先查來源、逐題釐清；Issue 由使用者建立，文件排除 NotebookLM 匯出，任何下游流程都要自行核准與驗收。
+`tests/installer/test_development_spec_removal.py` 驗證雙平台升級只刪除可核對舊安裝紀錄且未修改的開發規格受管理檔案；本機修改或歸屬不明會阻擋寫入。測試亦涵蓋失敗回復、程序中斷復原、重複升級與既有規格文件保留。

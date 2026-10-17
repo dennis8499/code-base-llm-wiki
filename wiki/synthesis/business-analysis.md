@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/references/business-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
-source_digest: "sha256:42fc79f5af1bbee21b17e249aaf0f8dd35eea7e37096572509ab8e735f8b9ce7"
+source_digest: sha256:ea763a5d6beaf82e256bf2e0286c04e46afa43c1d62ec03ad1f9b1a037302775
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[functional-requirement-catalog]]", "[[business-process-catalog]]", "[[business-rule-catalog]]"]
-last_updated: 2026-10-13
+last_updated: 2026-10-17
 tags: [synthesis, business-analysis, standards-aligned, notebooklm]
 status: active
 ---

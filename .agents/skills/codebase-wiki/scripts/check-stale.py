@@ -45,10 +45,7 @@ DIGEST_EXCLUDED_PARTS = {
 
 
 def digest_excluded(relative: pathlib.Path) -> bool:
-    parts = tuple(part.casefold() for part in relative.parts)
-    return bool(set(relative.parts) & DIGEST_EXCLUDED_PARTS) or any(
-        parts[i:i + 2] == ("exports", "megin") for i in range(len(parts) - 1)
-    )
+    return bool(set(relative.parts) & DIGEST_EXCLUDED_PARTS)
 
 
 def parse_frontmatter(filepath: pathlib.Path) -> dict:

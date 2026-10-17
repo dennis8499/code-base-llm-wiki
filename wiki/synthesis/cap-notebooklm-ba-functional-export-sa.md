@@ -19,7 +19,7 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/notebooklm/test_notebooklm_acceptance.py
   - tests/notebooklm/test_notebooklm_contract.py
-source_digest: "sha256:4957130ccec86e5f0a0be09203f548a4f08507a3444d300965074d0a13a0ff77"
+source_digest: sha256:148dd031e3d23486b0f2cc537bdc29c4f8142827cf2b5fdee7a468d5d47bef96
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1922"
   - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
@@ -29,7 +29,7 @@ source_locators:
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
   - "tests/notebooklm/test_notebooklm_contract.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-ba]]"]
-last_updated: 2026-10-13
+last_updated: 2026-10-17
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
 status: active
 ---

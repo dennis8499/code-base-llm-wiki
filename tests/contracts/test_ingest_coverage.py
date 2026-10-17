@@ -41,9 +41,8 @@ class IngestCoverageTests(unittest.TestCase):
         ledger = inventory(self.root)
         paths = {e["path"] for e in ledger["files"]}
         self.assertTrue({"config/app.toml", "schema/table.sql", "ignored.py", "nested/app.py", "exports/real-source.py"} <= paths)
-        self.assertNotIn("exports/megin/project-r1.md", paths)
-        self.assertNotIn("nested/exports/megin/project-r1.md", paths)
-        self.assertTrue(any(e["reason"] == "export_output" for e in ledger["excluded_roots"]))
+        self.assertIn("exports/megin/project-r1.md", paths)
+        self.assertIn("nested/exports/megin/project-r1.md", paths)
         self.assertEqual("partial", validate(self.root, ledger)["status"])
         self.assertTrue(validate(self.root, self.processed(ledger))["ok"])
 
@@ -66,8 +65,9 @@ class IngestCoverageTests(unittest.TestCase):
         ledger = self.processed(inventory(self.root))
         self.write("wiki/modules/project.md")
         self.write("__pycache__/generated.pyc")
-        self.write("exports/megin/project-r1.md")
         self.assertTrue(validate(self.root, ledger)["ok"])
+        self.write("exports/megin/project-r1.md")
+        self.assertFalse(validate(self.root, ledger)["ok"])
 
     def test_notebooklm_test_filter_does_not_narrow_full_ingest(self):
         self.write("notebooklm.toml", "[notebooklm]\nanalysis_include_tests = false\n")

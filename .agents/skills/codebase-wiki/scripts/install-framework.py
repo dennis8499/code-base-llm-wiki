@@ -52,6 +52,13 @@ INSTALL_STATE_PATH = ".agents/skills/codebase-wiki/install-state.json"
 TRANSACTION_VERSION = 1
 TRANSACTION_SUFFIX = ".codebase-wiki-install-transaction.json"
 TRANSACTION_LOCK_SUFFIX = ".codebase-wiki-install-transaction.lock"
+RETIRED_DEVELOPMENT_SPEC_PATHS = {
+    ".agents/skills/codebase-wiki/references/development-spec-workflow.md",
+    ".agents/skills/codebase-wiki/assets/development-spec-template.md",
+    ".agents/skills/codebase-wiki/scripts/development_spec.py",
+    ".agents/skills/codebase-wiki/scripts/validate-development-spec.py",
+    ".github/prompts/development-spec.prompt.md",
+}
 
 
 def _sha256(data: bytes) -> str:
@@ -492,7 +499,7 @@ def _prepare_plan(
     action: str,
     guard_mode: str,
     install_date: dt.date,
-) -> tuple[dict[str, Any], dict[str, bytes], bytes]:
+) -> tuple[dict[str, Any], dict[str, bytes | None], bytes]:
     if surface not in SURFACE_PATHS:
         raise ValueError(f"unknown surface: {surface}")
     if action not in {"install", "upgrade"}:
@@ -509,7 +516,7 @@ def _prepare_plan(
     preserved: list[str] = []
     conflicts: list[str] = []
     changes: list[str] = []
-    writes: dict[str, bytes] = {}
+    writes: dict[str, bytes | None] = {}
     next_state_files: dict[str, dict[str, str]] = {}
 
     for source, relative in _surface_files(source_root, surface, action):
@@ -564,6 +571,24 @@ def _prepare_plan(
             "kind": kind,
             "sha256": expected_fingerprint,
         }
+
+    for relative in sorted(RETIRED_DEVELOPMENT_SPEC_PATHS):
+        if relative.startswith(".github/") and surface != "copilot" and relative not in state_files:
+            continue
+        if not _target_path_is_safe(target_root, relative):
+            conflicts.append(relative)
+            continue
+        target = target_root / relative
+        if not target.exists():
+            continue
+        baseline = state_files.get(relative)
+        if (not target.is_file() or not isinstance(baseline, dict)
+                or baseline.get("kind") != "file"
+                or _sha256(target.read_bytes()) != baseline.get("sha256")):
+            conflicts.append(relative)
+        else:
+            writes[relative] = None
+            changes.append(relative)
 
     expected_paths = set(files)
     state_payload = {
@@ -637,10 +662,19 @@ def _create_stage_directory(parent: Path) -> Path:
     raise FileExistsError(f"unable to allocate installer stage under {parent}")
 
 
-def _atomic_write_unlocked(target_root: Path, writes: dict[str, bytes]) -> None:
+def _atomic_write_unlocked(target_root: Path, writes: dict[str, bytes | None]) -> None:
+    state = _load_state(target_root) if any(value is None for value in writes.values()) else None
+    removal_hashes = {}
     for relative in writes:
         if not _target_path_is_safe(target_root, relative):
             raise OSError(f"unsafe target path: {relative}")
+        if writes[relative] is None:
+            baseline = (state or {}).get("files", {}).get(relative, {})
+            target = target_root / relative
+            if (relative not in RETIRED_DEVELOPMENT_SPEC_PATHS or baseline.get("kind") != "file"
+                    or not target.is_file() or _sha256(target.read_bytes()) != baseline.get("sha256")):
+                raise OSError(f"retired managed file changed before apply: {relative}")
+            removal_hashes[relative] = baseline["sha256"]
     _recover_pending_transaction_unlocked(target_root)
     if not writes:
         return
@@ -653,6 +687,8 @@ def _atomic_write_unlocked(target_root: Path, writes: dict[str, bytes]) -> None:
     journal_created = False
     try:
         for relative, data in writes.items():
+            if data is None:
+                continue
             staged = stage / relative
             staged.parent.mkdir(parents=True, exist_ok=True)
             staged.write_bytes(data)
@@ -679,12 +715,16 @@ def _atomic_write_unlocked(target_root: Path, writes: dict[str, bytes]) -> None:
         journal_created = True
         for relative in sorted(writes):
             destination = target_root / relative
+            if relative in removal_hashes and (
+                    not destination.is_file() or _sha256(destination.read_bytes()) != removal_hashes[relative]):
+                raise OSError(f"retired managed file changed during apply: {relative}")
             destination.parent.mkdir(parents=True, exist_ok=True)
             if relative in originals:
                 saved = backup / relative
                 saved.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(destination, saved)
-            os.replace(stage / relative, destination)
+            if writes[relative] is not None:
+                os.replace(stage / relative, destination)
         _write_transaction(
             journal,
             {

@@ -251,17 +251,3 @@ page-shape source of truth.
     `evidence-gap` / `business-confirmation`。
 21. `gap_classification` 若存在，必須是 `none` / `analysis-gap` /
     `evidence-gap` / `business-confirmation`。
-
-### Development specifications
-
-`development-spec` synthesis pages use `spec_revision` (positive integer),
-`spec_status: draft | ready`, `blocking_questions` (string list), and
-`notebooklm_role: exclude`. Freshness `status` is independent of readiness.
-Drafts use `self_contained_review: pending` and an empty
-`reviewed_spec_digest`. A ready page has no blocking questions and records
-`self_contained_review: passed` with `reviewed_spec_digest: sha256:<64 hex>`
-matching the validator's current `review_digest` for its body and spec_revision.
-Changing either invalidates the recorded review. Validate with
-`scripts/validate-development-spec.py`; its `structural_status` and
-`semantic_status` are separate. Only the Agent can perform the self-contained
-semantic review; script success verifies its recorded digest, not its judgment.

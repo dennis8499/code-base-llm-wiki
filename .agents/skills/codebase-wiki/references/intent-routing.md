@@ -1,6 +1,6 @@
 # Intent Routing
 
-This is the single workflow index for fourteen user-facing intent groups.
+This is the single workflow index for thirteen user-facing intent groups.
 `capabilities.json` maps them to machine operations and authorization policies.
 Interpret signals in the requested Wiki/framework context; the explicit deliverable
 takes precedence over generic words such as "explain", "analyze" or "review".
@@ -17,7 +17,6 @@ takes precedence over generic words such as "explain", "analyze" or "review".
 | Synthesis | save this cross-cutting analysis | [synthesis-workflow.md](synthesis-workflow.md); explicit creation authorizes durable output under `wiki/synthesis/`. |
 | Business Analysis / BA | BA文件、業務分析文件 | [business-analysis-workflow.md](business-analysis-workflow.md); produce a standard-aligned BA document from Wiki-first evidence. |
 | System Analysis / SA | SA文件、系統分析、SAD | [system-analysis-workflow.md](system-analysis-workflow.md); produce solution-neutral requirements and verification needs from Wiki-first evidence. |
-| Development specification | 開發規格、可交接的功能敘述 | [development-spec-workflow.md](development-spec-workflow.md); inspect current code, resolve blocking questions, produce a standalone five-section draft/ready specification. Explicit creation authorizes output. |
 | System Design / SD | SD文件、系統設計、SDD | [system-design-workflow.md](system-design-workflow.md); produce standard-aligned architecture views, decisions and quality strategy from Wiki-first evidence. |
 | NotebookLM export | NotebookLM、source pack、BA／SA 匯出 | [notebooklm-export-workflow.md](notebooklm-export-workflow.md); scan the full safe text scope of the explicit project first, preview capabilities/gaps, obtain one confirmation, update the confirmed knowledge set, then run readiness and generate `.notebooklm/`. Wiki supplements current source. |
 | Archaeology | why this code changed, legacy, Git 考古 | [code-archaeology-workflow.md](code-archaeology-workflow.md); trace entrypoints/calls and non-destructive Git history, separating evidence from inference. Read-only by default. |
@@ -29,9 +28,7 @@ takes precedence over generic words such as "explain", "analyze" or "review".
 - NotebookLM/export/source-pack context takes precedence over BA/SA document wording.
   A downstream profile-specific export takes precedence over generic NotebookLM routing.
   只有裸稱 `BA`、沒有 document/export context 時才要求澄清。
-- Explicit creation authorizes ADR, Synthesis, BA, SA, SD and development-spec output.
-  Standalone specifications stay independent of implementation/delivery tooling;
-  downstream Megin delivery is a separate extension.
+- Explicit creation authorizes ADR, Synthesis, BA, SA and SD output.
 - Interactive and Batch are Ingest modes. Query/Lint follow-up choices use
   [follow-up-actions.md](follow-up-actions.md): a selected concrete preview authorizes
   its bounded update/save and checks once; no selection or none means zero writes.
@@ -51,5 +48,3 @@ takes precedence over generic words such as "explain", "analyze" or "review".
   separates `BUG-*` / `RISK-*` / `BIZ-*`, reports coverage and makes no Wiki writes.
 - **「把 BA 匯出給 NotebookLM」** → Export scans current source before the one confirmation;
   it then finishes confirmed knowledge updates, readiness and the source pack as one workflow.
-- **「整理成可交接的開發規格」** → Development specification resolves blocking behavior
-  and verifies a self-contained draft/ready document; it does not start implementation.

@@ -44,9 +44,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: "sha256:39b1a2579123f23062e0c990b0b9a8cf824848cce448ae0fee3515c708604902"
+source_digest: sha256:1ca17a1889675ca2cf12680fa709376d9891bbd0f7b887f289fb51e4a548fdc3
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-16
+last_updated: 2026-10-17
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -55,9 +55,9 @@ status: active
 
 ## Skill 分流與完成條件
 
-Skill 入口保留共用邊界、輸出及完成條件；十四個意圖的 workflow 與授權路由統一由
+Skill 入口保留共用邊界、輸出及完成條件；十三個意圖的 workflow 與授權路由統一由
 `references/intent-routing.md` 維護，只載入目前分支的參考文件。Query 先查 Wiki；
-功能探索、Codebase audit、開發規格與 NotebookLM 依各自 source-first 流程讀取目前來源。
+功能探索、Codebase audit 與 NotebookLM 依各自 source-first 流程讀取目前來源。
 明確的合併／上版分支審查保持其原流程，不轉成 Wiki 健檢。
 
 查詢後的具體預覽只需一次範圍授權；完整 Ingest／探索／audit 保留逐檔及入口覆蓋、
@@ -78,8 +78,6 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 
 ## 職責
 
-- `development_spec` 的獨立規格、逐題釐清與 draft／ready 邊界見 [[development-specification]]；
-  此路由透過 Codex／Copilot 共用同一模板和驗證器。
 
 - 維持 Copilot prompts/hooks 與 Codex recipes/hooks 的共同 intent、
   authorization 與 completion contract。
@@ -112,8 +110,8 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 ## Evidence
 
 - 查詢具體預覽的一次授權及全量 Ingest 逐檔完成性見 [[query-follow-ups-and-ingest]]；
-  Codex 與 Copilot 共用相同 reference，原生套件保留通用規格，Megin 專屬匯出由下游擴充。
-- `parity-check.py` 驗證 contract 6、十四個 operation mapping、Codebase audit 的四類檢查／Git history／
+  Codex 與 Copilot 共用相同 reference。
+- `parity-check.py` 驗證 contract 6、十三個 operation mapping、Codebase audit 的四類檢查／Git history／
   validator contract、靜態邊界、prompt coupling、built-in
   prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
   root-resolved hooks，並驗證唯一 release workflow 的 trigger、權限、版本驗證、資產

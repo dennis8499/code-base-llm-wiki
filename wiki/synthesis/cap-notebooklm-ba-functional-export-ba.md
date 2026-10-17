@@ -19,7 +19,7 @@ sources:
   - .github/prompts/export-notebooklm.prompt.md
   - notebooklm.toml
   - tests/notebooklm/test_notebooklm_acceptance.py
-source_digest: "sha256:1e5a029ae9a327bc1e809691be689f48c367c19f7097d7494c3d431781d5aea8"
+source_digest: sha256:bddee8deb31a19b84e053e126192313c821035b2f37c228e3115b95c2cdcd6e4
 source_locators:
   - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4172"
   - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
@@ -29,7 +29,7 @@ source_locators:
   - "notebooklm.toml:1"
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-sa]]"]
-last_updated: 2026-10-13
+last_updated: 2026-10-17
 tags: [synthesis, business-analysis, codebase-as-is, notebooklm]
 status: active
 ---

@@ -95,9 +95,9 @@ preflight，apply 使用第二次 ID。流程缺口另外標成 `analysis-gap`�
 1. 唯讀執行 `python .agents/skills/codebase-wiki/scripts/ingest-coverage.py inventory
    --root .`，以共用 scanner 建立安全來源快照。涵蓋程式、設定、schema、文件、測試、
    CI／部署與工具，包含未追蹤、被 Git ignore 及巢狀 Repo 的安全來源。排除理由由
-   scanner 決定；`exports/megin/` 是交付產物，其他 `exports/` 仍可作來源。
+   scanner 決定；`exports/` 依一般來源規則處理。
    全量 Ingest 固定納入測試，不受 NotebookLM 的 `analysis_include_tests = false`
-   限縮；巢狀 Repo 的 `exports/megin/` 亦排除。
+   限縮。
 2. 在獲授權的 Batch 寫入階段保存 `wiki/ingest-coverage.json`。逐檔保留 path、sha256、
    category、status、pages 與 reason；已讀且完成處理才標 `processed`，指向實際 Wiki
    頁面或說明不需成頁的理由。無法讀取／尚未分析標 `blocked`，不得自行改成排除。

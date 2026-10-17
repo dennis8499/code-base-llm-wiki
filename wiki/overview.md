@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: "sha256:300ad542742cb73764004fe92a4020ed624ca097e81ffcdb9a7f68437430bade"
+source_digest: sha256:4446fbab56d6def62eea79d43f1e7381ebbb006d392fce300b2747a3e6c2bcb0
 derived_from: []
-last_updated: 2026-10-16
+last_updated: 2026-10-17
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -78,7 +78,7 @@ NotebookLM Exporter 每次從當下完整安全 Codebase 重新盤點，以 Wiki
 
 查詢可依 [[query-follow-ups-and-ingest]] 提供具體更新／保存預覽，選擇一次後完成
 所選工作流程與驗證；未選擇維持零寫入。全量 Ingest 以安全來源快照與逐檔處置清單
-檢查完整性。獨立規格的 ready 邊界及結構／語意檢查分工見 [[development-specification]]。
+檢查完整性。
 
 標準對齊文件能力由 [[business-analysis-document]]、[[system-analysis-document]]、
 [[system-design-document]] 與共用流程 [[generate-analysis-document]] 定義；三份文件可

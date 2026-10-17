@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - tools/validate_release.py
   - tests/release/test_validation.py
-source_digest: "sha256:28cf1daec1d31e742162acd01bb93c5633565ae47958ee1a4858450f748b808e"
+source_digest: sha256:a94c3f53505a42412174f9f982f36a65baf13a66f5426bc004303def79efb457
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-16
+last_updated: 2026-10-17
 tags: [module, lint, provenance, frontmatter, freshness]
 status: active
 ---

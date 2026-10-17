@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-16
+last_updated: 2026-10-17
 tags: [log]
 status: active
 ---
@@ -810,3 +810,11 @@ status: active
 
 - 核對可選 Output Style 優先、原 Concise fallback 與正式欄位保留；版本更新為本機候選 0.6.2。更新四筆已知來源（Skill 入口、README、ChangeLog、VERSION）的 coverage hash，以及引用這些來源的頁面摘要；未新增功能覆蓋或宣稱正式發布。
 - Affected pages: [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[framework-introduction]], [[release-and-update]], [[code-audit]], [[overview]]
+
+
+## [2026-10-17] update | Remove development specification integration
+
+- 移除開發規格路由、模板、驗證器與平台提示詞，既有文件保留；來源掃描改用一般 exports 規則。
+- 升級驗證舊安裝歸屬與內容後交易式移除舊入口，衝突保留原檔，補齊失敗與中斷復原測試。
+- 同步現行功能說明、框架來源覆蓋及摘要；歷史頁保留停用紀錄以維持既有 log 連結。
+- Affected pages: [[development-specification]], [[installer-and-upgrade]], [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[index]]

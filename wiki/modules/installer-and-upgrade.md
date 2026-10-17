@@ -17,9 +17,9 @@ sources:
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: "sha256:8d21aa952b3d4a73f720d7cab32a00239ee438b7fc7b32beca8ed6bebfd1c74c"
+source_digest: sha256:2fb2afb0aa91b159c9ea37c7e4433b360ee2c6e70daf86d1098fdb76409ecc6c
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-16
+last_updated: 2026-10-17
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -74,9 +74,10 @@ JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 ## Evidence
 
 - `_prepare_plan()` 以 manifest baseline 比較目標與新 framework fingerprints。
-- 上游移除的受管檔案不進入新安裝；upgrade 將舊路徑列入 `obsolete_paths` 並保留實體檔，
+- 一般上游移除的受管檔案不進入新安裝；upgrade 將舊路徑列入 `obsolete_paths` 並保留實體檔，
   `test_upgrade_reports_removed_live_database_rule_without_deleting_it` 與
   `test_upgrade_marks_removed_capability_paths_obsolete_without_deleting_them` 固定此相容性契約。
+  已明確撤下的開發規格五個檔案依下方歸屬驗證與交易式刪除規則處理。
 - `_atomic_write()` 先建立 stage/backup，再使用 `os.replace()` 套用及回復。
 - `_create_stage_directory()` 在 Windows 使用原子 `mkdir` 建立 stage；
   `test_windows_installed_files_inherit_target_permissions` 以 `icacls` 驗證安裝檔含
@@ -119,7 +120,7 @@ JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 
 ## Gaps
 
-- Obsolete paths 只回報，不自動刪除。
+- 除已明確撤下並可驗證歸屬的開發規格檔案外，其餘 obsolete paths 只回報，不自動刪除。
 - 尚未提供跨版本互動式 conflict resolver。
 
 ## 相關頁面
@@ -130,3 +131,12 @@ JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 - [[business-analysis]]
 - [[system-analysis]]
 - [[system-design]]
+
+## 已移除功能的升級
+
+開發規格的五個受管理檔案在升級時依 install-state 的原 SHA-256 驗證後刪除。
+`changes` 列出刪除項目，`obsolete_paths` 保留過時清單；既有 JSON contract 6 維持。
+本機修改或無安裝歸屬時列為 conflicts，停止全部套用。刪除與其他更新共用 before-image
+交易、失敗回復與程序中斷復原；使用者的 Wiki 與規格文件保留。
+
+歷史入口與既有文件的處理方式見 [[development-specification]]。

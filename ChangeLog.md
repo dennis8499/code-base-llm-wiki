@@ -24,6 +24,11 @@
 
 ## [Unreleased]
 
+### Removed
+
+- 移除開發規格路由、模板、驗證器及 Copilot 入口；既有規格保留為一般 synthesis 文件。
+- 移除 Megin 專用掃描排除；升級以交易式刪除未修改且有安裝歸屬的舊入口，衝突保留原檔。
+
 ### Changed
 
 - 目前 Skills root 已安裝 `output-style` 時，優先依其自動或明確指定模式呈現進度、回答與文件；獨立安裝缺少該 Skill 時保留既有 Concise 輸出，Wiki 的必要結構、來源證據與授權流程維持原契約。

@@ -8,7 +8,7 @@
 [![Obsidian Compatible](https://img.shields.io/badge/Obsidian-Compatible-7C3AED?logo=obsidian)](https://obsidian.md/)
 [![Latest Release](https://img.shields.io/github/v/release/dennis8499/code-base-llm-wiki?display_name=tag&sort=semver)](https://github.com/dennis8499/code-base-llm-wiki/releases/latest)
 
-Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`；一般查詢先讀 Wiki，Codebase audit 則先從目前 Codebase 盤點入口與呼叫路徑，只有遇到業務規則語意缺口才回查 Wiki。開發規格會先讀取目前 Codebase 的原始碼，再逐題釐清必要決策，產出可交接給任意實作流程的文件。
+Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent 會把已理解的模組、實體、模式、決策與操作經驗整理到 `wiki/`；一般查詢先讀 Wiki，Codebase audit 則先從目前 Codebase 盤點入口與呼叫路徑，只有遇到業務規則語意缺口才回查 Wiki。
 
 它不是 RAG：不建立向量資料庫、不複製完整原始碼，也不要求常駐本機搜尋服務。Windows x64
 另可用隨 Skill 提供的 tgrep 加速 Ingest／Archaeology 的來源探索；知識仍以可閱讀、可版本控制、
@@ -323,7 +323,7 @@ v3 報告仍可依舊契約驗證；新一輪 Audit 才升級為 v4。
 | [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
 | [架構與資料流](docs/product/architecture/README.md) | 三層模型、雙入口、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/operations/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/product/workflows/README.md) | 十三類意圖、14 個操作情境、平台對照與輸出契約 |
+| [工作流手冊](docs/product/workflows/README.md) | 十三類意圖、13 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/operations/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/operations/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |
@@ -352,9 +352,7 @@ Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 
 本 Repo 採用 MIT License，請參閱 [`LICENSE`](LICENSE)。
 
-## 開發規格
-
-在單一 Codebase 使用 `$codebase-wiki` 描述新功能，會進入獨立的 `development_spec` 流程：先查來源、逐題確認必要決策，再產生五段、可交接的規格。未回答的必要問題保持 draft；ready 代表資訊完整，不會替任何下游流程核准或建立 Issue。BA／SA／SD 保留原有用途。
+## Wiki 工作流程
 
 ### 查詢後續處理與全量 Ingest（0.6.0）
 
@@ -366,10 +364,6 @@ Repo 內的 `.sql`、migration 與 schema 仍可作為唯讀 source evidence。
 保存 `wiki/ingest-coverage.json`，以 `ingest-coverage.py validate` 核對逐檔 hash、
 處置與頁面／不需成頁理由；包含 src 外、ignored、untracked 與巢狀 Repo 安全來源。
 缺漏、受阻或來源漂移只能回報部分完成。
-
-通用開發規格的 ready 現在要求結構檢查，以及綁定正文與版次的 Agent 自足性檢查
-紀錄。舊 ready 規格須重新檢查後補上 `self_contained_review`、`reviewed_spec_digest`。
-結構成功不能取代語意審查。Megin 專屬匯出僅由 GitlabWorkSpace 擴充提供。
 
 ### 功能探索（0.5.0）
 

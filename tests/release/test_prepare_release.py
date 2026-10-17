@@ -42,7 +42,7 @@ class MetadataPreparationTests(unittest.TestCase):
         cls.seed.mkdir()
         names = release.git(ROOT, "ls-files", "--cached", "--others", "--exclude-standard", "-z").split(b"\0")
         for name in names:
-            if name:
+            if name and (ROOT / name.decode()).is_file():
                 relative = name.decode()
                 destination = cls.seed / relative
                 destination.parent.mkdir(parents=True, exist_ok=True)
