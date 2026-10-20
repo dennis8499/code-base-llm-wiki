@@ -10,9 +10,9 @@ sources:
   - .codex/hooks.json
   - .github/hooks/
   - tests/wiki/test_write_guard.py
-source_digest: sha256:0cbb1e22216f65d3c873fe98c4d23435f151315f5cad160bd52c92fe281111c0
+source_digest: sha256:113a9b0343f04437808e89fea4d968fffdf3edc5299b0c8e1314ac8cc17ebb41
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-09-04
+last_updated: 2026-10-20
 tags: [module, hooks, guard, codex, copilot]
 status: active
 ---
@@ -85,3 +85,7 @@ root 啟動時才回退目前目錄。Windows wrapper 以 `Get-Location` 與 `Jo
 - [[installer-and-upgrade]]
 - [[framework-introduction]]
 - [[system-analysis]]
+
+## 0.6.3 Windows 路徑與 writer
+
+Guard 接受解析後仍在 Repo 內的 Windows 絕對路徑，繼續拒絕 drive-relative 與 Repo 外路徑；framework 模式納入 root `scripts/` 維護。路徑 hook 本身不提供跨工具寫入鎖，持久 Wiki 由 [[bounded-resource-operations]] 的 writer／CAS 提交，Shell／編輯器繞過 helper 的寫入仍須以快照衝突偵測。

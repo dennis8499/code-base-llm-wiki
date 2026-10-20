@@ -269,6 +269,7 @@ from project_scanner import (  # noqa: E402
     parse_scan_settings,
     scan_project as shared_scan_project,
 )
+from offline_git import ProcessLimitError, run_git
 
 # ``analysis_status`` is deliberately separate from ``coverage_status``.  The
 # former says whether the analyst has completed the evidence trace; the latter
@@ -347,6 +348,8 @@ class Settings:
     exclude_paths: tuple[str, ...]
     dlp_profile: str
     config_path: Path | None
+    scan_max_file_bytes: int = 64 * 1024 * 1024
+    scan_max_total_bytes: int = 256 * 1024 * 1024
 
     @property
     def available_source_slots(self) -> int:
@@ -605,6 +608,8 @@ def load_settings(root: Path, config_path: Path | None = None) -> Settings:
         exclude_paths=scan_settings.exclude_paths,
         dlp_profile=dlp_profile,
         config_path=selected_config if selected_config.is_file() else None,
+        scan_max_file_bytes=scan_settings.scan_max_file_bytes,
+        scan_max_total_bytes=scan_settings.scan_max_total_bytes,
     )
 
 
@@ -899,6 +904,8 @@ def _is_dev_tool(relative: str) -> bool:
 
 
 def _is_transaction_artifact(relative: str) -> bool:
+    if any(".codebase-wiki-write." in part for part in PurePosixPath(relative.lower()).parts):
+        return True
     """Recognize crash-recovery siblings before they can become evidence."""
 
     markers = (
@@ -1308,7 +1315,8 @@ def coverage_disposition(
     return None
 
 
-def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> dict[str, Any]:
+def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile], *,
+                 source_texts: dict[str, str] | None = None) -> dict[str, Any]:
     """Return the canonical source-first inventory used by all export paths.
 
     The scanner owns filesystem boundaries and entrypoint candidates.  The
@@ -1317,7 +1325,7 @@ def scan_project(root: Path, settings: Settings, pages: Iterable[InputFile]) -> 
     """
 
     page_list = list(pages)
-    scan = shared_scan_project(root, settings, page_list)
+    scan = shared_scan_project(root, settings, page_list, source_texts=source_texts)
     scan["declared_source_paths"] = list(declared_source_paths(page_list, root))
     scan["business_source_count"] = sum(
         1
@@ -1360,9 +1368,13 @@ def scan_summary(scan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def collect_analysis_inputs(root: Path, scan: dict[str, Any]) -> tuple[InputFile, ...]:
+def collect_analysis_inputs(root: Path, scan: dict[str, Any], *,
+                            source_texts: dict[str, str] | None = None) -> tuple[InputFile, ...]:
     inputs: list[InputFile] = []
     for item in scan["included"]:
+        if source_texts is not None and item["path"] in source_texts:
+            inputs.append(InputFile(path=item["path"], text=source_texts[item["path"]], digest=item["sha256"]))
+            continue
         path = root / Path(*PurePosixPath(item["path"]).parts)
         try:
             data = path.read_bytes()
@@ -3932,23 +3944,11 @@ def git_revision(root: Path) -> str | None:
         return None
     try:
         root_path = root.resolve()
-        top_level = subprocess.run(
-            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-        )
+        top_level = run_git(root, "rev-parse", "--show-toplevel")
         if Path(top_level.stdout.strip()).resolve() != root_path:
             return None
-        result = subprocess.run(
-            ["git", "-C", str(root), "rev-parse", "HEAD"],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-        )
-    except (OSError, subprocess.CalledProcessError):
+        result = run_git(root, "rev-parse", "HEAD")
+    except (OSError, subprocess.CalledProcessError, ProcessLimitError):
         return None
     value = result.stdout.strip()
     return value or None
@@ -4890,6 +4890,8 @@ def _settings_fingerprint(settings: Settings, root: Path) -> dict[str, Any]:
         "reserved_source_slots": settings.reserved_source_slots,
         "max_source_bytes": settings.max_source_bytes,
         "max_source_words": settings.max_source_words,
+        "scan_max_file_bytes": settings.scan_max_file_bytes,
+        "scan_max_total_bytes": settings.scan_max_total_bytes,
         "business_source_paths": list(settings.business_source_paths),
         "extra_paths": list(settings.extra_paths),
         "exclude_paths": list(settings.exclude_paths),
@@ -5085,7 +5087,8 @@ def build_preflight(
 ) -> dict[str, Any]:
     pages, skipped, warnings = collect_wiki_pages(root)
     business_coverage = business_contract_coverage(pages)
-    scan = scan_project(root, settings, pages)
+    source_texts: dict[str, str] = {}
+    scan = scan_project(root, settings, pages, source_texts=source_texts)
     capability_coverage = capability_document_coverage(pages, root, scan)
     if business_coverage["unclassified_pages"]:
         warnings.append(
@@ -5105,7 +5108,7 @@ def build_preflight(
     warnings.extend(excluded_root_warnings(scan))
     coverage = coverage_summary(scan)
     _, analysis_dlp = mask_dlp_inputs(
-        collect_analysis_inputs(root, scan), phase="analysis"
+        collect_analysis_inputs(root, scan, source_texts=source_texts), phase="analysis"
     )
     dlp_message = dlp_warning(analysis_dlp)
     if dlp_message:
@@ -5132,7 +5135,10 @@ def build_preflight(
             ],
         }
     else:
-        lint_result = _load_wiki_lint().lint_wiki(root / "wiki", root, use_git=False)
+        lint_result = _load_wiki_lint().lint_wiki(
+            root / "wiki", root, use_git=False,
+            page_texts={root / page.path: page.text for page in pages},
+            source_hashes={root / item["path"]: item["sha256"] for item in scan["included"]})
     capability_paths = {
         PurePosixPath(document["path"]).relative_to("wiki").as_posix()
         for capability in capability_coverage["capabilities"]
@@ -5609,12 +5615,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                     raise ExportError(
                         "configuration changed during apply; prior output was preserved"
                     )
-                latest = build_preflight(root, latest_settings)
-                if (
-                    latest["discovery_id"] != preflight["discovery_id"]
-                    or latest["preflight_id"] != preflight["preflight_id"]
-                    or not latest["ready_to_export"]
-                ):
+                # Revalidate all input bytes and scope under the output lock.
+                # Lint, DLP and BA/SA planning are deterministic for those exact
+                # bytes and settings; rebuilding them cannot detect extra drift.
+                latest_pages, _, _ = collect_wiki_pages(root)
+                latest_scan = scan_project(root, latest_settings, latest_pages)
+                if (_discovery_identity(root, latest_settings, latest_scan)[1] != preflight["discovery_id"]
+                    or [(page.path, page.digest) for page in latest_pages] !=
+                       [(page.path, page.digest) for page in prepared["pages"]]):
                     raise ExportError(
                         "repository inputs changed during apply; prior output was preserved"
                     )

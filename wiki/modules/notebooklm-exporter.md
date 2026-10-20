@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: sha256:2d492415f69a6731c2fe0dc63c85409f21397a723095c8371fe02903042e97c6
+source_digest: sha256:1f1b88d9c1cc7f0b282293f4bbdef2aa36d2073a64027383464fe5e132fe447c
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-21
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
@@ -151,3 +151,7 @@ dispositions、source policy、input/output hashes、limits、DLP phases 與 upl
 - [[business-analysis]]
 - [[system-analysis]]
 - [[system-design]]
+
+## 0.6.3 共用快照
+
+Shared scanner 以同一個 bounded UTF-8 byte stream 產生文字與 SHA，analysis DLP 直接重用該文字；lint 重用 Wiki 文字／frontmatter 及已知來源 SHA。Apply 的最後檢查重新列舉並核對完整來源及 Wiki identity，來源或設定有變就保留舊 pack；相同輸入重用先前 deterministic lint、DLP 及 BA／SA plan。這是操作內快取，不跨操作沿用舊證據。輸入預算與 failure 邊界見 [[bounded-resource-operations]]。

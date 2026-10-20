@@ -4,6 +4,15 @@
 
 ---
 
+## 0.6.3 - 2026-10-20
+
+- Git 證據改用 bounded offline runner，禁止 lazy fetch、互動提示及外部 diff/textconv；缺物件、逾時或輸出超限維持可見缺口。
+- Scanner 以 dictionary 加速逐檔去重及 exact coverage；排除目錄摘要限量列舉，來源採 chunk hash／UTF-8 decode，輸入預算超限保留 blocked。
+- 修正 Windows 小檔串流的過量配置，以 8 KiB 起讀並按完整 chunk 倍增；整輪 I/O 預算納入 binary、無效 UTF-8 與單檔超限的已讀 bytes，耗盡後繼續 discovery 但不再開啟新來源。
+- NotebookLM preflight 共用同輪來源文字／SHA、Wiki 文字及解析；apply 保留來源、Wiki 與設定的最後漂移檢查，重用已驗證的 DLP 與文件規劃。
+- Wiki 日誌連結一次建立頁面索引；新增單一 writer、全 Wiki CAS、append-only log、失敗回復與中斷復原。rebuild-index 提供唯讀 --stdout 並以 writer 提交更新。
+- tgrep 搜尋限制時間、輸出及程序樹；Windows guard 支援 Repo 內絕對路徑及 framework scripts 維護。
+
 ## 0.6.1 - 2026-10-15
 
 - 精簡 Skill 入口，將十四個意圖的分流集中至單一索引，明列 source-first 例外、一次授權與逐分支完成條件；新增整合情境，保留既有 capability、驗證及副作用契約。

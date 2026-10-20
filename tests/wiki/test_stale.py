@@ -35,23 +35,21 @@ class StaleTests(unittest.TestCase):
                 (root / f"wiki/{name}.md").write_text(
                     "---\ntitle: Service\nsources: [src, src/service.py]\n"
                     f"source_digest: {digest}\nlast_updated: 2026-07-01\n---\n", encoding="utf-8")
-            original_sha = check_stale_module.hashlib.sha256
             with (mock.patch.object(check_stale_module, "latest_source_date", return_value=None) as dates,
                   mock.patch.object(check_stale_module, "_source_files", wraps=check_stale_module._source_files) as files,
-                  mock.patch.object(check_stale_module.hashlib, "sha256", wraps=original_sha) as hashes):
+                  mock.patch.object(check_stale_module, "hash_source_file", wraps=check_stale_module.hash_source_file) as hashes):
                 first = check_stale(root / "wiki", root)
                 self.assertFalse(first["critical"] or first["warning"])
-                self.assertEqual(dates.call_count, 2)
+                self.assertEqual(dates.call_count, 0)
                 self.assertEqual(files.call_count, 2)
-                self.assertEqual(sum(call.args == (b"return 1\n",) for call in hashes.call_args_list), 1)
+                self.assertEqual(hashes.call_count, 1)
                 source.write_bytes(b"return 2\n")
                 (root / "src/new.py").write_bytes(b"added\n")
                 second = check_stale(root / "wiki", root)
                 self.assertEqual(len(second["warning"]), 2)
-                self.assertEqual(dates.call_count, 4)
+                self.assertEqual(dates.call_count, 0)
                 self.assertEqual(files.call_count, 4)
-                self.assertEqual(sum(call.args == (b"return 2\n",) for call in hashes.call_args_list), 1)
-                self.assertEqual(sum(call.args == (b"added\n",) for call in hashes.call_args_list), 1)
+                self.assertEqual(hashes.call_count, 3)
 
     def test_check_stale_cli_reports_success_warning_and_input_errors(self) -> None:
         script = str(SCRIPTS / "check-stale.py")

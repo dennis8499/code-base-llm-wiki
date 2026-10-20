@@ -29,9 +29,14 @@ python .agents\skills\codebase-wiki\scripts\tgrep-search.py `
 
 Supported wrapper options are deliberately narrow: `--pattern`, `--files`,
 `--fixed`, `--ignore-case`, `--files-only`, `--count`, `--context`, repeated
-`--glob`, repeated `--type`, `--no-index`, and `--json`. The wrapper places
+`--glob`, repeated `--type`, `--no-index`, `--json`, `--timeout`, and
+`--max-output-bytes`. The wrapper places
 `--` before a search pattern, does not use a shell, and rejects a path that
 resolves outside `--root`.
+
+Search defaults to 30 seconds and 8 MiB of combined stdout/stderr. Exceeding a
+budget stops the process tree and returns an incomplete-search error (2), without
+publishing truncated output as a successful search. Narrow the path/glob first.
 
 Use `--fixed` for a user-provided symbol or string, `--files-only` before a
 broad content query, and `--context 2` or `--context 3` when surrounding code

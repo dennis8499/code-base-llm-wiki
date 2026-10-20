@@ -15,6 +15,8 @@ import stat
 import subprocess
 import sys
 from typing import Sequence
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from bounded_process import ProcessLimitError, run_bounded
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +26,8 @@ SUPPORTED_MACHINES = frozenset({"amd64", "x86_64", "x64"})
 TGREP_EXIT_CODES = frozenset({0, 1, 2})
 UNAVAILABLE_EXIT_CODE = 3
 MAX_CHECK_SECONDS = 10
+MAX_SEARCH_SECONDS = 30
+MAX_SEARCH_OUTPUT_BYTES = 8 * 1024 * 1024
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 EXPECTED_VERSION = "1.0.5"
 EXPECTED_PLATFORM = "windows-x86_64"
@@ -250,17 +254,14 @@ def _emit(data: bytes, stream: object) -> None:
     text_stream.flush()  # type: ignore[attr-defined]
 
 
-def run_search(command: Sequence[str], root: Path) -> int:
+def run_search(command: Sequence[str], root: Path, *, timeout: float = MAX_SEARCH_SECONDS,
+               max_output_bytes: int = MAX_SEARCH_OUTPUT_BYTES) -> int:
     """Run without a shell and preserve tgrep's documented exit codes."""
 
     try:
-        result = subprocess.run(
-            list(command),
-            cwd=str(root),
-            capture_output=True,
-            check=False,
-            shell=False,
-        )
+        result = run_bounded(command, cwd=str(root), timeout=timeout, max_output_bytes=max_output_bytes)
+    except ProcessLimitError as exc:
+        raise TgrepError(f"incomplete source search: {exc}") from exc
     except OSError as exc:
         raise TgrepUnavailable(f"unable to execute bundled tgrep: {exc}") from exc
     _emit(result.stdout, sys.stdout)
@@ -288,6 +289,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-index", action="store_true", help="read the current filesystem instead of an index")
     parser.add_argument("--json", action="store_true", help="request tgrep JSON output")
     parser.add_argument("--check", action="store_true", help="verify the bundled binary and version")
+    parser.add_argument("--timeout", type=float, default=MAX_SEARCH_SECONDS, help="search deadline in seconds")
+    parser.add_argument("--max-output-bytes", type=int, default=MAX_SEARCH_OUTPUT_BYTES, help="combined stdout/stderr budget")
     return parser
 
 
@@ -302,6 +305,8 @@ def _validate_arguments(parser: argparse.ArgumentParser, args: argparse.Namespac
         parser.error("one of --pattern or --files is required")
     if args.context is not None and args.context < 0:
         parser.error("--context must be zero or greater")
+    if args.timeout <= 0 or args.max_output_bytes <= 0:
+        parser.error("timeout and output budget must be positive")
     if args.list_files and any((args.fixed, args.ignore_case, args.files_only, args.count, args.context, args.json)):
         parser.error("file listing cannot use pattern-only flags")
 
@@ -317,7 +322,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         root, _, relative_path = resolve_search_path(args.root, args.path)
         bundle = validate_bundle()
-        return run_search(build_command(args, bundle, root, relative_path), root)
+        return run_search(build_command(args, bundle, root, relative_path), root,
+                          timeout=args.timeout, max_output_bytes=args.max_output_bytes)
     except TgrepError as exc:
         print(f"tgrep unavailable: {exc}" if isinstance(exc, TgrepUnavailable) else f"tgrep search error: {exc}", file=sys.stderr)
         return exc.exit_code

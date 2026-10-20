@@ -8,8 +8,8 @@ sources:
   - .agents/skills/codebase-wiki/scripts/ingest_coverage.py
   - .agents/skills/codebase-wiki/scripts/ingest-coverage.py
   - tests/contracts/test_ingest_coverage.py
-source_digest: sha256:0fad5027b44914dfe9efe7fb23bd31ffa8dbfb8a765bc107181c11b0b50ca3b1
-last_updated: 2026-10-17
+source_digest: sha256:cfbebc93e0d29559dbe75207968e60083afe6b4acd33cac1938a13cdb7547635
+last_updated: 2026-10-20
 tags: [module, query, ingest, coverage, authorization]
 status: active
 notebooklm_role: exclude
@@ -37,3 +37,7 @@ validate 依原請求 scope 重掃；遺漏、重複、映射不存在、受阻�
 部分完成。Group 擴充以全部合法直屬本機 Repo 為預設，明確清單才限縮；原生模式只
 涵蓋目前專案。完成性驗證只證明處置與來源快照完整，來源理解與頁面品質仍由 Agent
 核對。相關邊界見 [[wiki-quality-and-provenance]]。
+
+## 0.6.3 全量讀取與寫入
+
+來源仍全量列舉 ignored／untracked／巢狀 Repo；dictionary 去重及 exact coverage lookup 不縮小清冊。64 MiB 單檔與 256 MiB 操作總量預算超限時保留 blocked，逐檔 ledger 不得偽報 complete。獲授權的 Wiki 頁面、index 與 log 透過 [[bounded-resource-operations]] 的單一 writer／全 Wiki CAS 一起提交，原有一次授權及人工 notes 保留規則不變。

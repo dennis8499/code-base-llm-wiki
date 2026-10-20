@@ -18,6 +18,9 @@ code path.
    - `git log --all --oneline --grep "{keyword}"`
    - `git blame -L start,end path/to/file`
    - `git show <commit> -- path/to/file`
+   Execute these through `scripts/offline-git.py` as described in
+   [resource-safety.md](resource-safety.md); narrow queries when bounded output or
+   missing objects leave a gap. The helper disables lazy fetching and external helpers.
 6. Persist findings only when the user asks or the task explicitly includes
    wiki updates.
 

@@ -6,6 +6,7 @@ import json
 from dataclasses import replace
 from pathlib import Path, PurePosixPath
 import subprocess
+from offline_git import run_git
 
 from frontmatter import is_reparse_point
 from project_scanner import load_scan_settings, scan_project
@@ -45,8 +46,7 @@ def repository_names(root: Path, scope: str, selected: list[str] | None) -> list
         repo = safe_path(root, name)
         if not repo.is_dir() or not (repo / ".git").exists() or is_reparse_point(repo / ".git"):
             raise ValueError(f"not a regular direct-child repository: {name}")
-        result = subprocess.run(["git", "-C", str(repo), "rev-parse", "--show-toplevel"],
-                                capture_output=True, text=True, encoding="utf-8", check=False)
+        result = run_git(repo, "rev-parse", "--show-toplevel", check=False)
         if result.returncode or Path(result.stdout.strip()).resolve() != repo.resolve():
             raise ValueError(f"not a valid repository root: {name}")
     return names

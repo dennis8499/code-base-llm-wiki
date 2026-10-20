@@ -35,6 +35,10 @@ a code-derived operation/input, expected result, and actual or conditional resul
 
 ## Evidence and scan boundaries
 
+Execute the Git evidence commands below through `scripts/offline-git.py` using
+[resource-safety.md](resource-safety.md). Missing objects and exceeded budgets
+remain visible history gaps; the helper never performs lazy fetches.
+
 1. Start with the current Codebase tree, independently of Wiki coverage. Run
    `python .agents/skills/codebase-wiki/scripts/scan-project.py --root <root>
    --profile target --format json` and use its snapshot as the inventory

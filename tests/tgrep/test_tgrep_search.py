@@ -154,14 +154,15 @@ class TgrepWrapperTests(unittest.TestCase):
                 wrapper.validate_bundle()
         self.assertEqual(raised.exception.exit_code, 3)
 
-    def test_run_search_disables_shell_and_preserves_documented_codes(self) -> None:
+    def test_run_search_delegates_bounds_and_preserves_documented_codes(self) -> None:
         wrapper = load_wrapper()
         result = subprocess.CompletedProcess(["tgrep"], 1, b"", b"")
-        with mock.patch.object(wrapper.subprocess, "run", return_value=result) as run:
+        with mock.patch.object(wrapper, "run_bounded", return_value=result) as run:
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 code = wrapper.run_search(["tgrep", "--", "pattern", "."], Path("."))
         self.assertEqual(code, 1)
-        self.assertFalse(run.call_args.kwargs["shell"])
+        self.assertEqual(run.call_args.kwargs["timeout"], 30)
+        self.assertEqual(run.call_args.kwargs["max_output_bytes"], 8 * 1024 * 1024)
 
 
 if __name__ == "__main__":

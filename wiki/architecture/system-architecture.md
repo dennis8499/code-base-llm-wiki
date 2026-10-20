@@ -18,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/assets/code-audit-template.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-source_digest: sha256:71304c36f95a69219d0dd737486ee285490d06319ed83109f1828df33d404ef6
+source_digest: sha256:86d9aced15eb630474c5c97f8a08cf82868914be5e524e71ea2fd3f680931629
 derived_from: ["[[overview]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -137,3 +137,7 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 - [[system-analysis]]
 - [[system-design]]
 - [[framework-introduction]]
+
+## 0.6.3 資源與提交邊界
+
+本機證據及持久 Wiki 的共用機制見 [[bounded-resource-operations]]：Git 讀取有離線、時間與輸出限制；Scanner 與 NotebookLM 在單次操作內共用內容快照，apply 仍重新核對原始來源、Wiki 及設定。Wiki 頁面、index 與 log 由單一 writer／全 Wiki CAS 一起提交，未參與鎖的讀者須核對快照。

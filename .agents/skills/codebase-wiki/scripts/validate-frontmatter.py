@@ -110,10 +110,11 @@ def relative_posix(path: pathlib.Path, root: pathlib.Path) -> pathlib.PurePosixP
     return pathlib.PurePosixPath(path.relative_to(root).as_posix())
 
 
-def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path) -> list[str]:
+def validate_page(path: pathlib.Path, wiki_dir: pathlib.Path, *, text: str | None = None,
+                  frontmatter: dict | None = None) -> list[str]:
     errors: list[str] = []
-    text = path.read_text(encoding="utf-8")
-    fm = parse_frontmatter_text(text)
+    text = path.read_text(encoding="utf-8") if text is None else text
+    fm = parse_frontmatter_text(text) if frontmatter is None else frontmatter
     rel = relative_posix(path, wiki_dir)
 
     if not fm:

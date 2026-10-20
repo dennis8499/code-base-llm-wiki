@@ -17,9 +17,9 @@ sources:
   - .github/prompts/code-audit.prompt.md
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:2fb2afb0aa91b159c9ea37c7e4433b360ee2c6e70daf86d1098fdb76409ecc6c
+source_digest: sha256:0dc488ee3f6d8fe34b28db87aa2d9708aff41a5bd990d23af9d8a13ace9f5663
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -140,3 +140,7 @@ JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 交易、失敗回復與程序中斷復原；使用者的 Wiki 與規格文件保留。
 
 歷史入口與既有文件的處理方式見 [[development-specification]]。
+
+## 0.6.3 工具交付
+
+新增離線 Git、bounded process、Wiki writer／CAS 及其 CLI 均隨原生 Skill scripts 封裝，維持標準函式庫、唯讀 raw-source 與既有 installer 交易契約。持久 Wiki 的檔案交易與 installer／NotebookLM output locks 各自保護所屬表面，操作見 [[bounded-resource-operations]]。

@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:4446fbab56d6def62eea79d43f1e7381ebbb006d392fce300b2747a3e6c2bcb0
+source_digest: sha256:a64227fae230d84e50e65e83904e021f55583163e2e8843332a8df6f98036626
 derived_from: []
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -136,6 +136,10 @@ tgrep wrapper 定位候選 source；結果必須重新讀取目前 source 才能
 未支援的非文字證據、外部 stakeholder 確認與 NotebookLM 實際回答品質，都保留在
 [[business-knowledge-gaps]]。固定 BA 驗收題組未達門檻時，應修正 BA Wiki 後重跑
 readiness preflight。
+
+## 資源及並行維護
+
+[[bounded-resource-operations]] 說明 0.6.3 的離線 Git、Scanner／搜尋預算、NotebookLM 操作內快照，以及 Wiki 單一 writer／CAS。超限、來源漂移與並行衝突維持可見缺口，保留人工內容及已存在的日誌正文。
 
 <!-- codebase-wiki:managed:end -->
 

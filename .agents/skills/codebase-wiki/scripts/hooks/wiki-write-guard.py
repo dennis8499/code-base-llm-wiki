@@ -27,6 +27,7 @@ FRAMEWORK_PREFIXES = (
     "samples/",
     "tests/",
     "tools/",
+    "scripts/",
 )
 FRAMEWORK_ROOT_FILES = {
     ".gitattributes",

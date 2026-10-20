@@ -17,15 +17,15 @@ sources:
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-frontmatter.py
   - tests/contracts/test_contracts.py
-source_digest: sha256:baa140247539c37fa8a5a321d5a9f894fcc1ce4a9a0f1b06604a992d619f52d9
+source_digest: sha256:f2628c5061d2de3757ede670ccb15f9ccc91aa827bc57ad803fc9681e67f74f3
 source_locators:
   - ".agents/skills/codebase-wiki/references/business-analysis-workflow.md:12"
   - ".agents/skills/codebase-wiki/references/system-analysis-workflow.md:13"
   - ".agents/skills/codebase-wiki/references/system-design-workflow.md:14"
-  - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215"
+  - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:113"
   - "tests/contracts/test_contracts.py:1"
 derived_from: ["[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[cap-analysis-document-generation-ba]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -62,6 +62,10 @@ Codebase 未提供背景服務、資料庫、網路 API 或自動文件生成 ru
 ## 對應 BA
 
 [[cap-analysis-document-generation-ba]]
+## 0.6.3 Wiki 提交一致性
+
+文件保存採 Wiki writer／全域快照 CAS，將頁面、index 及一筆 append-only log 一起提交；並行新增、刪除或人工 notes 變更均要求重新協調。此機制提供本機檔案 staging、失敗復原及 crash recovery，來源及操作證據見 [[bounded-resource-operations]]，不改變文件內容的語意驗證責任。
+
 <!-- codebase-wiki:managed:end -->
 
 <!-- codebase-wiki:user-notes:start -->

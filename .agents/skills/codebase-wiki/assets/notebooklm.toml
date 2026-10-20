@@ -7,6 +7,11 @@ output_directory = ".notebooklm"
 content_mode = "ba_sa"
 analysis_include_tests = true
 
+# Input scan budgets. Exceeded limits remain blocked and prevent full completion.
+# Total bytes include failed reads; exhausted scans discover without opening more sources.
+scan_max_file_bytes = 67108864
+scan_max_total_bytes = 268435456
+
 # Lower source_limit when the organization's Workspace tier has fewer slots.
 source_limit = 300
 reserved_source_slots = 0

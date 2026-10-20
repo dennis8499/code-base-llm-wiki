@@ -19,9 +19,9 @@ sources:
   - .github/prompts/export-notebooklm.prompt.md
   - notebooklm.toml
   - tests/notebooklm/test_notebooklm_acceptance.py
-source_digest: sha256:bddee8deb31a19b84e053e126192313c821035b2f37c228e3115b95c2cdcd6e4
+source_digest: sha256:0ca5244d8d4d8b508945a76af3f856937e94db1b39b6d3e4ae8da5473eeba8be
 source_locators:
-  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4172"
+  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5082"
   - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
   - ".agents/skills/codebase-wiki/scripts/project_scanner.py:1"
   - ".agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:1"
@@ -29,7 +29,7 @@ source_locators:
   - "notebooklm.toml:1"
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-sa]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-21
 tags: [synthesis, business-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -74,6 +74,10 @@ status: active
 ## 對應 SA
 
 [[cap-notebooklm-ba-functional-export-sa]]
+## 0.6.3 完整性與等待邊界
+
+大型來源超過明確輸入預算時，使用者會得到 blocked／partial，保留未完成項目。來源、Wiki 或設定在套用前改變時保留先前來源包；同輪已核對內容可重用以減少等待。技術界線及本機驗證見 [[bounded-resource-operations]]，不新增上傳或服務操作。
+
 <!-- codebase-wiki:managed:end -->
 
 <!-- codebase-wiki:user-notes:start -->

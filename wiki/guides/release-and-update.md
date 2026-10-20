@@ -27,9 +27,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:1215dfdedfa59877a98e476149054dbae701f67efb24cca62b5a45e5ba812d6d
+source_digest: sha256:ca9182711a2b125dc6812825d5ae3acb2af4968e13a5095ba3390b855a09e2aa
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -148,3 +148,7 @@ tag 與上游 attribution。上游方法論文件只保留原創摘要、作者�
 - [[framework-introduction]] — 安裝、升級與驗收
 - [[platform-adapters-and-release]] — 平台 parity、本機驗證與 release readiness 實作
 - [[system-analysis]] — 系統級風險與待確認事項
+
+## 0.6.3 維護驗證
+
+本機候選 0.6.3 加入 [[bounded-resource-operations]]。核心變更在原生 framework／Skill 維護，通過單元、parity、frontmatter、stale、index、log 及 readiness 後再交給外層組合包重建。`tools/benchmark_resources.py` 可比較 HEAD 與目前 scanner／log 的本機微型基準；保存結果不代表真 GitLab 壓測或正式發布。

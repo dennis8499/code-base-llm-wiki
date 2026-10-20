@@ -18,9 +18,9 @@ sources:
   - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
   - tests/tgrep/test_tgrep_search.py
   - tests/contracts/test_code_audit_validator.py
-source_digest: sha256:6a8e764a85c47c7f755ca5dfca5b76800517975b1b3632b393aca9089fe53df8
+source_digest: sha256:94bda06bd3c991d7c8e75bf87b08c5d9c1e38335caa9e58b8f3846d14a44e9c2
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -272,3 +272,7 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 - [[business-analysis]] — 業務分析與 BA traceability
 - [[system-analysis]] — solution-neutral 系統分析與 verification needs
 - [[system-design]] — 架構與設計 views、決策及品質策略
+
+## 0.6.3 本機維護
+
+目前本機候選為 0.6.3。[[bounded-resource-operations]] 說明離線 Git、來源預算、快照重用、搜尋限制及 Wiki writer；超限或缺少證據保留 partial，人工內容及既有日誌正文保留。這次維護沒有發布或宣稱已通過 Codex／Copilot host 的真人對話驗收。

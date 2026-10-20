@@ -428,6 +428,7 @@ class WriteGuardTests(unittest.TestCase):
             "samples/task-tracker/README.md",
             "tests/wiki/test_write_guard.py",
             "tools/release.py",
+            "scripts/release_ci.py",
             "VERSION",
             "LICENSE.txt",
             "wiki/index.md",
@@ -438,6 +439,13 @@ class WriteGuardTests(unittest.TestCase):
         for path in allowed:
             with self.subTest(path=path):
                 self.assertTrue(guard.is_allowed_path(path, "framework"))
+
+    @unittest.skipUnless(os.name == "nt", "Windows absolute paths")
+    def test_windows_absolute_paths_inside_repository_are_valid_edit_targets(self) -> None:
+        guard = load_guard()
+        self.assertTrue(guard.is_allowed_path(str(REPO_ROOT / "wiki/index.md"), "wiki-only"))
+        self.assertFalse(guard.is_allowed_path(str(REPO_ROOT.parent / "outside.md"), "wiki-only"))
+        self.assertFalse(guard.is_allowed_path("C:wiki/index.md", "wiki-only"))
 
     def test_target_mode_only_allows_wiki(self) -> None:
         guard = load_guard()

@@ -238,7 +238,9 @@ def main(argv: list[str] | None = None) -> int:
     configure_utf8_stdio()
     parser = argparse.ArgumentParser()
     parser.add_argument("wiki_dir", nargs="?", type=pathlib.Path, default=pathlib.Path("wiki"))
-    parser.add_argument("--check", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--check", action="store_true")
+    mode.add_argument("--stdout", action="store_true", help="render an index for a Wiki write plan without writing")
     args = parser.parse_args(argv)
     wiki_dir = args.wiki_dir
     if not wiki_dir.is_dir():
@@ -270,12 +272,20 @@ def main(argv: list[str] | None = None) -> int:
             print(f"OK: {wiki_dir / 'index.md'} matches expected page/type entries")
             return 0
 
+        from wiki_transaction import commit, snapshot
+        root = wiki_dir.resolve().parent
+        expected = snapshot(root) if not args.stdout else None
         content = rebuild_index(wiki_dir)
+        if args.stdout:
+            print(content, end="")
+            return 0
         index_path = wiki_dir / "index.md"
-        index_path.write_text(content, encoding="utf-8")
+        date = __import__("datetime").date.today().isoformat()
+        commit(root, {"wiki/index.md": content.encode("utf-8")}, expected,
+               log_append=f"## [{date}] update | Rebuild managed Wiki index\n\n- Affected pages: [[index]]".encode("utf-8"))
         print(f"✅ index.md rebuilt at {index_path}")
         return 0
-    except (OSError, UnicodeError) as exc:
+    except (OSError, UnicodeError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
 

@@ -16,9 +16,9 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: "sha256:6b295d7aa0d38354f8b6d6b33edfaeb1555a30b5782e62850002352f59985b39"
+source_digest: sha256:0b21df3086f06bdb54cd8fc93e5b21cbc8d2a73f4bf87a6636a1e9a48122a51c
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]"]
-last_updated: 2026-10-03
+last_updated: 2026-10-21
 tags: [business-requirement, notebooklm, export, dlp]
 status: active
 ---
@@ -109,6 +109,10 @@ System Analyst 可直接查詢的現況知識。程式、設定、schema、測�
 
 - `gap-notebooklm-non-text-evidence`：非 UTF-8／Office／影像型業務證據由誰轉換與核准？
 - `gap-notebooklm-tenant-uat`：目標 tenant 的實際 DLP 與回答品質是否通過企業驗收？
+## 0.6.3 資源情境
+
+輸入超過明確 scan budget 時保留 blocked，不產生完整匯出結論。來源、Wiki 或設定在 apply 中變更時保留先前 pack；相同輸入共用單輪的文字、SHA、DLP 與文件規劃結果。相應實作及本機測試見 [[bounded-resource-operations]]，不取代既有語意及租戶驗收。
+
 <!-- codebase-wiki:managed:end -->
 
 <!-- codebase-wiki:user-notes:start -->

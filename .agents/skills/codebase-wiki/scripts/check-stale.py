@@ -13,6 +13,7 @@ import datetime as _datetime
 import hashlib
 import re
 import subprocess
+from offline_git import ProcessLimitError, run_git
 import sys
 from typing import Any
 
@@ -55,38 +56,27 @@ def parse_frontmatter(filepath: pathlib.Path) -> dict:
 
 def git_dirty_paths(repo_root: pathlib.Path) -> set[str]:
     try:
-        result = subprocess.run(
-            ["git", "-C", str(repo_root), "status", "--porcelain", "--untracked-files=all"],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-        )
-    except (OSError, subprocess.CalledProcessError):
+        result = run_git(repo_root, "status", "--porcelain", "-z", "--untracked-files=all")
+    except (OSError, subprocess.CalledProcessError, ProcessLimitError):
         return set()
     paths: set[str] = set()
-    for line in result.stdout.splitlines():
+    records = iter(result.stdout.split("\0"))
+    for line in records:
         if len(line) < 4:
             continue
-        value = line[3:].strip()
-        if " -> " in value:
-            value = value.rsplit(" -> ", 1)[1]
+        value = line[3:]
+        if "R" in line[:2] or "C" in line[:2]:
+            next(records, None)  # -z emits destination then original name.
         paths.add(value.replace("\\", "/"))
     return paths
 
 
 def latest_source_date(repo_root: pathlib.Path, source: str) -> _datetime.date | None:
     try:
-        result = subprocess.run(
-            ["git", "-C", str(repo_root), "log", "-1", "--format=%cs", "--", source],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-        )
+        result = run_git(repo_root, "log", "-1", "--format=%cs", "--", source)
         value = result.stdout.strip()
         return _datetime.date.fromisoformat(value) if value else None
-    except (OSError, subprocess.CalledProcessError, ValueError):
+    except (OSError, subprocess.CalledProcessError, ProcessLimitError, ValueError):
         return None
 
 
@@ -147,11 +137,7 @@ def _source_files(
     else:
         relative_source = source_path.relative_to(repo_root.resolve()).as_posix()
         try:
-            result = subprocess.run(
-                [
-                    "git",
-                    "-C",
-                    str(repo_root),
+            result = run_git(repo_root,
                     "ls-files",
                     "--cached",
                     "--others",
@@ -159,16 +145,14 @@ def _source_files(
                     "-z",
                     "--",
                     relative_source,
-                ],
-                check=True,
-                capture_output=True,
+                text=False,
             )
             candidates = [
                 repo_root / value.decode("utf-8", errors="surrogateescape")
                 for value in result.stdout.split(b"\0")
                 if value
             ]
-        except (OSError, subprocess.CalledProcessError):
+        except (OSError, subprocess.CalledProcessError, ProcessLimitError):
             candidates = _filesystem_source_files(repo_root, source_path)
 
     files: list[pathlib.Path] = []
@@ -185,15 +169,23 @@ def _source_files(
     return sorted(set(files), key=lambda item: item.resolve().as_posix())
 
 
+def hash_source_file(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 class SourceCache:
     """One check's source snapshot; never retain Git/filesystem data across calls."""
 
-    def __init__(self, repo_root: pathlib.Path, use_git: bool):
+    def __init__(self, repo_root: pathlib.Path, use_git: bool, source_hashes: dict | None = None):
         self.repo_root = repo_root
         self.use_git = use_git
         self.dates: dict[str, _datetime.date | None] = {}
         self.files: dict[str, list[pathlib.Path]] = {}
-        self.hashes: dict[pathlib.Path, str] = {}
+        self.hashes: dict[pathlib.Path, str] = {path.resolve(): digest for path, digest in (source_hashes or {}).items()}
 
     @staticmethod
     def key(source: str) -> str:
@@ -214,7 +206,7 @@ class SourceCache:
     def file_digest(self, path: pathlib.Path) -> str:
         key = path.resolve()
         if key not in self.hashes:
-            self.hashes[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+            self.hashes[key] = hash_source_file(path)
         return self.hashes[key]
 
 
@@ -240,7 +232,8 @@ def compute_source_digest(
 
 
 def check_stale(
-    wiki_dir: pathlib.Path, repo_root: pathlib.Path, *, use_git: bool = True
+    wiki_dir: pathlib.Path, repo_root: pathlib.Path, *, use_git: bool = True,
+    page_frontmatter: dict | None = None, source_hashes: dict | None = None,
 ):
     """檢查每個 wiki 頁面的 sources 是否仍存在。"""
     validate_regular_tree(wiki_dir)
@@ -248,9 +241,9 @@ def check_stale(
     results: dict[str, list[Any]] = {"critical": [], "warning": [], "ok": []}
 
     dirty_paths = git_dirty_paths(repo_root) if use_git else set()
-    cache = SourceCache(repo_root, use_git)
+    cache = SourceCache(repo_root, use_git, source_hashes)
     for fp in md_files:
-        fm = parse_frontmatter(fp)
+        fm = page_frontmatter[fp] if page_frontmatter is not None and fp in page_frontmatter else parse_frontmatter(fp)
         sources = fm.get("sources", [])
         if not sources:
             continue
@@ -262,6 +255,9 @@ def check_stale(
         except ValueError:
             repo_page_path = ""
         page_is_dirty = repo_page_path in dirty_paths
+        # Exact content fingerprints determine freshness without one Git log
+        # process per source. Legacy pages still use commit dates as a fallback.
+        has_content_digest = bool(re.fullmatch(r"sha256:[0-9a-f]{64}", str(fm.get("source_digest", ""))))
         missing = []
         existing = []
         stale = []
@@ -313,6 +309,7 @@ def check_stale(
             )
             changed_after_page = bool(
                 use_git
+                and not has_content_digest
                 and page_date
                 and (latest := cache.latest_date(normalized))
                 and latest > page_date

@@ -19,6 +19,14 @@ Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent
 
 ---
 
+## 資源與寫入一致性
+
+本機 Git 證據使用 `offline-git.py`，預設 30 秒／8 MiB，缺物件保持缺口，不會 lazy fetch。
+Scanner 保留完整安全來源列舉，輸入預算超限標為 blocked；NotebookLM 共用單輪讀取，提交前
+重新核對全部來源、Wiki 與設定。Wiki 頁面、index 與日誌透過 `wiki-write.py` 的單一 writer／CAS
+一起提交，保留人工內容與 append-only 日誌；tgrep 也有時間與輸出上限。細節與操作見
+[資源及交易契約](.agents/skills/codebase-wiki/references/resource-safety.md)。
+
 ## 目錄
 
 - [專案結構](#專案結構)
@@ -219,7 +227,7 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.6.1`。Installer 會把目前版本保存到目標 Repo 的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.6.3`。Installer 會把目前版本保存到目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
 installer contract 版本。
 

@@ -20,9 +20,9 @@ sources:
   - tests/contracts/test_code_audit_validator.py
   - tests/fixtures/code-audit/history/README.md
   - tests/fixtures/code-audit/history/expected-findings.md
-source_digest: sha256:1f4b6d0d05f447a15fd54581093def96eb37c25da4a31112e6b2811987c317e9
+source_digest: sha256:d34004db8b62f785bf293bbf5c67ec9e8d9e1e20d466d514299b9ae4c835621c
 derived_from: ["[[system-architecture]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-21
 tags: [module, code-audit, static-analysis, business-logic, git-history]
 status: active
 notebooklm_group: local-governance
@@ -107,3 +107,7 @@ report template。驗收 fixture 涵蓋多入口共享根因、交易／設定�
 - [[system-architecture]]
 - [[platform-adapters-and-release]]
 - [[project-function-catalog]]
+
+## 離線歷史與資源缺口
+
+歷史命令透過 `scripts/offline-git.py`，禁止 lazy fetch、互動提示及外部 diff／textconv；30 秒或 8 MiB 超限就停止並保留歷史缺口。Scanner 的來源預算超限也保留 blocked，而不是縮小完整性結論。持久報告與 index／log 使用 [[bounded-resource-operations]] 的 writer／CAS；原有靜態追查及逐功能覆蓋契約不變。

@@ -44,9 +44,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:1ca17a1889675ca2cf12680fa709376d9891bbd0f7b887f289fb51e4a548fdc3
+source_digest: sha256:900ee70a918c63d84f26e43e8b91dfd10e2663555ea20c6befd8acf1d4dd6e9f
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -186,3 +186,7 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 - [[business-analysis]]
 - [[system-analysis]]
 - [[system-design]]
+
+## 0.6.3 跨入口一致性
+
+Skill 的 Runtime bounds pointer 讓兩個平台共用 `resource-safety.md`，將離線 Git、來源預算與 Wiki writer／CAS 收斂到相同腳本。Root 與 Skill 版號更新為本機候選 0.6.3；封裝仍由原生 release builder 產生，沒有直接改寫既有正式附件或擴大外部發布授權。參見 [[bounded-resource-operations]]。

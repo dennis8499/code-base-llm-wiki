@@ -10,6 +10,7 @@ follows links or reparse points outside the root.
 from __future__ import annotations
 
 from collections import Counter
+import codecs
 from dataclasses import dataclass
 import fnmatch
 import hashlib
@@ -26,6 +27,8 @@ SCAN_SCHEMA_VERSION = 2
 SCAN_PROFILES = frozenset({"target", "framework"})
 DEFAULT_SCAN_PROFILE = "target"
 DEFAULT_OUTPUT_DIRECTORY = ".notebooklm"
+DEFAULT_SCAN_MAX_FILE_BYTES = 64 * 1024 * 1024
+DEFAULT_SCAN_MAX_TOTAL_BYTES = 256 * 1024 * 1024
 SOURCE_CATEGORIES = frozenset(
     {
         "runtime_source",
@@ -147,6 +150,7 @@ CONFIG_NAMES = {
 }
 DATA_PARTS = {"data", "database", "db", "migration", "migrations", "schema", "schemas"}
 TRANSACTION_MARKERS = (
+    ".codebase-wiki-write.",
     ".codebase-wiki-install-transaction.",
     ".notebooklm-transaction.",
 )
@@ -174,6 +178,8 @@ class ScanSettings:
     analysis_include_tests: bool
     business_source_paths: tuple[str, ...]
     exclude_paths: tuple[str, ...]
+    scan_max_file_bytes: int = DEFAULT_SCAN_MAX_FILE_BYTES
+    scan_max_total_bytes: int = DEFAULT_SCAN_MAX_TOTAL_BYTES
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -338,12 +344,20 @@ def parse_scan_settings(
     # later reject.
     path_tuple("extra_paths")
 
+    def positive_budget(field: str, default: int) -> int:
+        value = values.get(field, default)
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ScanError(f"{field} must be a positive integer")
+        return value
+
     return ScanSettings(
         scan_profile=scan_profile,
         output_directory=output_directory,
         analysis_include_tests=analysis_include_tests,
         business_source_paths=path_tuple("business_source_paths"),
         exclude_paths=path_tuple("exclude_paths"),
+        scan_max_file_bytes=positive_budget("scan_max_file_bytes", DEFAULT_SCAN_MAX_FILE_BYTES),
+        scan_max_total_bytes=positive_budget("scan_max_total_bytes", DEFAULT_SCAN_MAX_TOTAL_BYTES),
     )
 
 
@@ -425,7 +439,11 @@ def _bounded_excluded_root_summary(path: Path, relative: str, reason: str, *, bo
         current = pending.pop()
         try:
             with os.scandir(current) as iterator:
-                entries = sorted(iterator, key=lambda item: item.name)
+                # Summaries are metadata only. Consume at most the remaining
+                # budget plus one lookahead, even for a huge flat directory.
+                from itertools import islice
+                budget = summary["entry_limit"] - summary["observed_entries"]
+                entries = list(islice(iterator, budget + 1))
         except OSError:
             summary["errors"] += 1
             continue
@@ -635,13 +653,89 @@ def _coverage_match(relative: str, rules: Sequence[dict[str, Any]]) -> dict[str,
     return None
 
 
-def scan_project(root: Path, settings: Any, pages: Sequence[Any] = ()) -> dict[str, Any]:
+@dataclass
+class SourceReadBudget:
+    """One scan's content I/O allowance, including failed source reads."""
+
+    maximum: int
+    consumed: int = 0
+
+    @property
+    def remaining(self) -> int:
+        return self.maximum - self.consumed
+
+    def charge(self, amount: int) -> None:
+        self.consumed += amount
+
+
+def _total_read_limit() -> OSError:
+    return OSError("source inventory exceeds scan_max_total_bytes; increase the budget or retain partial coverage")
+
+
+def read_source(path: Path, max_bytes: int, *, budget: SourceReadBudget | None = None) -> tuple[str, str, int]:
+    """Hash and decode the same bounded byte stream; never materialize bytes twice."""
+    digest = hashlib.sha256()
+    decoder = codecs.getincrementaldecoder("utf-8")()
+    chunks: list[str] = []
+    size = 0
+    # Most source files are small. A 1 MiB read also allocates that buffer on
+    # Windows for a tiny file and again at EOF. Grow only after full reads;
+    # never infer EOF from a size hint or a short read while a file may grow.
+    read_size = 8192
+    if budget is not None and budget.remaining <= 0:
+        raise _total_read_limit()
+    # FileIO has no hidden read-ahead beyond the charged read() bytes.
+    with path.open("rb", buffering=0 if budget is not None else -1) as stream:
+        while True:
+            requested = min(read_size, max_bytes - size + 1)
+            if budget is not None:
+                if budget.remaining <= 0:
+                    # A regular-file position at its current size proves EOF
+                    # without an extra byte outside the strict total budget.
+                    # This is a terminal observation, never an initial size
+                    # hint that could conceal later bytes or a short read.
+                    try:
+                        position = stream.tell()
+                        status = os.fstat(stream.fileno())
+                    except (OSError, ValueError):
+                        raise _total_read_limit() from None
+                    if stat.S_ISREG(status.st_mode):
+                        if position >= status.st_size:
+                            break
+                        if size >= max_bytes:
+                            raise OSError(f"source exceeds scan_max_file_bytes ({max_bytes}); increase the budget or retain partial coverage")
+                    raise _total_read_limit()
+                requested = min(requested, budget.remaining)
+            chunk = stream.read(requested)
+            if budget is not None:
+                budget.charge(len(chunk))
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > max_bytes:
+                raise OSError(f"source exceeds scan_max_file_bytes ({max_bytes}); increase the budget or retain partial coverage")
+            if b"\x00" in chunk:
+                raise ValueError("binary_or_unsupported_encoding")
+            digest.update(chunk)
+            chunks.append(decoder.decode(chunk))
+            if len(chunk) == read_size:
+                read_size = min(read_size * 2, 1024 * 1024)
+            elif len(chunk) < requested:
+                read_size = 8192  # A small EOF probe, still continue after short reads.
+    chunks.append(decoder.decode(b"", final=True))
+    return "".join(chunks), digest.hexdigest(), size
+
+
+def scan_project(root: Path, settings: Any, pages: Sequence[Any] = (), *,
+                 source_texts: dict[str, str] | None = None) -> dict[str, Any]:
     root = Path(root).absolute()
     if not root.exists() or not root.is_dir():
         raise ScanError(f"project root is not a directory: {root}")
     if _is_reparse_point(root):
         raise ScanError(f"project root must not be a symlink or reparse point: {root}")
     included: list[dict[str, Any]] = []
+    included_by_path: dict[str, dict[str, Any]] = {}
+    read_budget = SourceReadBudget(int(_settings_value(settings, "scan_max_total_bytes", DEFAULT_SCAN_MAX_TOTAL_BYTES)))
     excluded: list[dict[str, str]] = []
     excluded_roots: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
@@ -654,7 +748,7 @@ def scan_project(root: Path, settings: Any, pages: Sequence[Any] = ()) -> dict[s
             # same file.  Keep the inventory one-row-per-path for validators.
             excluded[:] = [item for item in excluded if item["path"] != relative]
             read_issues[:] = [item for item in read_issues if item["path"] != relative]
-        existing = next((item for item in included if item["path"] == relative), None)
+        existing = included_by_path.get(relative)
         if existing is not None:
             # A configured business source is a deliberate semantic override.
             # The ordinary walk may have classified a test/example as
@@ -668,28 +762,31 @@ def scan_project(root: Path, settings: Any, pages: Sequence[Any] = ()) -> dict[s
             excluded.append({"path": relative, "reason": reason})
             return
         try:
-            data = path.read_bytes()
-        except OSError as exc:
-            excluded.append({"path": relative, "reason": "unreadable"})
-            read_issues.append({"path": relative, "reason": "unreadable", "detail": str(exc)})
-            return
-        if b"\x00" in data:
-            excluded.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
-            return
-        try:
-            text = data.decode("utf-8")
+            text, digest, size = read_source(path, int(_settings_value(settings, "scan_max_file_bytes", DEFAULT_SCAN_MAX_FILE_BYTES)),
+                                             budget=read_budget)
         except UnicodeDecodeError as exc:
             excluded.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
             read_issues.append({"path": relative, "reason": "binary_or_unsupported_encoding", "detail": str(exc)})
             return
+        except ValueError:
+            excluded.append({"path": relative, "reason": "binary_or_unsupported_encoding"})
+            return
+        except OSError as exc:
+            excluded.append({"path": relative, "reason": "unreadable"})
+            read_issues.append({"path": relative, "reason": "unreadable", "detail": str(exc)})
+            return
         category = "business_documentation" if business else classify_project_file(relative)
-        included.append({
+        record = {
             "path": relative,
             "category": category,
-            "byte_count": len(data),
-            "sha256": sha256_bytes(data),
+            "byte_count": size,
+            "sha256": digest,
             "line_count": max(1, len(text.splitlines())),
-        })
+        }
+        included.append(record)
+        included_by_path[relative] = record
+        if source_texts is not None:
+            source_texts[relative] = text
         entrypoints.extend(_entrypoint_candidates(relative, text, category))
 
     for path, relative in _iter_project_files(
@@ -742,11 +839,14 @@ def scan_project(root: Path, settings: Any, pages: Sequence[Any] = ()) -> dict[s
     entrypoints.sort(key=lambda item: (item["path"], item["line"], item["kind"]))
 
     rules, ledger_issues, coverage_schema_version = _coverage_rules(list(pages), root)
+    exact_rules = {rule["path"]: rule for rule in reversed(rules) if not rule["prefix"]}
+    prefix_rules = [rule for rule in rules if rule["prefix"]]
     dispositions: list[dict[str, Any]] = []
     uncovered: list[str] = []
     legacy_prefix_paths: list[str] = []
     for item in included:
-        rule = _coverage_match(item["path"], rules)
+        rule = (exact_rules.get(item["path"]) or _coverage_match(item["path"], prefix_rules)
+                if coverage_schema_version >= 2 else _coverage_match(item["path"], rules))
         if rule is None:
             uncovered.append(item["path"])
             continue

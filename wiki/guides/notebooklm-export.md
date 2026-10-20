@@ -9,9 +9,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - docs/product/workflows/README.md
-source_digest: sha256:d6f6f976cb6538731bc7d69a26016ba6b24c07639967987a4dd93254068e750d
+source_digest: sha256:2dd75b1d72d46a5a694a98693b8f77f5e2045ffe2c80e58587d022f292ddd578
 derived_from: ["[[overview]]", "[[notebooklm-ba-knowledge-export]]", "[[notebooklm-exporter]]", "[[business-analysis]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-21
 tags: [guide, notebooklm, export, ba-first, enterprise]
 status: active
 notebooklm_group: business-notebooklm-export
@@ -166,3 +166,7 @@ dlp_profile = "notebooklm-enterprise-ba-sa-mask-v1"
 - [[business-analysis]]
 - [[system-analysis]]
 - [[system-design]]
+
+## 0.6.3 執行預算
+
+`scan_max_file_bytes`／`scan_max_total_bytes` 預設為 64／256 MiB，輸入超限維持 unreadable／blocked，須調整明確預算或保留缺口。preflight 重用同輪來源及 Wiki 解析；apply 在 output lock 內重新核對來源、Wiki、設定，任何漂移均保留先前 pack。詳見 [[bounded-resource-operations]]。

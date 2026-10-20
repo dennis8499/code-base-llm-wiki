@@ -19,3 +19,4 @@ codebase-wiki-backup-*/
 __pycache__/
 .mypy_cache/
 .ruff_cache/
+.codebase-wiki-write.*

@@ -111,7 +111,9 @@ def normalize_path(value: str) -> str:
 
 def repo_relative_path(value: str) -> str | None:
     normalized = normalize_path(value)
-    if DRIVE_PATH_PATTERN.match(normalized):
+    # A Windows absolute edit target is valid on Windows when it resolves
+    # inside this repository. Reject drive-relative paths on every platform.
+    if DRIVE_PATH_PATTERN.match(normalized) and (os.name != "nt" or not Path(normalized).is_absolute()):
         return None
     while normalized.startswith("./"):
         normalized = normalized[2:]

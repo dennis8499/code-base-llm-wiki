@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from offline_git import ProcessLimitError, run_git
 from typing import Any
 
 from frontmatter import (
@@ -45,14 +46,8 @@ def _body(text: str) -> str:
 def _baseline_body(log_path: Path, repo_root: Path) -> str | None:
     try:
         relative = log_path.resolve().relative_to(repo_root.resolve()).as_posix()
-        result = subprocess.run(
-            ["git", "-C", str(repo_root), "show", f"HEAD:{relative}"],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-        )
-    except (OSError, ValueError, subprocess.CalledProcessError):
+        result = run_git(repo_root, "show", f"HEAD:{relative}")
+    except (OSError, ValueError, subprocess.CalledProcessError, ProcessLimitError):
         return None
     return _body(result.stdout)
 
@@ -91,6 +86,7 @@ def validate_log(
     headings = list(HEADING_PATTERN.finditer(body))
     dates: list[dt.date] = []
     entry_count = 0
+    page_stems = {path.stem for path in (repo_root / "wiki").rglob("*.md")}
 
     for index, heading in enumerate(headings):
         value = heading.group(0)
@@ -126,7 +122,7 @@ def validate_log(
                 errors.append(f"log entry lacks an affected-pages wikilink: {value}")
             for raw_target in links:
                 target = raw_target.split("|", 1)[0].split("#", 1)[0].strip()
-                if not any(path.stem == Path(target).stem for path in (repo_root / "wiki").rglob("*.md")):
+                if Path(target).stem not in page_stems:
                     errors.append(f"log entry references a missing Wiki page: [[{target}]]")
 
     for previous, current in zip(dates, dates[1:]):

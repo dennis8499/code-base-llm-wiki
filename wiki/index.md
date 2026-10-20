@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-10-17
+last_updated: 2026-10-21
 tags: [index]
 status: active
 notebooklm_group: wiki-navigation
@@ -66,8 +66,9 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
-| [[development-specification]] | 已移除的開發規格功能紀錄，僅保留歷史 log 連結與既有文件保留方式 |
+| [[bounded-resource-operations]] | 以 bounded offline evidence、單輪快照及單一 writer/CAS 保護來源完整性、資源與人工 Wiki 內容 |
 | [[code-audit]] | 先用共用 scanner 盤點目前 Codebase 的功能與入口，再以完整呼叫路徑和定向 Git 歷史追查可證明缺陷，並保留逐功能、逐檔重跑狀態與覆蓋限制 |
+| [[development-specification]] | 保留歷史 Wiki 連結，記錄開發規格入口已移除及既有文件的保留方式 |
 | [[functional-exploration]] | ??????????????????????? |
 | [[installer-and-upgrade]] | Installer v6 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
 | [[notebooklm-exporter]] | 以全專案 scanner、schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack |
@@ -96,7 +97,7 @@ _（尚無頁面）_
 
 | 頁面 | 摘要 |
 |------|------|
-| [[framework-introduction]] | 從安裝、Wiki-first 操作與 source-first Codebase 健檢，到驗證及升級的框架使用路線 |
+| [[framework-introduction]] | 從安裝、Wiki-first 操作、source-first Codebase 健檢，到驗證及升級的框架使用路線 |
 | [[notebooklm-export]] | 依全量 discovery、一次確認、每功能 BA／SA 與自動 readiness 安全產生 schema-v6 source pack |
 | [[release-and-update]] | 以 VERSION、本機驗證、surface-specific ZIP、tag-triggered GitHub Actions 與授權 gate 管理框架發布 |
 

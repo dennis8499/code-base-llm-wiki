@@ -1,0 +1,143 @@
+{
+  "baseline": "facc909f0f6c5fda38c4cd05c28187ed2ea063d0",
+  "log": {
+    "baseline_seconds": 3.083551,
+    "current_seconds": 0.02666,
+    "entries": 1000,
+    "pages": 201,
+    "same_result": true,
+    "speedup": 115.662
+  },
+  "platform": "Windows",
+  "python": "3.14.7",
+  "repeats": 3,
+  "scanner": [
+    {
+      "baseline_seconds": 0.585123,
+      "current_seconds": 0.272495,
+      "files": 2000,
+      "same_snapshot": true,
+      "speedup": 2.147
+    },
+    {
+      "baseline_seconds": 1.001568,
+      "current_seconds": 0.690988,
+      "files": 4000,
+      "same_snapshot": true,
+      "speedup": 1.449
+    },
+    {
+      "baseline_seconds": 3.987539,
+      "current_seconds": 1.654999,
+      "files": 8000,
+      "same_snapshot": true,
+      "speedup": 2.409
+    }
+  ],
+  "schema": "codebase-wiki-resource-benchmark/v1",
+  "scanner_fixture": "Historical scanner rows use in-memory file doubles; excludes physical filesystem I/O.",
+  "log_fixture": "Physical temporary Wiki pages and log.",
+  "small_file_read_correction": {
+    "method": "Five alternating fresh-process pairs; 8000 physical UTF-8 10-byte files; warm OS cache, local Windows filesystem; scanner only, no model/Git/network.",
+    "before_scanner_sha256": "b161a7e04b32c9fd59124435e4fc1f6b7eb8ab2657849874c1bd6dfe7197725d",
+    "candidate_scanner_sha256": "47f9551257028b918bb18fc6db98c85e2b54682561a650156f7a50870ad3d350",
+    "median_seconds": {
+      "v1": 5.99112050000258,
+      "candidate": 1.1950757000013255
+    },
+    "all_snapshot_output_and_open_counts_equal": true,
+    "rows": [
+      {
+        "arm": "v1",
+        "mode": "scan",
+        "seconds": 5.342086399999971,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 1
+      },
+      {
+        "arm": "candidate",
+        "mode": "scan",
+        "seconds": 1.174350900000718,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 1
+      },
+      {
+        "arm": "candidate",
+        "mode": "scan",
+        "seconds": 1.232512599999609,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 2
+      },
+      {
+        "arm": "v1",
+        "mode": "scan",
+        "seconds": 6.213168399997812,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 2
+      },
+      {
+        "arm": "v1",
+        "mode": "scan",
+        "seconds": 8.757075099994836,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 3
+      },
+      {
+        "arm": "candidate",
+        "mode": "scan",
+        "seconds": 1.534790099998645,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 3
+      },
+      {
+        "arm": "candidate",
+        "mode": "scan",
+        "seconds": 1.1950757000013255,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 4
+      },
+      {
+        "arm": "v1",
+        "mode": "scan",
+        "seconds": 5.99112050000258,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 4
+      },
+      {
+        "arm": "v1",
+        "mode": "scan",
+        "seconds": 5.062757700005022,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 5
+      },
+      {
+        "arm": "candidate",
+        "mode": "scan",
+        "seconds": 1.1098406999954022,
+        "source_open_calls": 8000,
+        "identity": "sha256:3263e113d2ab5841c2540d6525a46af1d632edcbe1fb37fd067dd31f920fa69e",
+        "output_bytes": 1512963,
+        "pair": 5
+      }
+    ],
+    "comparison": "Frozen pre-correction 0.6.3 scanner versus corrected 0.6.3 scanner; original HEAD formal benchmark remains separate."
+  }
+}

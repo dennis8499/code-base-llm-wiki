@@ -19,17 +19,17 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/notebooklm/test_notebooklm_acceptance.py
   - tests/notebooklm/test_notebooklm_contract.py
-source_digest: sha256:148dd031e3d23486b0f2cc537bdc29c4f8142827cf2b5fdee7a468d5d47bef96
+source_digest: sha256:2892f81c39ac72d75a74874b4c1133898ba1a84875512cc9e3256cc5f9d4836f
 source_locators:
-  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1922"
+  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5082"
   - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
   - ".agents/skills/codebase-wiki/scripts/project_scanner.py:1"
-  - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215"
+  - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:113"
   - ".agents/skills/codebase-wiki/capabilities.json:61"
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
   - "tests/notebooklm/test_notebooklm_contract.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-ba]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-21
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -68,6 +68,10 @@ Output commit 使用 sibling lock、journal、stage 與 backup；驗證全數完
 ## 對應 BA
 
 [[cap-notebooklm-ba-functional-export-ba]]
+## 0.6.3 執行與一致性
+
+Scanner `source_texts` 與逐檔 SHA 綁定同一次讀取；preflight 的 DLP／lint 共用該輪來源及 Wiki 解析。新增 `scan_max_file_bytes`／`scan_max_total_bytes` 正整數預算，預設 64／256 MiB。來源以 8 KiB 起讀並倍增；總量計入失敗來源已讀 bytes，耗盡後持續列舉但不再開啟來源，超限仍是明確 completeness gap。Output lock 內的最後檢查重新核對 discovery identity、Wiki bytes 及設定；相同輸入重用 deterministic plan，漂移保留舊 pack。詳見 [[bounded-resource-operations]]。
+
 <!-- codebase-wiki:managed:end -->
 
 <!-- codebase-wiki:user-notes:start -->

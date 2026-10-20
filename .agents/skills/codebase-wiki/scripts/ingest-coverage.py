@@ -2,6 +2,7 @@
 """Emit an inventory or validate a saved full-ingest ledger, without writing files."""
 import argparse
 import json
+import subprocess
 from pathlib import Path
 
 from frontmatter import configure_utf8_stdio
@@ -26,7 +27,7 @@ def main() -> int:
             if args.ledger is None:
                 raise ValueError("validate requires --ledger")
             result = validate(args.root, json.loads(args.ledger.read_text(encoding="utf-8")), **kwargs)
-    except (OSError, ValueError, TypeError, KeyError) as exc:
+    except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as exc:
         result = {"ok": False, "status": "partial", "errors": [str(exc)]}
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result.get("ok", True) else 1

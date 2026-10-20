@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/lint-wiki.py
   - tools/validate_release.py
   - tests/release/test_validation.py
-source_digest: sha256:a94c3f53505a42412174f9f982f36a65baf13a66f5426bc004303def79efb457
+source_digest: sha256:6668171e4e5c3b144965a38a9a39629b4eae81d6712423598ed3bc37fc138e0b
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [module, lint, provenance, frontmatter, freshness]
 status: active
 ---
@@ -113,3 +113,7 @@ completeness 是兩個獨立判定。持久化 archaeology page 還必須由相�
 - [[system-analysis]]
 - [[notebooklm-exporter]]
 - [[framework-introduction]]
+
+## 0.6.3 品質與速度
+
+Log validator 一次建立 Wiki page stem set，長期累積的 affected-page links 不再逐次走訪目錄。Lint 在單次操作共用頁面文字及 frontmatter，來源 SHA 採串流計算並可重用該輪 scanner 結果。頁面、index 與 append-only log 的 writer／CAS、並行衝突與中斷恢復詳見 [[bounded-resource-operations]]；語意審查仍另行判斷。

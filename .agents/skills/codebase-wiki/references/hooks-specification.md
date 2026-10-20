@@ -97,7 +97,12 @@ Allowed values:
   non-Wiki paths. This does not broaden task authorization; raw sources remain
   read-only during Wiki tasks.
 - `framework`: allow `wiki/`, `.codex/`, `.agents/`, `.github/`, `docs/`,
-  `samples/`, `tests/`, `tools/`, and approved root governance/release files.
+  `samples/`, `tests/`, `tools/`, `scripts/`, and approved root governance/release files.
   Use this only when maintaining the Codebase LLM Wiki framework repository.
 
 If the config is missing or invalid, the guard fails closed to `wiki-only`.
+
+Windows absolute edit paths are accepted when their resolved target stays within
+the repository; drive-relative and outside-repository paths remain rejected.
+Durable Wiki edits use the writer/CAS workflow in
+[resource-safety.md](resource-safety.md); the path hook does not replace that lock.

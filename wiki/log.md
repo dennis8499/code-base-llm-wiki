@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-17
+last_updated: 2026-10-21
 tags: [log]
 status: active
 ---
@@ -818,3 +818,25 @@ status: active
 - 升級驗證舊安裝歸屬與內容後交易式移除舊入口，衝突保留原檔，補齊失敗與中斷復原測試。
 - 同步現行功能說明、框架來源覆蓋及摘要；歷史頁保留停用紀錄以維持既有 log 連結。
 - Affected pages: [[development-specification]], [[installer-and-upgrade]], [[platform-adapters-and-release]], [[codebase-functional-coverage]], [[index]]
+
+
+## [2026-10-20] update | Bounded offline evidence and coordinated Wiki writes
+
+- 本機候選更新為 0.6.3：離線 Git／程序樹與輸出限制、scanner 與 log 熱點、NotebookLM 單輪快照及最後漂移驗證。
+- 新增 Wiki writer／全 Wiki CAS、append-only log、失敗及中斷恢復，保留人工內容與未完成缺口；Windows 路徑及 framework scripts 維護修正。
+- 同步已核對來源、逐檔 ledger、索引與資源策略；保存本機 synthetic microbenchmark，未發布、未連 GitLab 壓測或宣稱 host 真人驗收。
+- Affected pages: [[bounded-resource-operations]], [[wiki-quality-and-provenance]], [[notebooklm-exporter]], [[platform-hooks-and-guards]], [[codebase-functional-coverage]], [[system-architecture]], [[overview]], [[index]]
+
+
+## [2026-10-20] update | Finalize resource provenance and local writer state
+
+- 強內容摘要直接判斷來源新鮮度，避免對每個來源再啟動 Git log；legacy 頁面仍保留日期 fallback。
+- 本機 writer artifacts 保持 generated／ignored；Wiki 操作不改目標專案的 ignore 規則。
+- 以原 scope 重掃 217 個安全來源，更新已核對頁面摘要、逐檔 ledger、discovery ID 與 index；日誌正文及人工 notes 保留。
+- Affected pages: [[codebase-functional-coverage]], [[wiki-quality-and-provenance]], [[bounded-resource-operations]], [[index]]
+
+
+## [2026-10-21] update | 小檔串流配置與整輪 I/O 預算修正
+
+- Affected pages: [[bounded-resource-operations]], [[notebooklm-exporter]], [[cap-notebooklm-ba-functional-export-sa]], [[codebase-functional-coverage]], [[index]]
+- 以實體 8,000 檔五組交替微測保留修正前後 rows／SHA；修正 1 MiB 小檔配置，並把失敗讀取納入嚴格累計 I/O 額度。同步來源 digest、精確 ledger、discovery identity 與索引；保留原始退步測量及既有日誌正文。

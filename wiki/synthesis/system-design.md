@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:8731860e90d797c2e0afb073e8d50851955ee73fc9d971315bb65daa93ba3581
+source_digest: sha256:3d09b9c0c592a1d16f9961d588a9534c92f717f233405256cbc54bd9c0d835a5
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-20
 tags: [synthesis, system-design, standards-aligned]
 status: active
 ---
@@ -297,6 +297,10 @@ flowchart LR
   [[project-function-catalog]]、[[installer-and-upgrade]]、[[notebooklm-exporter]]、
   [[wiki-quality-and-provenance]]。
 - Implementation observation：`DE-DOC-*` 描述目前框架設計，未替代 accepted ADR。
+
+## 0.6.3 已實作的資源策略
+
+[[bounded-resource-operations]] 記錄 bounded offline subprocess、來源 chunk hash／decode、操作內快照，以及 Wiki writer／CAS。時間、輸出及輸入超限採可見的失敗或 partial；本機微型基準只比較相同證據的 scanner／log 熱點，並不建立服務容量、host 對話或正式環境 SLO 的保證。
 
 <!-- codebase-wiki:managed:end -->
 

@@ -62,11 +62,16 @@ def lint_wiki(
     wiki_dir: Path, repo_root: Path, *, use_git: bool = True,
     components: dict[str, Any] | None = None,
     precomputed: dict[str, Any] | None = None,
+    page_texts: dict[Path, str] | None = None,
+    source_hashes: dict[Path, str] | None = None,
 ) -> dict[str, Any]:
     """Run Wiki checks, optionally disabling Git freshness/baseline checks."""
 
     validate_regular_tree(wiki_dir)
     pages = sorted(wiki_dir.rglob("*.md"))
+    texts = {path: page_texts[path] if page_texts is not None and path in page_texts
+             else path.read_text(encoding="utf-8") for path in pages}
+    frontmatters = {path: parse_frontmatter_text(text) for path, text in texts.items()}
     findings: list[dict[str, Any]] = []
     validate = load_script("validate_frontmatter_for_lint", "validate-frontmatter.py")
     stale = load_script("check_stale_for_lint", "check-stale.py")
@@ -76,13 +81,14 @@ def lint_wiki(
     for path in pages:
         relative = path.relative_to(wiki_dir).as_posix()
         errors = (precomputed["frontmatter"]["by_page"][relative] if precomputed is not None
-                  else validate.validate_page(path, wiki_dir))
+                  else validate.validate_page(path, wiki_dir, text=texts[path], frontmatter=frontmatters[path]))
         frontmatter_errors.extend(errors)
         for error in errors:
             findings.append(finding("critical", "frontmatter", error, relative))
 
     stale_results = (precomputed["stale"] if precomputed is not None
-                     else stale.check_stale(wiki_dir, repo_root, use_git=use_git))
+                     else stale.check_stale(wiki_dir, repo_root, use_git=use_git,
+                                            page_frontmatter=frontmatters, source_hashes=source_hashes))
     for item in stale_results["critical"]:
         page = str(item["page"])
         if "invalid_sources" in item:
@@ -159,7 +165,7 @@ def lint_wiki(
     inbound: Counter[str] = Counter()
     index_targets: set[str] = set()
     for path in pages:
-        text = path.read_text(encoding="utf-8")
+        text = texts[path]
         for raw in wikilinks(text):
             target = normalized_target(raw)
             if not target:
@@ -203,7 +209,7 @@ def lint_wiki(
     type_counts: Counter[str] = Counter()
     status_counts: Counter[str] = Counter()
     for path in pages:
-        fm = parse_frontmatter_text(path.read_text(encoding="utf-8"))
+        fm = frontmatters[path]
         type_counts[str(fm.get("type", "unknown"))] += 1
         status_counts[str(fm.get("status", "unknown"))] += 1
         sources = fm.get("sources", [])
