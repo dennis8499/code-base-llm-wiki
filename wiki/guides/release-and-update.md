@@ -27,9 +27,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
   - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: sha256:ca9182711a2b125dc6812825d5ae3acb2af4968e13a5095ba3390b855a09e2aa
+source_digest: "sha256:854c5ada090524a3d90de99b535ae18cefc7ba79253fb20e04c56ddfcb22f797"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-20
+last_updated: 2026-10-21
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -152,3 +152,7 @@ tag 與上游 attribution。上游方法論文件只保留原創摘要、作者�
 ## 0.6.3 維護驗證
 
 本機候選 0.6.3 加入 [[bounded-resource-operations]]。核心變更在原生 framework／Skill 維護，通過單元、parity、frontmatter、stale、index、log 及 readiness 後再交給外層組合包重建。`tools/benchmark_resources.py` 可比較 HEAD 與目前 scanner／log 的本機微型基準；保存結果不代表真 GitLab 壓測或正式發布。
+
+## 0.6.4 附件下載相容性
+
+Actions artifact ZIP API 使用 `application/vnd.github+json`，Release asset raw GET 才使用 `application/octet-stream`；錯用後者會使 artifact 下載回傳 HTTP 415。修正保留來源、完整 CI 矩陣及 SHA 驗證。失敗的 v0.6.3 tag 保持原值且不發布未完成資產，以 0.6.4 重新走完整 CI 與正式發版流程。Root／Skill 版本及發布文件已同步。

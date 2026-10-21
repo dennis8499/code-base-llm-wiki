@@ -227,7 +227,7 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.6.3`。Installer 會把目前版本保存到目標 Repo 的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.6.4`。Installer 會把目前版本保存到目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
 installer contract 版本。
 

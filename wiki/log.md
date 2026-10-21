@@ -840,3 +840,10 @@ status: active
 
 - Affected pages: [[bounded-resource-operations]], [[notebooklm-exporter]], [[cap-notebooklm-ba-functional-export-sa]], [[codebase-functional-coverage]], [[index]]
 - 以實體 8,000 檔五組交替微測保留修正前後 rows／SHA；修正 1 MiB 小檔配置，並把失敗讀取納入嚴格累計 I/O 額度。同步來源 digest、精確 ledger、discovery identity 與索引；保留原始退步測量及既有日誌正文。
+
+
+## [2026-10-21] update | Fix release artifact media types for v0.6.4
+
+- Reviewed the artifact/asset Accept selection, regression cases, Root/Skill VERSION, README, ChangeLog and release guide. Only these seven source hashes and their existing coverage identity were refreshed; existing dispositions remain unchanged.
+- Preserve the failed v0.6.3 tag and unpublished state; v0.6.4 repeats the complete CI and fixed-byte publication gates.
+- Affected pages: [[framework-introduction]], [[release-and-update]], [[index]], [[platform-adapters-and-release]], [[overview]], [[codebase-functional-coverage]], [[system-analysis]]

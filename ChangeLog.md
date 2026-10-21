@@ -4,6 +4,11 @@
 
 ---
 
+## 0.6.4 - 2026-10-21
+
+- 修正 Actions artifact 下載的 Accept 標頭，避免 HTTP 415 阻擋固定 CI 證據及正式附件發布；Release asset 下載仍使用 octet-stream，來源、矩陣與 SHA 驗證維持完整。
+- 同步下載媒體類型回歸、版本及 Wiki 證據；0.6.3 的失敗 tag 保留，不改寫既有 tag 或發布未完成的產物。
+
 ## 0.6.3 - 2026-10-20
 
 - Git 證據改用 bounded offline runner，禁止 lazy fetch、互動提示及外部 diff/textconv；缺物件、逾時或輸出超限維持可見缺口。

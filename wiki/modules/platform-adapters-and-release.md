@@ -44,9 +44,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - .github/prompts/code-audit.prompt.md
   - Codex.md
-source_digest: sha256:900ee70a918c63d84f26e43e8b91dfd10e2663555ea20c6befd8acf1d4dd6e9f
+source_digest: "sha256:2a99488e55be854639d7cd861bb4ef72d5f4e7c3895d9b135e81c9c7f8672a6f"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-20
+last_updated: 2026-10-21
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -190,3 +190,7 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 ## 0.6.3 跨入口一致性
 
 Skill 的 Runtime bounds pointer 讓兩個平台共用 `resource-safety.md`，將離線 Git、來源預算與 Wiki writer／CAS 收斂到相同腳本。Root 與 Skill 版號更新為本機候選 0.6.3；封裝仍由原生 release builder 產生，沒有直接改寫既有正式附件或擴大外部發布授權。參見 [[bounded-resource-operations]]。
+
+## 0.6.4 發布附件修正
+
+`scripts/release_ci.py` 依 URL 與方法選擇 Accept：Actions artifact ZIP 使用 GitHub JSON API 媒體類型，只有 Release asset 的 raw GET 使用 octet-stream。`scripts/test_release_ci.py` 驗證 artifact、相對及絕對 asset URL；固定來源、完整矩陣、證據期限、重導向憑證移除及附件摘要 gate 均維持原規則。v0.6.3 的 tag 發布因 HTTP 415 失敗且未形成正式 Release；保留 tag，修正版本為 0.6.4。
