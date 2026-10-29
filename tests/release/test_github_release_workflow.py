@@ -36,6 +36,10 @@ class GitHubReleaseWorkflowTests(unittest.TestCase):
             "retention-days: 14",
             "workflow_dispatch:",
             "needs: [select, build]",
+            "runs-on: windows-latest",
+            "if: matrix.cell == 'windows-py3.14'",
+            '--output "$env:GITHUB_OUTPUT"',
+            '--run-id "$env:REUSE_RUN_ID"',
         ):
             with self.subTest(required=required):
                 self.assertIn(required, workflow)
@@ -48,6 +52,8 @@ class GitHubReleaseWorkflowTests(unittest.TestCase):
         }
         self.assertEqual(permission_names, {"contents", "actions"})
         self.assertNotIn("dist/*", workflow)
+        self.assertNotIn("ubuntu-latest", workflow)
+        self.assertNotIn("linux-py3.", workflow)
         before_publish, publish = workflow.split("\n  publish:\n")
         self.assertNotIn("contents: write", before_publish)
         self.assertIn("github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')", publish)

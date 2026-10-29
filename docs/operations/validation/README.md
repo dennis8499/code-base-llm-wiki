@@ -2,7 +2,7 @@
 
 框架維護者必須在乾淨、隔離的 Git worktree 執行 deterministic checks；公開發版則由
 `.github/workflows/release.yml` 在推送版本 tag 時提升已驗證產物。PR、main、手動與 reusable workflow
-先執行 Python 3.11／3.14 validation；tag 只重用相同提交且完整可信的近期證據，否則重跑完整矩陣。
+先在 Windows runner 執行 Python 3.11／3.14 validation；tag 只重用相同提交且完整可信的近期證據，否則重跑完整 Windows 矩陣。
 兩個平台 ZIP、manifest、checksum 只建置一次，publish 核對後提升原始位元組；詳細契約見
 [版本、發佈與更新契約](../releases/README.md)。
 
@@ -90,7 +90,7 @@ deterministic tool checks，不增加五項 active agent runtime 情境。
 `agent_review_required`；維護者另行完成人工語意審查並保存結論。另須確認：
 
 - `.github/workflows/release.yml` 是唯一 workflow，完整 validation 支援 PR、main、手動及 reusable 呼叫；只有版本 tag push 可發布；
-- release workflow 先驗證兩個 Python matrix cells 與來源／環境／workflow 證據，再由單一 cell 建置 ZIP、manifest 與 checksum；publish 使用 `GITHUB_TOKEN` 提升已驗證產物，不重新建置；
+- release workflow 的 select、validation 與 publish jobs 都使用 Windows runner；先驗證兩個 Windows Python matrix cells 與來源／環境／workflow 證據，再由 canonical cell 建置 ZIP、manifest 與 checksum；publish 使用 `GITHUB_TOKEN` 提升已驗證產物，不重新建置；
 - 所有保留的 Copilot prompts 都使用 built-in `agent` metadata，且 Repo 不含 Wiki
   custom-agent profiles；
 - Codex 三個 hooks 可從 repo root、Git 子目錄，以及非 Git 安裝 root 啟動；
@@ -173,7 +173,7 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 ## 發佈前清單
 
 - [ ] `git status --short` 只包含預期變更。
-- [ ] Python 3.11 與 3.14 的 unit、compile、parity、frontmatter、stale、log、stats、lint、index checks 全部通過。
+- [ ] Windows runner 上 Python 3.11 與 3.14 的 unit、compile、parity、frontmatter、stale、log、stats、lint、index checks 全部通過。
 - [ ] Lint 的 missing-module coverage 與 contradictions 已人工審查。
 - [ ] Copilot 標示為 `static-compatible / runtime-unverified`，沒有誤稱 runtime pass。
 - [ ] 若宣告 v6 host runtime verified，五個 active 情境各有 3/3 證據；否則維持 `runtime-unverified`。
