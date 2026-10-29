@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-21
+last_updated: 2026-10-29
 tags: [log]
 status: active
 ---
@@ -735,7 +735,7 @@ status: active
 - Affected pages: [[index]], [[framework-introduction]], [[release-and-update]], [[platform-adapters-and-release]], [[system-architecture]], [[project-function-catalog]], [[overview]], [[notebooklm-export]], [[codebase-functional-coverage]], [[log]]
 ## [2026-10-06] update | Make development specifications standalone
 
-- 開發規格改為以目前單一 Codebase 為範圍，使用通用專案欄位，並移除對 Group、Megin 與 GitLab Issue 的強制相依。
+- 開發規格改為以目前單一 Codebase 為範圍，使用通用專案欄位，並移除對 Group 與 GitLab Issue 的強制相依。
 - 受影響頁面：[[development-specification]]、[[system-architecture]]、[[framework-introduction]]、[[index]]、[[log]]
 
 
@@ -766,7 +766,7 @@ status: active
 
 ## [2026-10-13] update | Complete query follow-ups, full Ingest and self-contained specifications
 
-- Add concrete Query update/save/combined previews with one bounded confirmation; preserve notes and finish mapped workflow checks. Add scanner-backed full-Ingest dispositions and source-drift checks, recorded self-contained specification review and portable downstream export checks. Synchronize platform instructions, v0.6.0 release metadata, reviewed source fingerprints and coverage identity. Megin delivery remains exclusive to the GitlabWorkSpace extension.
+- Add concrete Query update/save/combined previews with one bounded confirmation; preserve notes and finish mapped workflow checks. Add scanner-backed full-Ingest dispositions and source-drift checks, recorded self-contained specification review and portable downstream export checks. Synchronize platform instructions, v0.6.0 release metadata, reviewed source fingerprints and coverage identity.
 - Affected pages: [[business-analysis]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[code-audit]], [[codebase-functional-coverage]], [[development-specification]], [[framework-introduction]], [[functional-exploration]], [[generate-analysis-document]], [[index]], [[installer-and-upgrade]], [[log]], [[notebooklm-export]], [[notebooklm-exporter]], [[overview]], [[platform-adapters-and-release]], [[query-follow-ups-and-ingest]], [[release-and-update]], [[system-analysis]], [[system-architecture]], [[system-design]], [[wiki-quality-and-provenance]]
 
 ## [2026-10-15] update | 統一 Concise 輸出風格
@@ -847,3 +847,14 @@ status: active
 - Reviewed the artifact/asset Accept selection, regression cases, Root/Skill VERSION, README, ChangeLog and release guide. Only these seven source hashes and their existing coverage identity were refreshed; existing dispositions remain unchanged.
 - Preserve the failed v0.6.3 tag and unpublished state; v0.6.4 repeats the complete CI and fixed-byte publication gates.
 - Affected pages: [[framework-introduction]], [[release-and-update]], [[index]], [[platform-adapters-and-release]], [[overview]], [[codebase-functional-coverage]], [[system-analysis]]
+
+## [2026-10-29] update | Remove retired release references
+
+- Remove obsolete release, package, and migration references from the historical work log while preserving unrelated records.
+- Affected pages: [[log]]
+
+
+## [2026-10-29] update | Refresh Wiki source fingerprints
+
+- Refresh source digests after removing retired release references from release tooling and the Ingest contract fixture.
+- Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[query-follow-ups-and-ingest]]

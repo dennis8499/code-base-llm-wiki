@@ -8,8 +8,8 @@ sources:
   - .agents/skills/codebase-wiki/scripts/ingest_coverage.py
   - .agents/skills/codebase-wiki/scripts/ingest-coverage.py
   - tests/contracts/test_ingest_coverage.py
-source_digest: sha256:cfbebc93e0d29559dbe75207968e60083afe6b4acd33cac1938a13cdb7547635
-last_updated: 2026-10-20
+source_digest: sha256:438e72baff9513e1a648f1c632941614a58236d4aecb4a73e7c59fad8802bd5f
+last_updated: 2026-10-29
 tags: [module, query, ingest, coverage, authorization]
 status: active
 notebooklm_role: exclude

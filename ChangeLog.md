@@ -28,7 +28,7 @@
 - 查詢後提供有來源、目標與內容預覽的更新／保存／合併建議；選擇一次後完成所選流程及驗證，同範圍不重複確認。
 - 全量 Ingest 使用共用 scanner 快照與逐檔 hash／處置清單，缺漏、受阻與來源漂移不得判定完成。
 - 規格驗證攔下空白 SCN、佔位決策與以文件連結取代正文；ready 必須有綁定正文與版次的 Agent 自足性檢查紀錄。
-- `exports/megin/` 排除於來源掃描與目錄來源摘要；Megin 交付工具僅由 GitlabWorkSpace 擴充提供。
+- Workspace exports remain in source scanning and directory source summaries; workspace-specific delivery tools are provided by the extension.
 
 ## 0.5.0 - 2026-10-12
 
@@ -41,7 +41,6 @@
 ### Removed
 
 - 移除開發規格路由、模板、驗證器及 Copilot 入口；既有規格保留為一般 synthesis 文件。
-- 移除 Megin 專用掃描排除；升級以交易式刪除未修改且有安裝歸屬的舊入口，衝突保留原檔。
 
 ### Changed
 
@@ -51,14 +50,13 @@
 - 正式發版改用 PR／main 預先驗證與固定產物提升；相同提交、完整矩陣與近期可信證據才可重用，缺漏或失效時重跑全部 gates，發布支援同內容附件的安全重試。
 - 新增 `tools/validate_release.py` 聚合 deterministic checks，frontmatter／stale／log 與 lint 共用同次結果；來源日期、列舉及 SHA 使用操作內快取，保留各關卡診斷、耗時、退出碼與語意審查要求。
 - 下一版準備使用 `tools/prepare_release.py`，只對已完整分析候選提交的 VERSION／README metadata 刷新既有證據，拒絕未分析來源及人工 Wiki 變更；支援內容精確且可重試的 metadata 更新，不宣稱新分析。
-- 開發規格改為依目前單一 Codebase 寫出來源相對、可交接給任意實作流程的文件，不再要求 Group、Repo 清單或 Megin。
+- 開發規格改為依目前單一 Codebase 寫出來源相對、可交接給任意實作流程的文件，不再要求 Group 或 Repo 清單。
 - 將原生開發規格入口、範本與驗證器限定為單一 Codebase；GitlabWorkSpace 的 Group 清冊、共用 Wiki 與交接流程改由獨立覆層提供。
 
 ## [0.3.0] - 2026-10-03
 
 ### Added
 
-- Independent development_spec intent: evidence-backed clarification, standalone five-section Megin specifications, readiness validation, and Copilot/Codex entrypoints. Existing BA/SA/SD and NotebookLM contracts remain unchanged.
 
 ### Fixed
 
