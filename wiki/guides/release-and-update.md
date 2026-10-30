@@ -29,7 +29,7 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:94670091eaf2b129ca6ae5b1ada6a699d2edd42a59ff1d0f6e044c0ad551092e
+source_digest: "sha256:ed185dd7280a3d3400b7e0e0a3d91e0a5721cf544dbd9cd49f8cbe170b7164d5"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-10-30
 tags: [guide, release, version, extension]

@@ -952,3 +952,9 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - 更新 `ChangeLog.md` source hash 與 analyzed discovery ID，保留既有 disposition。
 - Affected pages: [[codebase-functional-coverage]]
+
+
+## [2026-10-30] update | Prepare release v0.7.1 metadata
+
+- Reuse the complete analysis at `2523fb1da0dcae73ac2e07c637f4f7db61969f77`; update only VERSION/README fingerprints and the existing coverage identity. No source reanalysis or new dispositions.
+- Affected pages: [[codebase-functional-coverage]], [[release-and-update]]
