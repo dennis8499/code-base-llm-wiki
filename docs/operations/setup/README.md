@@ -42,7 +42,7 @@ read/search。tgrep 的 `0`、`1`、`2` 分別保留為命中、無命中、錯�
 
 ## Dry-run 優先
 
-所有安裝與升級都先執行 dry-run。Contract v6 JSON 回應包含 `managed`、
+所有安裝與升級都先執行 dry-run。Contract v7 JSON 回應包含 `managed`、
 `changes`、`preserved`、`conflicts`、`obsolete_paths` 與 `applied`；只有
 `--apply` 且 `conflicts` 為空時才以 staged atomic write 套用。Installer 會留下
 active/committed transaction journal；若程序在替換窗口終止，下一次 apply 會先恢復

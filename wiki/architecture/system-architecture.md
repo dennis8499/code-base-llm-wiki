@@ -5,22 +5,25 @@ summary: 以共享 Skill 為規格核心，透過雙平台 adapter、source-firs
 notebooklm_group: architecture
 notebooklm_role: traceability
 sources:
-  - .agents/skills/codebase-wiki/capabilities.json
-  - .agents/skills/codebase-wiki/scripts/install-framework.py
-  - .github/workflows/release.yml
-  - LICENSE
-  - .agents/skills/codebase-wiki/scripts/lint-wiki.py
-  - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-  - .agents/skills/codebase-wiki/scripts/hooks/common.py
-  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-  - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
-  - .agents/skills/codebase-wiki/references/code-audit-workflow.md
-  - .agents/skills/codebase-wiki/assets/code-audit-template.md
-  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-source_digest: sha256:86d9aced15eb630474c5c97f8a08cf82868914be5e524e71ea2fd3f680931629
+  - ".agents/skills/codebase-wiki/capabilities.json"
+  - ".agents/skills/codebase-wiki/scripts/install-framework.py"
+  - ".github/workflows/release.yml"
+  - "LICENSE"
+  - ".agents/skills/codebase-wiki/scripts/lint-wiki.py"
+  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py"
+  - ".agents/skills/codebase-wiki/scripts/hooks/common.py"
+  - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
+  - ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+  - ".agents/skills/codebase-wiki/references/source-discovery-workflow.md"
+  - ".agents/skills/codebase-wiki/references/code-audit-workflow.md"
+  - ".agents/skills/codebase-wiki/assets/code-audit-template.md"
+  - ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+  - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
+  - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
+  - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
+source_digest: sha256:19517e5961f649065bda1e276e46bcd3f36d5b35b8a5503a04b782a11bbeb0e7
 derived_from: ["[[overview]]"]
-last_updated: 2026-10-20
+last_updated: 2026-10-30
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -30,8 +33,8 @@ status: active
 ## Overview
 
 系統採三層模型：目標專案原始來源是唯讀證據、`wiki/` 是可持續累積的知識層、
-`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十三個 machine
-operations、十三個 intent groups 與 authorization policy 由
+`.agents/skills/codebase-wiki/` 與平台 adapter 是行為規格。十四個 machine
+operations、十四個 intent groups 與 authorization policy 由
 `.agents/skills/codebase-wiki/capabilities.json` 描述，詳細流程由 Skill references
 按意圖載入。Windows x64 的 tgrep wrapper 是同一 Skill 內的選用唯讀來源定位層，
 只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper
@@ -49,13 +52,14 @@ tgrep 的 Ingest／Archaeology 使用範圍。
 | 元件 | 職責 | 證據 |
 | --- | --- | --- |
 | Skill 與 references | 意圖路由、授權、不變量、完成條件 | `.agents/skills/codebase-wiki/SKILL.md` |
-| Installer v6 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
+| Installer v7 | dry-run、managed block、fingerprint manifest、symlink/reparse-safe 原子套用 | `.agents/skills/codebase-wiki/scripts/install-framework.py` |
 | BA／SA／SD 文件工作流 | Versioned standards profiles、layer boundary、stable IDs、Gap 與 managed/user/local-only markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] |
 | Wiki quality tools | frontmatter、digest freshness、links、index、log 與 lint 狀態 | [[wiki-quality-and-provenance]] |
 | Codebase audit | 入口 inventory、transaction／設定／邏輯交叉檢查、定向 Git history、finding evidence、coverage gaps 與 Wiki report | [[code-audit]] |
 | tgrep source discovery | 固定版本 Windows x64 binary、manifest、root/path containment 與 allowlisted read-only search | `.agents/skills/codebase-wiki/scripts/tgrep-search.py`、`.agents/skills/codebase-wiki/bin/tgrep-manifest.json` |
 | Platform hooks | session context、寫入邊界、log reminder | [[platform-hooks-and-guards]] |
 | NotebookLM exporter | 完整 discovery、每 capability BA／SA 配對、雙識別碼、DLP、容量與單一 Notebook source plan | [[notebooklm-exporter]] |
+| Archify visualization | ten on-demand diagram types, immutable HTML/JSON artifacts, four validation gates and CAS publication | [[archify-visualization]] |
 | Platform/release surface | Copilot 靜態契約、Codex UAT、本機 gates、版本與 tag-triggered GitHub Release | [[platform-adapters-and-release]] |
 
 ## Data Flow
@@ -107,7 +111,7 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 - Installer、lint、exporter 與 hooks 皆位於共享 Skill，平台設定只負責調用。
 - Canonical installer、lint、exporter 與 hook 程式承載可由測試直接驗證的核心行為。
 - Codex CLI 0.152.1 於 2026-09-03 在獨立 fixtures 完成六項流程各 3/3，這是
-  contract v4 的歷史基線；目前 contract v6 已完成本機 deterministic 驗證，host
+  contract v4 的歷史基線；目前 contract v7 已完成本機 deterministic 驗證，host
   runtime 尚未重跑。Copilot 維持 `static-compatible / runtime-unverified`。
 
 ## Contradictions

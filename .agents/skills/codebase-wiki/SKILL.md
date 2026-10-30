@@ -3,7 +3,7 @@ name: codebase-wiki
 description: >
   Build and maintain an evidence-backed codebase Wiki. Use for install/upgrade,
   ingest, Wiki queries or lint, functional exploration, static Codebase audit,
-  ADR/synthesis, business analysis, system analysis/design,
+  ADR/synthesis, visualization, business analysis, system analysis/design,
   NotebookLM export, and Git archaeology. Implementation and branch-to-branch
   merge/release reviews follow their own workflows.
 ---
@@ -54,6 +54,8 @@ to progress, answers, and new or updated human-readable artifacts on both hosts:
   Query follow-up carries its bounded authorization through Ingest/Synthesis and checks;
   read [follow-up-actions.md](references/follow-up-actions.md) when offering those choices.
   Other branches use their routed workflow's preview, confirmation or explicit-request rule.
+Explicit visualization requests route to `references/visualization-workflow.md`; they authorize
+one evidence-bound artifact and its companion Wiki transaction. Ordinary Query remains read-only.
 - **Coverage:** Full Ingest, functional exploration and audit use their own complete
   inventories and ledgers. Retain unread paths, exclusions and source drift as gaps.
   Codebase audit stays static; findings distinguish `BUG-*`, `RISK-*` and `BIZ-*`.

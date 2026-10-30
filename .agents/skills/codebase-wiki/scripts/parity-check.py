@@ -26,6 +26,7 @@ EXPECTED_OPERATIONS = {
     "system_analysis",
     "system_design",
     "notebooklm_export",
+    "visualize",
 }
 EXPECTED_INTENT_CONTRACT = {
     "install": (False, True, "apply_flag"),
@@ -41,6 +42,7 @@ EXPECTED_INTENT_CONTRACT = {
     "system_analysis": (True, False, "explicit_request"),
     "system_design": (True, False, "explicit_request"),
     "notebooklm_export": (False, True, "preview_then_confirm"),
+    "visualize": (True, False, "explicit_request"),
 }
 CODE_AUDIT_CHECKS = [
     "transaction_consistency",
@@ -95,6 +97,7 @@ EXPECTED_GROUPS = {
     "lint": ["lint"],
     "code_audit": ["code_audit"],
     "functional_exploration": ["functional_exploration"],
+    "visualize": ["visualize"],
     "adr": ["adr"],
     "synthesis": ["synthesis"],
     "business_analysis": ["business_analysis"],
@@ -216,6 +219,23 @@ TGREP_INTEGRATION = {
     "sha256": TGREP_SHA256,
     "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
 }
+VISUALIZATION_INTEGRATION = {
+    "provider": "archify",
+    "version": "3.2.0",
+    "source_commit": "208acba8d412335185b2056fedf54b3405df43fb",
+    "archive_sha256": "70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5",
+    "manifest": ".agents/skills/codebase-wiki/vendor/archify-manifest.json",
+    "manifest_sha256": "15c1b258d6958b964d4bf41f87e596e79ff5751cb438173c6b4f95bbad519509",
+    "license": "MIT",
+    "node_requirement": ">=18",
+    "platforms": ["windows-x86_64"],
+    "other_platforms": "not-yet-tested",
+    "diagram_types": ["architecture", "workflow", "sequence", "dataflow", "lifecycle", "erd", "class", "tree", "timeline", "waterfall"],
+    "update_check": "disabled",
+    "auto_download": False,
+    "wrapper": ".agents/skills/codebase-wiki/scripts/wiki-visualize.py",
+    "workflow": ".agents/skills/codebase-wiki/references/visualization-workflow.md",
+}
 COPILOT_PROMPT_CONTRACT = {
     "ingest-module.prompt.md": (
         "references/ingest-workflow.md",
@@ -294,6 +314,15 @@ COPILOT_PROMPT_CONTRACT = {
         "wiki/index.md",
         "wiki/log.md",
     ),
+    "visualize-wiki.prompt.md": (
+        "references/visualization-workflow.md",
+        "wiki-visualize.py",
+        "candidate.json",
+        "evidence-map.json",
+        "browser-check",
+        "wiki/index.md",
+        "wiki/log.md",
+    ),
 }
 
 
@@ -356,6 +385,17 @@ def main() -> int:
     source_discovery = integrations.get("source_discovery") if isinstance(integrations, dict) else None
     if source_discovery != TGREP_INTEGRATION:
         issues.append("tgrep source_discovery integration metadata drifted")
+    visualization = integrations.get("visualization") if isinstance(integrations, dict) else None
+    if visualization != VISUALIZATION_INTEGRATION:
+        issues.append("Archify visualization integration metadata drifted")
+    for relative in (
+        VISUALIZATION_INTEGRATION["manifest"],
+        VISUALIZATION_INTEGRATION["wrapper"],
+        VISUALIZATION_INTEGRATION["workflow"],
+        ".agents/skills/codebase-wiki/vendor/archify/bin/archify.mjs",
+    ):
+        if not (root / relative).is_file():
+            issues.append(f"missing visualization integration surface: {relative}")
     project_scanner = integrations.get("project_scanner") if isinstance(integrations, dict) else None
     if not isinstance(project_scanner, dict) or project_scanner.get("version") != "2":
         issues.append("project_scanner integration metadata is missing or stale")
@@ -393,8 +433,8 @@ def main() -> int:
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):
             issues.append(f"manifest missing surface: {surface}")
-    if manifest.get("contract_version") != 6:
-        issues.append("manifest contract_version must be 6")
+    if manifest.get("contract_version") != 7:
+        issues.append("manifest contract_version must be 7")
     guard_modes = manifest.get("guard_modes", {})
     if guard_modes.get("default") != "wiki-only" or guard_modes.get("installed") != [
         "wiki-only",
@@ -404,7 +444,7 @@ def main() -> int:
 
     intents = manifest.get("intents", {})
     if not isinstance(intents, dict) or set(intents) != EXPECTED_OPERATIONS:
-        issues.append("manifest intents must define the thirteen canonical operations")
+        issues.append("manifest intents must define the fourteen canonical operations")
         intents = {}
     for operation, expected in EXPECTED_INTENT_CONTRACT.items():
         contract = intents.get(operation, {})
@@ -430,7 +470,7 @@ def main() -> int:
 
     groups = manifest.get("intent_groups", {})
     if groups != EXPECTED_GROUPS:
-        issues.append("manifest must define the exact thirteen user-facing intent groups")
+        issues.append("manifest must define the exact fourteen user-facing intent groups")
         groups = {}
     grouped = [operation for values in groups.values() if isinstance(values, list) for operation in values]
     if len(grouped) != len(set(grouped)) or set(grouped) != EXPECTED_OPERATIONS:
@@ -473,6 +513,8 @@ def main() -> int:
     recipe_document = entrypoints.get("codex", {}).get("recipe_document", "")
     if recipe_document != "Codex.md" or not (root / recipe_document).is_file():
         issues.append("Codex recipe document must be Codex.md")
+    elif "Visualization" not in (root / recipe_document).read_text(encoding="utf-8"):
+        issues.append("Codex recipe document is missing the visualization route")
     for relative in (
         ".agents/skills/codebase-wiki/references/ingest-workflow.md",
         ".agents/skills/codebase-wiki/references/code-archaeology-workflow.md",

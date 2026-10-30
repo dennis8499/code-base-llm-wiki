@@ -9,8 +9,8 @@ sources:
   - .agents/skills/codebase-wiki/scripts/functional_inventory.py
   - .agents/skills/codebase-wiki/scripts/explore-functions.py
   - .agents/skills/codebase-wiki/capabilities.json
-source_digest: sha256:60166e5f1977a4119826525adc2479e425f1d5cfa00c020f20ddd1984dae328f
-last_updated: 2026-10-17
+source_digest: sha256:c0de56e871ce0eb1e24e232c440963ea5e6b4203d90809a1c26ed2ea274219ca
+last_updated: 2026-10-30
 tags: [functional-exploration, coverage]
 status: active
 ---

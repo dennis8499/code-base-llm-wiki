@@ -1,52 +1,55 @@
 ---
 title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v6、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索
+summary: 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
-  - .agents/skills/codebase-wiki/SKILL.md
-  - .agents/skills/codebase-wiki/references/intent-routing.md
-  - .agents/skills/codebase-wiki/assets/target-agents-block.md
-  - AGENTS.md
-  - .github/copilot-instructions.md
-  - .agents/skills/codebase-wiki/capabilities.json
-  - .agents/skills/codebase-wiki/scripts/parity-check.py
-  - tests/contracts/test_contracts.py
-  - tests/contracts/test_code_audit.py
-  - tests/installer/test_install_framework.py
-  - tests/fixtures/code-audit/README.md
-  - tests/fixtures/code-audit/expected-findings.md
-  - tests/contracts/test_code_audit_validator.py
-  - tests/fixtures/code-audit/history/README.md
-  - tests/fixtures/code-audit/history/expected-findings.md
-  - tools/release.py
-  - tools/validate_release.py
-  - tools/prepare_release.py
-  - tests/release/test_prepare_release.py
-  - scripts/release_ci.py
-  - scripts/test_release_ci.py
-  - tests/release/test_validation.py
-  - docs/operations/releases/README.md
-  - docs/operations/validation/README.md
-  - LICENSE
-  - .github/workflows/release.yml
-  - .agents/skills/codebase-wiki/scripts/install-framework.py
-  - tests/release/test_github_release_workflow.py
-  - tests/release/features/github-release.feature
-  - tests/release/scenario_runner.py
-  - tests/release/test_release.py
-  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-  - tests/tgrep/test_tgrep_search.py
-  - .agents/skills/codebase-wiki/references/code-audit-workflow.md
-  - .agents/skills/codebase-wiki/assets/code-audit-template.md
-  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-  - .github/prompts/code-audit.prompt.md
-  - Codex.md
-source_digest: "sha256:9dd480db82154390a1934f22e04f1054911f5d508602647cbe5321dd404230b0"
+  - ".agents/skills/codebase-wiki/SKILL.md"
+  - ".agents/skills/codebase-wiki/references/intent-routing.md"
+  - ".agents/skills/codebase-wiki/assets/target-agents-block.md"
+  - "AGENTS.md"
+  - ".github/copilot-instructions.md"
+  - ".agents/skills/codebase-wiki/capabilities.json"
+  - ".agents/skills/codebase-wiki/scripts/parity-check.py"
+  - "tests/contracts/test_contracts.py"
+  - "tests/contracts/test_code_audit.py"
+  - "tests/installer/test_install_framework.py"
+  - "tests/fixtures/code-audit/README.md"
+  - "tests/fixtures/code-audit/expected-findings.md"
+  - "tests/contracts/test_code_audit_validator.py"
+  - "tests/fixtures/code-audit/history/README.md"
+  - "tests/fixtures/code-audit/history/expected-findings.md"
+  - "tools/release.py"
+  - "tools/validate_release.py"
+  - "tools/prepare_release.py"
+  - "tests/release/test_prepare_release.py"
+  - "scripts/release_ci.py"
+  - "scripts/test_release_ci.py"
+  - "tests/release/test_validation.py"
+  - "docs/operations/releases/README.md"
+  - "docs/operations/validation/README.md"
+  - "LICENSE"
+  - ".github/workflows/release.yml"
+  - ".agents/skills/codebase-wiki/scripts/install-framework.py"
+  - "tests/release/test_github_release_workflow.py"
+  - "tests/release/features/github-release.feature"
+  - "tests/release/scenario_runner.py"
+  - "tests/release/test_release.py"
+  - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
+  - ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+  - "tests/tgrep/test_tgrep_search.py"
+  - ".agents/skills/codebase-wiki/references/code-audit-workflow.md"
+  - ".agents/skills/codebase-wiki/assets/code-audit-template.md"
+  - ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+  - ".github/prompts/code-audit.prompt.md"
+  - "Codex.md"
+  - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
+  - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
+  - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
+source_digest: sha256:d4166f7c1044617957f0bd8bf050b267d0628e063baafd3dc86a31808fc6b165
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-29
+last_updated: 2026-10-30
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -55,7 +58,7 @@ status: active
 
 ## Skill 分流與完成條件
 
-Skill 入口保留共用邊界、輸出及完成條件；十三個意圖的 workflow 與授權路由統一由
+Skill 入口保留共用邊界、輸出及完成條件；十四個意圖的 workflow 與授權路由統一由
 `references/intent-routing.md` 維護，只載入目前分支的參考文件。Query 先查 Wiki；
 功能探索、Codebase audit 與 NotebookLM 依各自 source-first 流程讀取目前來源。
 明確的合併／上版分支審查保持其原流程，不轉成 Wiki 健檢。
@@ -81,7 +84,7 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 
 - 維持 Copilot prompts/hooks 與 Codex recipes/hooks 的共同 intent、
   authorization 與 completion contract。
-- 以 `capabilities.json` contract version 6 描述十四個 manifest-declared operations／intent groups；
+- 以 `capabilities.json` contract version 7 描述十四個 manifest-declared operations／intent groups；
   BA／SA／SD 與既有操作的
   名稱與 authorization policy 不因平台 adapter 改變。
 - 將 Copilot `.github/prompts/` 限定為 VS Code 本機 Agent 入口；其他 Copilot
@@ -98,7 +101,7 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
   `git log`／`git show`／`git blame` 讀取 commit 完整內文與 diff。不呼叫 tgrep、不執行目標程式或
   測試，並將 `BUG-*`、`RISK-*` 與 `BIZ-*` 分列。明確健檢要求預設保存 synthesis 報告，使用者
   指定只回報時維持零寫入，持久化後通過 `validate-code-audit.py`。
-- Copilot 與 Codex v6 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
+- Copilot 與 Codex v7 只宣告本機 contract/deterministic 驗證結果；host runtime UAT
   尚未重跑。2026-09-03 的 Codex v4 evidence 是歷史基線，不外推到目前 contract。
 - 以根 `VERSION` 作為產品版號唯一來源；`.github/workflows/release.yml` 在 PR、main、手動及 reusable
   呼叫時以 Python 3.11／3.14 完成 validation；只有版本 tag push 可發布，明列
@@ -107,11 +110,15 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 - 本 Repo 採用 MIT License；workflow 使用 job-level `contents: write` 發布，installer
   將 framework-only release workflow 排除在 target surface 之外。
 
+## On-demand Wiki visualizations
+
+The `visualize` intent is shared by both hosts and runs only after an explicit diagram request. Copilot exposes `/visualize-wiki`; Codex uses the natural-language recipe. The pinned Archify workflow records evidence per element, Gaps, four native validation gates, and immutable HTML/JSON runs in one CAS transaction. See [[archify-visualization]].
+
 ## Evidence
 
 - 查詢具體預覽的一次授權及全量 Ingest 逐檔完成性見 [[query-follow-ups-and-ingest]]；
   Codex 與 Copilot 共用相同 reference。
-- `parity-check.py` 驗證 contract 6、十三個 operation mapping、Codebase audit 的四類檢查／Git history／
+- `parity-check.py` 驗證 contract 7、十四個 operation mapping、Codebase audit 的四類檢查／Git history／
   validator contract、靜態邊界、prompt coupling、built-in
   prompt metadata、已移除資源保持不存在、即時資料庫能力保持移除、Codex
   root-resolved hooks，並驗證唯一 release workflow 的 trigger、權限、版本驗證、資產
@@ -150,7 +157,7 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
   驗證 `bundled_tools` 中 tgrep 1.0.5 的固定 path、platform 與 SHA-256，且排除 `.tgrep/`。
 - `update-manifest.json` 使用 schema v2，以每個 asset 的 `surface` 分別描述兩個
   精簡 ZIP；`bundled_tools` 描述隨兩包發佈的 wrapper、manifest 與 binary。這不是額外
-  asset，installer contract version 與目前實作一致為 6。
+  asset，installer contract version 與目前實作一致為 7。
 
 - 解壓後的精簡 package README 提供 install／upgrade 預覽與套用指令。Installer 會
   識別 package marker，在任何 target 寫入前檢查共用 Skill、Wiki starter 與所選 adapter
@@ -159,7 +166,7 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 ## Contradictions
 
 - `v0.3.0` Release 已公開；版本、附件及發版 CI 證據見下方現行發版紀錄。
-- 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v6 或
+- 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v7 或
   未測 host/version 的保證。
 
 ### v0.3.0 現行發版紀錄
@@ -176,7 +183,7 @@ Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給
 ## Gaps
 
 - Copilot host runtime 尚未執行，因此維持 `runtime-unverified`。
-- Codex v6 host runtime UAT 尚未執行，因此與 Copilot 相同，維持 `runtime-unverified`。
+- Codex v7 host runtime UAT 尚未執行，因此與 Copilot 相同，維持 `runtime-unverified`。
 
 ## 相關頁面
 

@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-10-21
+last_updated: 2026-10-30
 tags: [index]
 status: active
 notebooklm_group: wiki-navigation
@@ -66,13 +66,14 @@ notebooklm_role: exclude
 
 | 頁面 | 摘要 |
 |------|------|
+| [[archify-visualization]] | 以固定版本 Archify 產生可編輯 JSON、來源對照與可驗證的 Wiki HTML 圖表。 |
 | [[bounded-resource-operations]] | 以 bounded offline evidence、單輪快照及單一 writer/CAS 保護來源完整性、資源與人工 Wiki 內容 |
 | [[code-audit]] | 先用共用 scanner 盤點目前 Codebase 的功能與入口，再以完整呼叫路徑和定向 Git 歷史追查可證明缺陷，並保留逐功能、逐檔重跑狀態與覆蓋限制 |
 | [[development-specification]] | 保留歷史 Wiki 連結，記錄開發規格入口已移除及既有文件的保留方式 |
 | [[functional-exploration]] | ??????????????????????? |
-| [[installer-and-upgrade]] | Installer v6 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
+| [[installer-and-upgrade]] | Installer v7 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle |
 | [[notebooklm-exporter]] | 以全專案 scanner、schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack |
-| [[platform-adapters-and-release]] | 以 contract v6、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索 |
+| [[platform-adapters-and-release]] | 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索 |
 | [[platform-hooks-and-guards]] | 共用 canonical hooks 以 Git-root 定位與三種 guard modes 維持跨 cwd 寫入邊界 |
 | [[query-follow-ups-and-ingest]] | 查詢先提供具體預覽，選擇一次後完成更新或保存；全量 Ingest 用安全快照與逐檔處置驗證完成性 |
 | [[wiki-quality-and-provenance]] | 以安全來源解析、內容摘要、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |

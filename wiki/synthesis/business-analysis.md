@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/references/business-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-analysis-workflow.md
   - .agents/skills/codebase-wiki/references/system-design-workflow.md
-source_digest: sha256:ea763a5d6beaf82e256bf2e0286c04e46afa43c1d62ec03ad1f9b1a037302775
+source_digest: sha256:7b99c4c481419360a0564063d79e8588659014b1f8550225a8557b1516d631cf
 derived_from: ["[[overview]]", "[[generate-analysis-document]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[functional-requirement-catalog]]", "[[business-process-catalog]]", "[[business-rule-catalog]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-30
 tags: [synthesis, business-analysis, standards-aligned, notebooklm]
 status: active
 ---
@@ -63,7 +63,7 @@ Analyst、Architect 與 reviewer 能審查自己關心的 abstraction level。�
 | Business context, problem, opportunity | covered | [[overview]]、既有 [[system-analysis]] legacy snapshot |
 | Scope and outcomes | covered | [[business-analysis-document]]、[[system-analysis-document]]、[[system-design-document]] |
 | Stakeholders and needs | partial | 使用者與文件角色已知；`gap-analysis-doc-owner-approval` |
-| Current and target state | covered | capability contract v6 與三工作流差異 |
+| Current and target state | covered | capability contract v7 與三工作流差異 |
 | Capabilities and requirements | covered | `cap-analysis-document-generation` 與三個 `fr-*` |
 | Business processes and rules | covered | [[generate-analysis-document]] 與兩條 `br-*` |
 | Business information and glossary | covered | [[business-glossary]] |
@@ -96,7 +96,7 @@ Analyst、Architect 與 reviewer 能審查自己關心的 abstraction level。�
   SR/NFR/IF、conceptual flow、failure 與 V&V needs。
 - BA／SA／SD templates、standards mapping、coverage、traceability、Gap、markers 與
   evidence-gated Mermaid slots。
-- Capability contract v6、frontmatter 相容性、installer、NotebookLM BA／SA regression、文件與 Wiki。
+- capability contract v7、frontmatter 相容性、installer、NotebookLM BA／SA regression、文件與 Wiki。
 
 ### Out of scope
 
@@ -178,7 +178,7 @@ flowchart TD
 
 | Measure ID | Outcome／Metric | Baseline | Target／Timeframe | Measurement owner | Status |
 | --- | --- | --- | --- | --- | --- |
-| M-DOC-001 | Capability manifest operations/groups | 11 / 11 | manifest-declared sets remain parity-clean in contract v6 | framework maintainer | covered |
+| M-DOC-001 | Capability manifest operations/groups | 14 / 14 | manifest-declared sets remain parity-clean in contract v7 | framework maintainer | covered |
 | M-DOC-002 | 三份 template/workflow/prompt contract tests | BA／SA／SD workflows、templates 與 prompts 已建立 | all required tokens and semantics pass | framework maintainer | covered |
 | M-DOC-003 | Frontmatter compatibility | 無 standards metadata validation | valid new fields + valid legacy omission | framework maintainer | covered |
 | M-DOC-004 | NotebookLM regression | schema v5 BA-only（歷史 baseline） | schema v6 requires paired current-state BA／SA, strips local-only, excludes standalone/SD | framework maintainer | covered |
@@ -199,7 +199,7 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | SA authors | 在 SA 同時描述需求與設計 | 把 solution choices/views 移到 SD | 首次重跑保存 legacy snapshot | framework maintainer |
 | BA users | `BA` 多半表示 NotebookLM export | 使用 `BA文件` 產出 standalone doc | 裸 `BA` 先澄清；export signals 優先 | knowledge maintainer |
-| Installer users | prior contract resources/adapters | contract v6；removed managed paths 僅列 obsolete | upgrade 不改 target Wiki，也不自動刪舊檔 | repository maintainer |
+| Installer users | prior contract resources/adapters | contract v7；removed managed paths 僅列 obsolete | upgrade 不改 target Wiki，也不自動刪舊檔 | repository maintainer |
 | NotebookLM users | schema-v5 BA-only source set | schema-v6 每 capability current-state BA／SA | 同一本 Notebook 完整替換舊 static sources | Notebook owner |
 
 ## BA → SA 追溯矩陣

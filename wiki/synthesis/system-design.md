@@ -12,9 +12,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - .agents/skills/codebase-wiki/scripts/notebooklm_exporter.py
-source_digest: sha256:3d09b9c0c592a1d16f9961d588a9534c92f717f233405256cbc54bd9c0d835a5
+source_digest: sha256:cf61e8bb45ee15aa9f507bf05d8f8c1fb485ca1c665f3786ff665554051c12d0
 derived_from: ["[[system-analysis]]", "[[business-analysis]]", "[[system-architecture]]", "[[project-function-catalog]]", "[[platform-adapters-and-release]]", "[[installer-and-upgrade]]", "[[notebooklm-exporter]]", "[[wiki-quality-and-provenance]]", "[[generate-analysis-document]]"]
-last_updated: 2026-10-20
+last_updated: 2026-10-30
 tags: [synthesis, system-design, standards-aligned]
 status: active
 ---
@@ -43,9 +43,9 @@ status: active
 
 設計沿用框架既有「共享 Skill 是 canonical contract、平台檔案是薄 adapters、Wiki 是
 durable output」架構。新增一份 versioned standards reference，BA／SA／SD 各有獨立
-workflow/template；capabilities v6 對兩平台公開 manifest-declared operations／groups。現有
+workflow/template；capabilities v7 對兩平台公開 manifest-declared operations／groups。現有
 frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只作最小擴充，
-不新增 runtime generator 或 dependency。
+BA／SA／SD Markdown 產文流程仍不新增 generator。Framework v0.7.0 另以獨立 Archify 子系統提供明確請求觸發的互動圖表，包含 Node.js 執行需求與四道原生驗證；詳見 [[archify-visualization]]。
 
 | Driver | Upstream SA ID／Gap | Design consequence | Priority／Risk |
 | --- | --- | --- | --- |
@@ -123,16 +123,16 @@ frontmatter validator、installer、index/log/lint 與 NotebookLM exporter 只�
 | `analysis-document-standards.md` | profiles、edition、layer、coverage、ID/marker/diagram contract | three profile IDs | official standards references | `SR-DOC-003/004/005` / `DE-DOC-001` |
 | Three workflow references | routing、source order、coverage、persistence/completion | BA/SA/SD workflow contracts | standards ref + exact template | `SR-DOC-001`–`007` / `DE-DOC-002` |
 | Three templates | document shape and regeneration regions | frontmatter + managed/user/local blocks | workflow/profile | `SR-DOC-002`–`006` / `DE-DOC-002/003/006` |
-| Capability manifest / parity | operations、intent groups、authorization、entrypoint mapping | contract v6 | platform prompts/recipes | `IF-DOC-001` / `DE-DOC-002` |
+| Capability manifest / parity | operations、intent groups、authorization、entrypoint mapping | contract v7 | platform prompts/recipes | `IF-DOC-001` / `DE-DOC-002` |
 | Frontmatter validator | optional metadata value validation and compatibility | profile/coverage values | parser/tests | `NFR-DOC-002/005` / `DE-DOC-003` |
-| Installer | distribute shared skill and selected platform adapters | install state v6; starter only on install | framework surface | `NFR-DOC-002` / `DE-DOC-007` |
+| Installer | distribute shared skill and selected platform adapters | install state v7; starter only on install | framework surface | `NFR-DOC-002` / `DE-DOC-007` |
 | NotebookLM exporter | validate current-state BA／SA pairs、mask、map and preserve schema v6 | documents、sources、mapping、governance | Wiki frontmatter | `IF-DOC-003` / `DE-DOC-005` |
 | Framework Wiki | dogfood BA/SA/SD and traceability evidence | requirements/process/rules/synthesis/index/log | all above | `SR-DOC-007` |
 
 ```mermaid
 flowchart TB
     User[User / Author] --> Entry[Copilot prompts or Codex recipes]
-    Entry --> Manifest[capabilities.json v6]
+    Entry --> Manifest[capabilities.json v7]
     Manifest --> Workflows[BA / SA / SD workflows]
     Standards[Shared standards profiles] --> Workflows
     Templates[BA / SA / SD templates] --> Workflows
@@ -200,7 +200,7 @@ erDiagram
 
 | Interface／IF ID | Protocol／Schema／Version | Authentication／Authorization | Error／Retry semantics | Consumer／Provider | Decision |
 | --- | --- | --- | --- | --- | --- |
-| `IF-DOC-001` | natural language / VS Code prompt frontmatter / manifest v6 mapping | explicit request policy | ambiguous bare BA produces clarification, no write | user ↔ platform adapter | `DE-DOC-002` |
+| `IF-DOC-001` | natural language / VS Code prompt frontmatter / manifest v7 mapping | explicit request policy | ambiguous bare BA produces clarification, no write | user ↔ platform adapter | `DE-DOC-002` |
 | `IF-DOC-002` | Markdown + YAML frontmatter + HTML markers + wikilinks | repository write authorization | validator failure is visible; log append-only | workflow ↔ Wiki filesystem | `DE-DOC-003/006/007` |
 | `IF-DOC-003` | dedicated profiles + schema-v6 document/source mapping | one-confirmation discovery plus automatic readiness | missing pair/locator or drift rejects; standalone/SD excluded | Wiki ↔ exporter | `DE-DOC-005` |
 
@@ -215,8 +215,8 @@ erDiagram
 
 ```mermaid
 flowchart LR
-    Framework[Framework Repo\nshared Skill + docs/tests] -->|installer v6| Codex[Codex target\nAGENTS + Codex + .codex]
-    Framework -->|installer v6| Copilot[Copilot target\n.github adapters]
+    Framework[Framework Repo\nshared Skill + docs/tests] -->|installer contract v7| Codex[Codex target\nAGENTS + Codex + .codex]
+    Framework -->|installer contract v7| Copilot[Copilot target\n.github adapters]
     Framework -->|both surfaces| Shared[.agents/skills/codebase-wiki]
     Codex --> WikiA[target wiki/]
     Copilot --> WikiB[target wiki/]

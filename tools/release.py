@@ -22,7 +22,7 @@ from typing import Iterable, Sequence
 
 
 PRODUCT_ID = "codebase-llm-wiki"
-INSTALLER_CONTRACT_VERSION = 6
+INSTALLER_CONTRACT_VERSION = 7
 VERSION_FILE = "VERSION"
 VERSION_PATTERN = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 SURFACES = ("codex", "copilot")
@@ -30,6 +30,11 @@ ARCHIVE_NAMES = tuple(f"{PRODUCT_ID}-{surface}.zip" for surface in SURFACES)
 ARCHIVE_BY_SURFACE = dict(zip(SURFACES, ARCHIVE_NAMES))
 MANIFEST_NAME = "update-manifest.json"
 BUNDLED_TOOL_MANIFEST = ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+ARCHIFY_MANIFEST_PATH = ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
+ARCHIFY_ROOT = ".agents/skills/codebase-wiki/vendor/archify"
+ARCHIFY_MANIFEST_SHA256 = "15c1b258d6958b964d4bf41f87e596e79ff5751cb438173c6b4f95bbad519509"
+ARCHIFY_ARCHIVE_SHA256 = "70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
+ARCHIFY_COMMIT = "208acba8d412335185b2056fedf54b3405df43fb"
 EXPECTED_TGREP = {
     "tool": "tgrep",
     "version": "1.0.5",
@@ -485,8 +490,8 @@ def _safe_repo_relative_path(root: Path, relative: str, label: str) -> Path:
     return candidate
 
 
-def bundled_tool_metadata(root: Path = REPO_ROOT) -> list[dict[str, str]]:
-    """Validate the pinned bundled tgrep binary and return release metadata."""
+def bundled_tool_metadata(root: Path = REPO_ROOT) -> list[dict[str, object]]:
+    """Validate pinned tgrep and Archify bundles and return release metadata."""
 
     root = root.resolve()
     manifest_path = _safe_repo_relative_path(
@@ -524,7 +529,7 @@ def bundled_tool_metadata(root: Path = REPO_ROOT) -> list[dict[str, str]]:
             "bundled tgrep SHA-256 mismatch: "
             f"expected {EXPECTED_TGREP['sha256']}, got {actual_hash}"
         )
-    return [
+    tools: list[dict[str, object]] = [
         {
             "tool": metadata["tool"],
             "version": metadata["version"],
@@ -534,6 +539,61 @@ def bundled_tool_metadata(root: Path = REPO_ROOT) -> list[dict[str, str]]:
             "source_url": metadata["upstream_release"],
         }
     ]
+    archify_manifest_path = _safe_repo_relative_path(root, ARCHIFY_MANIFEST_PATH, "bundled Archify manifest")
+    if not archify_manifest_path.is_file():
+        raise ReleaseError(f"missing bundled Archify manifest: {ARCHIFY_MANIFEST_PATH}")
+    manifest_hash = sha256(archify_manifest_path)
+    if manifest_hash != ARCHIFY_MANIFEST_SHA256:
+        raise ReleaseError(
+            f"bundled Archify manifest SHA-256 mismatch: expected {ARCHIFY_MANIFEST_SHA256}, got {manifest_hash}"
+        )
+    try:
+        archify = json.loads(archify_manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ReleaseError("unable to read bundled Archify manifest") from exc
+    expected_archify = {
+        "schema_version": 1, "tool": "archify", "version": "3.2.0",
+        "commit": ARCHIFY_COMMIT, "archive_sha256": ARCHIFY_ARCHIVE_SHA256,
+        "license": "MIT", "node_requirement": ">=18", "file_count": 200,
+        "cli": f"{ARCHIFY_ROOT}/bin/archify.mjs",
+    }
+    if not isinstance(archify, dict) or any(archify.get(key) != value for key, value in expected_archify.items()):
+        raise ReleaseError("bundled Archify manifest metadata does not match the pinned release")
+    inventory = archify.get("files")
+    if not isinstance(inventory, dict) or len(inventory) != archify["file_count"]:
+        raise ReleaseError("bundled Archify file inventory is incomplete")
+    vendor_root = _safe_repo_relative_path(root, ARCHIFY_ROOT, "bundled Archify directory")
+    expected_prefix = ARCHIFY_ROOT + "/"
+    expected_files: dict[str, str] = {}
+    for relative, expected_hash in inventory.items():
+        pure = PurePosixPath(relative) if isinstance(relative, str) else PurePosixPath(".")
+        if (not isinstance(relative, str) or not relative.startswith(expected_prefix) or
+            pure.is_absolute() or any(part in {".", ".."} for part in pure.parts) or
+            not re.fullmatch(r"[0-9a-f]{64}", str(expected_hash))):
+            raise ReleaseError("bundled Archify manifest contains an unsafe file entry")
+        expected_files[relative[len(expected_prefix):]] = expected_hash
+    if not vendor_root.is_dir():
+        raise ReleaseError("bundled Archify directory is missing")
+    actual_files: dict[str, str] = {}
+    for path in sorted(vendor_root.rglob("*")):
+        _safe_repo_relative_path(root, path.relative_to(root).as_posix(), "bundled Archify file")
+        if path.is_file():
+            actual_files[path.relative_to(vendor_root).as_posix()] = sha256(path)
+    if set(actual_files) != set(expected_files):
+        raise ReleaseError("bundled Archify file set differs from the pinned inventory")
+    for relative, expected_hash in expected_files.items():
+        if actual_files[relative] != expected_hash:
+            raise ReleaseError(f"bundled Archify file SHA-256 mismatch: {relative}")
+    tools.append({
+        "tool": "archify", "version": archify["version"], "platform": archify["platform"],
+        "path": archify["cli"], "sha256": actual_files["bin/archify.mjs"],
+        "source_url": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+        "source_commit": ARCHIFY_COMMIT, "archive_sha256": ARCHIFY_ARCHIVE_SHA256,
+        "manifest_path": ARCHIFY_MANIFEST_PATH, "manifest_sha256": manifest_hash,
+        "license": archify["license"], "node_requirement": archify["node_requirement"],
+        "file_count": archify["file_count"],
+    })
+    return tools
 
 
 def build_release(

@@ -3,24 +3,29 @@ title: Codebase LLM Wiki — 使用指南
 type: guide
 summary: 從安裝、Wiki-first 操作、source-first Codebase 健檢，到驗證及升級的框架使用路線
 sources:
-  - README.md
-  - LICENSE
-  - .github/workflows/release.yml
-  - Codex.md
-  - docs/operations/setup/README.md
-  - docs/product/workflows/README.md
-  - docs/operations/validation/README.md
-  - .agents/skills/codebase-wiki/references/code-audit-workflow.md
-  - .agents/skills/codebase-wiki/assets/code-audit-template.md
-  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-  - .github/prompts/code-audit.prompt.md
-  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-  - .agents/skills/codebase-wiki/references/source-discovery-workflow.md
-  - tests/tgrep/test_tgrep_search.py
-  - tests/contracts/test_code_audit_validator.py
-source_digest: "sha256:aca0d11fe8e1d2faf6622ab8a3edfb046671ba920c0134841703d3f63e45aa40"
+  - "README.md"
+  - "LICENSE"
+  - ".github/workflows/release.yml"
+  - "Codex.md"
+  - "docs/operations/setup/README.md"
+  - "docs/product/workflows/README.md"
+  - "docs/operations/validation/README.md"
+  - ".agents/skills/codebase-wiki/references/code-audit-workflow.md"
+  - ".agents/skills/codebase-wiki/assets/code-audit-template.md"
+  - ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+  - ".github/prompts/code-audit.prompt.md"
+  - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
+  - ".agents/skills/codebase-wiki/references/source-discovery-workflow.md"
+  - "tests/tgrep/test_tgrep_search.py"
+  - "tests/contracts/test_code_audit_validator.py"
+  - ".agents/skills/codebase-wiki/capabilities.json"
+  - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
+  - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
+  - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
+  - "tests/visualization/test_archify_acceptance.py"
+source_digest: sha256:136e02bbf2710ea95e09c2ff4d48d7d03639dbb10d5b1f0e9bfd3e70a9d55e37
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-10-21
+last_updated: 2026-10-30
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -62,7 +67,7 @@ locator；其他平台使用 host-native search，Query 不使用 tgrep。
 
 雙入口的能力相同，但平台 adapter 不相同。Codex 不使用 project-level slash prompts；
 Copilot prompt files 也不會被假裝成非 VS Code host 功能。Copilot 驗收標示為
-`static-compatible / runtime-unverified`；Codex v6 也完成本機契約與 deterministic
+`static-compatible / runtime-unverified`；Codex v7 也完成本機契約與 deterministic
 驗證，但尚未重跑 host runtime UAT。2026-09-03 的 v4 Codex evidence 只作歷史基線。
 
 ## 2. 先 Dry-run 再安裝
@@ -135,7 +140,7 @@ Agent 應先讀 `wiki/index.md` 與少量相關頁面。只有內容不足、sta
 | NotebookLM export | 全量盤點當下 Codebase 並重建每功能現況 BA／SA | `.notebooklm/` documents、upload sources、schema v6、governance；不自動上傳 |
 
 完整提示詞與輸出契約位於 `docs/product/workflows/README.md`。
-目前工作流手冊列出十三類意圖、14 個常用操作情境；其中 Interactive／Batch Ingest 共用一個 intent。
+目前工作流手冊列出十四類意圖、15 個常用操作情境；其中 Interactive／Batch Ingest 共用一個 intent。
 
 ## Codebase 健檢
 
@@ -267,7 +272,8 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 ## 相關頁面
 
 - [[overview]] — 框架定位、產品結構與核心設計
-- [[installer-and-upgrade]] — v6 managed blocks、manifest 與 atomic apply
+- [[installer-and-upgrade]] — v7 managed blocks、manifest 與 atomic apply
+- [[archify-visualization]] — 十類圖表、來源追溯與單一 Wiki 交易
 - [[platform-hooks-and-guards]] — 三種 guard mode 與跨平台 hook contract
 - [[business-analysis]] — 業務分析與 BA traceability
 - [[system-analysis]] — solution-neutral 系統分析與 verification needs
@@ -275,4 +281,4 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 
 ## 0.6.3 本機維護
 
-目前本機候選為 0.6.3。[[bounded-resource-operations]] 說明離線 Git、來源預算、快照重用、搜尋限制及 Wiki writer；超限或缺少證據保留 partial，人工內容及既有日誌正文保留。這次維護沒有發布或宣稱已通過 Codex／Copilot host 的真人對話驗收。
+目前框架版本為 0.7.0。[[bounded-resource-operations]] 說明離線 Git、來源預算、快照重用、搜尋限制及 Wiki writer；超限或缺少證據保留 partial，人工內容及既有日誌正文保留。Windows 上的 Archify 十類 browser-check 通過；Codex／Copilot host UAT 與其他作業系統仍未實測。

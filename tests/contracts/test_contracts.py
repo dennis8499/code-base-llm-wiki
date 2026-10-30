@@ -15,14 +15,14 @@ REPO_ROOT = Path(__file__).parents[2]
 
 
 class ContractTests(unittest.TestCase):
-    def test_capability_manifest_declares_installer_contract_v6(self) -> None:
+    def test_capability_manifest_declares_installer_contract_v7(self) -> None:
         manifest = json.loads(
             (REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "capabilities.json").read_text(
                 encoding="utf-8"
             )
         )
 
-        self.assertEqual(manifest["contract_version"], 6)
+        self.assertEqual(manifest["contract_version"], 7)
         self.assertEqual(manifest["guard_modes"]["default"], "wiki-only")
         self.assertEqual(manifest["guard_modes"]["installed"], ["wiki-only", "coexist"])
         self.assertEqual(manifest["surfaces"], ["copilot", "codex"])
@@ -43,8 +43,10 @@ class ContractTests(unittest.TestCase):
             manifest["intents"]["notebooklm_export"]["audience"],
             "business-and-system-analyst",
         )
-        self.assertEqual(len(manifest["intents"]), 13)
-        self.assertEqual(len(manifest["intent_groups"]), 13)
+        self.assertEqual(len(manifest["intents"]), 14)
+        self.assertEqual(len(manifest["intent_groups"]), 14)
+        self.assertEqual(manifest["intents"]["visualize"]["authorization_policy"], "explicit_request")
+        self.assertEqual(manifest["intents"]["visualize"]["publish_gates"], ["validate", "deliver", "check", "browser-check"])
         grouped = [
             operation
             for operations in manifest["intent_groups"].values()
@@ -86,14 +88,14 @@ class ContractTests(unittest.TestCase):
             "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
         )
 
-    def test_current_public_docs_declare_installer_contract_v6(self) -> None:
+    def test_current_public_docs_declare_installer_contract_v7(self) -> None:
         expected_claims = {
-            "README.md": "`contract_version: 6` 維持為獨立的",
-            "docs/operations/releases/README.md": "`contract_version: 6` 則是獨立的",
+            "README.md": "`contract_version: 7` 維持為獨立的",
+            "docs/operations/releases/README.md": "`contract_version: 7` 則是獨立的",
             "wiki/guides/release-and-update.md": (
-                "`contract_version: 6` 是 installer/capability contract"
+                "`contract_version: 7` 是 installer/capability contract"
             ),
-            "wiki/modules/installer-and-upgrade.md": "JSON contract version 為 6",
+            "wiki/modules/installer-and-upgrade.md": "JSON contract version 為 7",
         }
 
         for relative, expected in expected_claims.items():
@@ -677,6 +679,15 @@ class ContractTests(unittest.TestCase):
                 "wiki/index.md",
                 "wiki/log.md",
             ),
+            "visualize-wiki.prompt.md": (
+                "references/visualization-workflow.md",
+                "wiki-visualize.py",
+                "candidate.json",
+                "evidence-map.json",
+                "browser-check",
+                "wiki/index.md",
+                "wiki/log.md",
+            ),
             "export-notebooklm.prompt.md": (
                 "references/notebooklm-export-workflow.md",
                 "--preflight",
@@ -732,7 +743,10 @@ class ContractTests(unittest.TestCase):
         codex_recipe = (REPO_ROOT / "Codex.md").read_text(encoding="utf-8")
         for filename in mapped_prompts:
             with self.subTest(recipe=filename):
-                self.assertIn(f"/{filename.removesuffix('.prompt.md')}", codex_recipe)
+                if filename == "visualize-wiki.prompt.md":
+                    self.assertIn("Natural-language visualization recipe", codex_recipe)
+                else:
+                    self.assertIn(f"/{filename.removesuffix('.prompt.md')}", codex_recipe)
         self.assertIn("/update-index", codex_recipe)
 
         update_index = (prompt_root / "update-index.prompt.md").read_text(
@@ -749,6 +763,7 @@ class ContractTests(unittest.TestCase):
             "validate-code-audit.py",
             "scan-project.py",
             "tgrep-search.py",
+            "wiki-visualize.py",
         )
         script_root = REPO_ROOT / ".agents/skills/codebase-wiki/scripts"
         for filename in scripts:

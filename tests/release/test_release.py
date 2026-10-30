@@ -16,6 +16,8 @@ REPO_ROOT = Path(__file__).parents[2]
 RELEASE_PATH = REPO_ROOT / "tools" / "release.py"
 TGREP_BINARY = REPO_ROOT / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
 TGREP_SHA256 = "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7"
+ARCHIFY_MANIFEST_SHA256 = "15c1b258d6958b964d4bf41f87e596e79ff5751cb438173c6b4f95bbad519509"
+ARCHIFY_ARCHIVE_SHA256 = "70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
 
 
 def add_bundled_tgrep(root: Path) -> None:
@@ -52,10 +54,33 @@ def add_release_package_surfaces(root: Path) -> None:
         skill / "scripts/install-framework.py",
     )
     shutil.copyfile(
+        REPO_ROOT / ".agents/skills/codebase-wiki/scripts/wiki-visualize.py",
+        skill / "scripts/wiki-visualize.py",
+    )
+    for filename in ("bounded_process.py", "wiki_transaction.py", "frontmatter.py", "rebuild-index.py"):
+        shutil.copyfile(
+            REPO_ROOT / ".agents/skills/codebase-wiki/scripts" / filename,
+            skill / "scripts" / filename,
+        )
+    (skill / "references").mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(
+        REPO_ROOT / ".agents/skills/codebase-wiki/references/visualization-workflow.md",
+        skill / "references/visualization-workflow.md",
+    )
+    shutil.copyfile(
         REPO_ROOT / ".agents/skills/codebase-wiki/assets/target-agents-block.md",
         skill / "assets/target-agents-block.md",
     )
     (skill / "assets/wiki-starter/overview.md").write_text("starter\n", encoding="utf-8")
+    (skill / "vendor").mkdir(parents=True, exist_ok=True)
+    shutil.copytree(
+        REPO_ROOT / ".agents/skills/codebase-wiki/vendor/archify",
+        skill / "vendor/archify",
+    )
+    shutil.copyfile(
+        REPO_ROOT / ".agents/skills/codebase-wiki/vendor/archify-manifest.json",
+        skill / "vendor/archify-manifest.json",
+    )
     (root / "AGENTS.md").write_text("framework rules\n", encoding="utf-8")
     (root / "Codex.md").write_text("codex adapter\n", encoding="utf-8")
     (root / ".codex").mkdir(exist_ok=True)
@@ -65,6 +90,10 @@ def add_release_package_surfaces(root: Path) -> None:
     (root / ".github/hooks").mkdir(parents=True, exist_ok=True)
     (root / ".github/copilot-instructions.md").write_text("copilot adapter\n", encoding="utf-8")
     (root / ".github/prompts/query-wiki.prompt.md").write_text("query\n", encoding="utf-8")
+    shutil.copyfile(
+        REPO_ROOT / ".github/prompts/visualize-wiki.prompt.md",
+        root / ".github/prompts/visualize-wiki.prompt.md",
+    )
     (root / ".github/instructions/wiki-pages.instructions.md").write_text("pages\n", encoding="utf-8")
     (root / ".github/hooks/config.toml").write_text("[wiki_guard]\nmode = 'framework'\n", encoding="utf-8")
 
@@ -277,7 +306,7 @@ class ReleaseTests(unittest.TestCase):
                 },
             )
             self.assertEqual(manifest["schema_version"], 2)
-            self.assertEqual(manifest["installer_contract_version"], 6)
+            self.assertEqual(manifest["installer_contract_version"], 7)
             self.assertEqual(manifest["release_url"], "https://github.com/owner/example/releases/tag/v0.2.0")
             self.assertEqual(
                 manifest["bundled_tools"],
@@ -289,7 +318,22 @@ class ReleaseTests(unittest.TestCase):
                         "path": ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe",
                         "sha256": TGREP_SHA256,
                         "source_url": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
-                    }
+                    },
+                    {
+                        "tool": "archify",
+                        "version": "3.2.0",
+                        "platform": "node.js-cross-platform",
+                        "path": ".agents/skills/codebase-wiki/vendor/archify/bin/archify.mjs",
+                        "sha256": json.loads((source_root / ".agents/skills/codebase-wiki/vendor/archify-manifest.json").read_text(encoding="utf-8"))["files"][".agents/skills/codebase-wiki/vendor/archify/bin/archify.mjs"],
+                        "source_url": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+                        "source_commit": "208acba8d412335185b2056fedf54b3405df43fb",
+                        "archive_sha256": ARCHIFY_ARCHIVE_SHA256,
+                        "manifest_path": ".agents/skills/codebase-wiki/vendor/archify-manifest.json",
+                        "manifest_sha256": ARCHIFY_MANIFEST_SHA256,
+                        "license": "MIT",
+                        "node_requirement": ">=18",
+                        "file_count": 200,
+                    },
                 ],
             )
             self.assertEqual(
@@ -342,6 +386,8 @@ class ReleaseTests(unittest.TestCase):
                         for name in names
                     )
                 )
+                self.assertTrue(any(name.endswith("/vendor/archify/bin/archify.mjs") for name in names))
+                self.assertTrue(any(name.endswith("/vendor/archify-manifest.json") for name in names))
 
     def test_public_release_readiness_passes_with_the_selected_license(self) -> None:
         release = load_release()

@@ -44,7 +44,7 @@ flowchart TB
 
 ## 雙入口與共用契約
 
-`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 6、使用者意圖群組、machine operations、guard modes 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
+`.agents/skills/codebase-wiki/capabilities.json` 宣告 contract version 7、使用者意圖群組、machine operations、guard modes 與 authorization policy。Copilot 和 Codex 各自使用平台原生設定，但共用以下內容：
 
 - intent routing、frontmatter、log operations 與工作流 references；NotebookLM export 另有離線 source-pack reference；
 - Wiki page templates；

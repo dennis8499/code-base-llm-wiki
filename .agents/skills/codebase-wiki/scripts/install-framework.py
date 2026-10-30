@@ -17,7 +17,7 @@ import tempfile
 from typing import Any, Sequence
 
 
-CONTRACT_VERSION = 6
+CONTRACT_VERSION = 7
 REPO_ROOT = Path(__file__).resolve().parents[4]
 COMMON_SURFACE_PATHS = ("AGENTS.md", ".agents/skills/codebase-wiki")
 SURFACE_PATHS = {
@@ -29,12 +29,18 @@ RELEASE_PACKAGE_REQUIRED = {
     "codex": (
         "Codex.md",
         ".codex",
+        ".agents/skills/codebase-wiki/scripts/wiki-visualize.py",
+        ".agents/skills/codebase-wiki/vendor/archify-manifest.json",
+        ".agents/skills/codebase-wiki/vendor/archify",
     ),
     "copilot": (
         ".github/copilot-instructions.md",
         ".github/prompts",
         ".github/instructions",
         ".github/hooks",
+        ".agents/skills/codebase-wiki/scripts/wiki-visualize.py",
+        ".agents/skills/codebase-wiki/vendor/archify-manifest.json",
+        ".agents/skills/codebase-wiki/vendor/archify",
     ),
 }
 FRAMEWORK_ONLY_PATHS = {".github/workflows/release.yml"}
@@ -155,6 +161,7 @@ def _validate_release_package_source(root: Path, surface: str) -> None:
     # reparse-point failures retain the existing fail-closed boundary behavior.
     for relative_root in (*COMMON_SURFACE_PATHS, *SURFACE_PATHS[surface]):
         _files(root, relative_root)
+    _validate_archify_bundle(root)
 
     required = (
         "AGENTS.md",
@@ -188,6 +195,57 @@ def _validate_release_package_source(root: Path, surface: str) -> None:
         raise OSError(
             f"release package is incomplete for {surface}: missing a non-empty LICENSE file"
         )
+
+
+def _validate_archify_bundle(root: Path) -> None:
+    """Reject an incomplete or drifted Archify vendor bundle before install."""
+
+    manifest_relative = ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
+    vendor_relative = ".agents/skills/codebase-wiki/vendor/archify"
+    manifest_path = root / manifest_relative
+    if not manifest_path.is_file() or _is_reparse_point(manifest_path):
+        raise OSError("missing or unsafe bundled Archify manifest")
+    manifest_bytes = manifest_path.read_bytes()
+    expected_manifest_hash = "15c1b258d6958b964d4bf41f87e596e79ff5751cb438173c6b4f95bbad519509"
+    if _sha256(manifest_bytes) != expected_manifest_hash:
+        raise OSError("bundled Archify manifest SHA-256 mismatch")
+    try:
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise OSError("bundled Archify manifest is invalid JSON") from exc
+    expected = {
+        "schema_version": 1, "tool": "archify", "version": "3.2.0",
+        "commit": "208acba8d412335185b2056fedf54b3405df43fb",
+        "archive_sha256": "70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5",
+        "license": "MIT", "node_requirement": ">=18", "file_count": 200,
+        "cli": vendor_relative + "/bin/archify.mjs",
+    }
+    if not isinstance(manifest, dict) or any(manifest.get(key) != value for key, value in expected.items()):
+        raise OSError("bundled Archify manifest metadata mismatch")
+    inventory = manifest.get("files")
+    if not isinstance(inventory, dict) or len(inventory) != manifest["file_count"]:
+        raise OSError("bundled Archify file inventory is incomplete")
+    prefix = vendor_relative + "/"
+    expected_files: dict[str, str] = {}
+    for relative, digest in inventory.items():
+        pure = PurePosixPath(relative) if isinstance(relative, str) else PurePosixPath(".")
+        if (not isinstance(relative, str) or not relative.startswith(prefix) or pure.is_absolute() or
+            any(part in {".", ".."} for part in pure.parts) or
+            not re.fullmatch(r"[0-9a-f]{64}", str(digest))):
+            raise OSError("bundled Archify manifest has an unsafe file entry")
+        expected_files[relative[len(prefix):]] = digest
+    vendor_root = root / vendor_relative
+    _validate_framework_source_path(root, vendor_root)
+    actual_files: dict[str, str] = {}
+    for path in sorted(vendor_root.rglob("*")):
+        _validate_framework_source_path(root, path)
+        if path.is_file():
+            actual_files[path.relative_to(vendor_root).as_posix()] = _sha256(path.read_bytes())
+    if set(actual_files) != set(expected_files):
+        raise OSError("bundled Archify file set differs from its pinned inventory")
+    for relative, digest in expected_files.items():
+        if actual_files[relative] != digest:
+            raise OSError(f"bundled Archify file SHA-256 mismatch: {relative}")
 
 
 def _managed_block(source_root: Path, source: Path, relative: str) -> bytes:
@@ -508,6 +566,8 @@ def _prepare_plan(
         raise ValueError(f"unknown guard mode: {guard_mode}")
 
     _validate_release_package_source(source_root, surface)
+    if (source_root / ".agents/skills/codebase-wiki/vendor/archify-manifest.json").exists():
+        _validate_archify_bundle(source_root)
 
     state = _load_state(target_root)
     state_files = state.get("files", {}) if state else {}

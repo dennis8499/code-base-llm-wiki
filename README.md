@@ -114,13 +114,13 @@ flowchart LR
 | Hooks | `.github/hooks/` | `.codex/hooks.json` |
 | 輸出 | `wiki/` | `wiki/` |
 
-兩個入口維持十三個使用者意圖群組、十三個 machine operations 與相同安全邊界；
+兩個入口維持十四個使用者意圖群組、十四個 machine operations 與相同安全邊界；
 工作由目前 Agent 透過共用 Skill 與平台入口完成。
 
 Copilot prompt files 是 VS Code 本機 Agent 入口，不是 GitHub Copilot coding agent
 或其他 hosts 的通用入口；其他 hosts 直接使用 `.agents/skills/codebase-wiki/`。
 目前 v6 Copilot surface 的驗收狀態是 `static-compatible / runtime-unverified`；
-Codex v6 也完成本機 contract、installer 與 deterministic 驗證，但尚未重跑 host
+Codex v7 也完成本機 contract、installer 與 deterministic 驗證，但尚未重跑 host
 runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範圍參考
 [VS Code prompt files](https://code.visualstudio.com/docs/agent-customization/prompt-files)、
 [Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)。
@@ -162,7 +162,7 @@ runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範�
 - **後續操作建議**：高價值 Query 與 Lint findings 會以有界文字選項提示 Synthesis、重新 Ingest 或 Lint；不會自動寫入或切換工作流。
 - **安全邊界**：`wiki-only` 安全專用、`coexist` 一般開發共存、`framework`
   框架維護；舊 `target` 是 `wiki-only` alias。
-- **零第三方依賴 installer**：contract v6 提供 managed blocks、fingerprint
+- **零第三方依賴 installer**：contract v7 提供 managed blocks、fingerprint
   manifest、動態 starter 日期與 staging/rollback。
 - **單一 Hook 實作**：兩平台設定共用 Skill 下的 canonical hooks。
 - **NotebookLM 現況 BA／SA 知識包**：每次重掃安全 Codebase，以程式碼優先處理來源衝突，
@@ -209,6 +209,10 @@ local 變更時回報 `conflicts`。Root instructions 只更新 managed marker b
 Installer 只發佈 `.agents/skills/codebase-wiki/`；同一工作目錄中的其他 Skills
 不會外帶。`upgrade` 只同步 framework surface，既有 `wiki/` 保持不變。
 
+### Interactive Wiki visualizations
+
+When a user explicitly requests a diagram, Codebase LLM Wiki uses the pinned Archify v3.2.0 bundle to create one of ten native diagram types. The shared workflow records editable JSON, evidence-to-element mappings, original validation receipts, and an immutable HTML run under `wiki/visualizations/`; a stable Synthesis page links the latest run. Publishing requires Archify validate, deliver, strict check, and browser-check to pass, followed by a snapshot-checked Wiki transaction. No package installation or update download is needed.
+
 ### tgrep 來源探索
 
 Windows x64 的 Ingest 與 Code Archaeology 可使用共用 wrapper：
@@ -227,8 +231,8 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.6.4`。Installer 會把目前版本保存到目標 Repo 的
-`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 6` 維持為獨立的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.7.0`。Installer 會把目前版本保存到目標 Repo 的
+`.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 7` 維持為獨立的
 installer contract 版本。
 
 本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.4.0` tag 後，
@@ -243,7 +247,7 @@ installer contract 版本。
 - [下載更新 manifest](https://github.com/dennis8499/code-base-llm-wiki/releases/latest/download/update-manifest.json)
 
 兩個 ZIP 分別是精簡的 Codex 與 GitHub Copilot 安裝包，包含共用 Skill、installer、
-Wiki starter、固定 tgrep bundle 與單一平台 adapter。解壓後使用對應的
+Wiki starter、固定 tgrep／Archify bundles 與單一平台 adapter。解壓後使用對應的
 `--surface codex` 或 `--surface copilot` 執行 installer；選錯平台包會在寫入前失敗。
 未來 Extension 可讀取 update manifest、比較本地版本、驗證 SHA-256，再呼叫
 `upgrade`；本 Repo 目前不包含 updater。
@@ -331,7 +335,7 @@ v3 報告仍可依舊契約驗證；新一輪 Audit 才升級為 v4。
 | [文件總覽](docs/README.md) | 文件分類、建議閱讀順序與框架 Repo 邊界 |
 | [架構與資料流](docs/product/architecture/README.md) | 三層模型、雙入口、Hooks、Installer 與安全邊界 |
 | [安裝與升級](docs/operations/setup/README.md) | 前置需求、兩種 surface、guard mode、相容性與排錯 |
-| [工作流手冊](docs/product/workflows/README.md) | 十三類意圖、13 個操作情境、平台對照與輸出契約 |
+| [工作流手冊](docs/product/workflows/README.md) | 十四類意圖、15 個操作情境、平台對照與輸出契約 |
 | [驗證手冊](docs/operations/validation/README.md) | 本機 deterministic checks、E2E 驗收與發佈前清單 |
 | [版本、發佈與更新契約](docs/operations/releases/README.md) | SemVer、GitHub Release、下載資產與 Extension manifest |
 | [Codex.md](Codex.md) | Codex 安裝後仍可使用的獨立操作手冊 |

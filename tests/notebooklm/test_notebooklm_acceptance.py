@@ -886,11 +886,12 @@ class NotebookLMAcceptanceTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
                 payload = json.loads(result.stdout)
-                self.assertEqual(payload["contract_version"], 6)
+                self.assertEqual(payload["contract_version"], 7)
                 skill = target / ".agents/skills/codebase-wiki"
                 installed_capability = json.loads(
                     (skill / "capabilities.json").read_text(encoding="utf-8")
                 )
+                self.assertEqual(installed_capability["contract_version"], 7)
                 self.assertEqual(
                     installed_capability["intents"]["notebooklm_export"]["confirmation_stages"],
                     ["discovery_plan"],

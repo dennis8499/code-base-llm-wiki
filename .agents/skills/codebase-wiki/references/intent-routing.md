@@ -1,6 +1,6 @@
 # Intent Routing
 
-This is the single workflow index for thirteen user-facing intent groups.
+This is the single workflow index for fourteen user-facing intent groups.
 `capabilities.json` maps them to machine operations and authorization policies.
 Interpret signals in the requested Wiki/framework context; the explicit deliverable
 takes precedence over generic words such as "explain", "analyze" or "review".
@@ -15,6 +15,7 @@ takes precedence over generic words such as "explain", "analyze" or "review".
 | Codebase audit | 程式健檢、Codebase audit、目前程式的邏輯缺陷 | [code-audit-workflow.md](code-audit-workflow.md); rebuild the current source/entrypoint inventory, trace reachable paths, consult Wiki only for business-rule gaps, then check transactions, config, logic/state and targeted Git history statically. Save a coverage-aware report unless chat-only is requested. |
 | ADR | record an architecture decision, ADR | [adr-workflow.md](adr-workflow.md); explicit creation authorizes an ADR under `wiki/decisions/`. |
 | Synthesis | save this cross-cutting analysis | [synthesis-workflow.md](synthesis-workflow.md); explicit creation authorizes durable output under `wiki/synthesis/`. |
+| Visualize | explicitly draw or render a Wiki or Codebase subject | [visualization-workflow.md](visualization-workflow.md); use the pinned Archify bundle, preserve evidence and Gaps, and publish only after every automated gate passes. |
 | Business Analysis / BA | BA文件、業務分析文件 | [business-analysis-workflow.md](business-analysis-workflow.md); produce a standard-aligned BA document from Wiki-first evidence. |
 | System Analysis / SA | SA文件、系統分析、SAD | [system-analysis-workflow.md](system-analysis-workflow.md); produce solution-neutral requirements and verification needs from Wiki-first evidence. |
 | System Design / SD | SD文件、系統設計、SDD | [system-design-workflow.md](system-design-workflow.md); produce standard-aligned architecture views, decisions and quality strategy from Wiki-first evidence. |

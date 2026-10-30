@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-29
+last_updated: 2026-10-30
 tags: [log]
 status: active
 ---
@@ -858,3 +858,51 @@ status: active
 
 - Refresh source digests after removing retired release references from release tooling and the Ingest contract fixture.
 - Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[query-follow-ups-and-ingest]]
+
+
+## [2026-10-30] update | Integrate pinned Archify visualizations
+
+- Affected pages: [[archify-visualization]] [[framework-introduction]] [[installer-and-upgrade]] [[platform-adapters-and-release]] [[release-and-update]] [[system-architecture]].
+- Updated framework architecture, installer/release guidance, and visualization provenance.
+
+
+## [2026-10-30] update | Refresh framework evidence coverage after Archify integration
+
+- Refreshed the scanner-backed source ledger and dependent Wiki evidence digests after framework changes.
+- Affected pages: [[codebase-functional-coverage]], [[overview]], [[cap-analysis-document-generation-sa]], [[cap-notebooklm-ba-functional-export-sa]]
+
+
+## [2026-10-30] update | Align visualization coverage with active system-design requirement
+
+- Linked the supplemental diagram evidence to an active requirement while retaining its Archify module association.
+- Affected pages: [[codebase-functional-coverage]]
+
+
+## [2026-10-30] update | Refresh evidence after contract test alignment
+
+- Refreshed scanner hashes, discovery identity, and the dependent NotebookLM SA source digest after updating v7 contract coverage.
+- Affected pages: [[codebase-functional-coverage]], [[cap-notebooklm-ba-functional-export-sa]]
+
+
+## [2026-10-30] update | Refresh NotebookLM evidence after contract test updates
+
+- Refreshed the framework coverage hash and NotebookLM BA evidence digest after aligning contract tests.
+- Affected pages: [[codebase-functional-coverage]], [[cap-notebooklm-ba-functional-export-ba]]
+
+
+## [2026-10-30] update | Reconcile stale evidence after Archify integration
+
+- Refreshed source fingerprints for framework pages and aligned current BA/SD references with capability contract v7; historical snapshots remain intact.
+- Affected pages: [[notebooklm-export]], [[release-and-update]], [[code-audit]], [[development-specification]], [[functional-exploration]], [[installer-and-upgrade]], [[platform-adapters-and-release]], [[generate-analysis-document]], [[business-analysis]], [[system-analysis]], [[system-design]]
+
+
+## [2026-10-30] update | Prepare v0.7.0 release evidence
+
+- Refresh release documentation digests and record the v7 runtime limitations.
+- Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[system-analysis]], [[index]]
+
+
+## [2026-10-30] update | Finalize v0.7.0 release note
+
+- Record Archify scope and current host validation limits against release sources.
+- Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[system-analysis]], [[index]]

@@ -15,9 +15,9 @@ sources:
   - docs/operations/releases/README.md
   - tests/contracts/test_contracts.py
   - tests/wiki/test_wiki_lint.py
-source_digest: "sha256:b5d1eb2540a63ae06992ed801452782de5ce9d8419a0dd8afba9b1a9863616c4"
+source_digest: sha256:d4b3e99af89490d4517ad026f8d330bb5b818d2f3c4481147c2d9a87b14f0c16
 derived_from: ["[[business-analysis]]", "[[business-analysis-document]]", "[[system-analysis-document]]", "[[system-design-document]]", "[[generate-analysis-document]]", "[[standards-alignment-not-conformance]]", "[[missing-evidence-remains-gap]]", "[[overview]]"]
-last_updated: 2026-10-21
+last_updated: 2026-10-30
 tags: [synthesis, system-analysis, standards-aligned]
 status: active
 ---
@@ -362,7 +362,7 @@ BA／SA pair 與已登記 gaps。詳見 [[system-architecture]]。
 
 | 系統 / 套件 | 整合方式 | 風險 / 注意事項 | 來源 |
 | --- | --- | --- | --- |
-| OpenAI Codex | `.codex` hooks/agents + shared Skill | CLI 0.152.1 於 2026-09-03 完成六流程各 3/3，屬 contract v4 歷史基線；目前 v6 host runtime 尚未重跑，其他 host/version 不直接外推 | [[platform-adapters-and-release]] |
+| OpenAI Codex | `.codex` hooks/agents + shared Skill | CLI 0.152.1 於 2026-09-03 完成六流程各 3/3，屬 contract v4 歷史基線；目前 v7 host runtime 尚未重跑，其他 host/version 不直接外推 | [[platform-adapters-and-release]] |
 | GitHub Copilot | VS Code 使用 `.github` prompts；其他 hosts 使用 shared Skill | 僅完成靜態相容驗證，runtime 表現仍未驗證 | [[platform-adapters-and-release]] |
 | Git | Wiki freshness/history、release tag、可選 manifest provenance | NotebookLM inventory/preflight 不依賴 Git；獨立 quality tools 仍可使用 Git 輔助 freshness | [[wiki-quality-and-provenance]] |
 | NotebookLM | 使用者手動上傳 query-index、project-map、shared business context 與 capability BA／SA static Markdown | 雲端 retrieval、IAM、資料位置與安全控制需由租戶管理員驗證 | [[notebooklm-export]] |
@@ -403,7 +403,7 @@ guard 與 NotebookLM profile。維護者在乾淨隔離 worktree 以 Python 3.11
 
 | 類別 | 目前證據 | 缺口 |
 | --- | --- | --- |
-| 正確性 | deterministic checks 與 contract tests；Codex CLI 0.152.1 於 2026-09-03 的六流程各 3/3 僅為 contract v4 歷史基線；Windows symlink cases 受 privilege 限制時須由 Linux clean-run 覆蓋 | contract v6 的 Codex host runtime 與 Copilot runtime 尚未驗證；語意矛盾仍需 agent review |
+| 正確性 | deterministic checks 與 contract tests；Codex CLI 0.152.1 於 2026-09-03 的六流程各 3/3 僅為 contract v4 歷史基線；Windows symlink cases 受 privilege 限制時須由 Linux clean-run 覆蓋 | contract v7 的 Codex host runtime 與 Copilot runtime 尚未驗證；語意矛盾仍需 agent review |
 | 安全性 | raw read-only、guard、secret exclusion、local Basic DLP、two-phase export | host/sandbox 與租戶 Advanced DLP 政策在框架外 |
 | 可恢復性 | installer/exporter stage + rollback；active/committed journal、同一 target/output 的 transaction lock 與子程序終止 regression 覆蓋未完成 replacement recovery | 突然斷電、metadata durability 與所有 host-specific termination windows 尚未完整驗證 |
 | 可維護性 | single canonical Skill/scripts、parity、managed docs | ChangeLog 歷史仍偏大 |

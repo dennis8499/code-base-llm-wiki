@@ -13,4 +13,5 @@
 | `release/` | release builder 與資產契約 |
 | `samples/` | `samples/task-tracker` 的安裝與 E2E contract |
 | `tgrep/` | pinned Windows x64 tgrep wrapper、版本／digest 與唯讀邊界 |
+| `visualization/` | Archify 十類 JSON、證據映射、CAS 發布、失敗保護與產物完整性 |
 | `wiki/` | Wiki lint、stale、log、hooks 與規格驗證 |

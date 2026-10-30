@@ -1,5 +1,5 @@
 {
-  "contract_version": 6,
+  "contract_version": 7,
   "surfaces": [
     "copilot",
     "codex"
@@ -126,6 +126,16 @@
       "requires_confirmation": false,
       "authorization_policy": "explicit_request"
     },
+    "visualize": {
+      "writes_by_default": true,
+      "requires_confirmation": false,
+      "authorization_policy": "explicit_request",
+      "workflow": "references/visualization-workflow.md",
+      "commands": ["prepare", "publish", "verify"],
+      "types": ["architecture", "workflow", "sequence", "dataflow", "lifecycle", "erd", "class", "tree", "timeline", "waterfall"],
+      "publish_gates": ["validate", "deliver", "check", "browser-check"],
+      "publish_only_after_all_gates_pass": true
+    },
     "business_analysis": {
       "writes_by_default": true,
       "requires_confirmation": false,
@@ -200,6 +210,9 @@
     ],
     "functional_exploration": [
       "functional_exploration"
+    ],
+    "visualize": [
+      "visualize"
     ]
   },
   "entrypoints": {
@@ -241,6 +254,9 @@
       ],
       "functional_exploration": [
         "functional-exploration.prompt.md"
+      ],
+      "visualize": [
+        "visualize-wiki.prompt.md"
       ]
     },
     "codex": {
@@ -294,6 +310,23 @@
       "scope": "explicit_project_root_and_descendants",
       "snapshot": "sha256",
       "entrypoint_candidates": true
+    },
+    "visualization": {
+      "provider": "archify",
+      "version": "3.2.0",
+      "source_commit": "208acba8d412335185b2056fedf54b3405df43fb",
+      "archive_sha256": "70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5",
+      "manifest": ".agents/skills/codebase-wiki/vendor/archify-manifest.json",
+      "manifest_sha256": "15c1b258d6958b964d4bf41f87e596e79ff5751cb438173c6b4f95bbad519509",
+      "license": "MIT",
+      "node_requirement": ">=18",
+      "platforms": ["windows-x86_64"],
+      "other_platforms": "not-yet-tested",
+      "diagram_types": ["architecture", "workflow", "sequence", "dataflow", "lifecycle", "erd", "class", "tree", "timeline", "waterfall"],
+      "update_check": "disabled",
+      "auto_download": false,
+      "wrapper": ".agents/skills/codebase-wiki/scripts/wiki-visualize.py",
+      "workflow": ".agents/skills/codebase-wiki/references/visualization-workflow.md"
     }
   },
   "query_follow_up": {

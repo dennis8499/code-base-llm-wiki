@@ -1,25 +1,28 @@
 ---
 title: Installer 與 Upgrade
 type: module
-summary: Installer v6 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle
+summary: Installer v7 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步提供 pinned tgrep source-discovery bundle
 notebooklm_group: function-install-upgrade
 notebooklm_role: traceability
 sources:
-  - .agents/skills/codebase-wiki/scripts/install-framework.py
-  - .github/workflows/release.yml
-  - .agents/skills/codebase-wiki/references/install-workflow.md
-  - .agents/skills/codebase-wiki/assets/target-agents-block.md
-  - .agents/skills/codebase-wiki/capabilities.json
-  - .agents/skills/codebase-wiki/references/code-audit-workflow.md
-  - .agents/skills/codebase-wiki/assets/code-audit-template.md
-  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-  - tests/installer/test_install_framework.py
-  - .github/prompts/code-audit.prompt.md
-  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-source_digest: sha256:0dc488ee3f6d8fe34b28db87aa2d9708aff41a5bd990d23af9d8a13ace9f5663
+  - ".agents/skills/codebase-wiki/scripts/install-framework.py"
+  - ".github/workflows/release.yml"
+  - ".agents/skills/codebase-wiki/references/install-workflow.md"
+  - ".agents/skills/codebase-wiki/assets/target-agents-block.md"
+  - ".agents/skills/codebase-wiki/capabilities.json"
+  - ".agents/skills/codebase-wiki/references/code-audit-workflow.md"
+  - ".agents/skills/codebase-wiki/assets/code-audit-template.md"
+  - ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+  - "tests/installer/test_install_framework.py"
+  - ".github/prompts/code-audit.prompt.md"
+  - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
+  - ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+  - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
+  - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
+  - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
+source_digest: sha256:fed541a9cd60fa38589bca2a5ad4783e2f8d6d8f004d39ad2102e8f53ea64a9b
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-20
+last_updated: 2026-10-30
 tags: [module, installer, upgrade, atomicity]
 status: active
 ---
@@ -49,7 +52,7 @@ status: active
 - Release package README marker 啟用額外完整性 gate：在任何 target 寫入前確認共用
   Skill、Wiki starter、VERSION、target `AGENTS.md` template 與所選 Codex／Copilot
   adapter 都存在；選錯平台包會 fail closed。
-- v6 隨共用 Skill 安裝三份 standards-aligned templates/workflows 與兩份 NotebookLM
+- v7 隨共用 Skill 安裝三份 standards-aligned templates/workflows 與兩份 NotebookLM
   current-state BA／SA templates，Copilot surface 另取得
   BA／SA／SD／Codebase audit 薄 prompt adapters；共用 Codebase audit workflow、報告模板與
   `validate-code-audit.py`
@@ -70,6 +73,10 @@ install-framework.py install|upgrade
 JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 `conflicts` 與 `obsolete_paths`。沒有 `--apply` 時不修改目標 Repo；存在 conflict
 時即使指定 apply 也不套用。
+
+## Archify bundle
+
+Installer contract v7 carries the complete pinned Archify package, MIT license, and file-hash manifest into both platform bundles. The installer validates the 200-file inventory and rejects metadata or hash drift before writing; users do not run npm install or download the tool.
 
 ## Evidence
 
@@ -135,7 +142,7 @@ JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
 ## 已移除功能的升級
 
 開發規格的五個受管理檔案在升級時依 install-state 的原 SHA-256 驗證後刪除。
-`changes` 列出刪除項目，`obsolete_paths` 保留過時清單；既有 JSON contract 6 維持。
+`changes` 列出刪除項目，`obsolete_paths` 保留過時清單；JSON contract version 為 7，並支援從 v6 安裝狀態升級。
 本機修改或無安裝歸屬時列為 conflicts，停止全部套用。刪除與其他更新共用 before-image
 交易、失敗回復與程序中斷復原；使用者的 Wiki 與規格文件保留。
 

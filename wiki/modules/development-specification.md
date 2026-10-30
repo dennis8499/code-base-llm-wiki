@@ -6,8 +6,8 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - .agents/skills/codebase-wiki/scripts/install-framework.py
   - tests/installer/test_development_spec_removal.py
-source_digest: sha256:da8a29c97b69aad64ce4fdba30f2fcc0f7d8341e9e71a8b0664ea2a4777a0930
-last_updated: 2026-10-17
+source_digest: sha256:5d5adb10ccb97b3960a2439c89933dcc0a351a1890cb6b7dd91db5d45a69b59a
+last_updated: 2026-10-30
 tags: [module, history]
 status: active
 notebooklm_role: exclude

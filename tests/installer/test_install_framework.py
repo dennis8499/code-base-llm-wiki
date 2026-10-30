@@ -7,6 +7,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -65,7 +66,7 @@ class FrameworkInstallerTests(unittest.TestCase):
             )
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(payload["contract_version"], 6)
+            self.assertEqual(payload["contract_version"], 7)
             self.assertEqual(payload["framework_version"], (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip())
             self.assertEqual(payload["action"], "install")
             self.assertEqual(payload["surface"], "codex")
@@ -74,6 +75,21 @@ class FrameworkInstallerTests(unittest.TestCase):
             self.assertFalse(payload["applied"])
             self.assertEqual(payload["obsolete_paths"], [])
             self.assertEqual(list(target.iterdir()), [])
+
+    def test_archify_vendor_hash_drift_is_rejected_before_install(self) -> None:
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "source"
+            vendor = root / ".agents/skills/codebase-wiki/vendor/archify"
+            vendor.parent.mkdir(parents=True)
+            shutil.copytree(REPO_ROOT / ".agents/skills/codebase-wiki/vendor/archify", vendor)
+            shutil.copyfile(
+                REPO_ROOT / ".agents/skills/codebase-wiki/vendor/archify-manifest.json",
+                vendor.parent / "archify-manifest.json",
+            )
+            (vendor / "bin/archify.mjs").write_text("tampered\n", encoding="utf-8")
+            with self.assertRaisesRegex(OSError, "SHA-256 mismatch"):
+                installer._validate_archify_bundle(root)
 
     def test_upgrade_plan_exposes_code_audit_resources_for_both_surfaces(self) -> None:
         installer = load_installer()
@@ -156,6 +172,12 @@ class FrameworkInstallerTests(unittest.TestCase):
                     target
                     / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
                 ).exists()
+            )
+            self.assertTrue(
+                (target / ".agents/skills/codebase-wiki/vendor/archify/bin/archify.mjs").is_file()
+            )
+            self.assertTrue(
+                (target / ".agents/skills/codebase-wiki/vendor/archify-manifest.json").is_file()
             )
             self.assertTrue(
                 (

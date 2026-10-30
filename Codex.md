@@ -9,7 +9,7 @@ surfaces directly instead of Copilot slash prompt files.
 | Path                            | Required    | Purpose                                                       |
 | ------------------------------- | ----------- | ------------------------------------------------------------- |
 | `AGENTS.md`                     | Yes         | Durable Codex project rules                                   |
-| `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, installer, references, templates, helper scripts, and pinned tgrep bundle |
+| `.agents/skills/codebase-wiki/` | Yes         | Skill instructions, installer, references, templates, helper scripts, pinned tgrep and Archify bundles |
 | `.codex/`                       | Recommended | Hooks and framework guard configuration                       |
 | `wiki/`                         | Yes         | Generated knowledge base                                      |
 | `.github/`                      | Optional    | Keep only when the repo also supports GitHub Copilot          |
@@ -74,6 +74,12 @@ allowlisted command contract and fallback behavior.
 
 Codex CLI and IDE slash commands are platform controls. Do not add project-level
 Codex slash prompt files for this framework.
+
+## Wiki Visualization
+
+When a user explicitly requests an interactive Wiki or Codebase diagram, follow `$codebase-wiki` and `references/visualization-workflow.md`. Use `python .agents/skills/codebase-wiki/scripts/wiki-visualize.py verify --bundle --root . --format json` before authoring, then prepare one of the ten supported types, complete the evidence map, publish only after all four Archify gates pass, and verify the immutable run. Query remains read-only.
+
+Natural-language visualization recipe: ask for an interactive Wiki diagram, name its subject and diagram type, then follow the shared visualization workflow.
 
 ## Common Workflows
 

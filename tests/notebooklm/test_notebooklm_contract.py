@@ -297,12 +297,15 @@ class NotebookLMContractTests(unittest.TestCase):
             self.assertEqual(len(compacted_sources), 1)
             self.assertTrue(all(paths == [compacted_sources[0][1]] for paths in compacted_mapping.values()))
 
-    def test_test_005_capability_manifest_and_templates_are_schema_v6(self) -> None:
+    def test_test_005_capability_manifest_v7_preserves_notebooklm_schema_v6(self) -> None:
         repository = Path(__file__).resolve().parents[2]
         capability_path = repository / ".agents/skills/codebase-wiki/capabilities.json"
         capability = json.loads(capability_path.read_text(encoding="utf-8"))
 
-        self.assertEqual(capability["contract_version"], 6)
+        self.assertEqual(capability["contract_version"], 7)
+        exporter = load_canonical_exporter()
+        self.assertEqual(exporter.EXPORT_SCHEMA_VERSION, 6)
+        self.assertEqual(exporter.PREFLIGHT_SCHEMA_VERSION, 6)
         export = capability["intents"]["notebooklm_export"]
         self.assertEqual(export["confirmation_stages"], ["discovery_plan"])
         self.assertEqual(export["audience"], "business-and-system-analyst")

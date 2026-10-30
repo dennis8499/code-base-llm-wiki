@@ -3,33 +3,35 @@ title: Codebase LLM Wiki — 版本、發佈與更新
 type: guide
 summary: 以 VERSION、本機驗證、surface-specific ZIP、tag-triggered GitHub Actions 與授權 gate 管理框架發布
 sources:
-  - VERSION
-  - LICENSE
-  - .github/workflows/release.yml
-  - tools/release.py
-  - tools/validate_release.py
-  - tools/prepare_release.py
-  - tests/release/test_prepare_release.py
-  - scripts/release_ci.py
-  - scripts/test_release_ci.py
-  - tests/release/test_validation.py
-  - docs/operations/releases/README.md
-  - docs/operations/validation/README.md
-  - README.md
-  - .agents/skills/codebase-wiki/capabilities.json
-  - .agents/skills/codebase-wiki/scripts/parity-check.py
-  - .agents/skills/codebase-wiki/scripts/install-framework.py
-  - tests/contracts/test_contracts.py
-  - tests/release/test_github_release_workflow.py
-  - tests/release/features/github-release.feature
-  - tests/release/scenario_runner.py
-  - tests/release/test_release.py
-  - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
-  - .agents/skills/codebase-wiki/bin/tgrep-manifest.json
-  - .agents/skills/codebase-wiki/scripts/tgrep-search.py
-source_digest: "sha256:3681d93644fdc2f879f2f5263fcc402b60d91b04e7307ec5f77a4aa51979f6ee"
+  - "VERSION"
+  - "LICENSE"
+  - ".github/workflows/release.yml"
+  - "tools/release.py"
+  - "tools/validate_release.py"
+  - "tools/prepare_release.py"
+  - "tests/release/test_prepare_release.py"
+  - "scripts/release_ci.py"
+  - "scripts/test_release_ci.py"
+  - "tests/release/test_validation.py"
+  - "docs/operations/releases/README.md"
+  - "docs/operations/validation/README.md"
+  - "README.md"
+  - ".agents/skills/codebase-wiki/capabilities.json"
+  - ".agents/skills/codebase-wiki/scripts/parity-check.py"
+  - ".agents/skills/codebase-wiki/scripts/install-framework.py"
+  - "tests/contracts/test_contracts.py"
+  - "tests/release/test_github_release_workflow.py"
+  - "tests/release/features/github-release.feature"
+  - "tests/release/scenario_runner.py"
+  - "tests/release/test_release.py"
+  - ".agents/skills/codebase-wiki/scripts/validate-code-audit.py"
+  - ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+  - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
+  - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
+  - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
+source_digest: sha256:c1a01f371f7f30c6349de08777ebe27f5cf7420c76993bf31b8d23cd9d547d94
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-29
+last_updated: 2026-10-30
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -45,11 +47,15 @@ notebooklm_role: traceability
 
 本版同步雙平台的 Concise 輸出、集中式意圖路由與逐分支完成條件，重新建置 Codex／Copilot 安裝包及更新資訊。產品版號為 0.6.1，installer contract 維持 v6。Host runtime 保留 `runtime-unverified`。
 
+## 0.7.0 Archify 視覺化
+
+v0.7.0 將 Archify v3.2.0 納入 Codex 與 Copilot 套件，並將 installer/capability contract 升為 v7。release manifest 記錄 Archify 來源 commit、官方 ZIP SHA-256、逐檔 manifest、MIT 授權與 Node.js 需求；套件不在安裝時下載更新。十類互動圖表只在使用者明確要求時產生，必須通過四項原生驗證，並以 Wiki CAS 同步提交 UUID 產物、伴隨頁、索引及一筆日誌。Windows browser fixtures 已完成；兩個 host 的 runtime UAT 與其他作業系統仍未實測。詳細設計見 [[archify-visualization]]。
+
 ## 版本規則
 
 - `VERSION` 是唯一產品版號來源，格式為穩定 `X.Y.Z`。
 - Git tag 必須是 `vX.Y.Z`，且必須與 `VERSION` 完全一致。
-- `contract_version: 6` 是 installer/capability contract，不是產品版號。
+- `contract_version: 7` 是 installer/capability contract，不是產品版號。
 - Installer 將版號保存至 `.agents/skills/codebase-wiki/VERSION`。
 - `.github/workflows/release.yml` 是 framework-only 的驗證與發版入口；PR、main、手動及 reusable
   呼叫先完整驗證，只有版本 tag push 可發布。Installer 不會把它安裝到 target repository。

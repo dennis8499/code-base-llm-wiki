@@ -45,6 +45,7 @@ ACTIVE_PROMPTS = {
     "save-synthesis.prompt.md",
     "system-analysis-doc.prompt.md",
     "system-design-doc.prompt.md",
+    "visualize-wiki.prompt.md",
 }
 
 
@@ -62,9 +63,9 @@ class CapabilityRemovalBehaviorTests(unittest.TestCase):
     def test_active_contract_and_platform_adapters_drop_removed_capabilities(self) -> None:
         manifest = json.loads((SKILL_ROOT / "capabilities.json").read_text(encoding="utf-8"))
 
-        self.assertEqual(manifest["contract_version"], 6)
-        self.assertEqual(len(manifest["intents"]), 13)
-        self.assertEqual(len(manifest["intent_groups"]), 13)
+        self.assertEqual(manifest["contract_version"], 7)
+        self.assertEqual(len(manifest["intents"]), 14)
+        self.assertEqual(len(manifest["intent_groups"]), 14)
         self.assertTrue({"guide", "delegation"}.isdisjoint(manifest["intents"]))
         self.assertTrue({"guide", "delegation"}.isdisjoint(manifest["intent_groups"]))
         self.assertTrue(
@@ -84,7 +85,10 @@ class CapabilityRemovalBehaviorTests(unittest.TestCase):
         self.assertEqual(mapped_prompts, ACTIVE_PROMPTS)
         for path in sorted(prompt_root.glob("*.prompt.md")):
             with self.subTest(prompt=path.name):
-                self.assertIn('agent: "agent"', path.read_text(encoding="utf-8"))
+                self.assertRegex(
+                    path.read_text(encoding="utf-8"),
+                    r'(?m)^agent:\s*"?agent"?\s*$',
+                )
 
         codex_config = (REPO_ROOT / ".codex" / "config.toml").read_text(encoding="utf-8")
         self.assertNotIn("[agents]", codex_config)
@@ -106,7 +110,7 @@ class CapabilityRemovalBehaviorTests(unittest.TestCase):
                         / "install-state.json"
                     ).read_text(encoding="utf-8")
                 )
-                self.assertEqual(installed_state["contract_version"], 6)
+                self.assertEqual(installed_state["contract_version"], 7)
                 for relative in REMOVED_PATHS:
                     with self.subTest(surface=surface, fresh_path=relative):
                         self.assertFalse((target / relative).exists())
