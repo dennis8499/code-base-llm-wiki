@@ -299,6 +299,14 @@ class FrameworkInstallerTests(unittest.TestCase):
     def test_windows_installed_files_inherit_target_permissions(self) -> None:
         installer = load_installer()
         with tempfile.TemporaryDirectory() as directory:
+            subprocess.run(
+                ["icacls", directory, "/grant", "*S-1-5-11:(OI)(CI)(RX)"],
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
             target = Path(directory) / "target"
             target.mkdir()
 
@@ -327,7 +335,10 @@ class FrameworkInstallerTests(unittest.TestCase):
                 encoding="utf-8",
                 errors="replace",
             )
-            self.assertIn("(I)", acl.stdout)
+            self.assertTrue(
+                "Authenticated Users" in acl.stdout or "S-1-5-11" in acl.stdout,
+                acl.stdout,
+            )
 
     def test_copilot_surface_excludes_codex_files(self) -> None:
         installer = load_installer()
