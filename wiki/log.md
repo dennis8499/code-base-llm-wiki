@@ -906,3 +906,15 @@ status: active
 
 - Record Archify scope and current host validation limits against release sources.
 - Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[system-analysis]], [[index]]
+
+
+## [2026-10-30] update | Refresh v0.7.0 coverage snapshot
+
+- Reconcile three source hashes and the analyzed discovery ID after preserving the pinned Archify bytes.
+- Affected pages: [[codebase-functional-coverage]], [[index]]
+
+
+## [2026-10-30] update | Refresh v0.7.0 coverage after release note
+
+- Refresh the ChangeLog source hash and analyzed discovery ID after documenting the Archify bundle byte-preservation fix.
+- Affected pages: [[codebase-functional-coverage]], [[index]]
