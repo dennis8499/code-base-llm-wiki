@@ -918,3 +918,15 @@ status: active
 
 - Refresh the ChangeLog source hash and analyzed discovery ID after documenting the Archify bundle byte-preservation fix.
 - Affected pages: [[codebase-functional-coverage]], [[index]]
+
+
+## [2026-10-30] update | Refresh v0.7.0 coverage after Windows test fix
+
+- Reconcile the release-note and Windows installer test source hashes with the analyzed discovery ID.
+- Affected pages: [[codebase-functional-coverage]], [[index]]
+
+
+## [2026-10-30] update | Refresh release evidence digests after Windows CI fix
+
+- Refresh installer and release evidence digests after documenting the Windows ACL test correction.
+- Affected pages: [[installer-and-upgrade]], [[platform-adapters-and-release]], [[index]]

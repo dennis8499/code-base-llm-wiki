@@ -47,7 +47,7 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:d4166f7c1044617957f0bd8bf050b267d0628e063baafd3dc86a31808fc6b165
+source_digest: sha256:3657a6ee29fa1e79b875c37f580335a015d0a4222ccdf2751348ee573181de46
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-30
 tags: [module, adapters, validation, release, parity]

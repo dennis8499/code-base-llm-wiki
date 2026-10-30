@@ -20,7 +20,7 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:fed541a9cd60fa38589bca2a5ad4783e2f8d6d8f004d39ad2102e8f53ea64a9b
+source_digest: sha256:e3ca373dd0d16cfea59db15747fae5ad441d952317c5f1ba1f4e73f255ee9988
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-30
 tags: [module, installer, upgrade, atomicity]
