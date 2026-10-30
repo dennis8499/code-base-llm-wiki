@@ -117,7 +117,7 @@ _（尚無頁面）_
 | [[cap-notebooklm-ba-functional-export-sa]] | 依 exporter 現況整理 discovery/readiness identity、配對驗證、遮罩、容量與原子輸出。 |
 | [[codebase-functional-coverage]] | 本機完整性 gate，將 framework scan profile 的每個安全檔案歸屬到 NotebookLM 與 BA／SA／SD 文件功能需求或無可觀察行為 |
 | [[functional-requirement-catalog]] | Codebase LLM Wiki 提供給 BA 的 NotebookLM 與 BA／SA／SD 文件 active 功能需求、能力、流程與驗收覆蓋 |
-| [[project-function-catalog]] | 將安裝、Wiki 品質、source-first Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋 |
+| [[project-function-catalog]] | 將安裝、Wiki 品質、source-first Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋 ，並收錄明確請求觸發的 Archify Wiki 視覺化 |
 | [[system-analysis]] | 以 solution-neutral 系統邊界、stakeholder needs、SR/NFR/IF 與驗證需求描述 BA／SA／SD 文件能力 |
 | [[system-design]] | 以共享 standards profiles、三個文件工作流、雙平台 adapters 與既有驗證／匯出器實作 BA／SA／SD 產出能力 |
 

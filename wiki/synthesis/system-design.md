@@ -33,7 +33,7 @@ status: active
 | Owner／Reviewer | Project owner（待具名）／framework maintainer |
 | 標準 Profile | `system-design-aligned-v1` |
 | 文件狀態／Coverage | active / partial |
-| 變更摘要 | 新增共享 profile、BA/SD workflows、重整 SA；目前 capability contract 為 v6 |
+| 變更摘要 | 新增共享 profile、BA/SD workflows、重整 SA；目前 capability contract 為 v7 |
 
 > 本文件為 standard-aligned，不代表 conformance。IEEE 1016-2009 只作
 > inactive-reserved／informative 的歷史 SDD 組織參考；architecture-description

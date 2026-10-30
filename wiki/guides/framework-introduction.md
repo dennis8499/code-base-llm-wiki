@@ -23,7 +23,7 @@ sources:
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - "tests/visualization/test_archify_acceptance.py"
-source_digest: sha256:136e02bbf2710ea95e09c2ff4d48d7d03639dbb10d5b1f0e9bfd3e70a9d55e37
+source_digest: sha256:f56068805c9c933cdbbcb283bda2723ce757488353970596946ad614ef798d04
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-10-30
 tags: [guide, onboarding, framework, copilot, codex]

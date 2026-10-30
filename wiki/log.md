@@ -930,3 +930,25 @@ status: active
 
 - Refresh installer and release evidence digests after documenting the Windows ACL test correction.
 - Affected pages: [[installer-and-upgrade]], [[platform-adapters-and-release]], [[index]]
+
+
+## [2026-10-30] update | 全面核對現行文件與實作
+
+Affected pages: [[installer-and-upgrade]], [[platform-adapters-and-release]], [[project-function-catalog]], [[system-architecture]], [[system-design]], [[framework-introduction]], [[release-and-update]], [[overview]], [[system-analysis]]
+
+- 更正現行契約、發版資訊、功能目錄與來源摘要。
+- 記錄 Archify 換行保護與 Windows ACL regression 測試的現行證據邊界。
+
+
+## [2026-10-30] update | 刷新功能覆蓋 scanner 快照
+
+Affected pages: [[codebase-functional-coverage]], [[index]]
+
+- 核對完整 222 個納入檔案與 90 個 entrypoint candidates；路徑、分類、覆蓋與 analysis-gap 狀態相符。
+- 更新七筆文件摘要與 analyzed discovery ID，保留原有處置、連結與 reviewer notes。
+
+
+## [2026-10-30] update | 刷新 ChangeLog 覆蓋證據
+
+- 更新 `ChangeLog.md` source hash 與 analyzed discovery ID，保留既有 disposition。
+- Affected pages: [[codebase-functional-coverage]]

@@ -1,12 +1,12 @@
 ---
 title: Codebase LLM Wiki 專案功能目錄
 type: synthesis
-summary: 將安裝、Wiki 品質、source-first Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋
+summary: 將安裝、Wiki 品質、source-first Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋, 並收錄明確請求觸發的 Archify Wiki 視覺化
 notebooklm_group: project
 notebooklm_role: traceability
 sources: []
 derived_from: ["[[overview]]", "[[system-architecture]]", "[[installer-and-upgrade]]", "[[wiki-quality-and-provenance]]", "[[notebooklm-exporter]]", "[[platform-hooks-and-guards]]", "[[platform-adapters-and-release]]", "[[code-audit]]", "[[business-analysis]]", "[[system-analysis]]", "[[system-design]]"]
-last_updated: 2026-10-17
+last_updated: 2026-10-30
 tags: [synthesis, function-catalog, notebooklm]
 status: active
 ---
@@ -31,9 +31,10 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
 | 分析／設計文件 | 獨立產出 standard-aligned BA、solution-neutral SA 與 SD，建立 Gap-visible 三層追溯 | BA／SA／SD prompt/recipe + shared workflows | profiles、coverage、BA/SR/NFR/IF/DE/VIEW/ADR IDs、markers | [[business-analysis]]、[[system-analysis]]、[[system-design]] | partial |
 | NotebookLM 準備 | 全量發現後建立每功能現況 BA／SA，一次確認後產生單一 Notebook 離線 pack | `export-notebooklm.py` | discovery/readiness 雙 ID、BA／SA pair、locator、DLP、容量、manifest v6 | [[notebooklm-exporter]] | covered |
 | 平台契約驗證 | 驗證 Copilot／Codex contract、adapter 與 Release workflow | parity、本機驗證、`release.py` | capability contract、runtime UAT 狀態 | [[platform-adapters-and-release]] | partial |
-| Release 發布 | 建置並公開 Codex／Copilot 版本資產 | `release.py`、tag-triggered workflow | v0.3.0 tag、CI、四項資產 | [[platform-adapters-and-release]] | covered |
+| Wiki 視覺化 | 使用者明確要求時從 Wiki evidence 產生十類圖表並以 CAS 保存成果 | Copilot `/visualize-wiki`、Codex 自然語言 recipe | Archify v3.2.0、證據對照、四項原生驗證、HTML/JSON runs | [[archify-visualization]] | covered |
+| Release 發布 | 建置並公開 Codex／Copilot 版本資產 | `release.py`、tag-triggered workflow | v0.7.0 tag、CI、四項資產 | [[platform-adapters-and-release]] | covered |
 
-平台契約驗證仍為 partial，因 Codex v6 與 Copilot host runtime UAT 尚未執行；v0.3.0 Release 已由成功 CI 發布，發布流程與資產覆蓋為 covered。
+平台契約驗證仍為 partial，因 Codex 與 Copilot v7 host runtime UAT 尚未執行；v0.7.0 Release 已由成功 CI 發布，發布流程與四項資產覆蓋為 covered。
 
 ## 跨功能能力
 
@@ -41,7 +42,7 @@ output 仍依安全 inventory 分類；本機驗證與 tag-triggered 發版行�
 | --- | --- | --- | --- |
 | Raw-source read-only | 所有 Wiki intents | `AGENTS.md`、`SKILL.md` | covered |
 | Untrusted evidence | Ingest、Query、NotebookLM、SA | `SKILL.md`、`ingest-workflow.md` | covered |
-| 明確授權 | 十三個 machine operations／十三個 intent groups | `capabilities.json` | covered |
+| 明確授權 | 十四個 machine operations／十四個 intent groups | `capabilities.json` | covered |
 | 原子交付 | Installer、NotebookLM exporter | 兩個 canonical Python modules | covered |
 | 跨平台 parity | Copilot、Codex | `parity-check.py` | covered |
 

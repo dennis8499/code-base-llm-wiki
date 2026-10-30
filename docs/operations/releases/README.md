@@ -112,7 +112,7 @@ Windows x64 binary 則會隨兩個 ZIP 一起發佈。解壓後仍以 installer 
 `--surface copilot` 或 `--surface codex` 選擇相同平台；若使用錯誤平台包，installer
 會在任何 target 寫入前失敗。
 
-Archify v3.2.0 is pinned and packaged offline. Install and diagram generation do not download or update it. Node.js 18+ is required. The first runtime acceptance targets Windows; other operating systems are not yet tested.
+Archify v3.2.0 is pinned and packaged offline. Install and diagram generation do not download or update it. Node.js 18+ is required. The first runtime acceptance targets Windows; other operating systems are not yet tested. `.gitattributes` marks the vendored files and manifest as `-text` so Git does not normalize their upstream line endings and invalidate pinned hashes on Windows checkouts.
 
 ## Update manifest
 

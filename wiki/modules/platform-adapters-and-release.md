@@ -46,8 +46,9 @@ sources:
   - "Codex.md"
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
+  - ".gitattributes"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:3657a6ee29fa1e79b875c37f580335a015d0a4222ccdf2751348ee573181de46
+source_digest: sha256:bb51ca671fac5f3ef410932e0a63435a1faec277f36c243794368431e4d8e85c
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-30
 tags: [module, adapters, validation, release, parity]
@@ -165,15 +166,20 @@ The `visualize` intent is shared by both hosts and runs only after an explicit d
 
 ## Contradictions
 
-- `v0.3.0` Release 已公開；版本、附件及發版 CI 證據見下方現行發版紀錄。
-- 靜態 contract 相容不能當作 host runtime 驗收；v4 歷史結果也不能外推為 v7 或
-  未測 host/version 的保證。
+- 靜態 contract 相容不能代替 host runtime 驗收；v4 歷史結果不能外推為 v7 或未測 host/version 的保證。
 
-### v0.3.0 現行發版紀錄
+## Published releases
+
+### v0.7.0 現行發版紀錄
+
+- [Codebase LLM Wiki v0.7.0](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.0) 於 2026-10-30 公開發布，tag 指向 commit `ed2c1d709994abbf41044fa10ccbfcf441c735ba`。
+- [發版 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41012321968) 通過 Python 3.11/3.14 完整矩陣，並產出四項正式資產：[Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/codebase-llm-wiki-codex.zip)、[Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/codebase-llm-wiki-copilot.zip)、[SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/SHA256SUMS) 與 [update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/update-manifest.json)。
+- Codex 與 Copilot host runtime UAT 尚未執行，狀態維持 `static-compatible / runtime-unverified`。
+
+### v0.3.0 歷史發版紀錄
 
 - [Codebase LLM Wiki v0.3.0](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.3.0) 於 2026-10-03 發布，tag 指向 commit `538712f553457d53b8e451d1733fe97a01c6aff6`。
-- [發版 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/37133823578) 已成功，Python 3.11／3.14 deterministic checks 通過；v0.3.0 包含 Codex／Copilot ZIP、`SHA256SUMS` 與 `update-manifest.json`。
-- Codex 與 Copilot host runtime UAT 尚未執行，狀態維持 `static-compatible / runtime-unverified`。
+- [發版 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/37133823578) 已成功；該版包含 Codex/Copilot ZIP、`SHA256SUMS` 與 `update-manifest.json`。
 
 ## Inferences
 

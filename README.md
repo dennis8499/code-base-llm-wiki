@@ -119,9 +119,9 @@ flowchart LR
 
 Copilot prompt files 是 VS Code 本機 Agent 入口，不是 GitHub Copilot coding agent
 或其他 hosts 的通用入口；其他 hosts 直接使用 `.agents/skills/codebase-wiki/`。
-目前 v6 Copilot surface 的驗收狀態是 `static-compatible / runtime-unverified`；
-Codex v7 也完成本機 contract、installer 與 deterministic 驗證，但尚未重跑 host
-runtime UAT。2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範圍參考
+目前 Copilot 與 Codex v7 surface 都已完成本機 contract、installer 與 deterministic
+驗證；兩個 host 的 runtime UAT 尚未重跑，狀態維持 `static-compatible / runtime-unverified`。
+2026-09-03 的 v4 runtime evidence 僅作歷史基線。平台範圍參考
 [VS Code prompt files](https://code.visualstudio.com/docs/agent-customization/prompt-files)、
 [Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)。
 
@@ -235,9 +235,9 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 7` 維持為獨立的
 installer contract 版本。
 
-本 Repo 採用 MIT License。推送與 `VERSION` 完全相符的 `v0.4.0` tag 後，
-`.github/workflows/release.yml` 會自動完成 validation、build 與 GitHub Release publish；
-這個 framework-only workflow 不會被 installer 安裝到 target repository。
+本 Repo 採用 MIT License。目前 `v0.7.0` 已公開發布；後續版本 tag 必須與根目錄
+`VERSION` 完全相符，`.github/workflows/release.yml` 才會完成 validation、build 與
+GitHub Release publish。這個 framework-only workflow 不會被 installer 安裝到 target repository。
 
 最新版本與下載：
 
@@ -350,8 +350,8 @@ v3 報告仍可依舊契約驗證；新一輪 Audit 才升級為 v4。
 | --- | --- | --- |
 | Windows / PowerShell | 支援 | Installer 與 scripts 使用 Python 3.11+ |
 | macOS / Linux | 支援 | 使用對應的路徑語法執行相同 Python commands |
-| GitHub Copilot | `static-compatible / runtime-unverified` | VS Code 使用 prompts；其他 hosts 使用共用 Skill |
-| OpenAI Codex | `static-compatible / v6 runtime-unverified` | v6 已通過本機契約與 deterministic checks；2026-09-03 的 v4 runtime evidence 只作歷史基線 |
+| GitHub Copilot | `static-compatible / runtime-unverified` | v7 本機契約與 deterministic checks 通過；VS Code 使用 prompts，其他 hosts 使用共用 Skill |
+| OpenAI Codex | `static-compatible / runtime-unverified` | v7 本機契約與 deterministic checks 通過；2026-09-03 的 v4 runtime evidence 只作歷史基線 |
 | Obsidian | 相容 | Wiki 使用 `[[wikilink]]` |
 | NotebookLM Enterprise | 支援完整 codebase 的現況 BA／SA 整理與離線匯出 | 一次確認、每功能 BA／SA、完整映射、DLP、schema v6 與 Google 官方治理清單；不含雲端 API |
 

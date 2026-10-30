@@ -55,8 +55,8 @@ flowchart TB
 
 平台 adapter 不需要逐 byte 相同；`parity-check.py` 驗證兩邊仍公開相同能力且沒有指向已移除的舊路徑。
 Copilot 的 `.github/prompts/` 是 VS Code 本機 adapter；其他 Copilot hosts 直接
-使用共用 Skill。v6 的 Copilot 與 Codex 都完成本機 contract 與 deterministic
-驗證；host runtime UAT 尚未重跑。2026-09-03 的 v4 Codex 實機矩陣只作歷史基線。
+使用共用 Skill。v7 的 Copilot 與 Codex 都完成本機 contract 與 deterministic
+驗證；兩個 host runtime UAT 尚未重跑。2026-09-03 的 v4 Codex 實機矩陣只作歷史基線。
 
 ## 執行責任
 
@@ -106,7 +106,7 @@ PowerShell wrapper 與 `Join-Path`，可安全處理空白和非 ASCII root path
 
 `.agents/skills/codebase-wiki/scripts/install-framework.py` 只使用 Python 標準函式庫：
 
-1. `install` 或 `upgrade` 預設只產生 contract-v6 file plan；
+1. `install` 或 `upgrade` 預設只產生 contract-v7 file plan；
 2. 指定 `--apply` 且沒有 conflicts 時才寫入；
 3. `--surface copilot|codex` 決定平台入口；
 4. `--guard-mode wiki-only|coexist` 明確選擇目標工作階段；

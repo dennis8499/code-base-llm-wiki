@@ -19,8 +19,9 @@ sources:
   - ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
+  - ".gitattributes"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:e3ca373dd0d16cfea59db15747fae5ad441d952317c5f1ba1f4e73f255ee9988
+source_digest: sha256:60240b16f1ea9d6e00b56da367dd63dd0516905c7f522e430abb0c196b18c381
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-30
 tags: [module, installer, upgrade, atomicity]
@@ -70,13 +71,13 @@ install-framework.py install|upgrade
   [--format json|text]
 ```
 
-JSON contract version 為 6，包含 `managed`、`changes`、`preserved`、
+JSON contract version 為 7，包含 `managed`、`changes`、`preserved`、
 `conflicts` 與 `obsolete_paths`。沒有 `--apply` 時不修改目標 Repo；存在 conflict
 時即使指定 apply 也不套用。
 
 ## Archify bundle
 
-Installer contract v7 carries the complete pinned Archify package, MIT license, and file-hash manifest into both platform bundles. The installer validates the 200-file inventory and rejects metadata or hash drift before writing; users do not run npm install or download the tool.
+Installer contract v7 carries the complete pinned Archify package, MIT license, and file-hash manifest into both platform bundles. The installer validates the 200-file inventory and rejects metadata or hash drift before writing; users do not run npm install or download the tool. The root `.gitattributes` sets `-text` for the vendored Archify files and manifest so Windows checkouts preserve the pinned bytes and hashes.
 
 ## Evidence
 
@@ -86,9 +87,7 @@ Installer contract v7 carries the complete pinned Archify package, MIT license, 
   `test_upgrade_marks_removed_capability_paths_obsolete_without_deleting_them` 固定此相容性契約。
   已明確撤下的開發規格五個檔案依下方歸屬驗證與交易式刪除規則處理。
 - `_atomic_write()` 先建立 stage/backup，再使用 `os.replace()` 套用及回復。
-- `_create_stage_directory()` 在 Windows 使用原子 `mkdir` 建立 stage；
-  `test_windows_installed_files_inherit_target_permissions` 以 `icacls` 驗證安裝檔含
-  inherited ACE，使 Codex sandbox account 可讀取 framework surface。
+- On Windows, `_create_stage_directory()` creates a secure random sibling stage under the target parent so it inherits that ACL. The regression `test_windows_installed_files_inherit_target_permissions` grants Authenticated Users (`S-1-5-11`) an inheritable read/execute ACE on the temporary parent and verifies the installed file ACL contains that SID. It does not assert the rendered `(I)` marker.
 - `_atomic_write()` 建立 active/committed transaction journal；下一次 apply 可在程序終止
   後恢復原檔並清理 stage/backup。
 - `_TransactionLock` 以 Windows `msvcrt` 或 POSIX `fcntl` 保護同一 target 的整段

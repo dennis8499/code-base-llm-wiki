@@ -10,8 +10,8 @@
 
 | 平台 | 可宣告狀態 | 判定方式 |
 | --- | --- | --- |
-| GitHub Copilot | `static-compatible / runtime-unverified` | parity、built-in prompt metadata、workflow 與 completion coupling 全部通過；未宣稱 host runtime 已執行 |
-| OpenAI Codex | `static-compatible / v6 runtime-unverified` | v6 contract、installer 與 deterministic gates 通過；尚未重跑 host runtime UAT |
+| GitHub Copilot | `static-compatible / runtime-unverified` | v7 parity、built-in prompt metadata、workflow 與 completion coupling 全部通過；未宣稱 host runtime 已執行 |
+| OpenAI Codex | `static-compatible / runtime-unverified` | v7 contract、installer 與 deterministic gates 通過；尚未重跑 host runtime UAT |
 
 Copilot runtime 不可用時，狀態固定停在 `static-compatible / runtime-unverified`。
 公開發版的必要門檻是本頁完整 deterministic checks 與 release readiness 全部通過。
@@ -20,9 +20,17 @@ Copilot runtime 不可用時，狀態固定停在 `static-compatible / runtime-u
 相應 host/runtime 的 `runtime-verified`。
 任何未來 host UAT 任一 run 失敗時不得取多數決；修復後須重新取得該情境完整 3/3。
 
-## 目前驗收結果
+## v0.7.0 目前驗收狀態
 
-截至 2026-09-08 的 v6 驗收以本機 contract、installer、behavior、Wiki governance 與
+v0.7.0 的來源 commit `ed2c1d709994abbf41044fa10ccbfcf441c735ba` 通過完整設定 CI 矩陣；
+[發版驗證](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41012321968)
+確認 Windows Python 3.11／3.14 checks 與正式資產完成。Codex 與 Copilot 均為 contract v7；
+本機 static/deterministic gates 通過，但兩個 host runtime UAT 尚未重跑，仍標示
+`runtime-unverified`。
+
+## 歷史驗收基線：v6（2026-09-08）
+
+以下是截至 2026-09-08 的 v6 本機 contract、installer、behavior、Wiki governance 與
 deterministic suite 為準；Codex host runtime 尚未重跑。2026-09-03 的 v4 Codex CLI 0.152.1
 歷史驗收曾在彼此獨立的 Task Tracker Git fixtures
 完成 18 個有效 runs：Interactive ingest、Batch ingest、Wiki-first query、Lint、
@@ -35,7 +43,7 @@ UAT 首輪暴露並修復三項缺口；受影響情境修正後均重新取得�
 
 | 缺口 | 修復與回歸契約 |
 | --- | --- |
-| Python 3.13+ 的 Windows staging DACL 使安裝檔只對建立者可讀 | Windows stage 改為繼承 target parent ACL，並以 `icacls` regression 驗證已安裝檔具有 inherited ACE |
+| Python 3.13+ 的 Windows staging DACL 使安裝檔只對建立者可讀 | 測試在暫存父目錄設定 Authenticated Users（`S-1-5-11`）可繼承的 read/execute ACE，再確認已安裝檔 ACL 含該 SID；不依賴 `icacls` 顯示 `(I)` 標記 |
 | `overview.md` 被排除 orphan 檢查時也意外跳過 index completeness | orphan 與 index completeness 分開判斷；overview 缺索引必須回報 `index_missing` |
 | 保存 archaeology synthesis 後只由 index/log 連入，造成 semantic orphan | 保存契約要求相關內容頁的語意 inbound wikilink；沒有更適合頁面時由 overview 加入不臆測的 related finding |
 
@@ -101,7 +109,7 @@ deterministic tool checks，不增加五項 active agent runtime 情境。
 
 Contract tests 另固定驗證：
 
-- capability manifest 為 v6、13 operations／13 intent groups；`code_audit` 採
+- capability manifest 為 v7、14 operations／14 intent groups；`code_audit` 採
   explicit-request report authorization，BA／SA／SD 同樣採 `explicit_request`；
 - capability manifest 的 tgrep source-discovery metadata 只包含 Ingest／Archaeology，
   `query_enabled`、auto index 與 auto serve 都是 false；wrapper、manifest 與 binary 的
@@ -176,7 +184,7 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - [ ] Windows runner 上 Python 3.11 與 3.14 的 unit、compile、parity、frontmatter、stale、log、stats、lint、index checks 全部通過。
 - [ ] Lint 的 missing-module coverage 與 contradictions 已人工審查。
 - [ ] Copilot 標示為 `static-compatible / runtime-unverified`，沒有誤稱 runtime pass。
-- [ ] 若宣告 v6 host runtime verified，五個 active 情境各有 3/3 證據；否則維持 `runtime-unverified`。
+- [ ] 若宣告 v7 host runtime verified，五個 active 情境各有 3/3 證據；否則維持 `runtime-unverified`。
 - [ ] Raw source before/after hashes 相同，Wiki 寫入數與 operation coupling 正確。
 - [ ] `.github/workflows/release.yml` 是唯一 workflow，且只在版本 tag push 時觸發。
 - [ ] `wiki/index.md` 已同步，`wiki/log.md` 只追加一筆本次 framework update。

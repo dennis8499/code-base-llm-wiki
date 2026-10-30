@@ -29,6 +29,13 @@
 - 將原生開發規格入口、範本與驗證器限定為單一 Codebase；GitlabWorkSpace 的 Group 清冊、共用 Wiki 與交接流程改由獨立覆層提供。
 
 
+## 0.7.1 - 2026-10-30
+
+### Changed
+
+- Align active framework documentation with product v0.7.0 and installer/capability contract v7; clarify the Archify byte-preservation rule and Windows ACL regression setup.
+- Reconcile framework guidance with current release, validation, platform-runtime, installation, and Wiki evidence; refresh the existing source digests and functional-coverage hashes without changing runtime behavior.
+
 ## 0.6.4 - 2026-10-21
 
 - 修正 Actions artifact 下載的 Accept 標頭，避免 HTTP 415 阻擋固定 CI 證據及正式附件發布；Release asset 下載仍使用 octet-stream，來源、矩陣與 SHA 驗證維持完整。
