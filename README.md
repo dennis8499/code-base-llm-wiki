@@ -231,11 +231,11 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.7.0`。Installer 會把目前版本保存到目標 Repo 的
+產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.7.1`。Installer 會把目前版本保存到目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 7` 維持為獨立的
 installer contract 版本。
 
-本 Repo 採用 MIT License。目前 `v0.7.0` 已公開發布；後續版本 tag 必須與根目錄
+本 Repo 採用 MIT License。目前 `v0.7.1` 已公開發布；後續版本 tag 必須與根目錄
 `VERSION` 完全相符，`.github/workflows/release.yml` 才會完成 validation、build 與
 GitHub Release publish。這個 framework-only workflow 不會被 installer 安裝到 target repository。
 

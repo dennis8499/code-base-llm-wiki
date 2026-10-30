@@ -48,7 +48,7 @@ sources:
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".gitattributes"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:bb51ca671fac5f3ef410932e0a63435a1faec277f36c243794368431e4d8e85c
+source_digest: sha256:ccb0ba340e642db3bff2cf4aa6a899853608fb0b88385fe88a00163ae00ccc61
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-10-30
 tags: [module, adapters, validation, release, parity]
@@ -170,7 +170,14 @@ The `visualize` intent is shared by both hosts and runs only after an explicit d
 
 ## Published releases
 
-### v0.7.0 現行發版紀錄
+### v0.7.1 現行發版紀錄
+
+- [Codebase LLM Wiki v0.7.1](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.1) 於 2026-10-30 公開發布，tag 指向 commit `7df56c9148293751f3f097e00e3dcf69ac169897`。
+- [Python 3.11／3.14 完整 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075270146) 通過完整 unit suite 與 deterministic gates；[tag 發布工作](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075958359) 驗證固定提交與證據後提升同一組已驗證資產。
+- 四項已驗證附件為 [Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-codex.zip)、[Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-copilot.zip)、[SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/SHA256SUMS) 與 [update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/update-manifest.json)；下載後 SHA-256 與 manifest URL 均核對通過。
+- Codex 與 Copilot host runtime UAT 尚未執行，狀態維持 `static-compatible / runtime-unverified`。
+
+### v0.7.0 前次發版紀錄
 
 - [Codebase LLM Wiki v0.7.0](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.0) 於 2026-10-30 公開發布，tag 指向 commit `ed2c1d709994abbf41044fa10ccbfcf441c735ba`。
 - [發版 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41012321968) 通過 Python 3.11/3.14 完整矩陣，並產出四項正式資產：[Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/codebase-llm-wiki-codex.zip)、[Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/codebase-llm-wiki-copilot.zip)、[SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/SHA256SUMS) 與 [update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/update-manifest.json)。

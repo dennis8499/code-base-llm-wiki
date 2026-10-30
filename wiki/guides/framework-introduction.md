@@ -4,6 +4,7 @@ type: guide
 summary: 從安裝、Wiki-first 操作、source-first Codebase 健檢，到驗證及升級的框架使用路線
 sources:
   - "README.md"
+  - "VERSION"
   - "LICENSE"
   - ".github/workflows/release.yml"
   - "Codex.md"
@@ -23,7 +24,7 @@ sources:
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - "tests/visualization/test_archify_acceptance.py"
-source_digest: sha256:f56068805c9c933cdbbcb283bda2723ce757488353970596946ad614ef798d04
+source_digest: sha256:bf2337b49cc1a48535a3c7306bf2b17b6a052fc7ce50fc8dfbabd3556652882d
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
 last_updated: 2026-10-30
 tags: [guide, onboarding, framework, copilot, codex]
@@ -281,4 +282,4 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 
 ## 0.6.3 本機維護
 
-目前框架版本為 0.7.0。[[bounded-resource-operations]] 說明離線 Git、來源預算、快照重用、搜尋限制及 Wiki writer；超限或缺少證據保留 partial，人工內容及既有日誌正文保留。Windows 上的 Archify 十類 browser-check 通過；Codex／Copilot host UAT 與其他作業系統仍未實測。
+目前框架版本為 0.7.1，版號由根目錄 `VERSION` 管理。[[bounded-resource-operations]] 說明離線 Git、來源預算、快照重用、搜尋限制及 Wiki writer；超限或缺少證據保留 partial，人工內容及既有日誌正文保留。Windows 上的 Archify 十類 browser-check 通過；Codex／Copilot host UAT 與其他作業系統仍未實測。

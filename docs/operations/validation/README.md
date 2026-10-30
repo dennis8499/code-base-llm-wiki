@@ -20,13 +20,20 @@ Copilot runtime 不可用時，狀態固定停在 `static-compatible / runtime-u
 相應 host/runtime 的 `runtime-verified`。
 任何未來 host UAT 任一 run 失敗時不得取多數決；修復後須重新取得該情境完整 3/3。
 
-## v0.7.0 目前驗收狀態
+## v0.7.1 目前驗收狀態
 
-v0.7.0 的來源 commit `ed2c1d709994abbf41044fa10ccbfcf441c735ba` 通過完整設定 CI 矩陣；
-[發版驗證](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41012321968)
-確認 Windows Python 3.11／3.14 checks 與正式資產完成。Codex 與 Copilot 均為 contract v7；
+v0.7.1 的來源 commit `7df56c9148293751f3f097e00e3dcf69ac169897` 通過完整設定 CI 矩陣；
+[Python 3.11／3.14 完整 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075270146)
+執行 unit suite 與 deterministic gates；[tag 發布工作](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075958359)
+完成 release readiness、canonical asset 建置及正式發布。Codex 與 Copilot 均為 contract v7；
 本機 static/deterministic gates 通過，但兩個 host runtime UAT 尚未重跑，仍標示
 `runtime-unverified`。
+
+## v0.7.0 前次驗收基線
+
+v0.7.0 的來源 commit `ed2c1d709994abbf41044fa10ccbfcf441c735ba` 於 2026-10-30 通過
+Python 3.11／3.14 矩陣；兩個 host runtime UAT 當時尚未重跑。後續版本的驗收以各自的
+tag 與 CI 證據為準。
 
 ## 歷史驗收基線：v6（2026-09-08）
 

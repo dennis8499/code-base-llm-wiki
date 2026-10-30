@@ -29,7 +29,7 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: "sha256:ed185dd7280a3d3400b7e0e0a3d91e0a5721cf544dbd9cd49f8cbe170b7164d5"
+source_digest: "sha256:763fc5789c6ba068457a711620b259392dddf18ae3795a411b59149f54cf6f25"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-10-30
 tags: [guide, release, version, extension]
@@ -46,6 +46,10 @@ notebooklm_role: traceability
 ## 0.6.1 Skills 修正版
 
 本版同步雙平台的 Concise 輸出、集中式意圖路由與逐分支完成條件，重新建置 Codex／Copilot 安裝包及更新資訊。產品版號為 0.6.1，installer contract 維持 v6。Host runtime 保留 `runtime-unverified`。
+
+## 0.7.1 文件核對與發版
+
+v0.7.1 已於 2026-10-30 發布，tag 指向 `7df56c9148293751f3f097e00e3dcf69ac169897`。本版整理現行 framework 文件與 Wiki，更新 Changelog、發版驗收證據及既有 coverage metadata；未改變 runtime 行為或 installer contract v7。Python 3.11／3.14 完整 CI 與正式資產驗證通過，Codex／Copilot host runtime UAT 仍為 `runtime-unverified`。正式附件及 SHA-256 見 [[platform-adapters-and-release]]。
 
 ## 0.7.0 Archify 視覺化
 

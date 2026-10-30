@@ -35,5 +35,5 @@
 `wiki/` 是維護與驗證內容，不屬於 installer surface。
 
 文件只描述目前已由程式、設定、測試或 Wiki 證據支持的行為。本 Repo 採用
-MIT License（`LICENSE`）；目前產品版號為 `0.7.0`（`VERSION`），installer/capability
+MIT License（`LICENSE`）；目前產品版號為 `0.7.1`（`VERSION`），installer/capability
 contract 為 v7。最新版本與發版資產見[發佈手冊](operations/releases/README.md)。

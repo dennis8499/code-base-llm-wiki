@@ -958,3 +958,9 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - Reuse the complete analysis at `2523fb1da0dcae73ac2e07c637f4f7db61969f77`; update only VERSION/README fingerprints and the existing coverage identity. No source reanalysis or new dispositions.
 - Affected pages: [[codebase-functional-coverage]], [[release-and-update]]
+
+
+## [2026-10-30] update | 記錄 v0.7.1 發布與附件校驗
+
+- 記錄 v0.7.1 tag commit、Python 3.11／3.14 CI、GitHub Release 與四項附件 SHA-256；同步現行版本說明、來源摘要與 coverage fingerprints。
+- Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[framework-introduction]], [[system-architecture]], [[project-function-catalog]], [[codebase-functional-coverage]], [[index]]

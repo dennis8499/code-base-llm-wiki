@@ -3,7 +3,7 @@
 ## 版本來源與 readiness gate
 
 產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer
-`MAJOR.MINOR.PATCH`；目前版號是 `0.7.0`。Git tag 必須是完全對應的
+`MAJOR.MINOR.PATCH`；目前版號是 `0.7.1`。Git tag 必須是完全對應的
 `vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
 的本地版本標記；`contract_version: 7` 則是獨立的 installer/API contract。
 
@@ -21,6 +21,21 @@ Codebase LLM Wiki v0.3.0 已於 2026-10-03 發布，來源 tag 指向
 [update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/update-manifest.json)
 及 [SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/SHA256SUMS)。
 v0.7.0 新增固定離線版 Archify v3.2.0 與十類 Wiki 視覺化，並保留 BA/SA/SD 與 Synthesis。GitlabWorkSpace 只為 Group 來源範圍套用覆層。十類圖表 fixture 已通過瀏覽器驗證；Codex/Copilot host UAT 與其他作業系統尚未實測。
+
+## 現行正式發版：v0.7.1
+
+Codebase LLM Wiki v0.7.1 已於 2026-10-30 發布，tag 指向 commit
+[`7df56c9`](https://github.com/dennis8499/code-base-llm-wiki/commit/7df56c9148293751f3f097e00e3dcf69ac169897)。
+[Python 3.11／3.14 完整 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075270146)
+通過 unit suite、deterministic framework gates、release readiness 與資產建置；
+[tag 發布工作](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075958359)
+驗證並發布相同位元組。Codex／Copilot host runtime UAT 尚未重跑，仍為
+`static-compatible / runtime-unverified`。
+
+- [Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-codex.zip) — SHA-256 `fd18f5e69d967756ec39d2edd4803dfaa74d7d913f9a34f79e2011b07b303e68`
+- [Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-copilot.zip) — SHA-256 `08e2e040cd2885c7fd545b9a633ac911e061b52ba2ae4a48e564b02d51ac83ad`
+- [update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/update-manifest.json) — SHA-256 `f7b1d3094ec2cb7e637fb3be43cdc91c362d335d312e4c2abded53f2dfddc7da`
+- [SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/SHA256SUMS)
 
 ## 由 GitHub Actions 建立 Release
 
@@ -54,7 +69,7 @@ python tools/prepare_release.py --baseline <candidate-SHA> --version X.Y.Z --for
 3. 驗證版本/tag 契約並建置兩個平台資產：
 
 ```powershell
-python tools/release.py validate --tag v0.7.0
+python tools/release.py validate --tag v0.7.1
 python tools/release.py build --output dist --repository dennis8499/code-base-llm-wiki
 ```
 
@@ -72,8 +87,8 @@ Skill 工具。此次 bundle 是 Windows x64 tgrep 1.0.5 + Archify v3.2.0； rel
 5. 提交核准變更並合併至 `main`，再建立並推送與 `VERSION` 完全相符的 tag：
 
 ```powershell
-git tag v0.7.0
-git push origin v0.7.0
+git tag v0.7.1
+git push origin v0.7.1
 ```
 
 6. Workflow 的 `scripts/release_ci.py publish` 重新確認版本/tag、固定提交、完整證據與
@@ -126,11 +141,11 @@ Archify v3.2.0 is pinned and packaged offline. Install and diagram generation do
 {
   "schema_version": 2,
   "product": "codebase-llm-wiki",
-  "version": "0.7.0",
-  "tag": "v0.7.0",
+  "version": "0.7.1",
+  "tag": "v0.7.1",
   "channel": "stable",
   "installer_contract_version": 7,
-  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.0",
+  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.1",
   "bundled_tools": [
     {
       "tool": "tgrep",
@@ -161,14 +176,14 @@ Archify v3.2.0 is pinned and packaged offline. Install and diagram generation do
       "name": "codebase-llm-wiki-codex.zip",
       "surface": "codex",
       "format": "zip",
-      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/codebase-llm-wiki-codex.zip",
+      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-codex.zip",
       "sha256": "..."
     },
     {
       "name": "codebase-llm-wiki-copilot.zip",
       "surface": "copilot",
       "format": "zip",
-      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.0/codebase-llm-wiki-copilot.zip",
+      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-copilot.zip",
       "sha256": "..."
     }
   ]

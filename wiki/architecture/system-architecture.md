@@ -131,7 +131,7 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 ## Gaps
 
 - 尚未提供 SaaS、NotebookLM API、自動 upload、多租戶權限管理或 Advanced DLP template 同步。
-- v0.7.0 已公開發布，版本、四項資產與 CI 證據見 [[platform-adapters-and-release]]；Codex 與 Copilot host runtime UAT 尚未執行。
+- v0.7.1 已公開發布，版本、四項資產與 CI 證據見 [[platform-adapters-and-release]]；Codex 與 Copilot host runtime UAT 尚未執行。
 
 ## Related Pages
 
