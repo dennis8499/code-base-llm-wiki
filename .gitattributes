@@ -3,3 +3,7 @@
 *.md text eol=lf
 *.json text eol=lf
 *.toml text eol=lf
+
+# The pinned Archify bundle is checked byte-for-byte; preserve its upstream CRLF and LF files.
+.agents/skills/codebase-wiki/vendor/archify/** -text
+.agents/skills/codebase-wiki/vendor/archify-manifest.json -text
