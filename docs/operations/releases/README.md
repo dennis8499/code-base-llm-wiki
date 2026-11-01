@@ -22,7 +22,21 @@ Codebase LLM Wiki v0.3.0 已於 2026-10-03 發布，來源 tag 指向
 及 [SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/SHA256SUMS)。
 v0.7.0 新增固定離線版 Archify v3.2.0 與十類 Wiki 視覺化，並保留 BA/SA/SD 與 Synthesis。GitlabWorkSpace 只為 Group 來源範圍套用覆層。十類圖表 fixture 已通過瀏覽器驗證；Codex/Copilot host UAT 與其他作業系統尚未實測。
 
-## 現行正式發版：v0.7.1
+## 現行正式發版：v0.7.2
+
+Codebase LLM Wiki v0.7.2 已於 2026-11-01 發布，tag 指向 commit
+[`2e413f8`](https://github.com/dennis8499/code-base-llm-wiki/commit/2e413f873a9bd7f770b01d6e702123b11b1ae363)。
+[Python 3.11／3.14 完整 CI 與 tag 發布工作](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41272847622)
+均通過；正式附件與 CI 驗證的 SHA-256 如下。
+
+- [Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/codebase-llm-wiki-codex.zip) — SHA-256 `95d6f451f5885e4bea3d01ac994217910f161e58286bd65f739ee073aa05c70a`
+- [Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/codebase-llm-wiki-copilot.zip) — SHA-256 `adae5005dfd51cb558f643d72d331c07cbebe5b69e5fa19ad280713e0d1b9693`
+- [update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/update-manifest.json) — SHA-256 `5a1fd79b686eaff1c4d78bb2ac7ee37293b4ad5c7377db7ddabaea01ea3d47da`
+- [SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/SHA256SUMS) — SHA-256 `45edf0280352411d6ce51ff1db903074548b13b626c52d52f6d89608dc36394e`
+
+Codex 與 Copilot host runtime UAT 尚未執行，狀態維持 `static-compatible / runtime-unverified`。
+
+## 歷史正式發版：v0.7.1
 
 Codebase LLM Wiki v0.7.1 已於 2026-10-30 發布，tag 指向 commit
 [`7df56c9`](https://github.com/dennis8499/code-base-llm-wiki/commit/7df56c9148293751f3f097e00e3dcf69ac169897)。
@@ -69,7 +83,7 @@ python tools/prepare_release.py --baseline <candidate-SHA> --version X.Y.Z --for
 3. 驗證版本/tag 契約並建置兩個平台資產：
 
 ```powershell
-python tools/release.py validate --tag v0.7.1
+python tools/release.py validate --tag v0.7.2
 python tools/release.py build --output dist --repository dennis8499/code-base-llm-wiki
 ```
 
@@ -89,8 +103,8 @@ tgrep 的獨立 MIT 授權檔 `bin/windows-x64/LICENSE.txt` 也隨 Skill 進入�
 5. 提交核准變更並合併至 `main`，再建立並推送與 `VERSION` 完全相符的 tag：
 
 ```powershell
-git tag v0.7.1
-git push origin v0.7.1
+git tag v0.7.2
+git push origin v0.7.2
 ```
 
 6. Workflow 的 `scripts/release_ci.py publish` 重新確認版本/tag、固定提交、完整證據與
@@ -143,11 +157,11 @@ Archify v3.2.0 is pinned and packaged offline. Install and diagram generation do
 {
   "schema_version": 2,
   "product": "codebase-llm-wiki",
-  "version": "0.7.1",
-  "tag": "v0.7.1",
+  "version": "0.7.2",
+  "tag": "v0.7.2",
   "channel": "stable",
   "installer_contract_version": 7,
-  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.1",
+  "release_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.2",
   "bundled_tools": [
     {
       "tool": "tgrep",
@@ -178,15 +192,15 @@ Archify v3.2.0 is pinned and packaged offline. Install and diagram generation do
       "name": "codebase-llm-wiki-codex.zip",
       "surface": "codex",
       "format": "zip",
-      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-codex.zip",
-      "sha256": "..."
+      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/codebase-llm-wiki-codex.zip",
+      "sha256": "95d6f451f5885e4bea3d01ac994217910f161e58286bd65f739ee073aa05c70a"
     },
     {
       "name": "codebase-llm-wiki-copilot.zip",
       "surface": "copilot",
       "format": "zip",
-      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.1/codebase-llm-wiki-copilot.zip",
-      "sha256": "..."
+      "download_url": "https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/codebase-llm-wiki-copilot.zip",
+      "sha256": "adae5005dfd51cb558f643d72d331c07cbebe5b69e5fa19ad280713e0d1b9693"
     }
   ]
 }

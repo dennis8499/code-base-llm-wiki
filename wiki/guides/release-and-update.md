@@ -30,7 +30,7 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:c8ecb6e7a0464de28ada7d2d4b37ad8feb9d9bcde3662d43ea7e0b636f3705bd"
+source_digest: "sha256:febe63e79d7a42c538d4af610d1a8f486368da2c85a90565eddb04e944009d15"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-11-01
 tags: [guide, release, version, extension]
@@ -47,6 +47,10 @@ notebooklm_role: traceability
 ## 0.6.1 Skills 修正版
 
 本版同步雙平台的 Concise 輸出、集中式意圖路由與逐分支完成條件，重新建置 Codex／Copilot 安裝包及更新資訊。產品版號為 0.6.1，installer contract 維持 v6。Host runtime 保留 `runtime-unverified`。
+
+## 0.7.2 tgrep 授權修正與發布
+
+v0.7.2 已於 2026-11-01 發布，tag 指向 `2e413f873a9bd7f770b01d6e702123b11b1ae363`。Python 3.11／3.14 完整 CI 與正式 tag 發布工作均通過；隨框架發佈的 tgrep 1.0.5 已在 Codex／Copilot ZIP 內附獨立 MIT License。四項正式資產與 SHA-256 見 [[platform-adapters-and-release]]。
 
 ## 0.7.1 文件核對與發版
 

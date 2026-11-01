@@ -49,7 +49,7 @@ sources:
   - ".gitattributes"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:a2a268054f033c12fbe0565afc98b5e63d0398efd04143d3f86909fb12f42ece"
+source_digest: "sha256:ddda5ff817fbcbc85e63bd79431ae31452ccf7124549bcc14b285423ac3151fb"
 derived_from: ["[[system-architecture]]"]
 last_updated: 2026-11-01
 tags: [module, adapters, validation, release, parity]
@@ -173,7 +173,14 @@ The `visualize` intent is shared by both hosts and runs only after an explicit d
 
 ## Published releases
 
-### v0.7.1 現行發版紀錄
+### v0.7.2 現行發版紀錄
+
+- [Codebase LLM Wiki v0.7.2](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.2) 於 2026-11-01 公開發布，tag 指向 commit `2e413f873a9bd7f770b01d6e702123b11b1ae363`。
+- [Python 3.11／3.14 完整 CI 與 tag 發布工作](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41272847622) 全數通過，正式工作提升與 CI 驗證相同的資產位元組。
+- 四項已驗證附件為 [Codex ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/codebase-llm-wiki-codex.zip)（`95d6f451f5885e4bea3d01ac994217910f161e58286bd65f739ee073aa05c70a`）、[Copilot ZIP](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/codebase-llm-wiki-copilot.zip)（`adae5005dfd51cb558f643d72d331c07cbebe5b69e5fa19ad280713e0d1b9693`）、[SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/SHA256SUMS)（`45edf0280352411d6ce51ff1db903074548b13b626c52d52f6d89608dc36394e`）與 [update-manifest.json](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.7.2/update-manifest.json)（`5a1fd79b686eaff1c4d78bb2ac7ee37293b4ad5c7377db7ddabaea01ea3d47da`）。兩種 ZIP 的 tgrep 授權檔均為 MIT，SHA-256 `968a3f0abba37c91bc9d62164072c706d07db794e38b804cf1fa519d90d3547c`。
+- Codex 與 Copilot host runtime UAT 尚未執行，狀態維持 `static-compatible / runtime-unverified`。
+
+### v0.7.1 歷史發版紀錄
 
 - [Codebase LLM Wiki v0.7.1](https://github.com/dennis8499/code-base-llm-wiki/releases/tag/v0.7.1) 於 2026-10-30 公開發布，tag 指向 commit `7df56c9148293751f3f097e00e3dcf69ac169897`。
 - [Python 3.11／3.14 完整 CI](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075270146) 通過完整 unit suite 與 deterministic gates；[tag 發布工作](https://github.com/dennis8499/code-base-llm-wiki/actions/runs/41075958359) 驗證固定提交與證據後提升同一組已驗證資產。

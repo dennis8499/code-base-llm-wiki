@@ -284,4 +284,4 @@ containment 與唯讀行為則由 `tests/tgrep/test_tgrep_search.py` 以 determi
 
 ## 0.6.3 本機維護
 
-目前框架版本為 0.7.1，版號由根目錄 `VERSION` 管理。[[bounded-resource-operations]] 說明離線 Git、來源預算、快照重用、搜尋限制及 Wiki writer；超限或缺少證據保留 partial，人工內容及既有日誌正文保留。Windows 上的 Archify 十類 browser-check 通過；Codex／Copilot host UAT 與其他作業系統仍未實測。
+目前框架版本為 0.7.2，版號由根目錄 `VERSION` 管理。[[bounded-resource-operations]] 說明離線 Git、來源預算、快照重用、搜尋限制及 Wiki writer；超限或缺少證據保留 partial，人工內容及既有日誌正文保留。Windows 上的 Archify 十類 browser-check 通過；Codex／Copilot host UAT 與其他作業系統仍未實測。

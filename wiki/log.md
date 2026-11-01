@@ -976,3 +976,15 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - Preserve existing file dispositions; synchronize scanner-backed source hashes and refresh affected Wiki source digests for the tgrep license and v0.7.2 release changes.
 - Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]]
+
+
+## [2026-11-01] update | Record v0.7.2 release evidence
+
+- Record the published tag, passing CI, verified asset hashes and tgrep MIT license distribution in the release guides; preserve prior release evidence.
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]]
+
+
+## [2026-11-01] update | Align release coverage identity
+
+- Align the existing coverage identity with the current source snapshot after recording v0.7.2 release evidence; preserve all file dispositions.
+- Affected pages: [[codebase-functional-coverage]]
