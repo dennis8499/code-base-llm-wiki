@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索
+summary: 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索，且驗證 tgrep binary 與其獨立 MIT 授權
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -48,9 +48,10 @@ sources:
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".gitattributes"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:ccb0ba340e642db3bff2cf4aa6a899853608fb0b88385fe88a00163ae00ccc61
+  - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+source_digest: "sha256:a2a268054f033c12fbe0565afc98b5e63d0398efd04143d3f86909fb12f42ece"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-10-30
+last_updated: 2026-11-01
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -147,18 +148,20 @@ The `visualize` intent is shared by both hosts and runs only after an explicit d
 - 發版檢查與套件建置使用乾淨 Git checkout 的 canonical LF bytes；來源摘要與
   coverage discovery identity 必須對應相同來源。完整 deterministic gates 通過後
   可發佈標示 `runtime-unverified` 的版本，host runtime 保證另須取得 active UAT 3/3。
-- `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、LICENSE、
-  repository name、surface package allowlist、資產邊界與 checksum。
+- `tools/release.py` 在 validate/build 時呼叫 readiness gate，驗證版本、tag、框架 root `LICENSE`、
+  bundled tgrep MIT 授權檔、repository name、surface package allowlist、資產邊界與 checksum。
 - `tools/prepare_release.py` 只對已完整分析且 preflight ready 的固定 HEAD 候選提交更新 release
   metadata 證據。VERSION／README 以外的來源變更、人工 Wiki 改動及新增檔案會阻擋；原有
   disposition 不增加，生成內容綁定候選提交及目標版本，部分完成或跨日重試仍須精確一致。
 - Release builder 排除 cache、hook/NotebookLM state、transaction artifacts 與敏感
   paths，並拒絕非排除路徑的 symlink/reparse source 或不安全 output entry；它只從
-  明確的共用 Skill、LICENSE、VERSION、target AGENTS template 與選定 adapter 收集檔案，
-  驗證 `bundled_tools` 中 tgrep 1.0.5 的固定 path、platform 與 SHA-256，且排除 `.tgrep/`。
-- `update-manifest.json` 使用 schema v2，以每個 asset 的 `surface` 分別描述兩個
-  精簡 ZIP；`bundled_tools` 描述隨兩包發佈的 wrapper、manifest 與 binary。這不是額外
-  asset，installer contract version 與目前實作一致為 7。
+  明確的共用 Skill、root `LICENSE`、VERSION、target AGENTS template 與選定 adapter 收集檔案，
+  驗證 `bundled_tools` 中 tgrep 1.0.5 的固定 path、platform 與 SHA-256；同時驗證
+  `tgrep-manifest.json` 的 MIT 授權檔路徑與 SHA-256，且排除 `.tgrep/`。
+- 兩個精簡 ZIP 與兩種安裝目標都包含 tgrep binary 旁的獨立 `LICENSE.txt`；root `LICENSE`
+  仍代表框架授權。`update-manifest.json` schema v2 及 `bundled_tools` 欄位維持不變，仍以
+  每個 asset 的 `surface` 描述兩個 ZIP，並記錄 bundled binary metadata；installer contract
+  version 與目前實作一致為 7。
 
 - 解壓後的精簡 package README 提供 install／upgrade 預覽與套用指令。Installer 會
   識別 package marker，在任何 target 寫入前檢查共用 Skill、Wiki starter 與所選 adapter

@@ -19,9 +19,10 @@ exploration。tgrep 不是安裝必要條件，也不是常駐服務。
 Installer allowlist 只包含 `.agents/skills/codebase-wiki/`，不會複製同一
 工作目錄中的其他個人或 workspace Skills。
 
-共用 Skill 會遞迴安裝 `scripts/tgrep-search.py`、`bin/tgrep-manifest.json` 與
-`bin/windows-x64/tgrep.exe`；Copilot 與 Codex 兩個 surface 使用同一份 wrapper、manifest
-與 binary。Installer 不會替 target repo 建立或管理 tgrep index/server。
+共用 Skill 會遞迴安裝 `scripts/tgrep-search.py`、`bin/tgrep-manifest.json`、
+`bin/windows-x64/tgrep.exe` 與相鄰的 `bin/windows-x64/LICENSE.txt`；Copilot 與 Codex
+兩個 surface 使用同一份 wrapper、manifest、binary 及 MIT 授權聲明。Installer 不會替
+target repo 建立或管理 tgrep index/server。
 
 ### tgrep 來源探索
 

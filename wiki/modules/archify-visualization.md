@@ -10,9 +10,9 @@ sources:
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/scripts/install-framework.py"
-source_digest: sha256:ea5b265a6ee2006a3d440fdff81947ae9f7980bf5212f68ad7d120b84ce8a5a1
+source_digest: "sha256:9feeb14e3f82964033fd4838883fd35342850c62b2090dba21ff200ef662a118"
 derived_from: ["[[system-architecture]]", "[[installer-and-upgrade]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-30
+last_updated: 2026-11-01
 tags: [module, visualization, archify, provenance]
 status: active
 ---

@@ -16,6 +16,8 @@ REPO_ROOT = Path(__file__).parents[2]
 RELEASE_PATH = REPO_ROOT / "tools" / "release.py"
 TGREP_BINARY = REPO_ROOT / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
 TGREP_SHA256 = "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7"
+TGREP_LICENSE = REPO_ROOT / ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+TGREP_LICENSE_SHA256 = "968a3f0abba37c91bc9d62164072c706d07db794e38b804cf1fa519d90d3547c"
 ARCHIFY_MANIFEST_SHA256 = "15c1b258d6958b964d4bf41f87e596e79ff5751cb438173c6b4f95bbad519509"
 ARCHIFY_ARCHIVE_SHA256 = "70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
 
@@ -24,6 +26,7 @@ def add_bundled_tgrep(root: Path) -> None:
     binary = root / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
     binary.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(TGREP_BINARY, binary)
+    shutil.copyfile(TGREP_LICENSE, binary.parent / "LICENSE.txt")
     (root / ".agents/skills/codebase-wiki/bin/tgrep-manifest.json").write_text(
         json.dumps(
             {
@@ -34,6 +37,9 @@ def add_bundled_tgrep(root: Path) -> None:
                 "binary": "bin/windows-x64/tgrep.exe",
                 "sha256": TGREP_SHA256,
                 "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+                "license": "MIT",
+                "license_file": "bin/windows-x64/LICENSE.txt",
+                "license_sha256": TGREP_LICENSE_SHA256,
             },
             indent=2,
         )
@@ -386,6 +392,14 @@ class ReleaseTests(unittest.TestCase):
                         for name in names
                     )
                 )
+                self.assertTrue(
+                    any(
+                        name.endswith(
+                            "/.agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+                        )
+                        for name in names
+                    )
+                )
                 self.assertTrue(any(name.endswith("/vendor/archify/bin/archify.mjs") for name in names))
                 self.assertTrue(any(name.endswith("/vendor/archify-manifest.json") for name in names))
 
@@ -553,6 +567,30 @@ class ReleaseTests(unittest.TestCase):
             binary = root / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
             binary.write_bytes(binary.read_bytes() + b"drift")
             with self.assertRaisesRegex(release.ReleaseError, "SHA-256 mismatch"):
+                release.bundled_tool_metadata(root)
+
+    def test_release_rejects_missing_mispointed_or_modified_tgrep_license(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            add_bundled_tgrep(root)
+            license_path = root / ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+            license_path.unlink()
+            with self.assertRaisesRegex(release.ReleaseError, "missing bundled tgrep license"):
+                release.bundled_tool_metadata(root)
+
+            add_bundled_tgrep(root)
+            manifest_path = root / ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+            metadata = json.loads(manifest_path.read_text(encoding="utf-8"))
+            metadata["license_file"] = "../LICENSE.txt"
+            manifest_path.write_text(json.dumps(metadata), encoding="utf-8")
+            with self.assertRaisesRegex(release.ReleaseError, "manifest mismatch for license_file"):
+                release.bundled_tool_metadata(root)
+
+            metadata["license_file"] = "bin/windows-x64/LICENSE.txt"
+            manifest_path.write_text(json.dumps(metadata), encoding="utf-8")
+            license_path.write_text("tampered license\n", encoding="utf-8")
+            with self.assertRaisesRegex(release.ReleaseError, "tgrep license SHA-256 mismatch"):
                 release.bundled_tool_metadata(root)
 
     def test_release_cli_rejects_invalid_utf8_history_without_traceback(self) -> None:

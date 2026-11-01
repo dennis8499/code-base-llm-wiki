@@ -13,9 +13,10 @@ sources:
   - .agents/skills/codebase-wiki/references/code-audit-workflow.md
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
-source_digest: sha256:8c88b7cf3c5ffbe8d786b8d0323686cbb7c57fee1660c509f9997e5543c2474e
+  - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+source_digest: "sha256:1720e58e02db7e48a0711f361a7b4327b80a47d1c62757ff16f0e923f9f16639"
 derived_from: []
-last_updated: 2026-10-30
+last_updated: 2026-11-01
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -107,7 +108,8 @@ Git `log`／`show`／`blame` 核對 commit 意圖、diff 與目前 source。明�
 使用 tgrep。Windows x64 的 Interactive/Batch Ingest 與 Code Archaeology 可選用共用
 tgrep wrapper 定位候選 source；結果必須重新讀取目前 source 才能成為 evidence。
 固定版本、digest、allowlisted flags、path containment 與不建立 index 的唯讀契約由
-`tests/tgrep/test_tgrep_search.py` 覆蓋；這不會把 tgrep 擴展成 Query fallback。
+`tests/tgrep/test_tgrep_search.py` 覆蓋；這不會把 tgrep 擴展成 Query fallback。框架根目錄
+`LICENSE` 與 tgrep 1.0.5 的 MIT `bin/windows-x64/LICENSE.txt` 分別授權框架與 tgrep；兩種 ZIP 和安裝目標都保留 tgrep 授權檔。
 
 ## 範圍與邊界
 

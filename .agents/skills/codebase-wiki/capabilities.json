@@ -293,6 +293,8 @@
       "manifest": ".agents/skills/codebase-wiki/bin/tgrep-manifest.json",
       "binary": ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe",
       "sha256": "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
+      "license": "MIT",
+      "license_file": ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt",
       "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5"
     },
     "project_scanner": {

@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-10-30
+last_updated: 2026-11-01
 tags: [log]
 status: active
 ---
@@ -964,3 +964,15 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - 記錄 v0.7.1 tag commit、Python 3.11／3.14 CI、GitHub Release 與四項附件 SHA-256；同步現行版本說明、來源摘要與 coverage fingerprints。
 - Affected pages: [[release-and-update]], [[platform-adapters-and-release]], [[framework-introduction]], [[system-architecture]], [[project-function-catalog]], [[codebase-functional-coverage]], [[index]]
+
+
+## [2026-11-01] update | 補齊 tgrep 第三方 MIT 授權
+
+- Release ZIP 與兩平台安裝目標隨附 tgrep 獨立 MIT 授權檔；manifest、release builder、installer 與 coverage ledger 已同步驗證及記錄。
+- Affected pages: [[system-architecture]], [[framework-introduction]], [[release-and-update]], [[archify-visualization]], [[code-audit]], [[development-specification]], [[functional-exploration]], [[installer-and-upgrade]], [[platform-adapters-and-release]], [[overview]], [[generate-analysis-document]], [[business-analysis]], [[cap-analysis-document-generation-sa]], [[cap-notebooklm-ba-functional-export-sa]], [[system-analysis]], [[system-design]], [[codebase-functional-coverage]], [[index]]
+
+
+## [2026-11-01] update | Reconcile release evidence metadata
+
+- Preserve existing file dispositions; synchronize scanner-backed source hashes and refresh affected Wiki source digests for the tgrep license and v0.7.2 release changes.
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]]

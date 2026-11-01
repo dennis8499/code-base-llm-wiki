@@ -4,6 +4,13 @@
 
 ---
 
+## 0.7.2 - 2026-11-01
+
+### Added
+
+- 隨 bundled tgrep 1.0.5 附上獨立 MIT License；tgrep manifest、release builder 與 installer 驗證授權檔路徑和 SHA-256，並確保兩種平台包都包含它。
+- README 與 release/setup/validation 文件說明根目錄專案授權和 tgrep 第三方授權的界線；`update-manifest.json` schema 維持 v2。
+
 ## 0.7.0 - 2026-10-30
 
 ### Added

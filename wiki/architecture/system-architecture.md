@@ -21,9 +21,10 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: sha256:19517e5961f649065bda1e276e46bcd3f36d5b35b8a5503a04b782a11bbeb0e7
+  - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+source_digest: "sha256:2d3003abbefe263c416f4cc948aca3063b35c02602504b6784438be8ae702b9b"
 derived_from: ["[[overview]]"]
-last_updated: 2026-10-30
+last_updated: 2026-11-01
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---
@@ -37,8 +38,8 @@ status: active
 operations、十四個 intent groups 與 authorization policy 由
 `.agents/skills/codebase-wiki/capabilities.json` 描述，詳細流程由 Skill references
 按意圖載入。Windows x64 的 tgrep wrapper 是同一 Skill 內的選用唯讀來源定位層，
-只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper
-與選定平台入口安裝到目標 Repo。
+只由 Ingest／Archaeology 使用；[[installer-and-upgrade]] 負責把共用規格、wrapper、binary
+及其獨立 MIT `LICENSE.txt` 與選定平台入口安裝到目標 Repo。
 
 `code_audit` 使用原生唯讀搜尋從目前 Codebase 的目錄、manifest、設定與註冊處盤點專案入口，先
 分析目前 source、設定與呼叫路徑；只有遇到業務規則語意缺口才查相關 Wiki，然後定向讀取 Git
@@ -93,8 +94,8 @@ discovery ID 只綁定 raw snapshot 與 discovery 設定，文件更新只使 re
 
 
 框架沒有必須常駐的服務或資料庫。執行環境只需要 Python 標準函式庫，以及支援 Codex 或
-GitHub Copilot 的專案入口；Windows x64 Skill 另帶 tgrep 1.0.5，但只供 Ingest／
-Archaeology 候選定位，不會自動執行 `index` 或 `serve`。Git 僅供獨立 Wiki freshness/history
+GitHub Copilot 的專案入口；Windows x64 Skill 另帶 tgrep 1.0.5 及其獨立 MIT 授權檔，
+只供 Ingest／Archaeology 候選定位，不會自動執行 `index` 或 `serve`。Git 僅供獨立 Wiki freshness/history
 與可選 manifest provenance 使用，NotebookLM export inventory 與 preflight 不要求 Git。
 安裝後的 `.notebooklm/`、`.tgrep/` 與 hook logs 是本機生成物，不進入 release；框架不
 管理 target tgrep index/server。
@@ -106,7 +107,8 @@ validation、固定資產建置與 GitHub Release；維護者仍須先完成 rev
 - `capabilities.json` 是跨平台 machine-readable contract。
 - `capabilities.json` 的 `source_discovery` integration metadata 將 tgrep 限定為
   `ingest`／`archaeology`，並記錄 pinned version、platform、hash、exit codes 與
-  no-auto-index/no-auto-serve policy。
+  no-auto-index/no-auto-serve policy；`tgrep-manifest.json` 固定 MIT 授權檔路徑與 SHA-256，
+  發佈器及 installer 均驗證授權檔。
 - `analysis-document-standards.md` 固定 BA／SA／SD profiles、邊界、coverage 與追溯契約。
 - Installer、lint、exporter 與 hooks 皆位於共享 Skill，平台設定只負責調用。
 - Canonical installer、lint、exporter 與 hook 程式承載可由測試直接驗證的核心行為。

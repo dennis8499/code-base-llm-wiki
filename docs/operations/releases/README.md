@@ -3,7 +3,7 @@
 ## 版本來源與 readiness gate
 
 產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer
-`MAJOR.MINOR.PATCH`；目前版號是 `0.7.1`。Git tag 必須是完全對應的
+`MAJOR.MINOR.PATCH`；目前版號是 `0.7.2`。Git tag 必須是完全對應的
 `vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
 的本地版本標記；`contract_version: 7` 則是獨立的 installer/API contract。
 
@@ -83,6 +83,8 @@ python tools/release.py build --output dist --repository dennis8499/code-base-ll
 `bundled_tools` 不是額外的 Release asset；它描述會隨兩個 archive 一起發佈的共用
 Skill 工具。此次 bundle 是 Windows x64 tgrep 1.0.5 + Archify v3.2.0； release builder 會驗證 manifest
 中的固定 binary path 與 SHA-256，然後將相同 metadata 寫入 `update-manifest.json`。
+tgrep 的獨立 MIT 授權檔 `bin/windows-x64/LICENSE.txt` 也隨 Skill 進入兩個 ZIP，並由發佈與安裝完整性檢查驗證；
+它不是額外 Release asset，`update-manifest.json` schema 維持 v2。
 
 5. 提交核准變更並合併至 `main`，再建立並推送與 `VERSION` 完全相符的 tag：
 

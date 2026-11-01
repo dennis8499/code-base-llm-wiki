@@ -201,7 +201,7 @@ session；Batch 與 Query 使用明確單次授權。測試證據只放隔離暫
 - [x] 本次 `0.2.1` 已加入 MIT `LICENSE`；缺少時 release readiness gate 必須阻擋。
 - [ ] Release builder 僅先用 fixture 驗證，正式資產通過 manifest 與 SHA-256 檢查。
 - [ ] `bundled_tools` 描述 tgrep 1.0.5 的路徑、平台與 SHA-256，archive 含 binary，且
-  `.tgrep/` generated state 未被封裝。
+  含 tgrep 獨立 MIT 授權檔；`.tgrep/` generated state 未被封裝。
 
 ## 手動語意審查
 

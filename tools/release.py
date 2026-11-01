@@ -43,6 +43,10 @@ EXPECTED_TGREP = {
     "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
     "path": ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe",
     "sha256": "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
+    "license": "MIT",
+    "license_file": "bin/windows-x64/LICENSE.txt",
+    "license_sha256": "968a3f0abba37c91bc9d62164072c706d07db794e38b804cf1fa519d90d3547c",
+    "license_path": ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt",
 }
 CHECKSUMS_NAME = "SHA256SUMS"
 EXCLUDED_PARTS = {
@@ -508,7 +512,7 @@ def bundled_tool_metadata(root: Path = REPO_ROOT) -> list[dict[str, object]]:
     if metadata.get("schema_version") != 1:
         raise ReleaseError("bundled tool manifest schema_version must be 1")
     for field, expected in EXPECTED_TGREP.items():
-        if field == "path":
+        if field in {"path", "license_path"}:
             continue
         if metadata.get(field) != expected:
             raise ReleaseError(f"bundled tgrep manifest mismatch for {field}")
@@ -528,6 +532,21 @@ def bundled_tool_metadata(root: Path = REPO_ROOT) -> list[dict[str, object]]:
         raise ReleaseError(
             "bundled tgrep SHA-256 mismatch: "
             f"expected {EXPECTED_TGREP['sha256']}, got {actual_hash}"
+        )
+    license_relative = skill_root / metadata["license_file"]
+    license_path = _safe_repo_relative_path(
+        root, license_relative.as_posix(), "bundled tgrep license"
+    )
+    license_repo_path = license_path.relative_to(root).as_posix()
+    if license_repo_path != EXPECTED_TGREP["license_path"]:
+        raise ReleaseError("bundled tgrep license path is not the pinned license path")
+    if not license_path.is_file():
+        raise ReleaseError(f"missing bundled tgrep license: {license_path}")
+    actual_license_hash = sha256(license_path)
+    if actual_license_hash != EXPECTED_TGREP["license_sha256"]:
+        raise ReleaseError(
+            "bundled tgrep license SHA-256 mismatch: "
+            f"expected {EXPECTED_TGREP['license_sha256']}, got {actual_license_hash}"
         )
     tools: list[dict[str, object]] = [
         {

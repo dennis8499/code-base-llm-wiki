@@ -25,6 +25,9 @@ SURFACE_PATHS = {
     "copilot": (".github",),
 }
 RELEASE_PACKAGE_MARKER = "surface of Codebase LLM Wiki"
+TGREP_MANIFEST_RELATIVE = ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+TGREP_LICENSE_RELATIVE = ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+TGREP_LICENSE_SHA256 = "968a3f0abba37c91bc9d62164072c706d07db794e38b804cf1fa519d90d3547c"
 RELEASE_PACKAGE_REQUIRED = {
     "codex": (
         "Codex.md",
@@ -162,6 +165,7 @@ def _validate_release_package_source(root: Path, surface: str) -> None:
     for relative_root in (*COMMON_SURFACE_PATHS, *SURFACE_PATHS[surface]):
         _files(root, relative_root)
     _validate_archify_bundle(root)
+    _validate_tgrep_license(root)
 
     required = (
         "AGENTS.md",
@@ -169,6 +173,7 @@ def _validate_release_package_source(root: Path, surface: str) -> None:
         ".agents/skills/codebase-wiki/SKILL.md",
         ".agents/skills/codebase-wiki/scripts/install-framework.py",
         ".agents/skills/codebase-wiki/assets/wiki-starter",
+        TGREP_LICENSE_RELATIVE,
         *RELEASE_PACKAGE_REQUIRED[surface],
     )
     for relative in required:
@@ -246,6 +251,37 @@ def _validate_archify_bundle(root: Path) -> None:
     for relative, digest in expected_files.items():
         if actual_files[relative] != digest:
             raise OSError(f"bundled Archify file SHA-256 mismatch: {relative}")
+
+
+def _validate_tgrep_license(root: Path) -> None:
+    """Reject a missing, misidentified, or modified bundled tgrep license."""
+
+    manifest_path = root / TGREP_MANIFEST_RELATIVE
+    _validate_framework_source_path(root, manifest_path)
+    if not manifest_path.is_file():
+        raise OSError("missing bundled tgrep manifest")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise OSError("bundled tgrep manifest is invalid") from exc
+    expected = {
+        "schema_version": 1,
+        "tool": "tgrep",
+        "version": "1.0.5",
+        "license": "MIT",
+        "license_file": "bin/windows-x64/LICENSE.txt",
+        "license_sha256": TGREP_LICENSE_SHA256,
+    }
+    if not isinstance(manifest, dict) or any(
+        manifest.get(key) != value for key, value in expected.items()
+    ):
+        raise OSError("bundled tgrep license metadata mismatch")
+    license_path = root / TGREP_LICENSE_RELATIVE
+    _validate_framework_source_path(root, license_path)
+    if not license_path.is_file() or license_path.stat().st_size == 0:
+        raise OSError("missing or empty bundled tgrep license")
+    if _sha256(license_path.read_bytes()) != TGREP_LICENSE_SHA256:
+        raise OSError("bundled tgrep license SHA-256 mismatch")
 
 
 def _managed_block(source_root: Path, source: Path, relative: str) -> bytes:

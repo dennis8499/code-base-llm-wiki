@@ -24,9 +24,10 @@ sources:
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - "tests/visualization/test_archify_acceptance.py"
-source_digest: sha256:bf2337b49cc1a48535a3c7306bf2b17b6a052fc7ce50fc8dfbabd3556652882d
+  - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+source_digest: "sha256:9cf399cdce1ac78e11297d6d06bef7b7afa4a778c87bdb6993d93b9c59c089e7"
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-10-30
+last_updated: 2026-11-01
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -55,7 +56,8 @@ notebooklm_role: traceability
 
 框架不需要向量資料庫、Node.js、MCP 搜尋服務、PyYAML 或其他第三方 Python 套件。
 Windows x64 的共用 Skill 另含 tgrep 1.0.5，但它只是 Ingest／Archaeology 的選用來源
-locator；其他平台使用 host-native search，Query 不使用 tgrep。
+locator；其他平台使用 host-native search，Query 不使用 tgrep。框架根目錄 `LICENSE`
+授權框架；tgrep 的獨立 MIT 授權檔 `bin/windows-x64/LICENSE.txt` 會隨 Skill 一起發佈及安裝。
 
 ## 1. 選擇入口
 

@@ -91,6 +91,31 @@ class FrameworkInstallerTests(unittest.TestCase):
             with self.assertRaisesRegex(OSError, "SHA-256 mismatch"):
                 installer._validate_archify_bundle(root)
 
+    def test_tgrep_license_validation_rejects_missing_and_mispointed_notice(self) -> None:
+        installer = load_installer()
+        manifest_source = REPO_ROOT / ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
+        license_source = REPO_ROOT / ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = root / installer.TGREP_MANIFEST_RELATIVE
+            manifest_path.parent.mkdir(parents=True)
+            shutil.copyfile(manifest_source, manifest_path)
+            license_path = root / installer.TGREP_LICENSE_RELATIVE
+            license_path.parent.mkdir(parents=True)
+            shutil.copyfile(license_source, license_path)
+
+            installer._validate_tgrep_license(root)
+            license_path.unlink()
+            with self.assertRaisesRegex(OSError, "missing or empty bundled tgrep license"):
+                installer._validate_tgrep_license(root)
+
+            shutil.copyfile(license_source, license_path)
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["license_file"] = "../LICENSE.txt"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(OSError, "bundled tgrep license metadata mismatch"):
+                installer._validate_tgrep_license(root)
+
     def test_upgrade_plan_exposes_code_audit_resources_for_both_surfaces(self) -> None:
         installer = load_installer()
         new_paths = {
@@ -172,6 +197,12 @@ class FrameworkInstallerTests(unittest.TestCase):
                     target
                     / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
                 ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+                ).is_file()
             )
             self.assertTrue(
                 (target / ".agents/skills/codebase-wiki/vendor/archify/bin/archify.mjs").is_file()
@@ -387,6 +418,12 @@ class FrameworkInstallerTests(unittest.TestCase):
                     target
                     / ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
                 ).exists()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+                ).is_file()
             )
             for prompt in (
                 "business-analysis-doc.prompt.md",

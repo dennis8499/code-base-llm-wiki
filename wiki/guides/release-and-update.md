@@ -1,7 +1,7 @@
 ---
 title: Codebase LLM Wiki — 版本、發佈與更新
 type: guide
-summary: 以 VERSION、本機驗證、surface-specific ZIP、tag-triggered GitHub Actions 與授權 gate 管理框架發布
+summary: 以 VERSION、本機驗證、surface-specific ZIP、tag-triggered GitHub Actions 與授權 gate 管理框架發布，並驗證內含 tgrep 的獨立 MIT 授權
 sources:
   - "VERSION"
   - "LICENSE"
@@ -29,9 +29,10 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/tgrep-search.py"
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
-source_digest: "sha256:763fc5789c6ba068457a711620b259392dddf18ae3795a411b59149f54cf6f25"
+  - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+source_digest: "sha256:c8ecb6e7a0464de28ada7d2d4b37ad8feb9d9bcde3662d43ea7e0b636f3705bd"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-10-30
+last_updated: 2026-11-01
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -128,9 +129,10 @@ release root 外的內容讀入資產。NotebookLM source pack 是每個使用�
 
 `.tgrep/` 是 target repo 的 generated index/server state，release builder 會排除它，
 也不由 framework 自動建立或管理。兩個精簡 ZIP 內則包含共用 Skill 的
-`scripts/tgrep-search.py`、`bin/tgrep-manifest.json` 與 Windows x64 tgrep 1.0.5；
-`update-manifest.json` 透過 `bundled_tools` 記錄 binary path、platform、source URL 與
-SHA-256，建置前會 fail closed 驗證 hash。
+`scripts/tgrep-search.py`、`bin/tgrep-manifest.json`、Windows x64 tgrep 1.0.5 與其旁邊
+的獨立 MIT `bin/windows-x64/LICENSE.txt`。tgrep manifest 固定授權識別、路徑與 SHA-256；
+release builder 驗證該檔後才封裝，installer 也會在寫入 target 前驗證。`update-manifest.json`
+維持 schema v2，`bundled_tools` 欄位仍記錄 binary path、platform、source URL 與 SHA-256。
 
 `--repository OWNER/NAME` 與 `GITHUB_REPOSITORY` 只接受安全的 GitHub owner/name
 元件；不合法的 query、path traversal 或額外 path segment 會被拒絕。
@@ -148,8 +150,9 @@ Extension 的最小流程是：讀取本地 version marker、取得 manifest、�
 目前框架只發布 manifest 與本地版本標記，不負責 Extension 的檢查排程、下載
 UI 或更新套用邏輯。
 
-目前 Repo 已加入 MIT `LICENSE`；`release.py validate/build` 仍會明確驗證授權、版本、
-tag 與上游 attribution。上游方法論文件只保留原創摘要、作者與來源連結，未鏡像
+根目錄 `LICENSE` 授權框架；隨附的 tgrep 1.0.5 另依上游 MIT 授權，全文位於 binary 旁
+的 `bin/windows-x64/LICENSE.txt`。`release.py validate/build` 驗證框架授權、tgrep 授權檔、
+版本、tag 與上游 attribution。其他上游方法論文件只保留原創摘要、作者與來源連結，未鏡像
 缺少再散布授權的全文。
 
 ## 相關頁面

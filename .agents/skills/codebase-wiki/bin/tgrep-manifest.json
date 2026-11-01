@@ -5,5 +5,8 @@
   "platform": "windows-x86_64",
   "binary": "bin/windows-x64/tgrep.exe",
   "sha256": "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7",
-  "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5"
+  "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+  "license": "MIT",
+  "license_file": "bin/windows-x64/LICENSE.txt",
+  "license_sha256": "968a3f0abba37c91bc9d62164072c706d07db794e38b804cf1fa519d90d3547c"
 }

@@ -181,6 +181,8 @@ SOURCE_DISCOVERY_REFERENCE = ".agents/skills/codebase-wiki/references/source-dis
 TGREP_MANIFEST_PATH = ".agents/skills/codebase-wiki/bin/tgrep-manifest.json"
 TGREP_BINARY_PATH = ".agents/skills/codebase-wiki/bin/windows-x64/tgrep.exe"
 TGREP_SHA256 = "9b90e4446e2cbf05e1da086547501e35d7b32f0f6d5f687548cf270b07fbd9d7"
+TGREP_LICENSE_PATH = ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
+TGREP_LICENSE_SHA256 = "968a3f0abba37c91bc9d62164072c706d07db794e38b804cf1fa519d90d3547c"
 RELEASE_WORKFLOW_PATH = ".github/workflows/release.yml"
 RELEASE_WORKFLOW_REQUIRED_TOKENS = (
     "name: Release",
@@ -217,6 +219,8 @@ TGREP_INTEGRATION = {
     "manifest": TGREP_MANIFEST_PATH,
     "binary": TGREP_BINARY_PATH,
     "sha256": TGREP_SHA256,
+    "license": "MIT",
+    "license_file": TGREP_LICENSE_PATH,
     "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
 }
 VISUALIZATION_INTEGRATION = {
@@ -403,7 +407,13 @@ def main() -> int:
         for relative in (project_scanner.get("wrapper"), project_scanner.get("module")):
             if not relative or not (root / relative).is_file():
                 issues.append(f"missing project scanner surface: {relative}")
-    for relative in (SOURCE_DISCOVERY_REFERENCE, TGREP_MANIFEST_PATH, TGREP_BINARY_PATH, TGREP_INTEGRATION["wrapper"]):
+    for relative in (
+        SOURCE_DISCOVERY_REFERENCE,
+        TGREP_MANIFEST_PATH,
+        TGREP_BINARY_PATH,
+        TGREP_LICENSE_PATH,
+        TGREP_INTEGRATION["wrapper"],
+    ):
         if not (root / relative).is_file():
             issues.append(f"missing tgrep integration surface: {relative}")
     tgrep_manifest_path = root / TGREP_MANIFEST_PATH
@@ -421,6 +431,9 @@ def main() -> int:
             "binary": "bin/windows-x64/tgrep.exe",
             "sha256": TGREP_SHA256,
             "upstream_release": "https://github.com/microsoft/tgrep/releases/tag/v1.0.5",
+            "license": "MIT",
+            "license_file": "bin/windows-x64/LICENSE.txt",
+            "license_sha256": TGREP_LICENSE_SHA256,
         }
         if tgrep_manifest != expected_manifest:
             issues.append("tgrep bundle manifest metadata drifted")
@@ -429,6 +442,11 @@ def main() -> int:
         digest = hashlib.sha256(tgrep_binary_path.read_bytes()).hexdigest()
         if digest != TGREP_SHA256:
             issues.append("bundled tgrep binary SHA-256 mismatch")
+    tgrep_license_path = root / TGREP_LICENSE_PATH
+    if tgrep_license_path.is_file():
+        digest = hashlib.sha256(tgrep_license_path.read_bytes()).hexdigest()
+        if digest != TGREP_LICENSE_SHA256:
+            issues.append("bundled tgrep license SHA-256 mismatch")
 
     for surface in ("copilot", "codex"):
         if surface not in manifest.get("surfaces", []):

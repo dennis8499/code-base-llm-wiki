@@ -77,6 +77,11 @@ class ContractTests(unittest.TestCase):
         tgrep = manifest["integrations"]["source_discovery"]
         self.assertEqual(tgrep["provider"], "tgrep")
         self.assertEqual(tgrep["version"], "1.0.5")
+        self.assertEqual(tgrep["license"], "MIT")
+        self.assertEqual(
+            tgrep["license_file"],
+            ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt",
+        )
         self.assertEqual(tgrep["platforms"], ["windows-x86_64"])
         self.assertEqual(tgrep["operations"], ["ingest", "archaeology"])
         self.assertFalse(tgrep["query_enabled"])
