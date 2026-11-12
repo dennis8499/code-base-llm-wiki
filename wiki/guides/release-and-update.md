@@ -30,7 +30,7 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:febe63e79d7a42c538d4af610d1a8f486368da2c85a90565eddb04e944009d15"
+source_digest: "sha256:d1d5d0de9652a5f689a1b7569044a3317fee8179d35589bb090784ce9a3a2481"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
 last_updated: 2026-11-01
 tags: [guide, release, version, extension]

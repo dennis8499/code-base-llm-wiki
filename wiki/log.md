@@ -988,3 +988,9 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - Align the existing coverage identity with the current source snapshot after recording v0.7.2 release evidence; preserve all file dispositions.
 - Affected pages: [[codebase-functional-coverage]]
+
+
+## [2026-11-01] update | Prepare release v0.7.3 metadata
+
+- Reuse the complete analysis at `11bb7ce5a9c83b3b5e1c46b79d5ff6aa3b9543a6`; update only VERSION/README fingerprints and the existing coverage identity. No source reanalysis or new dispositions.
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[release-and-update]]
