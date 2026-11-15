@@ -15,7 +15,7 @@ Codebase LLM Wiki 是一套給 coding agents 使用的持久知識框架。Agent
 可交叉引用的 Markdown 持續累積。
 
 對話、進度及新增或更新文件採用
-[輸出風格路由](.agents/skills/codebase-wiki/SKILL.md#output-style)：目前 Skills root 已安裝 `output-style` 時，由它依任務或使用者指定選擇呈現；未安裝則保留原 Concise 規則。兩者均保留必要章節、證據、缺口及錯誤資訊。
+[輸出風格路由](.agents/skills/codebase-wiki/SKILL.md#output-style)：預設保留原 Concise 規則；只有使用者明確要求或選取 `output-style` 時，才載入該 Skill 與本次必要參考。兩者均保留必要章節、證據、缺口及錯誤資訊。
 
 ---
 
@@ -231,11 +231,11 @@ Wrapper 只執行搜尋，不建立 `index` 或 `serve`；有既有 tgrep index/
 
 ## 版本與下載
 
-產品版號唯一來源是根目錄的 `VERSION`，目前為 `0.7.2`。Installer 會把目前版本保存到目標 Repo 的
+產品版號唯一來源是根目錄的 `VERSION`。Installer 會把目前版本保存到目標 Repo 的
 `.agents/skills/codebase-wiki/VERSION`，而 `contract_version: 7` 維持為獨立的
 installer contract 版本。
 
-本 Repo 採用 MIT License。目前 `v0.7.2` 已公開發布；後續版本 tag 必須與根目錄
+本 Repo 採用 MIT License。已公開版本請見 GitHub Releases；版本 tag 必須與根目錄
 `VERSION` 完全相符，`.github/workflows/release.yml` 才會完成 validation、build 與
 GitHub Release publish。這個 framework-only workflow 不會被 installer 安裝到 target repository。
 

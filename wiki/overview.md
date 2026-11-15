@@ -14,9 +14,9 @@ sources:
   - .agents/skills/codebase-wiki/scripts/validate-code-audit.py
   - tests/tgrep/test_tgrep_search.py
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:1720e58e02db7e48a0711f361a7b4327b80a47d1c62757ff16f0e923f9f16639"
+source_digest: "sha256:b940da19169e27fa4871cb461cb36e6a8b79ad237dbfcb23c16bb87d5efb59f9"
 derived_from: []
-last_updated: 2026-11-01
+last_updated: 2026-11-15
 tags: [framework, business-knowledge, wiki, notebooklm]
 status: active
 notebooklm_group: business-core
@@ -138,6 +138,10 @@ tgrep wrapper 定位候選 source；結果必須重新讀取目前 source 才能
 未支援的非文字證據、外部 stakeholder 確認與 NotebookLM 實際回答品質，都保留在
 [[business-knowledge-gaps]]。固定 BA 驗收題組未達門檻時，應修正 BA Wiki 後重跑
 readiness preflight。
+
+## 呈現方式
+
+預設採用框架內建 Concise 規則；只有使用者明確要求或選取 `output-style` 時，才載入該 Skill 與必要參考。選用風格仍須保留文件結構、證據、缺口與完成記錄。
 
 ## 資源及並行維護
 

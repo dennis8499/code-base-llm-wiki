@@ -30,9 +30,9 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:d1d5d0de9652a5f689a1b7569044a3317fee8179d35589bb090784ce9a3a2481"
+source_digest: "sha256:9a1f081bc01fc049169bd6b4734b1b50458582f04606e077a7529b3d8e0fbf7a"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-11-01
+last_updated: 2026-11-15
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides
@@ -43,6 +43,10 @@ notebooklm_role: traceability
 
 > 本指南給框架維護者與未來 Extension 作者，說明版號來源、GitHub Release
 > 資產與更新 manifest。相關安裝背景請先閱讀 [[framework-introduction]]。
+
+## 0.7.4 選用風格修正的發布準備
+
+主要 Skill 與 README 將 `output-style` 改為使用者明確要求或選取時才載入，並新增不隱式載入的契約回歸。0.7.4 發行說明已定稿，產品版號以根目錄 `VERSION` 為準，正式 tag 與附件由 release manager 後續驗證及發布；installer contract、既有 BA／SA／SD 及匯出契約不變，host runtime UAT 仍未驗證。
 
 ## 0.6.1 Skills 修正版
 

@@ -1,7 +1,7 @@
 ---
 title: 平台 Adapter 與 GitHub Release
 type: module
-summary: 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索，且驗證 tgrep binary 與其獨立 MIT 授權
+summary: 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供明確選用的 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索，且驗證 tgrep binary 與其獨立 MIT 授權
 notebooklm_group: function-platform-release
 notebooklm_role: traceability
 sources:
@@ -49,9 +49,9 @@ sources:
   - ".gitattributes"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:ddda5ff817fbcbc85e63bd79431ae31452ccf7124549bcc14b285423ac3151fb"
+source_digest: "sha256:112ec4e25abdf7ec4ad5534cdce6e88ac7918447ae5e7a3d44353a547639f4b3"
 derived_from: ["[[system-architecture]]"]
-last_updated: 2026-11-01
+last_updated: 2026-11-15
 tags: [module, adapters, validation, release, parity]
 status: active
 ---
@@ -70,9 +70,9 @@ Skill 入口保留共用邊界、輸出及完成條件；十四個意圖的 work
 
 ## 共用輸出風格
 
-目前選定 Skills root 已安裝 `output-style/SKILL.md` 時，先載入 `$output-style`，
-由它依任務或使用者明確選擇的模式取代以下通用呈現。Wiki 的必要文件結構、
-來源證據、授權及完成條件維持原契約；獨立安裝沒有該 Skill 時才使用既有 fallback。
+預設沿用本 Skill 的 Concise 呈現規則；只有使用者明確要求或選取 `output-style`，
+才載入該 Skill 與本次必要參考。安裝本身不代表選用。Wiki 的必要文件結構、
+來源證據、授權及完成條件維持原契約。
 
 Codex、Copilot 與安裝後入口共用 `.agents/skills/codebase-wiki/SKILL.md` 的
 Concise 規則，涵蓋進度、問答及新增或更新文件。首句直接給答案或目前結果，省略開場、

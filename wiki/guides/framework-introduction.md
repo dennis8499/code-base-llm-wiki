@@ -25,9 +25,9 @@ sources:
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - "tests/visualization/test_archify_acceptance.py"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:cfa6aad9469f28a584aaee80b5be49eee20ae7c3a3e429ebf3d1699c7ab5011f"
+source_digest: "sha256:8055d44e45cdfb05b7c1fc2ef37d8062546268b897b94f400bffbed176cfc1be"
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-11-01
+last_updated: 2026-11-15
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
@@ -72,6 +72,10 @@ locator；其他平台使用 host-native search，Query 不使用 tgrep。框架
 Copilot prompt files 也不會被假裝成非 VS Code host 功能。Copilot 驗收標示為
 `static-compatible / runtime-unverified`；Codex v7 也完成本機契約與 deterministic
 驗證，但尚未重跑 host runtime UAT。2026-09-03 的 v4 Codex evidence 只作歷史基線。
+
+### 選用輸出風格
+
+預設沿用框架 Concise 規則。已安裝 `output-style` 並不會自動載入；本次使用者明確要求或選取後才載入該 Skill 與必要參考，並保留原工作流的章節、證據、缺口及錯誤資訊。
 
 ## 2. 先 Dry-run 再安裝
 

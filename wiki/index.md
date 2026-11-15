@@ -2,7 +2,7 @@
 title: Wiki Index
 type: index
 sources: []
-last_updated: 2026-11-01
+last_updated: 2026-11-15
 tags: [index]
 status: active
 notebooklm_group: wiki-navigation
@@ -73,7 +73,7 @@ notebooklm_role: exclude
 | [[functional-exploration]] | ??????????????????????? |
 | [[installer-and-upgrade]] | Installer v7 以 dry-run、package completeness、managed blocks、upstream fingerprints 與原子寫入安全部署雙平台框架及 BA／SA／SD／NotebookLM current-state 資源，並同步安裝且驗證含獨立 MIT 授權的 pinned tgrep bundle |
 | [[notebooklm-exporter]] | 以全專案 scanner、schema v6、discovery/readiness identity、BA／SA 配對、DLP 與原子輸出建立單一 Notebook source pack |
-| [[platform-adapters-and-release]] | 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供可選 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索，且驗證 tgrep binary 與其獨立 MIT 授權 |
+| [[platform-adapters-and-release]] | 以 contract v7、單一 Skill 分流索引、Copilot 薄 adapters、Codex recipes、本機 parity 與 surface-specific GitHub Release packages 維持雙平台框架，並提供明確選用的 Output Style 路由、原 Concise fallback、source-first 靜態健檢及受限來源探索，且驗證 tgrep binary 與其獨立 MIT 授權 |
 | [[platform-hooks-and-guards]] | 共用 canonical hooks 以 Git-root 定位與三種 guard modes 維持跨 cwd 寫入邊界 |
 | [[query-follow-ups-and-ingest]] | 查詢先提供具體預覽，選擇一次後完成更新或保存；全量 Ingest 用安全快照與逐檔處置驗證完成性 |
 | [[wiki-quality-and-provenance]] | 以安全來源解析、內容摘要、受管索引與 append-only log 建立可稽核的 Markdown 知識層 |
@@ -117,7 +117,7 @@ _（尚無頁面）_
 | [[cap-notebooklm-ba-functional-export-sa]] | 依 exporter 現況整理 discovery/readiness identity、配對驗證、遮罩、容量與原子輸出。 |
 | [[codebase-functional-coverage]] | 本機完整性 gate，將 framework scan profile 的每個安全檔案歸屬到 NotebookLM 與 BA／SA／SD 文件功能需求或無可觀察行為 |
 | [[functional-requirement-catalog]] | Codebase LLM Wiki 提供給 BA 的 NotebookLM 與 BA／SA／SD 文件 active 功能需求、能力、流程與驗收覆蓋 |
-| [[project-function-catalog]] | 將安裝、Wiki 品質、source-first Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋 ，並收錄明確請求觸發的 Archify Wiki 視覺化 |
+| [[project-function-catalog]] | 將安裝、Wiki 品質、source-first Codebase 健檢、Hooks、BA／SA／SD、NotebookLM 與發布治理映射到入口、資料、證據與文件覆蓋, 並收錄明確請求觸發的 Archify Wiki 視覺化 |
 | [[system-analysis]] | 以 solution-neutral 系統邊界、stakeholder needs、SR/NFR/IF 與驗證需求描述 BA／SA／SD 文件能力 |
 | [[system-design]] | 以共享 standards profiles、三個文件工作流、雙平台 adapters 與既有驗證／匯出器實作 BA／SA／SD 產出能力 |
 

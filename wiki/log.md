@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-11-01
+last_updated: 2026-11-15
 tags: [log]
 status: active
 ---
@@ -994,3 +994,21 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - Reuse the complete analysis at `11bb7ce5a9c83b3b5e1c46b79d5ff6aa3b9543a6`; update only VERSION/README fingerprints and the existing coverage identity. No source reanalysis or new dispositions.
 - Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[release-and-update]]
+
+
+## [2026-11-14] update | Make optional Output Style explicitly selected
+
+- Default Wiki work keeps its standalone presentation; load the optional Skill only for an explicit user request or selection. Preserve artifact, evidence and completion contracts.
+- Affected pages: [[platform-adapters-and-release]], [[index]]
+
+
+## [2026-11-14] update | Reconcile reviewed optional-style evidence
+
+- Compare the ready clean HEAD with the current 223-file scanner inventory: recheck the four changed Skill/README/ChangeLog/contract-test diffs; retain all 219 unchanged source identities, existing dispositions, user notes and unresolved gaps. Refresh the six directly affected source digests and the scoped coverage identity; this is incremental framework evidence maintenance, not a new whole-codebase analysis or host runtime claim.
+- Affected pages: [[overview]], [[framework-introduction]], [[release-and-update]], [[code-audit]], [[cap-analysis-document-generation-sa]], [[system-analysis]], [[codebase-functional-coverage]], [[index]]
+
+
+## [2026-11-15] update | Finalize v0.7.4 maintenance evidence
+
+- Finalize the opt-in Output Style release notes and read the current product version from VERSION; preserve historical Release evidence and all existing Wiki content. Refresh the three reviewed source identities, affected digests and coverage discovery ID before the separate release metadata step.
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]]

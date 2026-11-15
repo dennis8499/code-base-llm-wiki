@@ -20,9 +20,9 @@ sources:
   - tests/contracts/test_code_audit_validator.py
   - tests/fixtures/code-audit/history/README.md
   - tests/fixtures/code-audit/history/expected-findings.md
-source_digest: "sha256:add5b8a5653aa100d58136a7038d1a5672d02d5da5bbea0cd8c38eca1a2228f5"
+source_digest: "sha256:f5041fd158c52178ac61d4aa7a92f4c22e4c355df1b5637c8aebbf714356ac2b"
 derived_from: ["[[system-architecture]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-11-01
+last_updated: 2026-11-14
 tags: [module, code-audit, static-analysis, business-logic, git-history]
 status: active
 notebooklm_group: local-governance
@@ -111,3 +111,7 @@ report template。驗收 fixture 涵蓋多入口共享根因、交易／設定�
 ## 離線歷史與資源缺口
 
 歷史命令透過 `scripts/offline-git.py`，禁止 lazy fetch、互動提示及外部 diff／textconv；30 秒或 8 MiB 超限就停止並保留歷史缺口。Scanner 的來源預算超限也保留 blocked，而不是縮小完整性結論。持久報告與 index／log 使用 [[bounded-resource-operations]] 的 writer／CAS；原有靜態追查及逐功能覆蓋契約不變。
+
+## 選用呈現與健檢邊界
+
+主要 Skill 預設保留框架 Concise 規則；只有使用者明確要求或選取 `output-style` 時才載入。這只選擇呈現方式，健檢的 source-first 範圍、BUG／RISK／BIZ、逐功能覆蓋與證據要求保持原契約。

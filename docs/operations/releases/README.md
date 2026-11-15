@@ -3,7 +3,7 @@
 ## 版本來源與 readiness gate
 
 產品版號唯一來源是 Repo 根目錄的 `VERSION`，格式為穩定 SemVer
-`MAJOR.MINOR.PATCH`；目前版號是 `0.7.2`。Git tag 必須是完全對應的
+`MAJOR.MINOR.PATCH`；目前版號請讀取該檔。Git tag 必須是完全對應的
 `vX.Y.Z`。Installer 產生的 `.agents/skills/codebase-wiki/VERSION` 是目標 Repo
 的本地版本標記；`contract_version: 7` 則是獨立的 installer/API contract。
 
@@ -22,7 +22,7 @@ Codebase LLM Wiki v0.3.0 已於 2026-10-03 發布，來源 tag 指向
 及 [SHA256SUMS](https://github.com/dennis8499/code-base-llm-wiki/releases/download/v0.3.0/SHA256SUMS)。
 v0.7.0 新增固定離線版 Archify v3.2.0 與十類 Wiki 視覺化，並保留 BA/SA/SD 與 Synthesis。GitlabWorkSpace 只為 Group 來源範圍套用覆層。十類圖表 fixture 已通過瀏覽器驗證；Codex/Copilot host UAT 與其他作業系統尚未實測。
 
-## 現行正式發版：v0.7.2
+## 歷史正式發版：v0.7.2
 
 Codebase LLM Wiki v0.7.2 已於 2026-11-01 發布，tag 指向 commit
 [`2e413f8`](https://github.com/dennis8499/code-base-llm-wiki/commit/2e413f873a9bd7f770b01d6e702123b11b1ae363)。
@@ -83,7 +83,7 @@ python tools/prepare_release.py --baseline <candidate-SHA> --version X.Y.Z --for
 3. 驗證版本/tag 契約並建置兩個平台資產：
 
 ```powershell
-python tools/release.py validate --tag v0.7.2
+python tools/release.py validate --tag vX.Y.Z
 python tools/release.py build --output dist --repository dennis8499/code-base-llm-wiki
 ```
 
@@ -103,8 +103,8 @@ tgrep 的獨立 MIT 授權檔 `bin/windows-x64/LICENSE.txt` 也隨 Skill 進入�
 5. 提交核准變更並合併至 `main`，再建立並推送與 `VERSION` 完全相符的 tag：
 
 ```powershell
-git tag v0.7.2
-git push origin v0.7.2
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 6. Workflow 的 `scripts/release_ci.py publish` 重新確認版本/tag、固定提交、完整證據與

@@ -15,6 +15,11 @@ REPO_ROOT = Path(__file__).parents[2]
 
 
 class ContractTests(unittest.TestCase):
+    def test_primary_skill_does_not_implicitly_invoke_optional_output_style(self) -> None:
+        skill = (REPO_ROOT / ".agents/skills/codebase-wiki/SKILL.md").read_text(encoding="utf-8")
+        self.assertNotIn("$output-style", skill)
+        self.assertNotIn("output-style/SKILL.md", skill)
+
     def test_capability_manifest_declares_installer_contract_v7(self) -> None:
         manifest = json.loads(
             (REPO_ROOT / ".agents" / "skills" / "codebase-wiki" / "capabilities.json").read_text(
