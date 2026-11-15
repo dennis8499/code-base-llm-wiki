@@ -1012,3 +1012,9 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - Finalize the opt-in Output Style release notes and read the current product version from VERSION; preserve historical Release evidence and all existing Wiki content. Refresh the three reviewed source identities, affected digests and coverage discovery ID before the separate release metadata step.
 - Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[index]], [[overview]], [[platform-adapters-and-release]], [[release-and-update]], [[system-analysis]]
+
+
+## [2026-11-15] update | Prepare release v0.7.4 metadata
+
+- Reuse the complete analysis at `7b83f555256894010ae06ceb8b3aaccbff968553`; update only VERSION/README fingerprints and the existing coverage identity. No source reanalysis or new dispositions.
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[release-and-update]]
