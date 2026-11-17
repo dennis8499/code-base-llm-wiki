@@ -4,6 +4,16 @@
 
 ---
 
+## Unreleased
+
+### Removed
+
+- 移除 NotebookLM exporter 未被呼叫的舊分類與 coverage helpers，以及僅由它們使用的常數；現行 scanner、匯出介面與逐檔 coverage 契約維持原樣。
+
+### Changed
+
+- 忽略本機 `.tmp/` 產物，保留固定來源、第三方 bundle 與相容性測試資料。
+
 ## 0.7.4 - 2026-11-15
 
 ### Changed

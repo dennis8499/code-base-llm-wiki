@@ -109,17 +109,6 @@ DEFAULT_DEPENDENCY_PARTS = {
     ".yarn",
 }
 DEFAULT_TEST_PARTS = {"__tests__", "spec", "specs", "test", "tests"}
-DEFAULT_IAC_PARTS = {
-    ".circleci",
-    ".terraform",
-    "helm",
-    "infra",
-    "infrastructure",
-    "k8s",
-    "terraform",
-}
-DEFAULT_CI_PREFIXES = (".github/workflows",)
-DEFAULT_DEV_TOOL_PARTS = {"examples", "samples", "tools"}
 DEFAULT_SENSITIVE_NAMES = {
     ".env",
     ".npmrc",
@@ -142,23 +131,6 @@ TEST_CONFIG_NAMES = {
     "playwright.config.ts",
     "pytest.ini",
     "tox.ini",
-}
-CI_FILENAMES = {
-    ".gitlab-ci.yml",
-    "azure-pipelines.yml",
-    "bitbucket-pipelines.yml",
-    "jenkinsfile",
-}
-DEV_SCRIPT_STEMS = {
-    "benchmark",
-    "build",
-    "coverage",
-    "dev",
-    "format",
-    "generate",
-    "lint",
-    "release",
-    "test",
 }
 DOCUMENTATION_EXTENSIONS = {".adoc", ".md", ".rst", ".txt"}
 DATA_EXTENSIONS = {".gql", ".graphql", ".prisma", ".proto", ".sql"}
@@ -881,28 +853,6 @@ def _is_test_file(relative: str) -> bool:
     return stem.startswith("test_") or stem.endswith("_test") or ".test." in name or ".spec." in name
 
 
-def _is_ci_or_iac(relative: str) -> bool:
-    path = PurePosixPath(relative.lower())
-    if _has_prefix(path.as_posix(), DEFAULT_CI_PREFIXES):
-        return True
-    if path.name in CI_FILENAMES or set(path.parts) & DEFAULT_IAC_PARTS:
-        return True
-    return path.suffix in {".tf", ".tfvars"}
-
-
-def _is_dev_tool(relative: str) -> bool:
-    path = PurePosixPath(relative.lower())
-    if set(path.parts) & DEFAULT_DEV_TOOL_PARTS:
-        return True
-    if "scripts" not in path.parts:
-        return False
-    stem = Path(path.name).stem.lower()
-    return any(
-        stem == value or stem.startswith(value + "-") or stem.startswith(value + "_")
-        for value in DEV_SCRIPT_STEMS
-    )
-
-
 def _is_transaction_artifact(relative: str) -> bool:
     if any(".codebase-wiki-write." in part for part in PurePosixPath(relative.lower()).parts):
         return True
@@ -1227,13 +1177,6 @@ def declared_source_paths(pages: Iterable[InputFile], root: Path) -> tuple[str, 
         for source in sources:
             values.add(validate_relative_config_path(source, root, "frontmatter.sources"))
     return tuple(sorted(values))
-
-
-def _covered_by(relative: str, source: str, root: Path) -> bool:
-    source_path = root / Path(*PurePosixPath(source).parts)
-    if source_path.is_dir():
-        return relative == source or relative.startswith(source + "/")
-    return relative == source
 
 
 def required_document_coverage(pages: Iterable[InputFile]) -> dict[str, str]:
@@ -2492,11 +2435,6 @@ def query_terms_for_pages(pages: Iterable[InputFile], group: str) -> list[str]:
             if len(token) > 1
         )
     return sorted(terms, key=lambda item: (item.lower(), item))
-
-
-def _unique_input_files(items: Iterable[InputFile]) -> tuple[InputFile, ...]:
-    by_path = {item.path: item for item in items}
-    return tuple(by_path[path] for path in sorted(by_path))
 
 
 def _source_ids_for_paths(

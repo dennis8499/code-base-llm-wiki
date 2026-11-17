@@ -14,7 +14,7 @@ sources:
   - .agents/skills/codebase-wiki/references/notebooklm-export-workflow.md
 source_digest: sha256:8d30e703cd81a4c20627fbf703027b42dbf7899ba37d75cdf07cfdfbf480f63c
 derived_from: ["[[overview]]", "[[notebooklm-export]]"]
-last_updated: 2026-09-19
+last_updated: 2026-11-17
 tags: [business-process, notebooklm, export]
 status: active
 ---
@@ -52,8 +52,8 @@ upload plan，不包含雲端操作自動化。
 | 1 | 使用者要求建立或更新 source pack | 知識維護者 | 執行唯讀 discovery，盤點安全來源、排除、Wiki 覆蓋與差異 | 讀取 repo、Wiki、設定；建立 inventory | `discovery_pending`／`preview_ready` | 形成 capability、gap 與文件計畫 | 不可讀或未分類來源列 gap，停止 readiness | `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:75` |
 | 2 | preview 已產生且 discovery ID 穩定 | 使用者 | 審查納入／排除、流程深度、BA／SA 配對與容量 | 讀取 preflight JSON；寫入確認意圖 | `preview_ready`／`plan_confirmed` | 取得唯一一次確認 | 範圍有疑問時修改計畫並重新 preview | `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:88` |
 | 3 | `plan_confirmed` | 知識維護者 | 從入口沿呼叫鏈追查流程，重建 managed BA／SA、保留 user notes，完成 disposition | 讀取 runtime/config/schema/docs/tests；寫入 Wiki、index、log、ledger | `plan_confirmed`／`knowledge_ready` | 每個 active capability 有 pair，流程保留條件、資料／狀態、分支與 locator | `analysis-gap`、uncovered 或 dangling link 阻擋；先補證據再重跑 | `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:131` |
-| 4 | 完整 snapshot 已寫入 coverage ledger | 知識維護者 | 執行 readiness，檢查 analyzed ID、配對、locator、流程完整性、DLP、容量與 migration | 讀取 Wiki、inventory、exact masked payload；產生 plan | `knowledge_ready`／`readiness_pending`／`ready_to_export` | 取得 latest `preflight_id` 與 flow-integrity report | stale、流程正文缺漏或 DLP residual 時保留舊 pack並修正 | `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5012` |
-| 5 | `ready_to_export` 且兩個 ID 相符 | 知識維護者 | 原子產生 schema-v6 pack，確認 sources 含完整流程與適用規則正文 | 寫入 `.notebooklm/documents/`、`sources/`、manifest、plan、governance | `ready_to_export`／`pack_generated` | documents、upload sources、mapping 與 governance 完整 | 超限、ID drift 或輸出邊界不安全時不替換舊 pack | `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:3725` |
+| 4 | 完整 snapshot 已寫入 coverage ledger | 知識維護者 | 執行 readiness，檢查 analyzed ID、配對、locator、流程完整性、DLP、容量與 migration | 讀取 Wiki、inventory、exact masked payload；產生 plan | `knowledge_ready`／`readiness_pending`／`ready_to_export` | 取得 latest `preflight_id` 與 flow-integrity report | stale、流程正文缺漏或 DLP residual 時保留舊 pack並修正 | `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4950` |
+| 5 | `ready_to_export` 且兩個 ID 相符 | 知識維護者 | 原子產生 schema-v6 pack，確認 sources 含完整流程與適用規則正文 | 寫入 `.notebooklm/documents/`、`sources/`、manifest、plan、governance | `ready_to_export`／`pack_generated` | documents、upload sources、mapping 與 governance 完整 | 超限、ID drift 或輸出邊界不安全時不替換舊 pack | `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:3663` |
 | 6 | `pack_generated` | 交付者 | 依 upload plan 在同一本 Notebook 完整替換 static sources | 讀取 `sources/*.md` 與 plan；手動上傳 tenant | `pack_generated`／`tenant_validation_pending` | 來源可供跨功能查詢 | NotebookLM 問答與租戶控制仍須人工驗證，不能由本機檢查代替 | `docs/operations/validation/notebooklm-ba-uat.md:1` |
 
 ## 替代與例外流程

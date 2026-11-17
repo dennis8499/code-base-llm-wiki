@@ -3,6 +3,7 @@
 .codex/hooks/logs/
 .codex-hook-logs/
 dist/
+.tmp/
 .notebooklm/
 .notebooklm-tests-tmp/
 .tgrep/

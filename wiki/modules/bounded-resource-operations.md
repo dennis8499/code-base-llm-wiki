@@ -17,9 +17,9 @@ sources:
   - tests/notebooklm/test_preflight_snapshot.py
   - tools/benchmark_resources.py
   - docs/operations/validation/resource-benchmark.json
-source_digest: sha256:7499a6f669ace15a494f878b517ccd0aac3b47dcb22a8b159754f32ab32518fd
+source_digest: sha256:401d8a304ccb5db486500774c0609de5286bf1d2c2bf944cc3cb53bd384ffa53
 derived_from: ["[[system-architecture]]", "[[wiki-quality-and-provenance]]"]
-last_updated: 2026-10-21
+last_updated: 2026-11-17
 tags: [module, resource, concurrency, offline, provenance]
 status: active
 ---

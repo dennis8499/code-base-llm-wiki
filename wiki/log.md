@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-11-15
+last_updated: 2026-11-17
 tags: [log]
 status: active
 ---
@@ -1018,3 +1018,19 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - Reuse the complete analysis at `7b83f555256894010ae06ceb8b3aaccbff968553`; update only VERSION/README fingerprints and the existing coverage identity. No source reanalysis or new dispositions.
 - Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[release-and-update]]
+
+
+## [2026-11-17] update | 精簡 NotebookLM exporter 與本機產物
+
+- 移除未使用的私有 helpers 與專用常數；共用 scanner、公開匯出介面與 coverage 契約維持原樣。
+- 補上本機 .tmp/ 忽略規則，保留固定來源、第三方 bundle 與相容性測試資料。
+- 依相同介面與原始來源核對相關頁面，刷新來源摘要及索引；保留既有內容與歷史限制。
+- Affected pages: [[system-architecture]], [[notebooklm-export]], [[bounded-resource-operations]], [[notebooklm-exporter]], [[notebooklm-ba-functional-export]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[system-design]], [[index]]
+
+
+## [2026-11-17] update | 同步精簡後的功能覆蓋清單與來源行號
+
+- 已核對的變更僅為移除未使用 helpers、忽略本機暫存及新增維護紀錄；保留既有功能分類與分析限制。
+- 更新三筆逐檔 SHA-256 與 analyzed discovery ID；來源行號由保留的相同程式行映射到目前位置。
+- 既有完整回歸偵測到 readiness 清單過期；同步後重新執行，保留原始失敗紀錄。
+- Affected pages: [[codebase-functional-coverage]], [[notebooklm-ba-knowledge-export]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[index]]

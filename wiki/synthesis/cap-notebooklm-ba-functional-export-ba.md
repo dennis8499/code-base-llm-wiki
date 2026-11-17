@@ -19,9 +19,9 @@ sources:
   - .github/prompts/export-notebooklm.prompt.md
   - notebooklm.toml
   - tests/notebooklm/test_notebooklm_acceptance.py
-source_digest: sha256:ac2c69b8e5d3e05fda1c5869eabeb1b4e049de64ea998321b58c130177ff2b05
+source_digest: sha256:06b77466f372b4f47f5ff2fa2965ad413f58ca8ab1ecc7c662ae4fc24ff13fe8
 source_locators:
-  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5082"
+  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5020"
   - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
   - ".agents/skills/codebase-wiki/scripts/project_scanner.py:1"
   - ".agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:1"
@@ -29,7 +29,7 @@ source_locators:
   - "notebooklm.toml:1"
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-sa]]"]
-last_updated: 2026-10-30
+last_updated: 2026-11-17
 tags: [synthesis, business-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -45,11 +45,11 @@ status: active
 
 | 步驟 | 觸發／條件 | 處理與資料／狀態變更 | 結果 | 失敗去向／定位 |
 | --- | --- | --- | --- | --- |
-| 1 | 執行 `--preflight` | 讀取完整安全 UTF-8 scope，建立 inventory 與 `discovery_id` | 形成功能、覆蓋、排除、DLP 與容量 preview | 未分類或不可讀來源列 gap；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5018` |
+| 1 | 執行 `--preflight` | 讀取完整安全 UTF-8 scope，建立 inventory 與 `discovery_id` | 形成功能、覆蓋、排除、DLP 與容量 preview | 未分類或不可讀來源列 gap；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4956` |
 | 2 | preview 已建立 | 使用者讀取 BA／SA 覆蓋與待分析差異，確認一次 | `discovery_pending` → `plan_confirmed` | 範圍變更須重新 preview；`.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:88` |
 | 3 | `plan_confirmed` | 沿入口追蹤呼叫鏈，將每一步的條件、資料讀寫、狀態、結果、失敗分支與 locator 寫入 managed Wiki；保留 user notes | 每個 capability 有可追溯 BA／SA pair | `analysis-gap`、uncovered、dangling link 阻擋；`.agents/skills/codebase-wiki/references/business-analysis-workflow.md:45` |
-| 4 | ledger 與 Wiki 已更新 | 再讀 Wiki、inventory、exact masked payload，檢查 source integrity、DLP、容量與 migration | 取得 latest `preflight_id` | stale、規則正文缺漏或 residual 時保留舊 pack；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5012` |
-| 5 | discovery／readiness ID 相符 | 原子寫入 documents、sources、mapping、manifest 與 plan | `ready_to_export` → `pack_generated` | 超限、ID drift 或 boundary 失敗不替換舊 pack；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:3725` |
+| 4 | ledger 與 Wiki 已更新 | 再讀 Wiki、inventory、exact masked payload，檢查 source integrity、DLP、容量與 migration | 取得 latest `preflight_id` | stale、規則正文缺漏或 residual 時保留舊 pack；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4950` |
+| 5 | discovery／readiness ID 相符 | 原子寫入 documents、sources、mapping、manifest 與 plan | `ready_to_export` → `pack_generated` | 超限、ID drift 或 boundary 失敗不替換舊 pack；`.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:3663` |
 
 流程問題要保留觸發、前置條件、每一步行為、資料／狀態與失敗去向；只有標題、四步摘要或規則連結不算完整。沒有證據的現況使用 `Codebase 未提供證據`；`analysis-gap` 代表尚未追查完成並阻擋，`evidence-gap` 代表已查來源但沒有該事實，`business-confirmation` 代表實作可見但營運政策仍待確認。Raw/config/scope drift 需要重新 preview 與確認；Wiki-only 重建沿用原 discovery 確認。
 
@@ -65,7 +65,7 @@ status: active
 
 ## 來源定位
 
-- `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4172`
+- `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:4110`
 - `.agents/skills/codebase-wiki/references/notebooklm-export-workflow.md:1`
 - `.github/prompts/export-notebooklm.prompt.md:1`
 - `notebooklm.toml:1`

@@ -19,9 +19,9 @@ sources:
   - .agents/skills/codebase-wiki/capabilities.json
   - tests/notebooklm/test_notebooklm_acceptance.py
   - tests/notebooklm/test_notebooklm_contract.py
-source_digest: "sha256:04b243a9f645fc82b8fdf3595b561d2730c44e84b461b73c3494e02dbda21dd5"
+source_digest: sha256:3e61984217191653b8f3f3c2d1356786e7614b250ce881bd350b278227e3f7e3
 source_locators:
-  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5082"
+  - ".agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:5020"
   - ".agents/skills/codebase-wiki/scripts/scan-project.py:1"
   - ".agents/skills/codebase-wiki/scripts/project_scanner.py:1"
   - ".agents/skills/codebase-wiki/scripts/validate-frontmatter.py:113"
@@ -29,7 +29,7 @@ source_locators:
   - "tests/notebooklm/test_notebooklm_acceptance.py:1"
   - "tests/notebooklm/test_notebooklm_contract.py:1"
 derived_from: ["[[notebooklm-ba-functional-export]]", "[[notebooklm-ba-knowledge-export]]", "[[cap-notebooklm-ba-functional-export-ba]]"]
-last_updated: 2026-11-01
+last_updated: 2026-11-17
 tags: [synthesis, system-analysis, codebase-as-is, notebooklm]
 status: active
 ---
@@ -59,7 +59,7 @@ Output commit 使用 sibling lock、journal、stage 與 backup；驗證全數完
 
 ## 來源定位
 
-- `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1922`
+- `.agents/skills/codebase-wiki/scripts/notebooklm_exporter.py:1865`
 - `.agents/skills/codebase-wiki/scripts/validate-frontmatter.py:215`
 - `.agents/skills/codebase-wiki/capabilities.json:61`
 - `tests/notebooklm/test_notebooklm_acceptance.py:1`
