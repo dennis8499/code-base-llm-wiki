@@ -30,9 +30,9 @@ sources:
   - ".agents/skills/codebase-wiki/scripts/wiki-visualize.py"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:a7f2359b6712dae7492458ad0c269bf11feb54fe3446ed8bcf592c6d804d25fd"
+source_digest: "sha256:1bbf3bcc81a205213b7ad90d84c6aeea66acfd48774dda0fd3fb00e60d5bf995"
 derived_from: ["[[overview]]", "[[platform-adapters-and-release]]"]
-last_updated: 2026-11-15
+last_updated: 2026-11-19
 tags: [guide, release, version, extension]
 status: active
 notebooklm_group: project-guides

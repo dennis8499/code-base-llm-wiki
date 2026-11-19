@@ -1053,3 +1053,9 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 
 - 確認變更紀錄的發行條目並同步來源摘要及覆蓋快照。
 - Affected pages: [[index]], [[codebase-functional-coverage]]
+
+
+## [2026-11-19] update | Prepare release v0.7.5 metadata
+
+- Reuse the complete analysis at `8d685ceb7a56de2d9d8d0b5cd2e32f9cec11cb72`; update only VERSION/README fingerprints and the existing coverage identity. No source reanalysis or new dispositions.
+- Affected pages: [[codebase-functional-coverage]], [[framework-introduction]], [[release-and-update]]

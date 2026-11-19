@@ -25,9 +25,9 @@ sources:
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - "tests/visualization/test_archify_acceptance.py"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: "sha256:1d8ef523a459d49815df90ef42b700c8f3e4134e3a186bb7319b460de8a44c93"
+source_digest: "sha256:149007dcfc5356504eddb09e48b4f5941017eccee24915a7eb7e3642c0140cf4"
 derived_from: ["[[overview]]", "[[installer-and-upgrade]]", "[[platform-hooks-and-guards]]"]
-last_updated: 2026-11-15
+last_updated: 2026-11-19
 tags: [guide, onboarding, framework, copilot, codex]
 status: active
 notebooklm_group: project-guides
