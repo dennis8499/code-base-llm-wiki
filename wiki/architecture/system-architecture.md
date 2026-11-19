@@ -22,9 +22,9 @@ sources:
   - ".agents/skills/codebase-wiki/references/visualization-workflow.md"
   - ".agents/skills/codebase-wiki/vendor/archify-manifest.json"
   - ".agents/skills/codebase-wiki/bin/windows-x64/LICENSE.txt"
-source_digest: sha256:9dd3205ef447c3fe08ba812624938424577edf768bc7169391fe340e8ea76cdd
+source_digest: sha256:d923cc670676ccaedbd566bced1d399ea5911c581e2f47872b608b5a5f4cd6b4
 derived_from: ["[[overview]]"]
-last_updated: 2026-11-17
+last_updated: 2026-11-19
 tags: [architecture, framework, data-flow, safety]
 status: active
 ---

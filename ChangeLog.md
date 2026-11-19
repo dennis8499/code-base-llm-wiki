@@ -6,9 +6,11 @@
 
 ## Unreleased
 
+## 0.7.5 - 2026-11-19
+
 ### Removed
 
-- 移除 NotebookLM exporter 未被呼叫的舊分類與 coverage helpers，以及僅由它們使用的常數；現行 scanner、匯出介面與逐檔 coverage 契約維持原樣。
+- 移除 NotebookLM 匯出器中未使用的舊分類、DLP 包裝、覆蓋清單解析、文件編排輔助程式及常數。現行匯出繼續使用掃描器與逐檔覆蓋清單。
 
 ### Changed
 

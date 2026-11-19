@@ -2,7 +2,7 @@
 title: Wiki Activity Log
 type: log
 sources: []
-last_updated: 2026-11-17
+last_updated: 2026-11-19
 tags: [log]
 status: active
 ---
@@ -1034,3 +1034,22 @@ Affected pages: [[codebase-functional-coverage]], [[index]]
 - 更新三筆逐檔 SHA-256 與 analyzed discovery ID；來源行號由保留的相同程式行映射到目前位置。
 - 既有完整回歸偵測到 readiness 清單過期；同步後重新執行，保留原始失敗紀錄。
 - Affected pages: [[codebase-functional-coverage]], [[notebooklm-ba-knowledge-export]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[index]]
+
+
+## [2026-11-19] update | 精簡 NotebookLM 匯出器的舊流程
+
+- 移除無呼叫者的舊 DLP 包裝、覆蓋清單解析與文件編排輔助程式。
+- 核對現行 readiness 與匯出入口，更新 Wiki 引用、來源摘要與完整覆蓋清單的快照識別碼。
+- Affected pages: [[system-architecture]], [[notebooklm-export]], [[bounded-resource-operations]], [[notebooklm-exporter]], [[notebooklm-ba-knowledge-export]], [[notebooklm-ba-functional-export]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[codebase-functional-coverage]], [[system-design]], [[index]]
+
+
+## [2026-11-19] update | 移除舊覆蓋清單常數
+
+- 補齊已退役解析器的常數清理，刷新來源摘要、覆蓋快照與程式引用。
+- Affected pages: [[system-architecture]], [[notebooklm-export]], [[bounded-resource-operations]], [[notebooklm-exporter]], [[notebooklm-ba-knowledge-export]], [[notebooklm-ba-functional-export]], [[cap-notebooklm-ba-functional-export-ba]], [[cap-notebooklm-ba-functional-export-sa]], [[codebase-functional-coverage]], [[system-design]], [[index]]
+
+
+## [2026-11-19] update | 彙整 0.7.5 發行變更
+
+- 確認變更紀錄的發行條目並同步來源摘要及覆蓋快照。
+- Affected pages: [[index]], [[codebase-functional-coverage]]

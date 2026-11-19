@@ -13,9 +13,9 @@ sources:
   - .agents/skills/codebase-wiki/assets/notebooklm.toml
   - .github/prompts/export-notebooklm.prompt.md
   - tests/notebooklm/test_export_notebooklm.py
-source_digest: sha256:c668c504b7a2a5d93c5d5a97852e4f4bffa3471b005e11806673379ec86a72c3
+source_digest: sha256:b195926657ed302161403b8c79d48edab2cac7c56ec80cac913beba3e665076e
 derived_from: ["[[notebooklm-ba-knowledge-export]]", "[[system-architecture]]", "[[wiki-quality-and-provenance]]", "[[business-analysis]]"]
-last_updated: 2026-11-17
+last_updated: 2026-11-19
 tags: [module, notebooklm, exporter, ba-first, traceability]
 status: active
 ---
@@ -34,7 +34,7 @@ NotebookLM API、不修改 raw sources，也不 materialize raw evidence 或技�
 
 ## 輸入分類
 
-分類與排除規則由共用 scanner 統一處理；2026-11-17 精簡移除了未使用的舊分類與 coverage helpers，匯出契約維持原樣。
+共用 scanner 執行分類與排除。匯出器使用通過 readiness 檢查的覆蓋清單與文件計畫，產出 NotebookLM 套件。
 
 | 類別 | 來源 | Pack 行為 |
 | --- | --- | --- |
